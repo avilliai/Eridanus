@@ -1,5 +1,5 @@
 ReverseWebsocketHost: 127.0.0.1 #ws的host
 ReverseWebsocketPort: 3003      #reverse ws端口
-access_token: ""                #access_token，如果你的onebot实现的access_token默认为空，随便填点什么吧，并与此配置项保持一致
+access_token: "sff"                #access_token
 机器人QQ: 919467430
-机器人名字: eridanus
+机器人名字: eridantus
