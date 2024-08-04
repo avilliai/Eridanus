@@ -1,0 +1,6 @@
+yiri-onebot
+pyYaml
+colorlog
+lanzou-api
+httpx
+pillow

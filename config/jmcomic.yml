@@ -1,0 +1,9 @@
+dir_rule:
+  base_dir: data/pictures/benzi/603561
+  rule: Bd
+download:
+  image:
+    suffix: .png
+  threading:
+    image: 3
+    photo: 1
