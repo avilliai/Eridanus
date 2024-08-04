@@ -10,7 +10,7 @@ gemini:                          #谷歌的gemini api，支持多key，，需要
   gemini-keys:                   #在https://ai.google.dev/tutorials/setup?hl=zh-cn获取
     - xxxx
   gemini-model: "gemini-1.5-flash"
-openaiSettings:                  #openai官方的apikey
+openai:                          #openai官方的apikey
   openai-keys:
     - sk-Mxxxxxxxxxxx
   openai-model: "gpt-3.5-turbo"  #调用openai api对应的模型，前提：在settings.yaml默认模型已经设置为gpt3.5，并配置了apikey
