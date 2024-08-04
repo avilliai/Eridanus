@@ -73,6 +73,6 @@ await bot.send_group_message(event.group_id, [Record(file=file_url,url="")])
 
 #你也可以调用我们在toolkits.py中提供的函数，这样一行即可完成语音发送，图片也是同理
 
-await bot.send_group_message(event.group_id, [Record(file=fileUrl("plugins/output.wav",url="")])
+await bot.send_group_message(event.group_id, [Record(file=fileUrl("plugins/output.wav"),url="")])
 ```
 完整的示例请查看run/example.py
