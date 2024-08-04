@@ -28,3 +28,6 @@ logger = logging.getLogger("yiri-bot")
 
 __all__ = ["logger", "pprint"]
 ```
+
+在yirimirai编写代码的大部分思路在这里都是可以使用的。目前的任务集中在原Manyana/run文件夹下文件的重写
+
