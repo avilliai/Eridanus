@@ -1,5 +1,5 @@
 ReverseWebsocketHost: 127.0.0.1 #reverse ws的host
 ReverseWebsocketPort: 3003      #reverse ws端口
-access_token: ""                #access_token，如果你onebot实现的access_token为空，你需要自己设置一个，并且与此配置项保持一致。yiriob似乎在此项为空时会报错
+access_token: ""                #access_token，如果你onebot实现的access_token为空，你需要自己设置一个，并且与此配置项保持一致。yiriob在此项为空时无法正常工作
 机器人QQ: 919467430
 机器人名字: eridantus
