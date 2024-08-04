@@ -10,8 +10,8 @@ from lanzou.api import LanZouCloud
 
 '''此处用以集合常用的工具
 lanzouFileToUrl(path) 用以上传文件转直链
-newLogger()           日志需要用到，但只用一次即可，重复调用会重复创建对象，我不建议重复调用
-await translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式。需要异步调用
+newLogger()           日志需要用到，如果你需要logger，调用即可
+async translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式。需要异步调用
 random_str()          生成六位随机字符串，用以文件命名
 get_headers()         返回一个UA，网络请求使用
 check_cq_atcode(event.raw_message,bot.id)  检查CQ码中是否包含at bot的信息
