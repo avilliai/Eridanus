@@ -2,7 +2,7 @@ import logging
 
 import yaml
 from yiriob.adapters import ReverseWebsocketAdapter
-from yiriob.bot import Bot,logger
+from yiriob.bot import Bot
 from yiriob.event import EventBus
 
 
