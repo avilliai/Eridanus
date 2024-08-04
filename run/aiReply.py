@@ -51,12 +51,9 @@ def main(bot, bus, logger):
         cha = yaml.load(f.read(), Loader=yaml.FullLoader)
     global chatGLMData
     chatGLMData = cha
-    # logger.info(chatGLMData)
     with open('config/noResponse.yaml', 'r', encoding='utf-8') as f:
         noRes1 = yaml.load(f.read(), Loader=yaml.FullLoader)
 
-    global totallink
-    totallink = False
     with open('config/settings.yaml', 'r', encoding='utf-8') as f:
         result = yaml.load(f.read(), Loader=yaml.FullLoader)
     friendsAndGroups = result.get("加群和好友")
@@ -71,10 +68,6 @@ def main(bot, bus, logger):
     maxTextLen = result.get("对话模型设置").get("maxLen")
     voiceRate = result.get("对话模型设置").get("voiceRate")
     withText = result.get("对话模型设置").get("withText")
-
-
-
-    
     
     with open('data/userData.yaml', 'r', encoding='utf-8') as file:
         data = yaml.load(file, Loader=yaml.FullLoader)
@@ -93,8 +86,6 @@ def main(bot, bus, logger):
             logger.error(f"用户{i}的sts数值出错，请打开data/userData.yaml检查，将其修改为正常数值")
     logger.info('chatglm部分已读取信任用户' + str(len(trustUser)) + '个')
 
-    global coziData
-    coziData = {}
     # 线程预备
     newLoop = asyncio.new_event_loop()
     listen = CListen(newLoop)
@@ -206,7 +197,7 @@ def main(bot, bus, logger):
     # 私聊中chatGLM清除本地缓存
     @bus.on(PrivateMessageEvent)
     async def clearPrompt(event: PrivateMessageEvent):
-        global chatGLMData, coziData
+        global chatGLMData
         if check_cq_atcode(event.raw_message,bot.id) == "/clear":
             reff = await clearsinglePrompt(event.sender.user_id)
             await bot.send_friend_message(event.sender.user_id, [Text(reff)])
@@ -333,7 +324,7 @@ def main(bot, bus, logger):
     # 群内chatGLM回复
     @bus.on(GroupMessageEvent)
     async def atReply(event:GroupMessageEvent):
-        global trustUser, chatGLMData, chatGLMCharacters, userdict, coziData, trustG,chattingUser
+        global trustUser, chatGLMData, chatGLMCharacters, userdict,trustG,chattingUser
         if check_cq_atcode(event.raw_message,bot.id)!=False or str(event.sender.user_id) in chattingUser:
             try:
                 if not wontrep(noRes1, check_cq_atcode(event.raw_message,bot.id).replace(" ", ""),
@@ -379,7 +370,7 @@ def main(bot, bus, logger):
     # 用于chatGLM清除本地缓存
     @bus.on(GroupMessageEvent)
     async def clearPrompt(event:GroupMessageEvent):
-        global chatGLMData, coziData
+        global chatGLMData
         if check_cq_atcode(event.raw_message,bot.id) == "/clear":
             reff = await clearsinglePrompt(event.sender.user_id)
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text(reff)])
