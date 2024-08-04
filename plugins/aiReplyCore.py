@@ -24,9 +24,9 @@ yuanqiBotToken=resulttr.get("腾讯元器").get("token")
 geminiapikey = resulttr.get("gemini").get("gemini-keys")
 geminimodel=resulttr.get("gemini").get("gemini-model")
 #openai相关配置
-openai_transit = resulttr.get("openaiSettings").get("openai-transit")
-gptkeys = resulttr.get("openaiSettings").get("openai-keys")
-openai_model = resulttr.get("openaiSettings").get("openai-model")
+openai_transit = resulttr.get("openai").get("openai-transit")
+gptkeys = resulttr.get("openai").get("openai-keys")
+openai_model = resulttr.get("openai").get("openai-model")
 #代理
 proxy = resulttr.get("proxy")
 GeminiRevProxy = resulttr.get("GeminiRevProxy")
