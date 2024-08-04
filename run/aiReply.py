@@ -62,12 +62,12 @@ def main(bot, bus, logger):
     for i in userdict.keys():
         data = userdict.get(i)
         try:
-            times = int(str(data.get('sts')))
+            times = int(str(data.get('签到次数')))
             if times > trustDays:
                 trustUser.append(str(i))
 
         except Exception as e:
-            logger.error(f"用户{i}的sts数值出错，请打开data/userData.yaml检查，将其修改为正常数值")
+            logger.error(f"用户{i}的签到次数 数值出错，请打开data/userData.yaml检查，将其修改为正常数值")
     logger.info('chatglm部分已读取信任用户' + str(len(trustUser)) + '个')
 
     # 线程预备
@@ -270,7 +270,7 @@ def main(bot, bus, logger):
             trustUser = []
             for i in userdict.keys():
                 data = userdict.get(i)
-                times = int(str(data.get('sts')))
+                times = int(str(data.get('签到次数')))
                 if times > trustDays:
                     trustUser.append(str(i))
             #定时清理用户
@@ -298,7 +298,7 @@ def main(bot, bus, logger):
             trustUser = []
             for i in userdict.keys():
                 data = userdict.get(i)
-                times = int(str(data.get('sts')))
+                times = int(str(data.get('签到次数')))
                 if times > trustDays:
                     trustUser.append(str(i))
             logger.info('已读取信任用户' + str(len(trustUser)) + '个')

@@ -1,8 +1,10 @@
 import asyncio
 import logging
+import os
 import random
 import re
 import threading
+from pathlib import Path
 
 import colorlog
 import httpx
@@ -16,7 +18,9 @@ newLogger()           日志需要用到，如果你需要logger，调用即可
 async translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式。需要异步调用
 random_str()          生成六位随机字符串，用以文件命名
 get_headers()         返回一个UA，网络请求使用
+fileUrl(path)         返回file://协议下的文件地址，发送本地语音和图片用。传递对于main.py的相对路径。
 check_cq_atcode(event.raw_message,bot.id)  检查CQ码中是否包含at bot的信息
+wash_cqCode(cq_code)                       洗去CQ码，返回纯文本
 extract_image_urls(event.raw_message)      返回event.raw_message中所有图片的url
 '''
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
@@ -145,6 +149,9 @@ def check_cq_atcode(cq_code, bot_qq):
             message = re.sub(r'\[.*?\]', '', cq_code).strip()
             return message
     return False
+def wash_cqCode(cq_code):
+    message = re.sub(r'\[.*?\]', '', cq_code).strip()
+    return message
 def extract_image_urls(text):
     # 正则表达式匹配所有 CQ:image 并提取 url 参数的值
     urls = re.findall(r'\[CQ:image,[^\]]*url=([^,^\]]+)', text)
@@ -165,3 +172,7 @@ class CListen(threading.Thread):
         asyncio.set_event_loop(self.mLoop)  # 在新线程中开启一个事件循环
 
         self.mLoop.run_forever()
+def fileUrl(path):
+    image_path = Path(f"{os.getcwd()}/{path}")
+    file_url = image_path.as_uri()
+    return file_url

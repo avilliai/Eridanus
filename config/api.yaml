@@ -1,6 +1,6 @@
 # 配置文件，在这里填写api
 
-weatherXinZhi: Sxxxxxxx          #心知天气api   从https://www.seniverse.com/注册获取
+心知天气: Sxxxxxxx          #心知天气api   从https://www.seniverse.com/注册获取
 sauceno-api: bxxxxxx             #sauceno搜图api，你可以从https://saucenao.com/user.php注册并获取
 moderate: 1xxxxxx                #色图审核api 从https://www.moderatecontent.com/获取
 nasa_api: HSxxxxxxx              #nasa相关天文api 从https://api.nasa.gov/index.html#main-content申请

@@ -1,9 +1,13 @@
 
 from bs4 import BeautifulSoup
 
-from plugins.newsEveryDay import get_headers
+
 
 import httpx
+
+from plugins.tookits import get_headers
+
+
 async def banguimiList(year,month,top):
 
     rank = 1  # 排名

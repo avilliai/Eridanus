@@ -1,12 +1,146 @@
-# -*- coding: utf-8 -*-
+import datetime
 import json
+import os
 import random
+from io import BytesIO
 
 import httpx
+import yaml
+from PIL import Image
 from emoji import is_emoji
 
-from plugins.RandomStr import random_str
+from plugins.tookits import get_headers, random_str
 
+
+async def news():
+    url = "https://api.52vmy.cn/api/wl/60s"
+    time = datetime.datetime.now().strftime('%Y_%m_%d')
+    #path="./news.png"
+    path = "data/pictures/cache/" + time + "news.png"
+
+    #r=requests.get(url).content
+    #with open("./news.png","wb") as fp:
+    #fp.write(r)
+    #return
+    #async with httpx.AsyncClient(timeout=20) as client:
+    #r = await client.get(url)
+    #url=r.json().get("tp1")
+    #print(url)
+    #return url
+    #print(r.json().get("data").get("image")) # 从二进制数据创建图片对象
+    async with httpx.AsyncClient(timeout=200, headers=get_headers()) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        #print(path)
+        return path
+
+
+async def chaijun():
+    headers = get_headers()
+    url = "http://api.yujn.cn/api/chaijun.php?"
+    path = "data/pictures/cache/" + random_str() + ".png"
+    async with httpx.AsyncClient(timeout=20, headers=headers) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        # print(path)
+        return path
+
+
+async def beCrazy(aim):
+    headers = get_headers()
+    url = f"https://api.lolimi.cn/API/fabing/fb.php?name={aim}"
+    async with httpx.AsyncClient(timeout=20, headers=headers) as client:
+        r = await client.get(url)
+        r = r.json().get("data")
+        # print(path)
+        return r
+
+
+async def danxianglii():
+    headers = get_headers()
+    time = datetime.datetime.now().strftime('%Y/%m%d')
+    url = f"https://img.owspace.com/Public/uploads/Download/{time}.jpg"
+    path = "data/pictures/cache/" + random_str() + ".png"
+    async with httpx.AsyncClient(timeout=20, headers=headers) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        # print(path)
+        return path
+
+
+async def moyu():
+    headers = get_headers()
+    url = "https://api.52vmy.cn/api/wl/moyu"
+    time = datetime.datetime.now().strftime('%Y_%m_%d')
+    path = "data/pictures/cache/" + time + "moyu.png"
+    #path="moyu.png"
+
+    async with httpx.AsyncClient(timeout=30, headers=headers) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        #print(path)
+        return path
+
+
+async def xingzuo():
+    url = "https://dayu.qqsuu.cn/xingzuoyunshi/apis.php"
+    time = datetime.datetime.now().strftime('%Y_%m_%d')
+    # path="./news.png"
+    path = "data/pictures/cache/" + time + "xingzuo.png"
+    #path="./xingzuo.png"
+    # print(r.json().get("data").get("image")) # 从二进制数据创建图片对象
+    async with httpx.AsyncClient(timeout=200, headers=get_headers()) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        #rint(path)
+        return path
+
+
+async def nong(url, name):
+    # path="./news.png"
+    path = "data/Elo/" + name + ".png"
+    # path="./xingzuo.png"
+    if os.path.exists(path):
+        return path
+    else:
+
+        # print(r.json().get("data").get("image")) # 从二进制数据创建图片对象
+        async with httpx.AsyncClient(timeout=200, headers=get_headers()) as client:
+            r = await client.get(url)
+            img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+            img.save(path)  # 使用PIL库保存图片
+            # rint(path)
+            return path
+
+
+async def sd(url, path):
+    # path="./news.png"
+
+    # path="./xingzuo.png"
+    # print(r.json().get("data").get("image")) # 从二进制数据创建图片对象
+
+    async with httpx.AsyncClient(timeout=200, headers=get_headers()) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        # rint(path)
+        return path
+
+
+async def handwrite(msg):
+    url = f"https://zj.v.api.aa1.cn/api/zuoye/?msg={msg}"
+    path = "data/pictures/cache/" + random_str() + ".png"
+    async with httpx.AsyncClient(timeout=200, headers=get_headers()) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        img.save(path)  # 使用PIL库保存图片
+        # rint(path)
+        return path
 ark = {
     "方舟种族": [
         "阿达克利斯", "阿达克利斯", "阿达克利斯", "阿达克利斯", "阿戈尔", "阿戈尔", "阿戈尔", "阿戈尔", "阿纳萨",
@@ -295,3 +429,70 @@ async def arkSign(url):
     #print(r.text)
     #print(r.text,type(r.json()))
     return str(r.text)
+async def pic():
+    url = "https://iw233.cn/api.php?sort=random"
+    # url+="tag=萝莉|少女&tag=白丝|黑丝"
+    headers = {
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.54",
+        "Referer": "https://weibo.com/"}
+    async with httpx.AsyncClient(timeout=20) as client:
+        r=await client.get(url, headers=headers)
+        r=r.content
+    ranpath = random_str()
+
+    with open("data/pictures/wallpaper/" + ranpath + ".png", mode="wb") as f:
+        f.write(r)  # 图片内容写入文件
+    return "data/pictures/wallpaper/" + ranpath + ".png"
+async def setuGet(data, withPic, grayPic):
+    ranpath = random_str()
+    path = "data/pictures/wallpaper/" + ranpath + ".png"
+    url = "https://api.lolicon.app/setu/v2?"
+    async with httpx.AsyncClient(timeout=100) as client:
+        r = await client.get(url, params=data)
+        #print(r.json().get("data")[0].get("urls").get("regular"))
+        url = r.json().get("data")[0].get("urls").get("regular")
+        if not withPic:
+            return url, None
+    async with httpx.AsyncClient(timeout=20) as client:
+        r = await client.get(url)
+        img = Image.open(BytesIO(r.content))  # 从二进制数据创建图片对象
+        if grayPic:
+            # open colour image
+            image_raw = img
+            # convert image to black and white
+            image_black_white = image_raw.convert('1')
+            image_black_white.save(path)
+            return url, path
+            #image_black_white.show()
+        img.save(path)  # 使用PIL库保存图片
+        return url, path
+async def querys(city, API_KEY) -> str:
+    """查询天气数据。"""
+    async with httpx.AsyncClient(timeout=20) as client:
+        try:
+            resp = await client.get(f'https://api.seniverse.com/v3/weather/now.json', params={
+                'key': API_KEY,
+                'location': city,
+                'language': 'zh-Hans',
+                'unit': 'c',
+            })
+            resp.raise_for_status()
+            data = resp.json()
+            return f'当前{data["results"][0]["location"]["name"]}天气为' \
+                   f'{data["results"][0]["now"]["text"]}，' \
+                   f'气温{data["results"][0]["now"]["temperature"]}℃。'
+        except (httpx.NetworkError, httpx.HTTPStatusError, KeyError):
+            return f'抱歉，没有找到{city}的天气数据。'
+with open('data/text/jokes.yaml', 'r', encoding='utf-8') as f:
+    jokes = yaml.load(f.read(), Loader=yaml.FullLoader)
+def get_joke(joke_tp):
+    if joke_tp == '法国':
+        return random.choice(jokes["french_jokes"])
+    elif joke_tp == '美国':
+        return random.choice(jokes["america_jokes"])
+    elif joke_tp == '苏联':
+        return random.choice(jokes["soviet_jokes"])
+    else:
+        if joke_tp == '':
+            joke_tp = 'yiris'
+        return random.choice(jokes["jokes"]).replace('%name%', joke_tp)
