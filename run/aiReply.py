@@ -34,10 +34,7 @@ def main(bot, bus, logger):
     proxy = resulttr.get("proxy")
     if proxy != "":
         os.environ["http_proxy"] = proxy
-    with open('data/chatGLMData.yaml', 'r', encoding='utf-8') as f:
-        cha = yaml.load(f.read(), Loader=yaml.FullLoader)
-    global chatGLMData
-    chatGLMData = cha
+
     with open('config/noResponse.yaml', 'r', encoding='utf-8') as f:
         noRes1 = yaml.load(f.read(), Loader=yaml.FullLoader)
 
@@ -136,10 +133,9 @@ def main(bot, bus, logger):
     # 私聊使用chatGLM,对信任用户或配置了apiKey的用户开启
     @bus.on(PrivateMessageEvent)
     async def GLMFriendChat(event: PrivateMessageEvent):
-        # 用非常丑陋的复制粘贴临时解决bug，这下成石山代码了
         if check_cq_atcode(event.raw_message,bot.id)==False:
             return
-        global chatGLMData, chatGLMCharacters, trustUser, userdict
+        global chatGLMCharacters, trustUser, userdict
         text = check_cq_atcode(event.raw_message,bot.id)
         if text == "/clear":
             return
@@ -184,7 +180,6 @@ def main(bot, bus, logger):
     # 私聊中chatGLM清除本地缓存
     @bus.on(PrivateMessageEvent)
     async def clearPrompt(event: PrivateMessageEvent):
-        global chatGLMData
         if check_cq_atcode(event.raw_message,bot.id) == "/clear":
             reff = await clearsinglePrompt(event.sender.user_id)
             await bot.send_friend_message(event.sender.user_id, [Text(reff)])
@@ -311,7 +306,7 @@ def main(bot, bus, logger):
     # 群内chatGLM回复
     @bus.on(GroupMessageEvent)
     async def atReply(event:GroupMessageEvent):
-        global trustUser, chatGLMData, chatGLMCharacters, userdict,trustG,chattingUser
+        global trustUser, chatGLMCharacters, userdict,trustG,chattingUser
         if check_cq_atcode(event.raw_message,bot.id)!=False or str(event.sender.user_id) in chattingUser:
             try:
                 if not wontrep(noRes1, check_cq_atcode(event.raw_message,bot.id).replace(" ", ""),
@@ -357,7 +352,6 @@ def main(bot, bus, logger):
     # 用于chatGLM清除本地缓存
     @bus.on(GroupMessageEvent)
     async def clearPrompt(event:GroupMessageEvent):
-        global chatGLMData
         if check_cq_atcode(event.raw_message,bot.id) == "/clear":
             reff = await clearsinglePrompt(event.sender.user_id)
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text(reff)])
