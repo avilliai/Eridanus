@@ -1,4 +1,4 @@
-ReverseWebsocketHost: 127.0.0.1 #ws的host
+ReverseWebsocketHost: 127.0.0.1 #reverse ws的host
 ReverseWebsocketPort: 3003      #reverse ws端口
 access_token: "sff"                #access_token
 机器人QQ: 919467430
