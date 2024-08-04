@@ -72,3 +72,4 @@ file_url = image_path.as_uri()
 await bot.send_group_message(event.group_id, [Record(file=file_url,url="")])
 
 ```
+完整的示例请查看run/example.py
