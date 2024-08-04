@@ -23,13 +23,14 @@ yuanqiBotToken=resulttr.get("腾讯元器").get("token")
 #gemini
 geminiapikey = resulttr.get("gemini").get("gemini-keys")
 geminimodel=resulttr.get("gemini").get("gemini-model")
+GeminiRevProxy = resulttr.get("gemini").get("GeminiRevProxy")
 #openai相关配置
 openai_transit = resulttr.get("openai").get("openai-transit")
 gptkeys = resulttr.get("openai").get("openai-keys")
 openai_model = resulttr.get("openai").get("openai-model")
 #代理
 proxy = resulttr.get("proxy")
-GeminiRevProxy = resulttr.get("GeminiRevProxy")
+
 #讯飞星火模型配置
 sparkAppKey=resulttr.get("讯飞星火").get("apiKey")
 sparkAppSecret=resulttr.get("讯飞星火").get("apiSecret")

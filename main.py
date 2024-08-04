@@ -23,7 +23,7 @@ bot = Bot(
 logger=newLogger()
 
 #与yiri mirai不同，我们需要传入bot和bus两个对象
-example.main(bot,bus,logger)  #这是一个测试示例，你可以参考它
-#aiReply.main(bot,bus,logger)  #ai回复功能
+#example.main(bot,bus,logger)  #这是一个测试示例，你可以参考它
+aiReply.main(bot,bus,logger)  #ai回复功能
 
 bot.run()
