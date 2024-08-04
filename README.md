@@ -57,3 +57,18 @@ await bot.send_group_message(event.group_id,[Record(file="imgurl",url="")])
 #MessageChain可以是一个列表，因此你可以构建出图文组合同时引用对方的回复
 await bot.send_group_message(event.group_id,[Text("你好"),Reply(str(event.message_id)),Record(file="imgurl",url="")])
 ```
+既然file参数只能用url,那如果我确实需要发送本地文件怎么办？这时候就要用到`file://`协议了，该协议用来访问本设备文件，我们可以以这种方式给Image类和Record类传参
+```python
+from pathlib import Path
+#中间的部分省略
+image_path = Path(f"{os.getcwd()}/plugins/NB2uR.png") #这一步，我们拼接出了img的绝对路径
+file_url = image_path.as_uri()                        #利用Path的as_uri()即可取到 file://协议下的文件链接
+await bot.send_group_message(event.group_id,[Image(file=file_url,type='flash',url="")])  #正常传参即可
+
+#语音也是同理
+#发送本地语音
+image_path = Path(f"{os.getcwd()}/plugins/output.wav")
+file_url = image_path.as_uri()
+await bot.send_group_message(event.group_id, [Record(file=file_url,url="")])
+
+```

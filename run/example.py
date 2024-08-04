@@ -1,4 +1,6 @@
 # -*- coding:utf-8 -*-
+import os
+from pathlib import Path
 
 from yiriob.event.events import GroupMessageEvent, PrivateMessageEvent
 from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams, SendPrivateMessageInterface, \
@@ -23,10 +25,20 @@ def main(bot,bus,logger):
             logger.info("ok")
             #几个参数分别是，艾特，文本，引用回复
             await bot.send_group_message(event.group_id,[At(str(event.sender.user_id)),Text("你好"),Reply(str(event.message_id))])
-            #发送图片(目前file参数似乎只能用url)
-            await bot.send_group_message(event.group_id,[Image(file="https://api.lolimi.cn/API/dmtx/api.php",type='flash',url="")])
-            #发送语音(目前file参数似乎只能用url)
-            await bot.send_group_message(event.group_id,[Record(file="https://s5k.cn/api/v1/studio/gally16/Bert-VITS21.x/gradio/file=/tmp/gradio/477121418d2334350e6cdc8cbf57094ab6801712/audio.wav",url="")])
+
+            #发送本地图片
+            image_path = Path(f"{os.getcwd()}/plugins/NB2uR.png")
+            file_url = image_path.as_uri()
+            await bot.send_group_message(event.group_id,[Image(file=file_url,type='flash',url="")])
+            #发送网络图片
+            await bot.send_group_message(event.group_id, [Image(file="https_url", type='flash', url="")])
+
+            #发送本地语音
+            image_path = Path(f"{os.getcwd()}/plugins/output.wav")
+            file_url = image_path.as_uri()
+            await bot.send_group_message(event.group_id, [Record(file=file_url,url="")])
+            #发送网络语音
+            await bot.send_group_message(event.group_id,[Record(file="https_url",url="")])
             #下面是原调用方式，我们不用这个
             '''await bot.adapter.call_api(
                 SendGroupMessageInterface,
