@@ -10,7 +10,7 @@ from asyncio import sleep
 import yaml
 from yiriob.event.events import GroupMessageEvent, PrivateMessageEvent
 from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams
-from yiriob.message import MessageChain, Text, At, Reply
+from yiriob.message import MessageChain, Text, At, Reply, Record
 
 from plugins.aiReplyCore import modelReply, clearAllPrompts, tstt, clearsinglePrompt
 from plugins.tookits import check_cq_atcode, extract_image_urls, CListen
@@ -164,8 +164,8 @@ def main(bot, bus, logger):
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("如对话异常请发送 /clear 以清理对话")])
         if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
             try:
-                #voiceP = await tstt(r)
-                #await bot.send(event, Voice(path=voiceP))
+                voiceP = await tstt(r)
+                await bot.send_group_message(event.group_id, [Record(file=voiceP, url="")])
                 if withText:
                     await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
                                                                   Text(r)])
@@ -338,8 +338,8 @@ def main(bot, bus, logger):
             chattingUser[user] = datetime.datetime.now()
         if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
             try:
-                #voiceP = await tstt(r)
-                #await bot.send(event, Voice(path=voiceP))
+                voiceP = await tstt(r)
+                await bot.send_group_message(event.group_id,[Record(file=voiceP,url="")])
                 if withText:
                     await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),Text(r)])
             except Exception as e:

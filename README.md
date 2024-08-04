@@ -46,3 +46,14 @@ async def test(event:GroupMessage):
         print(event.sender.id)
         await bot.send_group_message(event.group.id, "hello word",True)
 ```
+#### 5.若干常用类
+```python
+#几个参数分别是，艾特，文本，引用回复
+await bot.send_group_message(event.group_id,[At(str(event.sender.user_id)),Text("你好"),Reply(str(event.message_id))])
+#发送图片(目前file参数似乎只能用url)
+await bot.send_group_message(event.group_id,[Image(file="imgurl",type='flash',url="")])
+#发送语音(目前file参数似乎只能用url)
+await bot.send_group_message(event.group_id,[Record(file="imgurl",url="")])
+#MessageChain可以是一个列表，因此你可以构建出图文组合同时引用对方的回复
+await bot.send_group_message(event.group_id,[Text("你好"),Reply(str(event.message_id)),Record(file="imgurl",url="")])
+```

@@ -17,6 +17,10 @@ try:
     from vits import vG
 except:
     pass
+'''
+superVG作为语音合成的集合函数，在Eridanus中与Manyana不同，Eridanus中直接返回url而非语音文件路径。
+这是由于yiriob目前似乎不支持传递本地文件
+'''
 
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     resulttr = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -220,11 +224,12 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                 r = await client.post(url, json=data)
                 newurl = newurp + \
                          r.json().get("data")[1].get("name")
-            async with httpx.AsyncClient(timeout=200, headers=headers) as client:
+                return newurl
+            '''async with httpx.AsyncClient(timeout=200, headers=headers) as client:
                 r = await client.get(newurl)
                 with open(p, "wb") as f:
                     f.write(r.content)
-                return p
+                return p'''
     elif mode == "outVits":
         speaker = data.get("speaker")
         text = data.get("text")
@@ -233,11 +238,12 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
         async with httpx.AsyncClient(timeout=200) as client:
             r = await client.post(url)
             newUrl = r.json().get("music")
-            #print("outvits语音合成路径：" + p)
+            return newUrl
+            '''#print("outvits语音合成路径：" + p)
             r1 = requests.get(newUrl)
             with open(p, "wb") as f:
                 f.write(r1.content)
-            return p
+            return p'''
     elif mode == "FishTTS":
         modelid = data.get("speaker")
 
@@ -364,11 +370,12 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                     result = await send_get_request(client, task_id, Authorization)
                     # print("GET Request Result:", result)
                     audio_url = result['result']
-                    rb = await client.get(audio_url)
+                    return audio_url
+                    '''rb = await client.get(audio_url)
                     path = "data/voices/" + random_str() + '.wav'
                     with open(path, "wb") as f:
                         f.write(rb.content)
-                    return path
+                    return path'''
         else:
             proxies = {
                 "http://": proxy,
@@ -488,11 +495,12 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                     result = await send_get_request(client, task_id, Authorization)
                     #print("GET Request Result:", result)
                     audio_url = result['result']
-                    rb = await client.get(audio_url)
+                    return audio_url
+                    '''rb = await client.get(audio_url)
                     path = "data/voices/" + random_str() + '.wav'
                     with open(path, "wb") as f:
                         f.write(rb.content)
-                    return path
+                    return path'''
     #firefly模式不再可用，仅作为以后的代码参考。
     elif mode == "firefly":
         datap = data
@@ -619,11 +627,12 @@ async def modelscopeV2(speaker,text):
                     elif event_data.get("msg") == "process_completed":
                         p="./test.wav"
                         newurl=f"https://s5k.cn/api/v1/studio/gally16/Bert-VITS21.x/gradio/file={event_data['output']['data'][0]['path']}"
-                        async with httpx.AsyncClient(timeout=200, headers=headers) as client:
+                        return newurl
+                        '''async with httpx.AsyncClient(timeout=200, headers=headers) as client:
                             r = await client.get(newurl)
                             with open(p, "wb") as f:
                                 f.write(r.content)
-                            return p
+                            return p'''
                     count+=1
                     if count>10:
                         raise Exception("Exceeded 10 events without entering return branch.")
@@ -769,27 +778,3 @@ async def voiceGenerate(data):
     return out
 
 
-async def modelscopeTTS(data):
-    speaker = data.get("speaker")
-    text = data.get("text")
-    if speaker == "阿梓":
-        url = "https://www.modelscope.cn/api/v1/studio/xzjosh/Azusa-Bert-VITS2-2.3/gradio/run/predict"
-
-    data = {
-        "data": ["<zh>" + text, speaker, 0.5, 0.5, 0.9, 1, "ZH", None, "Happy", "Text prompt", "", 0.7],
-        "event_data": None,
-        "fn_index": 0,
-        "dataType": ["textbox", "dropdown", "slider", "slider", "slider", "slider", "dropdown", "audio", "textbox",
-                     "radio", "textbox", "slider"],
-        "session_hash": "xjwen214wqf"
-    }
-    p = "data/voices/" + random_str() + '.wav'
-    async with httpx.AsyncClient(timeout=200) as client:
-        r = await client.post(url, json=data)
-        newurl = "https://www.modelscope.cn/api/v1/studio/xzjosh/Azusa-Bert-VITS2-2.3/gradio/file=" + \
-                 r.json().get("data")[1].get("name")
-        async with httpx.AsyncClient(timeout=200) as client:
-            r = await client.get(newurl)
-            with open(p, "wb") as f:
-                f.write(r.content)
-            return p
