@@ -1,10 +1,16 @@
 import logging
 
 import colorlog
+import httpx
+import requests
 import yaml
-
-from plugins.newsEveryDay import get_headers
 from lanzou.api import LanZouCloud
+
+'''
+lanzouFileToUrl(path) 用以上传文件转直链
+newLogger()           日志需要用到，但只用一次即可，重复调用会重复创建对象，我不建议重复调用
+translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式
+'''
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     apiYaml = yaml.load(f.read(), Loader=yaml.FullLoader)
 
@@ -58,3 +64,27 @@ def newLogger():
     logger.error('This is an error message')
     logger.critical('This is a critical message')'''
     return logger
+async def translate(text, mode="ZH_CN2JA"):
+    try:
+        URL = f"https://api.pearktrue.cn/api/translate/?text={text}&type={mode}"
+        async with httpx.AsyncClient(timeout=20) as client:
+            r = await client.get(URL)
+            #print(r.json()["data"]["translate"])
+            return r.json()["data"]["translate"]
+    except:
+        print("文本翻译接口1失效")
+        if mode != "ZH_CN2JA":
+            return text
+    try:
+        url = f"https://findmyip.net/api/translate.php?text={text}&target_lang=ja"
+        r = requests.get(url=url, timeout=10)
+        return r.json()["data"]["translate_result"]
+    except:
+        print("翻译接口2调用失败")
+    try:
+        url = f"https://translate.appworlds.cn?text={text}&from=zh-CN&to=ja"
+        r = requests.get(url=url, timeout=10, verify=False)
+        return r.json()["data"]
+    except:
+        print("翻译接口3调用失败")
+    return text
