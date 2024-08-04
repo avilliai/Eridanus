@@ -17,7 +17,7 @@
 
 2.yiriob目前无法在py39使用，请使用py3.11。
 
-3.yiriob的默认Logger级别是DEBUG，会导致大量日志输出影响调试。你可以修改`.venv/Lib/site-packages/yiriob/utils/logger.py`
+3.yiriob的默认Logger级别是DEBUG，会出现大量日志输出影响调试。你可以修改`.venv/Lib/site-packages/yiriob/utils/logger.py`
 ```python
 logging.basicConfig(
     level=logging.INFO,           #这里，修改为logging.INFO即可。
@@ -29,5 +29,20 @@ logger = logging.getLogger("yiri-bot")
 __all__ = ["logger", "pprint"]
 ```
 
-4.在yirimirai编写代码的大部分思路在这里都是可以使用的。目前的任务集中在原Manyana/run文件夹下文件的重写
-
+4.在yirimirai编写代码的大部分思路在这里都是可以使用的。目前的任务集中在原Manyana/run文件夹下文件的重写<br>
+yirimirai和yirionebot十分相似，以下面的代码为例，在很多地方你都可以使用你的开发工具直接替换对应的文本。
+```python
+@bus.on(GroupMessageEvent)
+async def test(event:GroupMessageEvent):
+    if event.raw_message=="你好":
+        print(event.sender.user_id)
+        await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("hello word")]) #Reply(str(event.message_id))即为引用
+```
+等价于
+```python
+@bot.on(GroupMessage)
+async def test(event:GroupMessage):
+    if str(event.message_chain)=="你好":
+        print(event.sender.id)
+        await bot.send_group_message(event.group.id, "hello word",True)
+```
