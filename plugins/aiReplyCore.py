@@ -6,16 +6,13 @@ import re
 import copy
 # 注释
 import yaml
-from mirai import logger
 
-from plugins.RandomStr import random_str
-from plugins.ReplyModels import gptOfficial, gptUnofficial, kimi, qingyan, lingyi, stepAI, qwen, gptvvvv, grop, \
-    gpt4hahaha, anotherGPT35, chatGLM, relolimigpt2, xinghuo, Gemma, binggpt4, alcex_GPT3_5, freeGemini, catRep, \
+from plugins.ReplyModels import gptOfficial, gptUnofficial, anotherGPT35, chatGLM, Gemma, binggpt4, alcex_GPT3_5, catRep, \
     momoRep, sparkAI, wenxinAI, YuanQiTencent
 from plugins.googleGemini import geminirep
-from plugins.translater import translate
+from plugins.tookits import random_str, translate, newLogger
 from plugins.vitsGenerate import voiceGenerate, superVG
-
+logger=newLogger()
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     resulttr = yaml.load(f.read(), Loader=yaml.FullLoader)
 CoziUrl = resulttr.get("cozi")
@@ -24,7 +21,8 @@ berturl = resulttr.get("bert_colab")
 yuanqiBotId=resulttr.get("腾讯元器").get("智能体ID")
 yuanqiBotToken=resulttr.get("腾讯元器").get("token")
 #gemini
-geminiapikey = resulttr.get("gemini")
+geminiapikey = resulttr.get("gemini").get("gemini-keys")
+geminimodel=resulttr.get("gemini").get("gemini-model")
 #openai相关配置
 openai_transit = resulttr.get("openaiSettings").get("openai-transit")
 gptkeys = resulttr.get("openaiSettings").get("openai-keys")
@@ -33,18 +31,18 @@ openai_model = resulttr.get("openaiSettings").get("openai-model")
 proxy = resulttr.get("proxy")
 GeminiRevProxy = resulttr.get("GeminiRevProxy")
 #讯飞星火模型配置
-sparkAppKey=resulttr.get("sparkAI").get("apiKey")
-sparkAppSecret=resulttr.get("sparkAI").get("apiSecret")
-sparkModel=resulttr.get("sparkAI").get("spark-model")
+sparkAppKey=resulttr.get("讯飞星火").get("apiKey")
+sparkAppSecret=resulttr.get("讯飞星火").get("apiSecret")
+sparkModel=resulttr.get("讯飞星火").get("spark-model")
 #文心一言模型配置
-wenxinAppKey=resulttr.get("wenxinAI").get("apiKey")
-wenxinAppSecret=resulttr.get("wenxinAI").get("secretKey")
-wenxinModel=resulttr.get("wenxinAI").get("wenxin-model")
+wenxinAppKey=resulttr.get("文心一言").get("apiKey")
+wenxinAppSecret=resulttr.get("文心一言").get("secretKey")
+wenxinModel=resulttr.get("文心一言").get("wenxin-model")
 if proxy != "":
     os.environ["http_proxy"] = proxy
 
 chatGLM_api_key = resulttr.get("chatGLM")
-with open('config.json', 'r', encoding='utf-8') as f:
+with open('config.yaml', 'r', encoding='utf-8') as f:
     data = yaml.load(f.read(), Loader=yaml.FullLoader)
 config = data
 try:
@@ -52,27 +50,27 @@ try:
 except:
     logger.error("致命错误！mainGroup只能填写一个群的群号!")
     mainGroup = 0
-botName = config.get("botName")
-botqq = int(config.get("botQQ"))
+botName = config.get("机器人名字")
+botqq = int(config.get("机器人QQ"))
 with open('config/settings.yaml', 'r', encoding='utf-8') as f:
     result = yaml.load(f.read(), Loader=yaml.FullLoader)
 voicegg = result.get("语音功能设置").get("voicegenerate")
 friendsAndGroups = result.get("加群和好友")
 trustDays = friendsAndGroups.get("trustDays")
-glmReply = result.get("chatGLM").get("glmReply")
-modelDefault = result.get("chatGLM").get("model")
-privateGlmReply = result.get("chatGLM").get("privateGlmReply")
-randomModelPriority = result.get("chatGLM").get("randomModel&&&Priority")
-autoClearWhenError=result.get("chatGLM").get("AutoClearWhenError")
-replyModel = result.get("chatGLM").get("model")
-trustglmReply = result.get("chatGLM").get("trustglmReply")
-maxPrompt = result.get("chatGLM").get("maxPrompt")
+glmReply = result.get("对话模型设置").get("glmReply")
+modelDefault = result.get("对话模型设置").get("model")
+privateGlmReply = result.get("对话模型设置").get("privateGlmReply")
+randomModelPriority = result.get("对话模型设置").get("randomModel&&&Priority")
+autoClearWhenError=result.get("对话模型设置").get("AutoClearWhenError")
+replyModel = result.get("对话模型设置").get("model")
+trustglmReply = result.get("对话模型设置").get("trustglmReply")
+maxPrompt = result.get("对话模型设置").get("maxPrompt")
 voiceLangType = str(result.get("语音功能设置").get("voiceLangType"))
-allcharacters = result.get("chatGLM").get("bot_info")
-maxTextLen = result.get("chatGLM").get("maxLen")
-voiceRate = result.get("chatGLM").get("voiceRate")
+allcharacters = result.get("对话模型设置").get("bot_info")
+maxTextLen = result.get("对话模型设置").get("maxLen")
+voiceRate = result.get("对话模型设置").get("voiceRate")
 speaker = result.get("语音功能设置").get("speaker")
-withText = result.get("chatGLM").get("withText")
+withText = result.get("对话模型设置").get("withText")
 newLoop = asyncio.new_event_loop()
 global chatGLMData
 with open('data/chatGLMData.yaml', 'r', encoding='utf-8') as f:
@@ -128,7 +126,7 @@ async def modelReply(senderName, senderId, text, modelHere=modelDefault, trustUs
         if type(allcharacters.get(modelHere)) == dict:
             with open('config/settings.yaml', 'r', encoding='utf-8') as f:
                 resy = yaml.load(f.read(), Loader=yaml.FullLoader)
-            meta1 = resy.get("chatGLM").get("bot_info").get(modelHere)
+            meta1 = resy.get("对话模型设置").get("bot_info").get(modelHere)
             meta1["user_name"] = senderName
             meta1["user_info"] = meta1.get("user_info").replace("【用户】", senderName).replace("【bot】",
                                                                                               botName)
@@ -256,13 +254,13 @@ async def modelReply(senderName, senderId, text, modelHere=modelDefault, trustUs
             if type(rep) == list:
                 return "模型不可用，请更换模型。"
         elif modelHere == "Gemini":
-            r = await geminirep(ak=random.choice(geminiapikey), messages=prompt1, bot_info=bot_in,
+            r = await geminirep(ak=random.choice(geminiapikey), messages=prompt1, bot_info=bot_in,geminiModel=geminimodel,
                                 GeminiRevProxy=GeminiRevProxy, imgurls=imgurls),
             # print(r,type(r))
             rep = {"role": "assistant", "content": r[0].replace(r"\n", "\n")}
-        elif modelHere=="sparkAI" or modelHere=="讯飞星火":
+        elif modelHere=="讯飞星火":
             rep=await sparkAI(prompt1, bot_in,sparkAppKey,sparkAppSecret,sparkModel)
-        elif modelHere=="wenxinAI" or modelHere=="文心一言":
+        elif modelHere=="文心一言":
             rep=await wenxinAI(prompt1,bot_in,wenxinAppKey,wenxinAppSecret,wenxinModel)
         elif type(allcharacters.get(modelHere)) == dict:
             if (str(senderId) not in trustUser and trustglmReply) and trustUser is not None:

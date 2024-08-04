@@ -3,13 +3,17 @@ import asyncio
 import datetime
 import os
 import random
-import shutil
+
 import threading
 from asyncio import sleep
 
 import yaml
+from yiriob.event.events import GroupMessageEvent, PrivateMessageEvent
+from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams
+from yiriob.message import MessageChain, Text, At, Reply
 
 from plugins.aiReplyCore import modelReply, clearAllPrompts, tstt, clearsinglePrompt
+from plugins.tookits import check_cq_atcode, extract_image_urls
 from plugins.wReply.wontRep import wontrep
 
 
@@ -25,7 +29,10 @@ class CListen(threading.Thread):
         self.mLoop.run_forever()
 
 
-def main(bot, master, logger):
+def main(bot, bus, logger):
+    with open('config.yaml', 'r', encoding='utf-8') as f:
+        conf = yaml.load(f.read(), Loader=yaml.FullLoader)
+    master=conf["master"]
     with open('config/autoSettings.yaml', 'r', encoding='utf-8') as f:
         resul = yaml.load(f.read(), Loader=yaml.FullLoader)
     global trustG
@@ -54,49 +61,23 @@ def main(bot, master, logger):
         result = yaml.load(f.read(), Loader=yaml.FullLoader)
     friendsAndGroups = result.get("加群和好友")
     trustDays = friendsAndGroups.get("trustDays")
-    glmReply = result.get("chatGLM").get("glmReply")
-    privateGlmReply = result.get("chatGLM").get("privateGlmReply")
-    nudgeornot = result.get("chatGLM").get("nudgeReply")
-    replyModel = result.get("chatGLM").get("model")
-    trustglmReply = result.get("chatGLM").get("trustglmReply")
-    allcharacters = result.get("chatGLM").get("bot_info")
-    allowUserSetModel = result.get("chatGLM").get("allowUserSetModel")
-    maxTextLen = result.get("chatGLM").get("maxLen")
-    voiceRate = result.get("chatGLM").get("voiceRate")
-    withText = result.get("chatGLM").get("withText")
+    glmReply = result.get("对话模型设置").get("glmReply")
+    privateGlmReply = result.get("对话模型设置").get("privateGlmReply")
+    nudgeornot = result.get("对话模型设置").get("nudgeReply")
+    replyModel = result.get("对话模型设置").get("model")
+    trustglmReply = result.get("对话模型设置").get("trustglmReply")
+    allcharacters = result.get("对话模型设置").get("bot_info")
+    allowUserSetModel = result.get("对话模型设置").get("allowUserSetModel")
+    maxTextLen = result.get("对话模型设置").get("maxLen")
+    voiceRate = result.get("对话模型设置").get("voiceRate")
+    withText = result.get("对话模型设置").get("withText")
 
-    with open('config.json', 'r', encoding='utf-8') as f:
-        data = yaml.load(f.read(), Loader=yaml.FullLoader)
-    config = data
-    global mainGroup
-    try:
-        mainGroup = int(config.get("mainGroup"))
-    except:
-        logger.error("致命错误！mainGroup只能填写一个群的群号!")
-        mainGroup = 0
-    try:
-        with open('data/userData.yaml', 'r', encoding='utf-8') as file:
-            data = yaml.load(file, Loader=yaml.FullLoader)
-    except Exception as e:
-        #logger.error(e)
-        logger.error("用户数据文件出错，自动使用最新备用文件替换")
-        logger.warning(
-            "备份文件在temp/userDataBack文件夹下，如数据不正确，请手动使用更早的备份，重命名并替换data/userData.yaml")
-        directory = 'temp/userDataBack'
 
-        # 列出文件夹中的所有文件，并按日期排序
-        files = sorted(
-            [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))],
-            key=lambda x: datetime.datetime.strptime(os.path.splitext(x)[0], '%Y_%m_%d'),
-            reverse=True
-        )
-        # 列表中的第一个文件将是日期最新的文件
-        latest_file = files[0] if files else None
-        logger.warning(f'The latest file is: {latest_file}')
 
-        shutil.copyfile(f'{directory}/{latest_file}', 'data/userData.yaml')
-        with open('data/userData.yaml', 'r', encoding='utf-8') as file:
-            data = yaml.load(file, Loader=yaml.FullLoader)
+    
+    
+    with open('data/userData.yaml', 'r', encoding='utf-8') as file:
+        data = yaml.load(file, Loader=yaml.FullLoader)
     global trustUser
     global userdict
     userdict = data
@@ -122,22 +103,32 @@ def main(bot, master, logger):
     global chattingUser
     chattingUser={} #无需艾特即可对话的用户列表
     timeout = datetime.timedelta(minutes=5) #5分钟没有对话则超时
-    @bot.on(GroupMessage)
-    async def AddChatWithoutAt(event: GroupMessage):
-        if str(event.message_chain)=="开始对话" or str(event.message_chain)=="开始聊天":
+    @bus.on(GroupMessageEvent)
+    async def AddChatWithoutAt(event:GroupMessageEvent):
+        if check_cq_atcode(event.raw_message,bot.id)==False:
+            return
+        if check_cq_atcode(event.raw_message,bot.id)=="开始对话" or check_cq_atcode(event.raw_message,bot.id)=="开始聊天":
             global chattingUser
-            user = str(event.sender.id)
+            user = str(event.sender.user_id)
             chattingUser[user] = datetime.datetime.now()
-            await bot.send(event, "发送 退出 可退出当前对话",True)
-    @bot.on(GroupMessage)
-    async def removeChatWithoutAt(event: GroupMessage):
+            await bot.adapter.call_api(
+                SendGroupMessageInterface,
+                SendGroupMessageParams(
+                    group_id=event.group_id, message=MessageChain([Reply(str(event.message_id)),Text("发送 退出 可退出当前对话")])
+                ),
+            )
+    @bus.on(GroupMessageEvent)
+    async def removeChatWithoutAt(event:GroupMessageEvent):
         global chattingUser
-        if str(event.message_chain)=="退出" and str(event.sender.id) in chattingUser:
-            user = str(event.sender.id)
+        if check_cq_atcode(event.raw_message,bot.id)==False:
+            return
+        if check_cq_atcode(event.raw_message,bot.id)=="退出" and str(event.sender.user_id) in chattingUser:
+            user = str(event.sender.user_id)
             chattingUser.pop(user)
-            await bot.send(event, "已结束当前对话",True)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("已结束当前对话")])
 
-    @bot.on(NudgeEvent)
+
+    '''@bot.on(NudgeEvent)
     async def NudgeReply(event: NudgeEvent):
         global trustUser
         #戳一戳使用ai回复的话，和这部分放在一起会更好。
@@ -162,125 +153,139 @@ def main(bot, master, logger):
                     logger.error("语音合成调用失败")
                     await bot.send_group_message(event.subject.id, r)
             else:
-                await bot.send_group_message(event.subject.id, r)
+                await bot.send_group_message(event.subject.id, r)'''
 
     # 私聊使用chatGLM,对信任用户或配置了apiKey的用户开启
-    @bot.on(FriendMessage)
-    async def GLMFriendChat(event: FriendMessage):
+    @bus.on(PrivateMessageEvent)
+    async def GLMFriendChat(event: PrivateMessageEvent):
         # 用非常丑陋的复制粘贴临时解决bug，这下成石山代码了
+        if check_cq_atcode(event.raw_message,bot.id)==False:
+            return
         global chatGLMData, chatGLMCharacters, trustUser, userdict
-        text = str(event.message_chain)
+        text = check_cq_atcode(event.raw_message,bot.id)
         if text == "/clear":
             return
-        if event.sender.id == master:
+        if event.sender.user_id == master:
             noresm = ["群列表", "/bl", "退群#", "/quit"]
             for saa in noresm:
                 if text == saa or text.startswith(saa):
                     logger.warning("与屏蔽词匹配，不回复")
                     return
-        if privateGlmReply or (trustglmReply and str(event.sender.id) in trustUser):
+        if privateGlmReply or (trustglmReply and str(event.sender.user_id) in trustUser):
             pass
         else:
             return
-        text = str(event.message_chain)
-        imgurl = None
-        if event.message_chain.count(Image):
-            lst_img = event.message_chain.get(Image)
-            imgurl = []
-            for i in lst_img:
-                url = i.url
-                imgurl.append(url)
-                # print(url)
-        if event.sender.id in chatGLMCharacters:
-            print(type(chatGLMCharacters.get(event.sender.id)), chatGLMCharacters.get(event.sender.id))
-            r, firstRep = await modelReply(event.sender.nickname, event.sender.id, text,
-                                           chatGLMCharacters.get(event.sender.id), trustUser, imgurl,checkIfRepFirstTime=True)
+        text = check_cq_atcode(event.raw_message,bot.id)
+        imgurl = extract_image_urls(event.raw_message)
+
+        if event.sender.user_id in chatGLMCharacters:
+            print(type(chatGLMCharacters.get(event.sender.user_id)), chatGLMCharacters.get(event.sender.user_id))
+            r, firstRep = await modelReply(event.sender.nickname, event.sender.user_id, text,
+                                           chatGLMCharacters.get(event.sender.user_id), trustUser, imgurl,checkIfRepFirstTime=True)
         # 判断模型
         else:
-            r, firstRep = await modelReply(event.sender.nickname, event.sender.id, text, replyModel, trustUser,imgurl,
+            r, firstRep = await modelReply(event.sender.nickname, event.sender.user_id, text, replyModel, trustUser,imgurl,
                                            checkIfRepFirstTime=True)
         if firstRep:
-            await bot.send(event, "如对话异常请发送 /clear 以清理对话", True)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("如对话异常请发送 /clear 以清理对话")])
         if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
             try:
-                voiceP = await tstt(r)
-                await bot.send(event, Voice(path=voiceP))
+                #voiceP = await tstt(r)
+                #await bot.send(event, Voice(path=voiceP))
                 if withText:
-                    await bot.send(event, r, True)
+                    await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                                  Text(r)])
             except:
                 logger.error("语音合成调用失败")
-                await bot.send(event, r, True)
+                await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                              Text(r)])
         else:
-            await bot.send(event, r, True)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                          Text(r)])
 
     # 私聊中chatGLM清除本地缓存
-    @bot.on(FriendMessage)
-    async def clearPrompt(event: FriendMessage):
+    @bus.on(PrivateMessageEvent)
+    async def clearPrompt(event: PrivateMessageEvent):
         global chatGLMData, coziData
-        if str(event.message_chain) == "/clear":
-            reff = await clearsinglePrompt(event.sender.id)
-            await bot.send(event, reff, True)
-        elif str(event.message_chain) == "/allclear" and event.sender.id == master:
+        if check_cq_atcode(event.raw_message,bot.id) == "/clear":
+            reff = await clearsinglePrompt(event.sender.user_id)
+            await bot.send_friend_message(event.sender.user_id, [Text(reff)])
+        elif check_cq_atcode(event.raw_message,bot.id) == "/allclear" and event.sender.user_id == master:
             reff = await clearAllPrompts()
-            await bot.send(event, reff, True)
+            await bot.send_friend_message(event.sender.user_id, [Text(reff)])
 
     # 私聊设置bot角色
     # print(trustUser)
-    @bot.on(FriendMessage)
-    async def showCharacter(event: FriendMessage):
-        if str(event.message_chain) == "可用角色模板" or "角色模板" in str(event.message_chain):
+    @bus.on(PrivateMessageEvent)
+    async def showCharacter(event: PrivateMessageEvent):
+        if check_cq_atcode(event.raw_message,bot.id) == "可用角色模板" or "角色模板" in check_cq_atcode(event.raw_message,bot.id):
             st1 = ""
             for isa in allcharacters:
                 st1 += isa + "\n"
-            await bot.send(event, "对话可用角色模板：\n" + st1 + "\n发送：设定#角色名 以设定角色")
+            await bot.send_friend_message(event.sender.user_id, [Text("对话可用角色模板：\n" + st1 + "\n发送：设定#角色名 以设定角色")])
 
-    @bot.on(FriendMessage)
-    async def setCharacter(event: FriendMessage):
+
+    @bus.on(PrivateMessageEvent)
+    async def setCharacter(event: PrivateMessageEvent):
+        if check_cq_atcode(event.raw_message,bot.id)==False:
+            return
         global chatGLMCharacters
-        if str(event.message_chain).startswith("设定#"):
-            if str(event.message_chain).split("#")[1] in allcharacters and allowUserSetModel:
-                meta12 = str(event.message_chain).split("#")[1]
+        if check_cq_atcode(event.raw_message,bot.id).startswith("设定#"):
+            if check_cq_atcode(event.raw_message,bot.id).split("#")[1] in allcharacters and allowUserSetModel:
+                meta12 = check_cq_atcode(event.raw_message,bot.id).split("#")[1]
 
-                chatGLMCharacters[event.sender.id] = meta12
+                chatGLMCharacters[event.sender.user_id] = meta12
                 logger.info("当前：" + str(chatGLMCharacters))
                 with open('data/chatGLMCharacters.yaml', 'w', encoding="utf-8") as file:
                     yaml.dump(chatGLMCharacters, file, allow_unicode=True)
-                await bot.send(event, "设定成功")
+                await bot.send_friend_message(event.sender.user_id,
+                                              [Text("设定成功")])
             else:
                 if allowUserSetModel:
+                    await bot.send_friend_message(event.sender.user_id,[Text("不存在的角色")])
                     await bot.send(event, "不存在的角色")
                 else:
-                    await bot.send(event, "禁止用户自行设定模型(可联系master修改配置)")
+                    await bot.send_friend_message(event.sender.user_id,[Text("禁止用户自行设定模型(可联系master修改配置)")])
 
     # print(trustUser)
-    @bot.on(GroupMessage)
-    async def showCharacter(event: GroupMessage):
-        if str(event.message_chain) == "可用角色模板" or (
-                At(bot.qq) in event.message_chain and "角色模板" in str(event.message_chain)):
+    @bus.on(GroupMessageEvent)
+    async def showCharacter(event:GroupMessageEvent):
+        if check_cq_atcode(event.raw_message,bot.id) == "可用角色模板" or (
+                check_cq_atcode(event.raw_message,bot.id)!=False and "角色模板" in check_cq_atcode(event.raw_message,bot.id)):
             st1 = ""
             for isa in allcharacters:
                 st1 += isa + "\n"
-            await bot.send(event, "对话可用角色模板：\n" + st1 + "\n发送：设定#角色名 以设定角色")
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                          Text("对话可用角色模板：\n" + st1 + "\n发送：设定#角色名 以设定角色")])
 
-    @bot.on(GroupMessage)
-    async def setCharacter(event: GroupMessage):
+
+    @bus.on(GroupMessageEvent)
+    async def setCharacter(event:GroupMessageEvent):
         global chatGLMCharacters, userdict
-        if str(event.message_chain).startswith("设定#"):
-            if str(event.message_chain).split("#")[1] in allcharacters and allowUserSetModel:
-                meta12 = str(event.message_chain).split("#")[1]
+        if check_cq_atcode(event.raw_message,bot.id)==False:
+            return
+        if check_cq_atcode(event.raw_message,bot.id).startswith("设定#"):
+            if check_cq_atcode(event.raw_message,bot.id).split("#")[1] in allcharacters and allowUserSetModel:
+                meta12 = check_cq_atcode(event.raw_message,bot.id).split("#")[1]
 
-                chatGLMCharacters[event.sender.id] = meta12
+                chatGLMCharacters[event.sender.user_id] = meta12
                 logger.info("当前：" + str(chatGLMCharacters))
                 with open('data/chatGLMCharacters.yaml', 'w', encoding="utf-8") as file:
                     yaml.dump(chatGLMCharacters, file, allow_unicode=True)
-                await bot.send(event, "设定成功")
+                await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                              Text(
+                                                                  "设定成功")])
             else:
                 if allowUserSetModel:
-                    await bot.send(event, "不存在的角色")
+                    await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                                  Text(
+                                                                      "不存在的角色")])
                 else:
-                    await bot.send(event, "禁止用户自行设定模型(可联系master修改配置)")
+                    await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                                  Text(
+                                                                      "禁止用户自行设定模型(可联系master修改配置)")])
 
-    @bot.on(Startup)
+    '''@bus.on(Start)
     async def upDate(event: Startup):
         while True:
             await sleep(60)
@@ -301,10 +306,12 @@ def main(bot, master, logger):
             to_remove = [user for user, timestamp in chattingUser.items() if now - timestamp > timeout]
             for user in to_remove:
                 del chattingUser[user]
-                logger.info(f"Removed user {user} due to inactivity")
-    @bot.on(GroupMessage)
-    async def upddd(event: GroupMessage):
-        if str(event.message_chain).startswith("授权") and event.sender.id == master:
+                logger.info(f"Removed user {user} due to inactivity")'''
+    @bus.on(GroupMessageEvent)
+    async def upddd(event:GroupMessageEvent):
+        if check_cq_atcode(event.raw_message,bot.id)==False:
+            return
+        if check_cq_atcode(event.raw_message,bot.id).startswith("授权") and event.sender.user_id == master:
             await sleep(15)
             with open('config/autoSettings.yaml', 'r', encoding='utf-8') as f:
                 resul = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -324,63 +331,58 @@ def main(bot, master, logger):
             logger.info('已读取信任用户' + str(len(trustUser)) + '个')
 
     # 群内chatGLM回复
-    @bot.on(GroupMessage)
-    async def atReply(event: GroupMessage):
+    @bus.on(GroupMessageEvent)
+    async def atReply(event:GroupMessageEvent):
         global trustUser, chatGLMData, chatGLMCharacters, userdict, coziData, trustG,chattingUser
-        if At(bot.qq) in event.message_chain or str(event.sender.id) in chattingUser:
+        if check_cq_atcode(event.raw_message,bot.id)!=False or str(event.sender.user_id) in chattingUser:
             try:
-                if not wontrep(noRes1, str(event.message_chain).replace(str(At(bot.qq)), "").replace(" ", ""),
+                if not wontrep(noRes1, check_cq_atcode(event.raw_message,bot.id).replace(" ", ""),
                                logger):
                     return
             except Exception as e:
                 logger.error(f"无法运行屏蔽词审核，请检查noResponse.yaml配置格式--{e}")
-        if (At(bot.qq) in event.message_chain or str(event.sender.id) in chattingUser) and (glmReply or (trustglmReply and str(
-                event.sender.id) in trustUser) or event.group.id in trustG or event.group.id == int(mainGroup)):
+        if (check_cq_atcode(event.raw_message,bot.id)!=False or str(event.sender.user_id) in chattingUser) and (glmReply or (trustglmReply and str(
+                event.sender.user_id) in trustUser) or event.group.id in trustG):
             logger.info("ai聊天启动")
         else:
             return
-        text = str(event.message_chain).replace("@" + str(bot.qq) + "", '')
-        imgurl = None
-        if event.message_chain.count(Image):
-            lst_img = event.message_chain.get(Image)
-            imgurl = []
-            for i in lst_img:
-                url = i.url
-                imgurl.append(url)
-                #print(url)
-        if event.sender.id in chatGLMCharacters:
-            print(type(chatGLMCharacters.get(event.sender.id)), chatGLMCharacters.get(event.sender.id))
-            r, firstRep = await modelReply(event.sender.member_name, event.sender.id, text,
-                                           chatGLMCharacters.get(event.sender.id), trustUser, imgurl,True)
+        text = check_cq_atcode(event.raw_message,bot.id)
+        imgurl = extract_image_urls(event.raw_message)
+        if event.sender.user_id in chatGLMCharacters:
+            print(type(chatGLMCharacters.get(event.sender.user_id)), chatGLMCharacters.get(event.sender.user_id))
+            r, firstRep = await modelReply(event.sender.nickname, event.sender.user_id, text,
+                                           chatGLMCharacters.get(event.sender.user_id), trustUser, imgurl,True)
         # 判断模型
         else:
-            r, firstRep = await modelReply(event.sender.member_name, event.sender.id, text, replyModel, trustUser, imgurl,True)
+            r, firstRep = await modelReply(event.sender.nickname, event.sender.user_id, text, replyModel, trustUser, imgurl,True)
         if firstRep:
-            await bot.send(event, "如对话异常请发送 /clear", True)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
+                                                          Text(
+                                                              "如对话异常请发送 /clear")])
         #刷新时间
-        user = str(event.sender.id)
+        user = str(event.sender.user_id)
         if user in chattingUser:
             chattingUser[user] = datetime.datetime.now()
         if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
             try:
-                voiceP = await tstt(r)
-                await bot.send(event, Voice(path=voiceP))
+                #voiceP = await tstt(r)
+                #await bot.send(event, Voice(path=voiceP))
                 if withText:
-                    await bot.send(event, r, True)
+                    await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),Text(r)])
             except Exception as e:
                 logger.error(e)
                 logger.error("语音合成失败")
-                await bot.send(event, r, True)
+                await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),Text(r)])
         else:
-            await bot.send(event, r, True)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),Text(r)])
 
     # 用于chatGLM清除本地缓存
-    @bot.on(GroupMessage)
-    async def clearPrompt(event: GroupMessage):
+    @bus.on(GroupMessageEvent)
+    async def clearPrompt(event:GroupMessageEvent):
         global chatGLMData, coziData
-        if str(event.message_chain) == "/clear":
-            reff = await clearsinglePrompt(event.sender.id)
-            await bot.send(event, reff, True)
-        elif str(event.message_chain) == "/allclear" and event.sender.id == master:
+        if check_cq_atcode(event.raw_message,bot.id) == "/clear":
+            reff = await clearsinglePrompt(event.sender.user_id)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text(reff)])
+        elif check_cq_atcode(event.raw_message,bot.id) == "/allclear" and event.sender.user_id == master:
             reff = await clearAllPrompts()
-            await bot.send(event, reff, True)
+            await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text(reff)])

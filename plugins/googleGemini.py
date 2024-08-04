@@ -9,8 +9,7 @@ import copy
 import google.generativeai as genai
 import httpx
 
-from plugins.RandomStr import random_str
-from plugins.gacha import get_headers
+
 
 
 #官方sdk的prompt和使用post请求的prompt结构不同，需要进行转换
@@ -101,7 +100,7 @@ async def GeminiDownloadAllImagesAndSetPrompts(imgurls, rev=False):
                     pass
                     #print(f"Failed to download and process image from {i} after 3 attempts")
     return imgresults
-async def geminirep(ak, messages, bot_info, GeminiRevProxy="",imgurls=None):
+async def geminirep(ak, messages, bot_info, geminiModel="gemini-1.5-flash",GeminiRevProxy="",imgurls=None):
     messages_copy = copy.deepcopy(messages)
 
     # 在副本上进行操作
@@ -117,7 +116,7 @@ async def geminirep(ak, messages, bot_info, GeminiRevProxy="",imgurls=None):
         imgPromptResults=await GeminiDownloadAllImagesAndSetPrompts(imgurls,rev)
     if GeminiRevProxy == "" or GeminiRevProxy == " ":
         # Or use `os.getenv('GOOGLE_API_KEY')` to fetch an environment variable.
-        model1 = "gemini-1.5-flash"
+        model1 = geminiModel
 
         GOOGLE_API_KEY = ak
 

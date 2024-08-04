@@ -1,5 +1,6 @@
 import logging
 import random
+import re
 
 import colorlog
 import httpx
@@ -13,6 +14,8 @@ newLogger()           日志需要用到，但只用一次即可，重复调用�
 await translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式。需要异步调用
 random_str()          生成六位随机字符串，用以文件命名
 get_headers()         返回一个UA，网络请求使用
+check_cq_atcode(event.raw_message,bot.id)  检查CQ码中是否包含at bot的信息
+extract_image_urls(event.raw_message)      返回event.raw_message中所有图片的url
 '''
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     apiYaml = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -39,7 +42,7 @@ def lanzouFileToUrl(path):
         url=r.durl
     lzy.upload_file(path, -1, callback=show_progress,uploaded_handler=handler)
     return url
-def newLogger():
+def createLogger():
     # 创建一个logger对象
     logger = logging.getLogger("Manayana")
     # 设置日志级别为DEBUG，这样可以输出所有级别的日志
@@ -129,3 +132,24 @@ def get_headers():
     userAgent = random.choice(user_agent_list)
     headers = {'User-Agent': userAgent}
     return headers
+
+def check_cq_atcode(cq_code, bot_qq):
+    # 正则表达式匹配 [CQ:at,qq=bot_qq]
+    match = re.search(r'\[CQ:at,qq=(\d+)\]', cq_code)
+    if match:
+        qq_number = match.group(1)
+        if qq_number == str(bot_qq):
+            # 使用正则表达式去除所有 CQ 码部分
+            message = re.sub(r'\[.*?\]', '', cq_code).strip()
+            return message
+    return False
+def extract_image_urls(text):
+    # 正则表达式匹配所有 CQ:image 并提取 url 参数的值
+    urls = re.findall(r'\[CQ:image,[^\]]*url=([^,^\]]+)', text)
+
+    if urls:
+        return urls
+    return None
+logger=createLogger()
+def newLogger():
+    return logger
