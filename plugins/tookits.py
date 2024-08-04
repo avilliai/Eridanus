@@ -1,6 +1,8 @@
+import asyncio
 import logging
 import random
 import re
+import threading
 
 import colorlog
 import httpx
@@ -153,3 +155,13 @@ def extract_image_urls(text):
 logger=createLogger()
 def newLogger():
     return logger
+
+class CListen(threading.Thread):
+    def __init__(self, loop):
+        threading.Thread.__init__(self)
+        self.mLoop = loop
+
+    def run(self):
+        asyncio.set_event_loop(self.mLoop)  # 在新线程中开启一个事件循环
+
+        self.mLoop.run_forever()

@@ -13,21 +13,8 @@ from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams
 from yiriob.message import MessageChain, Text, At, Reply
 
 from plugins.aiReplyCore import modelReply, clearAllPrompts, tstt, clearsinglePrompt
-from plugins.tookits import check_cq_atcode, extract_image_urls
+from plugins.tookits import check_cq_atcode, extract_image_urls, CListen
 from plugins.wReply.wontRep import wontrep
-
-
-# 1
-class CListen(threading.Thread):
-    def __init__(self, loop):
-        threading.Thread.__init__(self)
-        self.mLoop = loop
-
-    def run(self):
-        asyncio.set_event_loop(self.mLoop)  # 在新线程中开启一个事件循环
-
-        self.mLoop.run_forever()
-
 
 def main(bot, bus, logger):
     with open('config.yaml', 'r', encoding='utf-8') as f:
