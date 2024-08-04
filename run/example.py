@@ -14,12 +14,10 @@ def main(bot,bus,logger):
 
     @bus.on(GroupMessageEvent)
     async def on_group_message(event: GroupMessageEvent) -> None:
-        if event.sender.user_id!=1840094972:
-            return
         logger.info(event)
         logger.info(event.message)
         logger.info(event.raw_message)
-        print(check_cq_atcode(event.raw_message,bot.id)) #此函数用于检查是否包含at bot
+        print(check_cq_atcode(event.raw_message,bot.id)) #此函数用于检查是否包含at bot,有艾特则去除CQ码并返回文本(可能为空文本)
         if event.raw_message=="你好":
             logger.info("ok")
             #几个参数分别是，艾特，文本，引用回复
