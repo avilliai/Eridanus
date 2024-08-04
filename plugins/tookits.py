@@ -1,4 +1,5 @@
 import logging
+import random
 
 import colorlog
 import httpx
@@ -6,10 +7,12 @@ import requests
 import yaml
 from lanzou.api import LanZouCloud
 
-'''
+'''此处用以集合常用的工具
 lanzouFileToUrl(path) 用以上传文件转直链
 newLogger()           日志需要用到，但只用一次即可，重复调用会重复创建对象，我不建议重复调用
-translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式
+await translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模式。需要异步调用
+random_str()          生成六位随机字符串，用以文件命名
+get_headers()         返回一个UA，网络请求使用
 '''
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     apiYaml = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -88,3 +91,41 @@ async def translate(text, mode="ZH_CN2JA"):
     except:
         print("翻译接口3调用失败")
     return text
+def random_str(random_length=6, chars='AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789@$#_%'):
+    """
+    生成随机字符串作为验证码
+    :param random_length: 字符串长度,默认为6
+    :return: 随机字符串
+    """
+    string = ''
+
+    length = len(chars) - 1
+    # random = Random()
+    # 设置循环每次取一个字符用来生成随机数
+    for i in range(7):
+        string += (chars[random.randint(0, length)])
+    return string
+def get_headers():
+    user_agent_list = [
+        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",
+        "Mozilla/5.0 (X11; CrOS i686 2268.111.0) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11",
+        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1092.0 Safari/536.6",
+        "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6",
+        "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/19.77.34.5 Safari/537.1",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.9 Safari/536.5",
+        "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.36 Safari/536.5",
+        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1063.0 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1063.0 Safari/536.3",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_0) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1063.0 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
+        "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.0 Safari/536.3",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
+        "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"]
+
+    userAgent = random.choice(user_agent_list)
+    headers = {'User-Agent': userAgent}
+    return headers
