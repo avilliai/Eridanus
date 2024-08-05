@@ -19,8 +19,8 @@ async translate(text,mode="ZH_CN2JA")  翻译接口，文本，以及翻译模�
 random_str()          生成六位随机字符串，用以文件命名
 get_headers()         返回一个UA，网络请求使用
 fileUrl(path)         返回file://协议下的文件地址，发送本地语音和图片用。传递对于main.py的相对路径。
-check_cq_atcode(event.raw_message,bot.id)  检查CQ码中是否包含at bot的信息
-wash_cqCode(cq_code)                       洗去CQ码，返回纯文本
+check_cq_atcode(event.raw_message,bot.id)  检查CQ码中是否包含at bot的信息，返回False或文本(去除所有CQ码，可能为"")
+wash_cqCode(cq_code)                       去除所有CQ码，返回纯文本
 extract_image_urls(event.raw_message)      返回event.raw_message中所有图片的url
 '''
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
