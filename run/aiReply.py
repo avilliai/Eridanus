@@ -13,7 +13,7 @@ from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams
 from yiriob.message import MessageChain, Text, At, Reply, Record
 
 from plugins.aiReplyCore import modelReply, clearAllPrompts, tstt, clearsinglePrompt
-from plugins.tookits import check_cq_atcode, extract_image_urls, CListen
+from plugins.tookits import check_cq_atcode, extract_image_urls, CListen, wash_cqCode
 from plugins.wReply.wontRep import wontrep
 
 def main(bot, bus, logger):
@@ -80,9 +80,7 @@ def main(bot, bus, logger):
     timeout = datetime.timedelta(minutes=5) #5分钟没有对话则超时
     @bus.on(GroupMessageEvent)
     async def AddChatWithoutAt(event:GroupMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id)==False:
-            return
-        if check_cq_atcode(event.raw_message,bot.id)=="开始对话" or check_cq_atcode(event.raw_message,bot.id)=="开始聊天":
+        if wash_cqCode(event.raw_message)=="开始对话" or wash_cqCode(event.raw_message)=="开始聊天":
             global chattingUser
             user = event.sender.user_id
             chattingUser[user] = datetime.datetime.now()
@@ -95,9 +93,7 @@ def main(bot, bus, logger):
     @bus.on(GroupMessageEvent)
     async def removeChatWithoutAt(event:GroupMessageEvent):
         global chattingUser
-        if check_cq_atcode(event.raw_message,bot.id)==False:
-            return
-        if check_cq_atcode(event.raw_message,bot.id)=="退出" and event.sender.user_id in chattingUser:
+        if wash_cqCode(event.raw_message)=="退出" and event.sender.user_id in chattingUser:
             user = event.sender.user_id
             chattingUser.pop(user)
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("已结束当前对话")])
@@ -133,10 +129,8 @@ def main(bot, bus, logger):
     # 私聊使用chatGLM,对信任用户或配置了apiKey的用户开启
     @bus.on(PrivateMessageEvent)
     async def GLMFriendChat(event: PrivateMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id)==False:
-            return
         global chatGLMCharacters, trustUser, userdict
-        text = check_cq_atcode(event.raw_message,bot.id)
+        text = wash_cqCode(event.raw_message)
         if text == "/clear":
             return
         if event.sender.user_id == master:
@@ -149,7 +143,7 @@ def main(bot, bus, logger):
             pass
         else:
             return
-        text = check_cq_atcode(event.raw_message,bot.id)
+        text = wash_cqCode(event.raw_message)
         imgurl = extract_image_urls(event.raw_message)
 
         if event.sender.user_id in chatGLMCharacters:
@@ -180,10 +174,10 @@ def main(bot, bus, logger):
     # 私聊中chatGLM清除本地缓存
     @bus.on(PrivateMessageEvent)
     async def clearPrompt(event: PrivateMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id) == "/clear":
+        if wash_cqCode(event.raw_message) == "/clear":
             reff = await clearsinglePrompt(event.sender.user_id)
             await bot.send_friend_message(event.sender.user_id, [Text(reff)])
-        elif check_cq_atcode(event.raw_message,bot.id) == "/allclear" and event.sender.user_id == master:
+        elif wash_cqCode(event.raw_message) == "/allclear" and event.sender.user_id == master:
             reff = await clearAllPrompts()
             await bot.send_friend_message(event.sender.user_id, [Text(reff)])
 
@@ -191,7 +185,7 @@ def main(bot, bus, logger):
     # print(trustUser)
     @bus.on(PrivateMessageEvent)
     async def showCharacter(event: PrivateMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id) == "可用角色模板" or "角色模板" in check_cq_atcode(event.raw_message,bot.id):
+        if wash_cqCode(event.raw_message) == "可用角色模板" :
             st1 = ""
             for isa in allcharacters:
                 st1 += isa + "\n"
@@ -200,12 +194,10 @@ def main(bot, bus, logger):
 
     @bus.on(PrivateMessageEvent)
     async def setCharacter(event: PrivateMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id)==False:
-            return
         global chatGLMCharacters
-        if check_cq_atcode(event.raw_message,bot.id).startswith("设定#"):
-            if check_cq_atcode(event.raw_message,bot.id).split("#")[1] in allcharacters and allowUserSetModel:
-                meta12 = check_cq_atcode(event.raw_message,bot.id).split("#")[1]
+        if wash_cqCode(event.raw_message).startswith("设定#"):
+            if wash_cqCode(event.raw_message).split("#")[1] in allcharacters and allowUserSetModel:
+                meta12 = wash_cqCode(event.raw_message).split("#")[1]
 
                 chatGLMCharacters[event.sender.user_id] = meta12
                 logger.info("当前：" + str(chatGLMCharacters))
@@ -223,8 +215,7 @@ def main(bot, bus, logger):
     # print(trustUser)
     @bus.on(GroupMessageEvent)
     async def showCharacter(event:GroupMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id) == "可用角色模板" or (
-                check_cq_atcode(event.raw_message,bot.id)!=False and "角色模板" in check_cq_atcode(event.raw_message,bot.id)):
+        if wash_cqCode(event.raw_message) == "可用角色模板" :
             st1 = ""
             for isa in allcharacters:
                 st1 += isa + "\n"
@@ -235,11 +226,9 @@ def main(bot, bus, logger):
     @bus.on(GroupMessageEvent)
     async def setCharacter(event:GroupMessageEvent):
         global chatGLMCharacters, userdict
-        if check_cq_atcode(event.raw_message,bot.id)==False:
-            return
-        if check_cq_atcode(event.raw_message,bot.id).startswith("设定#"):
-            if check_cq_atcode(event.raw_message,bot.id).split("#")[1] in allcharacters and allowUserSetModel:
-                meta12 = check_cq_atcode(event.raw_message,bot.id).split("#")[1]
+        if wash_cqCode(event.raw_message).startswith("设定#"):
+            if wash_cqCode(event.raw_message).split("#")[1] in allcharacters and allowUserSetModel:
+                meta12 = wash_cqCode(event.raw_message).split("#")[1]
 
                 chatGLMCharacters[event.sender.user_id] = meta12
                 logger.info("当前：" + str(chatGLMCharacters))
@@ -282,9 +271,7 @@ def main(bot, bus, logger):
                 logger.info(f"Removed user {user} due to inactivity")'''
     @bus.on(GroupMessageEvent)
     async def upddd(event:GroupMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id)==False:
-            return
-        if check_cq_atcode(event.raw_message,bot.id).startswith("授权") and event.sender.user_id == master:
+        if wash_cqCode(event.raw_message).startswith("授权") and event.sender.user_id == master:
             await sleep(15)
             with open('config/autoSettings.yaml', 'r', encoding='utf-8') as f:
                 resul = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -309,7 +296,7 @@ def main(bot, bus, logger):
         global trustUser, chatGLMCharacters, userdict,trustG,chattingUser
         if check_cq_atcode(event.raw_message,bot.id)!=False or event.sender.user_id in chattingUser:
             try:
-                if not wontrep(noRes1, check_cq_atcode(event.raw_message,bot.id).replace(" ", ""),
+                if not wontrep(noRes1, wash_cqCode(event.raw_message).replace(" ", ""),
                                logger):
                     return
             except Exception as e:
@@ -319,7 +306,7 @@ def main(bot, bus, logger):
             logger.info("ai聊天启动")
         else:
             return
-        text = check_cq_atcode(event.raw_message,bot.id)
+        text = wash_cqCode(event.raw_message)
         imgurl = extract_image_urls(event.raw_message)
         if event.sender.user_id in chatGLMCharacters:
             print(type(chatGLMCharacters.get(event.sender.user_id)), chatGLMCharacters.get(event.sender.user_id))
@@ -352,9 +339,9 @@ def main(bot, bus, logger):
     # 用于chatGLM清除本地缓存
     @bus.on(GroupMessageEvent)
     async def clearPrompt(event:GroupMessageEvent):
-        if check_cq_atcode(event.raw_message,bot.id) == "/clear":
+        if wash_cqCode(event.raw_message) == "/clear":
             reff = await clearsinglePrompt(event.sender.user_id)
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text(reff)])
-        elif check_cq_atcode(event.raw_message,bot.id) == "/allclear" and event.sender.user_id == master:
+        elif wash_cqCode(event.raw_message) == "/allclear" and event.sender.user_id == master:
             reff = await clearAllPrompts()
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text(reff)])
