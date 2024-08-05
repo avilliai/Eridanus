@@ -76,3 +76,24 @@ await bot.send_group_message(event.group_id, [Record(file=file_url,url="")])
 await bot.send_group_message(event.group_id, [Record(file=fileUrl("plugins/output.wav"),url="")])
 ```
 完整的示例请查看run/example.py
+#### 6.一些小寄巧
+你可以直接替换一些内容，减少工作量
+```
+str(event.message_chain)
+换成
+wash_cqCode(event.raw_message)
+
+At(bot.qq) in event.message_chain
+换成
+check_cq_atcode(event.raw_message,bot.id)!=False
+
+@bot.on(GroupMessage)
+换成
+@bus.on(GroupMessageEvent)
+
+原先的
+async def func(event: GroupMessage):
+中的GroupMessage也需要全部换成GroupMessageEvent
+
+私聊同理，换成对应的事件。用查找并替换应该能减少不少工作量，还有一些其他的内容也可以这样做，比如event.sender.id换event.sender.user_id等。
+```
