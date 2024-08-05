@@ -25,7 +25,7 @@ def main(bot, bus, logger):
     global trustG
     trustG = resul.get("trustGroups")
     # 读取个性化角色设定
-    with open('data/chatGLMCharacters.yaml', 'r', encoding='utf-8') as f:
+    with open('data/ChatCharacters.yaml', 'r', encoding='utf-8') as f:
         result2223 = yaml.load(f.read(), Loader=yaml.FullLoader)
     global chatGLMCharacters
     chatGLMCharacters = result2223
@@ -209,7 +209,7 @@ def main(bot, bus, logger):
 
                 chatGLMCharacters[event.sender.user_id] = meta12
                 logger.info("当前：" + str(chatGLMCharacters))
-                with open('data/chatGLMCharacters.yaml', 'w', encoding="utf-8") as file:
+                with open('data/ChatCharacters.yaml', 'w', encoding="utf-8") as file:
                     yaml.dump(chatGLMCharacters, file, allow_unicode=True)
                 await bot.send_friend_message(event.sender.user_id,
                                               [Text("设定成功")])
@@ -243,7 +243,7 @@ def main(bot, bus, logger):
 
                 chatGLMCharacters[event.sender.user_id] = meta12
                 logger.info("当前：" + str(chatGLMCharacters))
-                with open('data/chatGLMCharacters.yaml', 'w', encoding="utf-8") as file:
+                with open('data/ChatCharacters.yaml', 'w', encoding="utf-8") as file:
                     yaml.dump(chatGLMCharacters, file, allow_unicode=True)
                 await bot.send_group_message(event.group_id, [Reply(str(event.message_id)),
                                                               Text(

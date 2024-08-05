@@ -74,7 +74,7 @@ speaker = result.get("语音功能设置").get("speaker")
 withText = result.get("对话模型设置").get("withText")
 newLoop = asyncio.new_event_loop()
 global chatGLMData
-with open('data/chatGLMData.yaml', 'r', encoding='utf-8') as f:
+with open('data/ChatData.yaml', 'r', encoding='utf-8') as f:
     cha = yaml.load(f.read(), Loader=yaml.FullLoader)
 
 chatGLMData = cha
@@ -280,7 +280,7 @@ async def modelReply(senderName, senderId, text, modelHere=modelDefault, trustUs
             del prompt1[0]
         chatGLMData[senderId] = prompt1
         # 写入文件
-        with open('data/chatGLMData.yaml', 'w', encoding="utf-8") as file:
+        with open('data/ChatData.yaml', 'w', encoding="utf-8") as file:
             yaml.dump(chatGLMData, file, allow_unicode=True)
         # print(rep.get('content'),type(rep.get('content')))
         # print(rep,type(rep))
@@ -308,7 +308,7 @@ async def clearsinglePrompt(senderid):
     try:
         chatGLMData.pop(senderid)
         # 写入文件
-        with open('data/chatGLMData.yaml', 'w', encoding="utf-8") as file:
+        with open('data/ChatData.yaml', 'w', encoding="utf-8") as file:
             yaml.dump(chatGLMData, file, allow_unicode=True)
         return "已清理近期记忆"
     except:
@@ -319,7 +319,7 @@ async def clearAllPrompts():
     try:
         chatGLMData = {"f": "hhh"}
         # 写入文件
-        with open('data/chatGLMData.yaml', 'w', encoding="utf-8") as file:
+        with open('data/ChatData.yaml', 'w', encoding="utf-8") as file:
             yaml.dump(chatGLMData, file, allow_unicode=True)
         # print(chatGLMData)
         return "已清除所有用户的prompt"
