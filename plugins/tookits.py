@@ -175,4 +175,4 @@ class CListen(threading.Thread):
 def fileUrl(path):
     image_path = Path(f"{os.getcwd()}/{path}")
     file_url = image_path.as_uri()
-    return file_url
+    return str(file_url)

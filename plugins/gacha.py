@@ -9,7 +9,7 @@ import httpx
 import yaml
 from PIL import Image
 
-from plugins.RandomStr import random_str
+from plugins.tookits import random_str
 
 
 async def bbbgacha(bbb):

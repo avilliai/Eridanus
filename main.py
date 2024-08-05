@@ -7,7 +7,7 @@ from yiriob.event import EventBus
 
 
 from plugins.tookits import newLogger
-from run import example, aiReply
+from run import example, aiReply,Fragments
 
 #读取配置
 with open('config.yaml', 'r', encoding='utf-8') as f:
@@ -23,7 +23,7 @@ bot = Bot(
 logger=newLogger()
 
 #与yiri mirai不同，我们需要传入bot和bus两个对象
-example.main(bot,bus,logger)  #这是一个测试示例，你可以参考它
+#example.main(bot,bus,logger)  #这是一个测试示例，你可以参考它
 aiReply.main(bot,bus,logger)  #ai回复功能
-
+Fragments.main(bot,bus,logger)
 bot.run()

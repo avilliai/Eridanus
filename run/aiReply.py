@@ -84,7 +84,7 @@ def main(bot, bus, logger):
             return
         if check_cq_atcode(event.raw_message,bot.id)=="开始对话" or check_cq_atcode(event.raw_message,bot.id)=="开始聊天":
             global chattingUser
-            user = str(event.sender.user_id)
+            user = event.sender.user_id
             chattingUser[user] = datetime.datetime.now()
             await bot.adapter.call_api(
                 SendGroupMessageInterface,
@@ -97,8 +97,8 @@ def main(bot, bus, logger):
         global chattingUser
         if check_cq_atcode(event.raw_message,bot.id)==False:
             return
-        if check_cq_atcode(event.raw_message,bot.id)=="退出" and str(event.sender.user_id) in chattingUser:
-            user = str(event.sender.user_id)
+        if check_cq_atcode(event.raw_message,bot.id)=="退出" and event.sender.user_id in chattingUser:
+            user = event.sender.user_id
             chattingUser.pop(user)
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("已结束当前对话")])
 
@@ -145,7 +145,7 @@ def main(bot, bus, logger):
                 if text == saa or text.startswith(saa):
                     logger.warning("与屏蔽词匹配，不回复")
                     return
-        if privateGlmReply or (trustglmReply and str(event.sender.user_id) in trustUser):
+        if privateGlmReply or (trustglmReply and event.sender.user_id in trustUser):
             pass
         else:
             return
@@ -307,14 +307,14 @@ def main(bot, bus, logger):
     @bus.on(GroupMessageEvent)
     async def atReply(event:GroupMessageEvent):
         global trustUser, chatGLMCharacters, userdict,trustG,chattingUser
-        if check_cq_atcode(event.raw_message,bot.id)!=False or str(event.sender.user_id) in chattingUser:
+        if check_cq_atcode(event.raw_message,bot.id)!=False or event.sender.user_id in chattingUser:
             try:
                 if not wontrep(noRes1, check_cq_atcode(event.raw_message,bot.id).replace(" ", ""),
                                logger):
                     return
             except Exception as e:
                 logger.error(f"无法运行屏蔽词审核，请检查noResponse.yaml配置格式--{e}")
-        if (check_cq_atcode(event.raw_message,bot.id)!=False or str(event.sender.user_id) in chattingUser) and (glmReply or (trustglmReply and str(
+        if (check_cq_atcode(event.raw_message,bot.id)!=False or event.sender.user_id in chattingUser) and (glmReply or (trustglmReply and str(
                 event.sender.user_id) in trustUser) or event.group.id in trustG):
             logger.info("ai聊天启动")
         else:
@@ -333,7 +333,7 @@ def main(bot, bus, logger):
                                                           Text(
                                                               "如对话异常请发送 /clear")])
         #刷新时间
-        user = str(event.sender.user_id)
+        user = event.sender.user_id
         if user in chattingUser:
             chattingUser[user] = datetime.datetime.now()
         if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
