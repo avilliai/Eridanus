@@ -76,7 +76,7 @@ await bot.send_group_message(event.group_id, [Record(file=file_url,url="")])
 await bot.send_group_message(event.group_id, [Record(file=fileUrl("plugins/output.wav"),url="")])
 ```
 完整的示例请查看run/example.py
-### 6.一些小寄巧
+#### 6.一些小寄巧
 你可以直接替换一些内容，减少工作量
 ```
 str(event.message_chain)
