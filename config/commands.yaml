@@ -157,4 +157,17 @@ bluearchive:
 aiDraw:
   enable: true
   rules:
-    - startswith("画 ")
+    - startswith("画")
+musicPick:
+  selectMusic:
+    enable: true
+    rules:
+      - startswith("点歌")
+  dianzibofangqi:
+    enable: true
+    rules:
+      - fullmatch("开溜")
+  dianzibofangqiPick:
+    enable: true
+    rules:
+      - startswith("溜")

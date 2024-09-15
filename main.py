@@ -7,7 +7,7 @@ from yiriob.event import EventBus
 
 from plugins.tookits import newLogger
 from plugins.yiriob_fix.YamlDotDict import ExtendedBot
-from run import example, aiReply, FragmentsModule, aronaapi, aiDraw
+from run import example, aiReply, FragmentsModule, aronaapi, aiDraw, musicPick
 
 #读取配置
 with open('config.yaml', 'r', encoding='utf-8') as f:
@@ -34,6 +34,7 @@ logger=newLogger()
 #与yiri mirai不同，我们需要传入bot和bus两个对象
 #example.main(bot,bus,logger)  #这是一个测试示例，你可以参考它
 #aiReply.main(bot,bus,logger)  #ai回复功能
+musicPick.main(bot,bus,logger)  #调用musicPick插件
 aronaapi.main(bot,bus,logger)  #调用aronaapi插件
 FragmentsModule.main(bot,bus,logger)
 aiDraw.main(bot,bus,logger)  #调用aiDrawer插件
