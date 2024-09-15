@@ -589,7 +589,6 @@ def main(bot, bus, logger):
     @bus.on(GroupMessageEvent)
     async def handle_command(event: GroupMessageEvent):
         message = wash_cqCode(event.raw_message)
-        print(message)
         if len(wash_cqCode(event.raw_message)) == 2:  # 表情合成专用
             await emojimixer(event, message)
         for function_name, rules in command_rules.items():

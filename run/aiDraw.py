@@ -21,7 +21,7 @@ def check_command_rules(message):
             return True
     return False
 def bingImageCreator(bus,bot, logger):
-
+    logger.info("bingai绘画 enabled")
     resulttr = bot.api
     sock5proxy = resulttr.get("sock5-proxy")
     bing_image_creator_key = resulttr.get("bing-image-creator")
@@ -52,9 +52,8 @@ def bingImageCreator(bus,bot, logger):
                     await bot.send_group_message(event.group_id, [Text("出错，请重试；可能是bing cookie过期，请检查")])
 
 def main(bot, bus,logger):
-    logger.info("ai绘画 启用")
+    logger.info("聚合ai绘画 enabled")
     result=bot.api
-    proxy = result.get("proxy")
     sdUrl = result.get("sdUrl")
 
 

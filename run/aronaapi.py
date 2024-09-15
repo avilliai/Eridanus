@@ -135,7 +135,6 @@ def main(bot, bus, logger):
     @bus.on(GroupMessageEvent)
     async def handle_command(event: GroupMessageEvent):
         message = wash_cqCode(event.raw_message)
-        print(message)
         for function_name, rules in command_rules.items():
             if rules['enable']:  # 检查功能是否启用
                 for rule in rules['rules']:
