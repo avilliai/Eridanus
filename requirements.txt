@@ -17,3 +17,4 @@ ruamel.yaml
 jmcomic
 img2pdf
 lanzou-api
+httpx[socks]

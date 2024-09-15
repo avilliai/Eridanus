@@ -154,3 +154,7 @@ bluearchive:
     rules:
       - fullmatch("/arona")
       - fullmatch("/攻略")
+aiDraw:
+  enable: true
+  rules:
+    - startswith("画 ")

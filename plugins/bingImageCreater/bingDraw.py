@@ -2,8 +2,9 @@ import os
 
 import httpx
 
-from plugins.RandomStr import random_str
+
 from plugins.bingImageCreater.bingImg import BingArt
+from plugins.tookits import random_str
 
 
 async def bingCreate(sockProxy, prompt, _U, kiev):

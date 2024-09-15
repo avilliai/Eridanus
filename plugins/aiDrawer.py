@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
+import json
 import re
+from http.cookies import SimpleCookie
 
 import asyncio
 import base64
 import io
 
 import httpx
+import yaml
 from PIL import Image
 
-from plugins.RandomStr import random_str
+from plugins.tookits import random_str,random_session_hash
+
+with open('config/api.yaml', 'r', encoding='utf-8') as f:
+    resulttr = yaml.load(f.read(), Loader=yaml.FullLoader)
+modelscopeCookie = resulttr.get("modelscopeCookie")
+if modelscopeCookie == "":
+    modelscopeCookie = "cna=j117HdPDmkoCAXjC3hh/4rjk; ajs_anonymous_id=5aa505b4-8510-47b5-a1e3-6ead158f3375; t=27c49d517b916cf11d961fa3769794dd; uuid_tt_dd=11_99759509594-1710000225471-034528; log_Id_click=16; log_Id_pv=12; log_Id_view=277; xlly_s=1; csrf_session=MTcxMzgzODI5OHxEdi1CQkFFQ180SUFBUkFCRUFBQU12LUNBQUVHYzNSeWFXNW5EQW9BQ0dOemNtWlRZV3gwQm5OMGNtbHVad3dTQUJCNFkwRTFkbXAwV0VVME0wOUliakZwfHNEIp5sKWkjeJWKw1IphSS3e4R_7GyEFoKKuDQuivUs; csrf_token=TkLyvVj3to4G5Mn_chtw3OI8rRA%3D; _samesite_flag_=true; cookie2=11ccab40999fa9943d4003d08b6167a0; _tb_token_=555ee71fdee17; _gid=GA1.2.1037864555.1713838369; h_uid=2215351576043; _xsrf=2|f9186bd2|74ae7c9a48110f4a37f600b090d68deb|1713840596; csg=242c1dff; m_session_id=769d7c25-d715-4e3f-80de-02b9dbfef325; _gat_gtag_UA_156449732_1=1; _ga_R1FN4KJKJH=GS1.1.1713838368.22.1.1713841094.0.0.0; _ga=GA1.1.884310199.1697973032; tfstk=fE4KxBD09OXHPxSuRWsgUB8pSH5GXivUTzyBrU0oKGwtCSJHK7N3ebe0Ce4n-4Y8X8wideDotbQ8C7kBE3queYwEQ6OotW08WzexZUVIaNlgVbmIN7MQBYNmR0rnEvD-y7yAstbcoWPEz26cnZfu0a_qzY_oPpRUGhg5ntbgh_D3W4ZudTQmX5MZwX9IN8ts1AlkAYwSdc9sMjuSF8g56fGrgX9SFbgs5bGWtBHkOYL8Srdy07KF-tW4Wf6rhWQBrfUt9DHbOyLWPBhKvxNIBtEfyXi_a0UyaUn8OoyrGJ9CeYzT1yZbhOxndoh8iuFCRFg38WZjVr6yVWunpVaQDQT762H3ezewpOHb85aq5cbfM5aaKWzTZQ_Ss-D_TygRlsuKRvgt_zXwRYE_VymEzp6-UPF_RuIrsr4vHFpmHbxC61Ky4DGguGhnEBxD7Zhtn1xM43oi_fHc61Ky4DGZ6xfGo3-rjf5..; isg=BKKjOsZlMNqsZy8UH4-lXjE_8ygE86YNIkwdKew665XKv0I51IGvHCUz7_tDrx6l"
 
 
 async def SdDraw(prompt, negative_prompt, path, sdurl="http://166.0.199.118:17858"):
@@ -128,77 +137,73 @@ async def draw6(prompt, path="./test.png"):
         f.write(r1.content)
     return path
 
-async def modelScopeDrawer(prompt, negative_prompt):
-    url = "https://s5k.cn/api/v1/studio/AI-ModelScope/stable-diffusion-3-medium/gradio/queue/join"
-    params = {
-        "backend_url": "/api/v1/studio/AI-ModelScope/stable-diffusion-3-medium/gradio/",
-        "sdk_version": "4.31.3",
-        "t": "1720966413219",
-        "studio_token": "2aebd9a6-3f8e-4907-ba0e-1ac759249c24"
-    }
+async def fluxDrawer(prompt):
+    # 随机session hash
+    session_hash = random_session_hash(11)
+    # 请求studio_token
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://www.modelscope.cn/api/v1/studios/token", headers={"cookie": modelscopeCookie})
+        response_data = response.json()
+        studio_token = response_data["Data"]["Token"]
+    print("generated studio_token: "+studio_token)
 
+    # 第一个请求的URL和参数
+    queue_join_url = "https://s5k.cn/api/v1/studio/ByteDance/Hyper-FLUX-8Steps-LoRA/gradio/queue/join"
+    queue_join_params = {
+        "backend_url": "/api/v1/studio/ByteDance/Hyper-FLUX-8Steps-LoRA/gradio/",
+        "sdk_version": "4.38.1",
+        "t": "1724901517779",
+        "studio_token": studio_token,
+        "__theme":"light",
+    }
+    # 第二个请求的URL和headers
     headers = {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-        "Connection": "keep-alive",
-        "Content-Type": "application/json",
-        "Cookie": "_gid=GA1.2.685814012.1720887454; _ga=GA1.2.1599116772.1719823591; _ga_R1FN4KJKJH=GS1.1.1720887453.2.1.1720888543.0.0.0",
-        "Host": "s5k.cn",
-        "Origin": "https://s5k.cn",
-        "Referer": "https://s5k.cn/inner/studio/gradio?backend_url=/api/v1/studio/AI-ModelScope/stable-diffusion-3-medium/gradio/&sdk_version=4.31.3&t=1720966413219&studio_token=2aebd9a6-3f8e-4907-ba0e-1ac759249c24",
-        "Sec-Ch-Ua": "\"Microsoft Edge\";v=\"125\", \"Chromium\";v=\"125\", \"Not.A/Brand\";v=\"24\"",
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": "\"Windows\"",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0",
-        "X-Studio-Token": "2aebd9a6-3f8e-4907-ba0e-1ac759249c24"
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "connection": "keep-alive",
+        "content-type": "application/json",
+        "cookie": "_ga=GA1.2.1599116772.1719823591; _ga_R1FN4KJKJH=GS1.1.1722428989.8.0.1722428989.0.0.0",
+        "host": "s5k.cn",
+        "referer": f"https://s5k.cn/inner/studio/gradio?backend_url=/api/v1/studio/ByteDance/Hyper-FLUX-8Steps-LoRA/gradio/&sdk_version=4.38.1&t=1724901517779&__theme=light&studio_token={studio_token}",
+        "sec-ch-ua": '"Not)A;Brand";v="99", "Microsoft Edge";v="127", "Chromium";v="127"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0",
+        "x-studio-token": studio_token
     }
+    data1={"data":[1024,1024,8,3.5,prompt,3413],"event_data":None,"fn_index":0,"trigger_id":18,"dataType":["slider","slider","slider","slider","textbox","number"],"session_hash":session_hash}
 
-    data = {
-        "data": [
-            prompt,
-            negative_prompt,
-            1587008566,
-            True,
-            1024,
-            1024,
-            5,
-            28
-        ],
-        "event_data": None,
-        "fn_index": 1,
-        "trigger_id": 5,
-        "dataType": ["textbox", "textbox", "slider", "checkbox", "slider", "slider", "slider", "slider"],
-        "session_hash": "oxm1sjlvnr"
-    }
 
+    # 发起第一个请求
     async with httpx.AsyncClient(headers=headers) as client:
-        response = await client.post(url, json=data, params=params)
-        #print(f"POST request status code: {response.status_code}")
-        response_data =response.json()
-        event_id = response_data['event_id']
-        #print(f"Received event_id: {event_id}")
+        response = await client.post(queue_join_url, params=queue_join_params,json=data1)
+        # print(f"POST request status code: {response.status_code}")
+        # for header in response.headers:
+        #     if header[0].lower() == 'set-cookie':
+        #         cookie = SimpleCookie(header[1])
+        #         for key, morsel in cookie.items():
+        #             cookies[key] = morsel.value
+        # response_data = response.json()
+        # event_id = response_data['event_id']
+        #print(event_id)
 
-        # Now start listening to event stream
-        event_stream_url = f"https://s5k.cn/api/v1/studio/AI-ModelScope/stable-diffusion-3-medium/gradio/queue/data?session_hash=oxm1sjlvnr&studio_token=2aebd9a6-3f8e-4907-ba0e-1ac759249c24"
-        async with client.stream("GET", event_stream_url, headers=headers) as event_stream_response:
+        queue_data_url=f"https://s5k.cn/api/v1/studio/ByteDance/Hyper-FLUX-8Steps-LoRA/gradio/queue/data?session_hash={session_hash}&studio_token={studio_token}"
+
+        async with client.stream("GET", queue_data_url, headers=headers,timeout=60) as event_stream_response:
             async for line in event_stream_response.aiter_text():
-                # Check if line contains "url"
-                url_match = re.search(r'"url":"([^"]+)"', line)
-                if url_match:
-                    url = url_match.group(1)
-                    async with httpx.AsyncClient(timeout=40) as client:
-                        r1 = await client.get(url)
-                    path = "data/pictures/cache/" + random_str() + ".png"
-                    with open(path, "wb") as f:
-                        f.write(r1.content)
-                    #print(f"Received URL: {url}")
-                    return path
-                #print(line.strip())
+                event = line.replace("data:", "").strip()
+                if event:
+                    event_data = json.loads(event)
+                    print(event_data)
+                    if "output" in event_data:
+                        imgurl=event_data["output"]["data"][0]["url"]
+                        print(imgurl)
+                        return imgurl
 # 运行 Flask 应用
 if __name__ == "__main__":
-    asyncio.run(modelScopeDrawer("a 2D girlish","nsfw"))
+    asyncio.run(fluxDrawer("prompt:[[[artist:onineko]]], [[[artist:namie]]],cute, symbol-shaped pupils,school uniform, serafuku, clover print, sailor shirt, pleated skirt, sailor collar,shy, holding skirt,, 1girl, 1girl solo, loli, cat girl, animal ear fluff, cat ears,mid shot, x hair ornament, ahoge,traditional media, faux traditional media, lineart, {loli}"))
 

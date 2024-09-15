@@ -178,3 +178,24 @@ def fileUrl(path):
 def random_session_hash(random_length):
     # 给gradio一类的api用，生成随机session_hash,避免多任务撞车导致推理出错。这里偷懒套个娃（bushi
     return random_str(random_length, "abcdefghijklmnopqrstuvwxyz1234567890")
+def validate_rule(message, rule):
+    # 绕过引号的影响
+    message = message.strip('"\'')  # 移除消息两端的引号
+    rule = rule.strip()  # 移除规则两端的空白字符
+
+    # 如果规则是正则表达式
+    if rule.startswith("re.match("):
+        pattern = rule.split('(', 1)[1][:-1]  # 提取正则表达式
+        return bool(re.match(pattern, message))  # 返回匹配结果
+
+    # 处理其他规则
+    rule_content = rule.split('(')[1][:-1].replace('"', '').replace("'", '')  # 移除规则中的引号
+
+    if rule.startswith("endswith(") and message.endswith(rule_content):
+        return True
+    elif rule.startswith("startswith(") and message.startswith(rule_content):
+        return True
+    elif rule.startswith("fullmatch(") and message == rule_content:
+        return True
+
+    return False

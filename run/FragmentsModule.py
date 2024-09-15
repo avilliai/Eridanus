@@ -21,7 +21,7 @@ from plugins.aiReplyCore import modelReply
 from plugins.emojimixhandle import emojimix_handle
 from plugins.gacha import arkGacha, starRailGacha, bbbgacha
 from plugins.setuModerate import setuModerate
-from plugins.tookits import check_cq_atcode, wash_cqCode, fileUrl, random_str, newLogger
+from plugins.tookits import check_cq_atcode, wash_cqCode, fileUrl, random_str, newLogger, validate_rule
 
 logger=newLogger()
 def main(bot, bus, logger):
@@ -599,26 +599,6 @@ def main(bot, bus, logger):
                         await command_map[function_name](event, message)  # 通过命令映射调用处理函数
                         return
 
-    def validate_rule(message, rule):
-        # 绕过引号的影响
-        message = message.strip('"\'')  # 移除消息两端的引号
-        rule = rule.strip()  # 移除规则两端的空白字符
 
-        # 如果规则是正则表达式
-        if rule.startswith("re.match("):
-            pattern = rule.split('(', 1)[1][:-1]  # 提取正则表达式
-            return bool(re.match(pattern, message))  # 返回匹配结果
-
-        # 处理其他规则
-        rule_content = rule.split('(')[1][:-1].replace('"', '').replace("'", '')  # 移除规则中的引号
-
-        if rule.startswith("endswith(") and message.endswith(rule_content):
-            return True
-        elif rule.startswith("startswith(") and message.startswith(rule_content):
-            return True
-        elif rule.startswith("fullmatch(") and message == rule_content:
-            return True
-
-        return False
 
 

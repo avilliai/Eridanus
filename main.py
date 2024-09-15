@@ -5,10 +5,9 @@ from yiriob.adapters import ReverseWebsocketAdapter
 from yiriob.bot import Bot
 from yiriob.event import EventBus
 
-
 from plugins.tookits import newLogger
 from plugins.yiriob_fix.YamlDotDict import ExtendedBot
-from run import example, aiReply, FragmentsModule, aronaapi
+from run import example, aiReply, FragmentsModule, aronaapi, aiDraw
 
 #读取配置
 with open('config.yaml', 'r', encoding='utf-8') as f:
@@ -37,4 +36,5 @@ logger=newLogger()
 #aiReply.main(bot,bus,logger)  #ai回复功能
 aronaapi.main(bot,bus,logger)  #调用aronaapi插件
 FragmentsModule.main(bot,bus,logger)
+aiDraw.main(bot,bus,logger)  #调用aiDrawer插件
 bot.run()
