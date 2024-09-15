@@ -6,7 +6,7 @@ from pathlib import Path
 from yiriob.event.events import GroupMessageEvent, PrivateMessageEvent
 from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams, SendPrivateMessageInterface, \
     SendPrivateMessageParams
-from yiriob.message import MessageChain, Text, At, Reply, Record, Image
+from yiriob.message import MessageChain, Text, At, Reply, Record, Image, Node, Forward
 
 from plugins.tookits import check_cq_atcode, wash_cqCode, fileUrl
 
@@ -45,11 +45,12 @@ def main(bot,bus,logger):
             logger.info("ok")
             #几个参数分别是，艾特，文本，引用回复
             #await bot.send_group_message(event.group_id,[At(str(event.sender.user_id)),Text("你好"),Reply(str(event.message_id))])
-
+            node=[Node(id=str(event.message_id),user_id=str(bot.id),nickname="bot",content=MessageChain([Text("你好")]))]
+            await bot.send_group_message(event.group_id,Forward(id=str(event.message_id)))
             #发送本地图片
             image_path = Path(f"{os.getcwd()}/plugins/NB2uR.png")
             file_url = image_path.as_uri()
-            await bot.send_group_message(event.group_id,[Image(file=file_url,type='flash',url="")])
+            #await bot.send_group_message(event.group_id,[Image(file=file_url,type='flash',url="")])
             #发送网络图片
             #await bot.send_group_message(event.group_id, [Image(file="https_url", type='flash', url="")])
             '''
