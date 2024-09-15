@@ -1,0 +1,140 @@
+commands:
+  #支持正则表达式
+  #rules:
+  #  - startswith("命令")
+  #  - endswith("命令")
+  #  - fullmatch("命令")
+  #  - re.match("正则表达式")
+  handle_chaijun:
+    enable: true
+    rules:
+      - endswith("柴郡")
+      - fullmatch("柴郡")
+  handle_fabing:
+    enable: true
+    rules:
+      - startswith("发病 ")
+  handle_weather_query:
+    enable: true
+    rules:
+      - startswith("查询天气") #不建议增加其他匹配指令
+  handle_news_today:
+    enable: true
+    rules:
+      - fullmatch("新闻")
+  handle_onedimensionli:
+    enable: true
+    rules:
+      - startswith("单向历")
+      - fullmatch("单向历")
+  handle_moyu_today:
+    enable: true
+    rules:
+      - startswith("摸鱼")
+      - fullmatch("摸鱼")
+  handle_xingzuo_today:
+    enable: true
+    rules:
+      - startswith("星座")
+      - fullmatch("星座")
+  handle_historyToday:
+    enable: true
+    rules:
+      - fullmatch("历史上的今天")
+  handle_makeJokes:
+    enable: true
+    rules:
+      - endswith("笑话")
+  handle_cpGenerate:
+    enable: true
+    rules:
+      - startswith("/cp") #/cp 孙笑川 拐0
+  handle_astronomy:
+    enable: true
+    rules:
+      - fullmatch("天文")
+  handle_arkOperator:
+    enable: true
+    rules:
+      - fullmatch("干员生成")
+  handle_handle_genshinDraw:
+    enable: true
+    rules:
+      - fullmatch("原神启动")
+  handle_qianCao:
+    enable: true
+    rules:
+      - startswith("抽签")
+  handle_tarotChoice:
+    enable: true
+    rules:
+      - startswith("今日塔罗")
+      - startswith("塔罗")
+  handle_bbbGacha:
+    enable: true
+    rules:
+      - startswith("ba十连")
+  handle_arkGacha:
+    enable: true
+    rules:
+      - startswith("方舟十连")
+  handle_xingtieGacha:
+    enable: true
+    rules:
+      - startswith("星铁十连")
+  handle_addoneMore:
+    enable: true
+    rules:
+      - startswith("喜加一")
+  handle_littletail:
+    enable: true
+    rules:
+      - startswith("小尾巴")
+  handle_zhifubao:
+    enable: true
+    rules:
+      - startswith("支付宝到账")
+  handle_meme:
+    enable: true
+    rules:
+      - fullmatch("meme")
+  handle_yunshi:
+    enable: true
+    rules:
+      - fullmatch("运势")
+  handle_Poetry:
+    enable: true
+    rules:
+      - fullmatch("诗经")
+  handle_zhouyi:
+    enable: true
+    rules:
+      - fullmatch("周易")
+  handle_hanwriter:
+    enable: true
+    rules:
+      - startswith("手写")
+  handle_prise:
+    enable: true
+    rules:
+      - startswith("/奖状") #/奖状 孙笑川#啥比#孙笑川吧
+  handle_balogo:
+    enable: true
+    rules:
+      - startswith("/ba")
+  handle_colorfulanime:
+    enable: true
+    rules:
+      - fullmatch("彩色小人")
+  handle_minecraftQuery:
+    enable: true
+    rules:
+      - startswith("mc查在线")
+  handle_grammaAnalysis:
+    enable: true
+    rules:
+      - startswith("语法分析")
+  handle_steamQuery:
+    enable: true
+    rules:
+      - startswith("steam查询")

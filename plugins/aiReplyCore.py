@@ -51,8 +51,8 @@ try:
 except:
     logger.error("致命错误！mainGroup只能填写一个群的群号!")
     mainGroup = 0
-botName = config.get("机器人名字")
-botqq = int(config.get("机器人QQ"))
+botName = config.get("bot_name")
+botqq = int(config.get("bot_id"))
 with open('config/settings.yaml', 'r', encoding='utf-8') as f:
     result = yaml.load(f.read(), Loader=yaml.FullLoader)
 voicegg = result.get("语音功能设置").get("voicegenerate")

@@ -1,4 +1,5 @@
 import datetime
+import io
 import json
 import os
 import random
@@ -7,8 +8,10 @@ from io import BytesIO
 import httpx
 import yaml
 from PIL import Image
+from bs4 import BeautifulSoup
 from emoji import is_emoji
 
+from plugins.steamSearch import get_steam_game_description, fetch_description, get_steam_game_search
 from plugins.tookits import get_headers, random_str
 
 
@@ -398,30 +401,100 @@ async def emojimix(emoji1, emoji2):
         return path
 url = "https://www.ipip5.com/today/api.php"
 url2 = "https://api.pearktrue.cn/api/steamplusone/"
+async def eganylist(text,proxy):
+    proxies=None
+    if proxy!="" or proxy!=" ":
+        proxies = {
+            "http://": proxy,
+            "https://": proxy
+        }
+    URL = f"https://api.aipie.cool/api/ega/analysis/img?text={text}"
+    async with httpx.AsyncClient(timeout=20,proxies=proxies,verify=False) as client:
+        r = await client.get(URL)
+        p = "data/pictures/cache/" + random_str() + '.png'
+        with open(p, "wb") as f:
+            f.write(r.content)
+        return p
 
-
+async def solve(keyword,proxy=None):
+    # logger.info("选择代理：" + proxy)
+    search_result = await get_steam_game_search(keyword,proxy)
+    if search_result:
+        img_url = search_result["avatar"]
+        async with httpx.AsyncClient(timeout=200,proxies={"http://": proxy, "https://": proxy} if proxy else None,verify=False) as client:
+            response = await client.get(img_url)
+            img_content = response.content
+        image = Image.open(io.BytesIO(img_content))
+        path = f"data/pictures/cache/{search_result['name']}.png"
+        image.save(path)
+        description = await get_steam_game_description(search_result["app_id"],proxy)
+        if(description == 'none'):
+            description = await fetch_description(keyword)
+        result_dict = {
+            "name": search_result['name'],
+            "name_cn": search_result['name_cn'],
+            "app_id": search_result['app_id'],
+            "description": description,
+            "steam_url": f"https://store.steampowered.com/app/{search_result['app_id']}/",
+            "path": path
+        }
+        return result_dict
 async def hisToday():
     async with httpx.AsyncClient(timeout=100) as client:
         data = {"type": "json"}
         r = await client.get(url, params=data)
         return r.json()
+async def minecraftSeverQuery(ip):
+    async with httpx.AsyncClient(headers=get_headers(),timeout=20) as client:
+        r=await client.get(f"https://list.mczfw.cn/?ip={ip}")
 
+        soup = BeautifulSoup(r.text, 'html.parser')
+        # 找到 class 为 "form" 的第一个 <tr> 标签
+        description = soup.find('meta', attrs={'name': 'description'}).get('content')
+        og_title = soup.find('meta', property='og:title').get('content')
+        favicon = soup.find('meta', property='og:image').get('content')
+        return "https:"+str(favicon),og_title,description
 
 async def steamEpic():
+    url = 'https://steamstats.cn/en/xi'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Safari/537.36 Edg/90.0.818.41'}
+
     async with httpx.AsyncClient(timeout=100) as client:
-        data = {"type": "json"}
-        r = await client.get(url2, params=data)
-        #print(str(r.json().get("data")).replace(",","\n"))
-        st = ""
-        for i in r.json().get("data"):
-            st += "名称：" + i.get("name") + "\n"
-            st += "开始时间：" + i.get('starttime') + "\n"
-            st += "结束时间:" + i.get('endtime') + "\n"
-            st += "平台:" + i.get('source') + "\n"
-            st += "链接:" + i.get('url') + "\n"
-            st += "======================\n"
-        #print(st)
-        return st
+        try:
+            response = await client.get(url, headers=headers)
+
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            tbody = soup.find('tbody')
+            tr = tbody.find_all('tr')
+
+            i = 1
+            text = "\n"
+            for tr in tr:
+                td = tr.find_all('td')
+                name = td[1].string.strip().replace('\n', '').replace('\r', '')
+                gametype = td[2].string.replace(" ", "").replace('\n', '').replace('\r', '')
+                start = td[3].string.replace(" ", "").replace('\n', '').replace('\r', '')
+                end = td[4].string.replace(" ", "").replace('\n', '').replace('\r', '')
+                time = td[5].string.replace(" ", "").replace('\n', '').replace('\r', '')
+                oringin = td[6].find('span').string.replace(" ", "").replace('\n', '').replace('\r', '')
+                text += f"序号：{i}\n" \
+                        f"游戏名称：{name}\n" \
+                        f"DLC/game：{gametype}\n" \
+                        f"开始时间：{start}\n" \
+                        f"结束时间：{end}\n" \
+                        f"是否永久：{time}\n" \
+                        f"平台：{oringin}\n"
+                i += 1
+
+        except httpx.HTTPStatusError as e:
+            text = f"HTTP错误: {e}"
+        except Exception as e:
+            text = f"发生错误: {e}"
+
+    return text
 async def arkSign(url):
     url = f"https://api.lolimi.cn/API/ark/a2.php?img={url}"
     async with httpx.AsyncClient(timeout=20) as client:

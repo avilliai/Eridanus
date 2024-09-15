@@ -63,13 +63,13 @@ async def bbbgacha(bbb):
     a = 60
     b = 250
     count = 0
-    st = Image.open('data/blueArchive/back.png')
+    st = Image.open('data/pictures/blueArchive/back.png')
 
     for i in character:
         # 剪切图像
         '''if count>0:
             st=Image.open('pictures\\imgs.png')'''
-        st2 = Image.open("data/blueArchive/gacha/" + i + ".png")
+        st2 = Image.open("data/pictures/blueArchive/gacha/" + i + ".png")
         st2 = st2.resize((int(404 * 0.6), int(456 * 0.6)))
 
         mark = st2
@@ -82,7 +82,7 @@ async def bbbgacha(bbb):
             b += 400
             a = 45
         st = Image.composite(layer, st, layer)
-    pa = 'data/blueArchive/cache/' + random_str() + '.png'
+    pa = 'data/pictures/blueArchive/cache/' + random_str() + '.png'
     st.save(pa)
     return pa
 
@@ -132,7 +132,7 @@ async def arkGacha():
 
 
 async def starRailGacha():
-    with open('data/GachaData/StarRail.yaml', 'r', encoding='utf-8') as file:
+    with open('data/pictures/GachaData/StarRail.yaml', 'r', encoding='utf-8') as file:
         students = yaml.load(file, Loader=yaml.FullLoader)
 
     i = 0
@@ -171,13 +171,13 @@ async def starRailGacha():
     a = 193
     b = 221
     count = 0
-    st = Image.open('data/GachaData/StarRail/bg.png')
+    st = Image.open('data/pictures/GachaData/StarRail/bg.png')
     path = "data/pictures/cache/" + random_str() + '.png'
     for i in character:
         # 剪切图像
         # 发起超级融合
 
-        st2 = Image.open("data/GachaData/StarRail/" + i + ".png")
+        st2 = Image.open("data/pictures/GachaData/StarRail/" + i + ".png")
 
         im = st
         mark = st2

@@ -146,8 +146,7 @@ def check_cq_atcode(cq_code, bot_qq):
         qq_number = match.group(1)
         if qq_number == str(bot_qq):
             # 使用正则表达式去除所有 CQ 码部分
-            message = re.sub(r'\[.*?\]', '', cq_code).strip()
-            return message
+            return True
     return False
 def wash_cqCode(cq_code):
     message = re.sub(r'\[.*?\]', '', cq_code).strip()
