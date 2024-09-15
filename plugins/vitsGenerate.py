@@ -8,7 +8,7 @@ import requests
 import websockets
 import yaml
 
-from plugins.tookits import random_str, translate
+from plugins.tookits import translate,random_str,random_session_hash
 
 try:
     from plugins.modelsLoader import modelLoader
@@ -17,10 +17,6 @@ try:
     from vits import vG
 except:
     pass
-'''
-superVG作为语音合成的集合函数，在Eridanus中与Manyana不同，Eridanus中直接返回url而非语音文件路径。
-这是由于yiriob目前似乎不支持传递本地文件
-'''
 
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     resulttr = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -138,8 +134,8 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
         text = data.get("text")
         if text == "" or text == " ":
             text = "哼哼"
-        if speaker in ['anzai', '「信使」', '「公子」', '「博士」', '「大肉丸」', '「女士」', '「散兵」', '「白老先生」', '七七', '三月七', '上杉', '丹吉尔', '丹恒', '丹枢', '丽莎', '久利须', '久岐忍', '九条裟罗', '九条镰治', '云堇', '五郎', '伊利亚斯', '伊迪娅', '优菈', '伦纳德', '佐西摩斯', '佩拉', '停云', '元太', '克列门特', '克拉拉', '克罗索', '八重神子', '公输师傅', '凝光', '凯亚', '凯瑟琳', '刃', '刻晴', '北斗', '半夏', '博易', '博来', '卡波特', '卡维', '卡芙卡', '卢卡', '可可利亚', '可莉', '史瓦罗', '吴船长', '哲平', '嘉玛', '嘉良', '回声海螺', '坎蒂丝', '埃勒曼', '埃尔欣根', '埃德', '埃泽', '埃洛伊', '埃舍尔', '塔杰·拉德卡尼', '塞塔蕾', '塞琉斯', '夏洛蒂', '多莉', '夜兰', '大慈树王', '大毫', '天叔', '天目十五', '奥兹', '奥列格', '女士', '妮露', '姬子', '娜塔莎', '娜维娅', '安柏', '安西', '宛烟', '宵宫', '岩明', '巴达维', '布洛妮娅', '希儿', '希露瓦', '帕姆', '帕斯卡', '常九爷', '康纳', '开拓者(女)', '开拓者(男)', '式大将', '彦卿', '影', '德沃沙克', '恕筠', '恶龙', '悦', '慧心', '戴因斯雷布', '托克', '托马', '拉赫曼', '拉齐', '掇星攫辰天君', '提纳里', '斯坦利', '斯科特', '旁白', '早柚', '昆钧', '明曦', '景元', '晴霓', '杜拉夫', '杰帕德', '松浦', '林尼', '枫原万叶', '柊千里', '查尔斯', '柯莱', '桑博', '欧菲妮', '毗伽尔', '沙扎曼', '派蒙', '流浪者', '浣溪', '浮游水蕈兽·元素生命', '海妮耶', '海芭夏', '深渊使徒', '深渊法师', '温迪', '烟绯', '爱德琳', '爱贝尔', '玛乔丽', '玛塞勒', '玛格丽特', '玲可', '珊瑚', '珊瑚宫心海', '珐露珊', '班尼特', '琳妮特', '琴', '瑶瑶', '瓦尔特', '甘雨', '田铁嘴', '申鹤', '留云借风真君', '白术', '白露', '百闻', '知易', '石头', '砂糖', '神里绫人', '神里绫华', '空', '符玄', '笼钓瓶一心', '米卡', '素裳', '纯水精灵？', '纳比尔', '纳西妲', '绮良良', '绿芙蓉', '罗刹', '罗莎莉亚', '羽生田千鹤', '老孟', '胡桃', '舒伯特', '艾丝妲', '艾伯特', '艾尔海森', '艾文', '艾莉丝', '芙宁娜', '芭芭拉', '荒泷一斗', '荧', '莎拉', '莫塞伊思', '莫娜', '莱依拉', '莺儿', '菲米尼', '菲谢尔', '萍姥姥', '萨赫哈蒂', '萨齐因', '蒂玛乌斯', '虎克', '螺丝咕姆', '行秋', '西拉杰', '言笑', '诺艾尔', '费斯曼', '赛诺', '辛焱', '达达利亚', '迈勒斯', '迈蒙', '迪卢克', '迪奥娜', '迪娜泽黛', '迪希雅', '那维莱特', '重云', '金人会长', '钟离', '银狼', '镜流', '长生', '阿佩普', '阿兰', '阿圆', '阿娜耶', '阿守', '阿尔卡米', '阿巴图伊', '阿扎尔', '阿拉夫', '阿晃', '阿洛瓦', '阿祇', '阿贝多', '陆行岩本真蕈·元素生命', '雷泽', '雷电将军', '霄翰', '霍夫曼', '青镞', '青雀', '香菱', '驭空', '魈', '鹿野奈奈', '鹿野院平藏', '黑塔', '龙二']:
-            p=await modelscopeV2(speaker, text)
+        if speaker in ['辛焱', '鹿野奈奈', '云堇', '瑶瑶', '珐露珊', '蒂玛乌斯', '那维莱特', '砂糖', '康纳', '刻晴', '嘉玛', '知易', '魈', '阿拉夫', '塞塔蕾', '大毫', '伊利亚斯', '欧菲妮', '玛塞勒', '「白老先生」', '式大将', '埃洛伊', '卡芙卡', '公输师傅', '舒伯特', '艾莉丝', '八重神子', '海妮耶', '克罗索', '明曦', '阿佩普', '掇星攫辰天君', '奥兹', '菲米尼', '甘雨', '奥列格', '巴达维', '老孟', '阿圆', '坎蒂丝', '鹿野院平藏', '佐西摩斯', '青镞', '凝光', '「博士」', '斯科特', '阿尔卡米', '沙扎曼', '白术', '派蒙', '纳比尔', '回声海螺', '荧', '帕斯卡', '埃德', '五郎', '萨齐因', '帕姆', '西拉杰', '流浪者', '松浦', '驭空', '「大肉丸」', '莫娜', '多莉', '大慈树王', '留云借风真君', '优菈', '希露瓦', '桑博', '宵宫', '元太', '温迪', '芙宁娜', '九条镰治', '开拓者(男)', '可可利亚', '阿巴图伊', '埃尔欣根', '布洛妮娅', '琳妮特', '岩明', '安柏', '玛乔丽', '费斯曼', '娜维娅', '停云', '天目十五', '莫塞伊思', '史瓦罗', '玛格丽特', '埃泽', '慧心', '绿芙蓉', '浮游水蕈兽·元素生命', '申鹤', '伊迪娅', '托马', '班尼特', '卢卡', '罗刹', 'anzai', '姬子', '菲谢尔', '悦', '莺儿', '莎拉', '金人会长', '迪希雅', '柊千里', '博来', '三月七', '烟绯', '拉齐', '丹吉尔', '赛诺', '虎克', '埃勒曼', '阿扎尔', '深渊法师', '刃', '戴因斯雷布', '神里绫华', '青雀', '萍姥姥', '笼钓瓶一心', '石头', '海芭夏', '九条裟罗', '安西', '阿贝多', '行秋', '可莉', '上杉', '钟离', '提纳里', '绮良良', '迪奥娜', '「公子」', '阿守', '言笑', '阿兰', '龙二', '阿洛瓦', '重云', '丹恒', '开拓者(女)', '常九爷', '瓦尔特', '凯瑟琳', '恕筠', '百闻', '阿娜耶', '米卡', '塔杰·拉德卡尼', '莱依拉', '旁白', '吴船长', '田铁嘴', '托克', '艾文', '香菱', '空', '迪卢克', '迪娜泽黛', '霄翰', '陆行岩本真蕈·元素生命', '七七', '神里绫人', '克列门特', '久利须', '早柚', '「女士」', '半夏', '荒泷一斗', '佩拉', '斯坦利', '柯莱', '艾尔海森', '晴霓', '艾丝妲', '娜塔莎', '白露', '珊瑚', '霍夫曼', '迈勒斯', '毗伽尔', '螺丝咕姆', '博易', '符玄', '嘉良', '胡桃', '彦卿', '卡波特', '丹枢', '阿祇', '林尼', '久岐忍', '深渊使徒', '琴', '芭芭拉', '妮露', '天叔', '凯亚', '「信使」', '夏洛蒂', '纯水精灵？', '羽生田千鹤', '影', '伦纳德', '罗莎莉亚', '哲平', '珊瑚宫心海', '素裳', '希儿', '查尔斯', '宛烟', '镜流', '克拉拉', '迈蒙', '玲可', '长生', '女士', '爱德琳', '丽莎', '「散兵」', '杰帕德', '艾伯特', '塞琉斯', '萨赫哈蒂', '爱贝尔', '枫原万叶', '雷电将军', '杜拉夫', '埃舍尔', '夜兰', '拉赫曼', '达达利亚', '阿晃', '纳西妲', '卡维', '诺艾尔', '德沃沙克', '浣溪', '北斗', '银狼', '景元', '黑塔', '恶龙', '雷泽', '昆钧']:
+            p = await modelscopeV3(speaker, text)
             return p
         else:
             headers = {
@@ -217,33 +213,21 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                 "fn_index": 0,
                 "dataType": ["textbox", "dropdown", "slider", "slider", "slider", "slider", "dropdown", "audio", "textbox",
                              "radio", "textbox", "slider"],
-                "session_hash": "xjwen214wqf"
+                "session_hash": random_session_hash(11)
             }
             p = "data/voices/" + random_str() + '.wav'
             async with httpx.AsyncClient(timeout=200, headers=headers) as client:
                 r = await client.post(url, json=data)
                 newurl = newurp + \
                          r.json().get("data")[1].get("name")
-                return newurl
-            '''async with httpx.AsyncClient(timeout=200, headers=headers) as client:
+            async with httpx.AsyncClient(timeout=200, headers=headers) as client:
                 r = await client.get(newurl)
                 with open(p, "wb") as f:
                     f.write(r.content)
-                return p'''
+                return p
     elif mode == "outVits":
-        speaker = data.get("speaker")
-        text = data.get("text")
-        p = "data/voices/" + random_str() + '.wav'
-        url = f"https://api.lolimi.cn/API/yyhc/y.php?msg={text}&speaker={speaker}"
-        async with httpx.AsyncClient(timeout=200) as client:
-            r = await client.post(url)
-            newUrl = r.json().get("music")
-            return newUrl
-            '''#print("outvits语音合成路径：" + p)
-            r1 = requests.get(newUrl)
-            with open(p, "wb") as f:
-                f.write(r1.content)
-            return p'''
+        p=await outVits(text = data['text'],speaker=data["speaker"])
+        return p
     elif mode == "FishTTS":
         modelid = data.get("speaker")
 
@@ -370,12 +354,11 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                     result = await send_get_request(client, task_id, Authorization)
                     # print("GET Request Result:", result)
                     audio_url = result['result']
-                    return audio_url
-                    '''rb = await client.get(audio_url)
+                    rb = await client.get(audio_url)
                     path = "data/voices/" + random_str() + '.wav'
                     with open(path, "wb") as f:
                         f.write(rb.content)
-                    return path'''
+                    return path
         else:
             proxies = {
                 "http://": proxy,
@@ -495,23 +478,23 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                     result = await send_get_request(client, task_id, Authorization)
                     #print("GET Request Result:", result)
                     audio_url = result['result']
-                    return audio_url
-                    '''rb = await client.get(audio_url)
+                    rb = await client.get(audio_url)
                     path = "data/voices/" + random_str() + '.wav'
                     with open(path, "wb") as f:
                         f.write(rb.content)
-                    return path'''
+                    return path
     #firefly模式不再可用，仅作为以后的代码参考。
     elif mode == "firefly":
         datap = data
         uri = "wss://fs.firefly.matce.cn/queue/join"
-        session_hash = "1fki0r8hg8mj"
+        # 随机session hash
+        session_hash = random_session_hash(12)
 
         async with websockets.connect(uri) as ws:
             # 连接后发送的第一次请求
             await ws.send(json.dumps({"fn_index": 4, "session_hash": session_hash}))
             await ws.send(json.dumps(
-                {"data": [datap.get("speaker")], "event_data": None, "fn_index": 1, session_hash: "1fki0r8hg8mj"}))
+                {"data": [datap.get("speaker")], "event_data": None, "fn_index": 1, "session_hash": session_hash}))
             while True:
                 message = await ws.recv()
                 print("Received '%s'" % message)
@@ -524,7 +507,7 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
         async with websockets.connect(uri) as ws:
             await ws.send(json.dumps({"fn_index": 4, "session_hash": session_hash}))
             await ws.send(
-                json.dumps({"data": [ibn], "event_data": None, "fn_index": 2, "session_hash": "1fki0r8hg8mj"}))
+                json.dumps({"data": [ibn], "event_data": None, "fn_index": 2, "session_hash": session_hash}))
             while True:
                 message = await ws.recv()
                 data = json.loads(message)
@@ -544,7 +527,7 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                                                                          "data": f"https://fs.firefly.matce.cn/file={example}",
                                                                          "is_file": True, "orig_name": "audio.wav"},
                                                exampletext, 0, 90, 0.7, 1.5, 0.7, datap.get("speaker")],
-                                      "event_data": None, "fn_index": 4, "session_hash": "1fki0r8hg8mj"}))
+                                      "event_data": None, "fn_index": 4, "session_hash": session_hash}))
 
             # 等待并处理服务器的消息
             while True:
@@ -567,75 +550,79 @@ async def superVG(data, mode, urls="", langmode="<zh>"):
                 with open(p, "wb") as f:
                     f.write(r.content)
                 return p
-#modelscopeTTS v2，对接崩铁语音合成器
-async def modelscopeV2(speaker,text):
-    # 第一个请求的URL和参数
-    queue_join_url = "https://s5k.cn/api/v1/studio/gally16/Bert-VITS21.x/gradio/queue/join"
-    queue_join_params = {
-        "backend_url": "/api/v1/studio/gally16/Bert-VITS21.x/gradio/",
-        "sdk_version": "4.8.0",
-        "t": "1722421391963",
-        "studio_token": "f6325151-b86a-44d8-ba1d-aa95c485b173",
-        "fn_index": "3",
-        "session_hash": "wlev3x7dnvb"
-    }
 
-    # 第二个请求的URL和headers
-    queue_data_url = "https://s5k.cn/api/v1/studio/gally16/Bert-VITS21.x/gradio/queue/data"
+#modelscopeTTS V3，对接原神崩铁语音合成器。API用法相较之前发生了变化，参考V2修改而成。
+async def modelscopeV3(speaker,text):
+    # 随机session hash
+    session_hash = random_session_hash(11)
+    # 第一个请求的URL
+    queue_join_url = "https://s5k.cn/api/v1/studio/MuGeminorum/hoyoTTS/gradio/queue/join"
+    # 第二个请求的URL
+    queue_data_url = "https://s5k.cn/api/v1/studio/MuGeminorum/hoyoTTS/gradio/queue/data"
+    # 标头
     headers = {
-        "accept": "*/*",
-        "accept-encoding": "gzip, deflate, br, zstd",
-        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-        "connection": "keep-alive",
-        "content-type": "application/json",
-        "cookie": "_xsrf=2|6f60a475|a5b476579343255f3f4497ee1f7f3c4e|1722420837; _ga_R1FN4KJKJH=GS1.1.1722421405.7.0.1722421405.0.0.0; _ga=GA1.2.1599116772.1719823591; _gid=GA1.2.696222127.1722421405; _gat_gtag_UA_156449732_1=1",
-        "origin": "https://s5k.cn",
-        "referer": "https://s5k.cn/inner/studio/gradio?backend_url=/api/v1/studio/gally16/Bert-VITS21.x/gradio/&sdk_version=4.8.0&t=1722421391963&studio_token=f6325151-b86a-44d8-ba1d-aa95c485b173",
-        "sec-ch-ua": '"Not)A;Brand";v="99", "Microsoft Edge";v="127", "Chromium";v="127"',
+        "Host": "s5k.cn",
+        "Connection": "keep-alive",
+        "sec-ch-ua": '"Not/A)Brand";v="8", "Chromium";v="126", "Microsoft Edge";v="126"',
+        "Cache-Control": "no-cache",
         "sec-ch-ua-mobile": "?0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0",
         "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0",
-        "x-studio-token": "f6325151-b86a-44d8-ba1d-aa95c485b173"
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "empty",
+        "Referer": "https://s5k.cn/api/v1/studio/MuGeminorum/hoyoTTS/gradio/?",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
     }
-
-    # 准备第二个请求的数据
-    data_template = {
+    # cookies
+    cookies = {
+        "csrf_token": "2kgLec2ZlH_FM5ICpxvb0nQrIro%3D",
+        }
+    # 准备第一个链接请求的数据
+    join_template = {
         "data": [text, speaker, 0.2, 0.6, 0.8, 1],
         "event_data": None,
         "fn_index": 3,
         "trigger_id": 37,
         "dataType": ["textbox", "dropdown", "slider", "slider", "slider", "slider"],
-        "session_hash": "wlev3x7dnvb",
-        "event_id": ""  # 这里将会填入从第一个请求中获取的 event_id
+        "session_hash": session_hash,
     }
-
+    # 准备第二个链接请求的数据
+    data_params = {
+        "session_hash": session_hash,
+        "studio_token": None
+    }
     # 发起第一个请求
-    with httpx.Client(headers=headers,timeout=20) as client:
-        count=0
-        with client.stream("GET", queue_join_url, params=queue_join_params) as response:
-            for event in response.iter_text():
-                if event:
-                    event_data = json.loads(event.replace("data:","").replace(" ",""))
-                    if event_data.get("msg") == "send_data":
-                        event_id = event_data.get("event_id")
-                        data_template["event_id"] = event_id
-                        response = client.post(queue_data_url, json=data_template, headers=headers)
-                    # 持续监听第一个请求的后续结果
-                    elif event_data.get("msg") == "process_completed":
-                        p="./test.wav"
-                        newurl=f"https://s5k.cn/api/v1/studio/gally16/Bert-VITS21.x/gradio/file={event_data['output']['data'][0]['path']}"
-                        return newurl
-                        '''async with httpx.AsyncClient(timeout=200, headers=headers) as client:
-                            r = await client.get(newurl)
-                            with open(p, "wb") as f:
-                                f.write(r.content)
-                            return p'''
-                    count+=1
-                    if count>10:
-                        raise Exception("Exceeded 10 events without entering return branch.")
+    async with httpx.AsyncClient(timeout=10) as client:
+        join_response = httpx.post(queue_join_url, json=join_template,headers=headers)
+        csrf_token = join_response.cookies["csrf_token"]
+        cookies["csrf_token"] = csrf_token
+    # 发起第二个请求
+    async with httpx.AsyncClient(timeout=20) as client:
+        count = 0
+        async with client.stream("GET", queue_data_url, params=data_params, headers=headers, cookies=cookies) as response:
+            async for chunk in response.aiter_text():
+                events = chunk.replace("data:", "").strip().split('\n')
+                for event in events:
+                    event = event.strip()
+                    if not event:
+                        continue
+                    try:
+                        event_data = json.loads(event)
+                        if event_data.get("msg") == "process_completed":
+                            p = "data/voices/" + random_str() + '.wav'
+                            newurl = event_data['output']['data'][0]['url']
+                            async with httpx.AsyncClient(timeout=200) as download_client:
+                                r = await download_client.get(newurl, headers=headers, cookies=cookies)
+                                with open(p, "wb") as f:
+                                    f.write(r.content)
+                                return p
+                        count += 1
+                        if count > 10:
+                            raise Exception("Exceeded 10 events without entering return branch.")
+                    except json.JSONDecodeError:
+                        raise Exception(f"JSON decode error{event}")
 async def fetch_FishTTS_ModelId(proxy, Authorization, speaker):
     proxies = {
         "http://": proxy,
@@ -736,17 +723,16 @@ async def taffySayTest(data, url, proxy=None):
             return p
 
 
-async def outVits(data):
-    speaker = data.get("speaker")
-    text = data.get("text")
+async def outVits(text,speaker):
     # os.system("where python")
     #p = random_str() + ".mp3"
     #p = "data/voices/" + p
     p = "data/voices/" + random_str() + '.wav'
-    url = f"https://api.lolimi.cn/API/yyhc/y.php?msg={text}&speaker={speaker}"
+    url = f"https://api.lolimi.cn/API/yyhc/api.php?msg={text}&sp={speaker}"
     async with httpx.AsyncClient(timeout=200) as client:
-        r = await client.post(url)
-        newUrl = r.json().get("music")
+        r = await client.get(url)
+        print(r)
+        newUrl = r.json().get("mp3")
         print("outvits语音合成路径：" + p)
         r1 = requests.get(newUrl)
         with open(p, "wb") as f:
@@ -778,3 +764,27 @@ async def voiceGenerate(data):
     return out
 
 
+async def modelscopeTTS(data):
+    speaker = data.get("speaker")
+    text = data.get("text")
+    if speaker == "阿梓":
+        url = "https://www.modelscope.cn/api/v1/studio/xzjosh/Azusa-Bert-VITS2-2.3/gradio/run/predict"
+
+    data = {
+        "data": ["<zh>" + text, speaker, 0.5, 0.5, 0.9, 1, "ZH", None, "Happy", "Text prompt", "", 0.7],
+        "event_data": None,
+        "fn_index": 0,
+        "dataType": ["textbox", "dropdown", "slider", "slider", "slider", "slider", "dropdown", "audio", "textbox",
+                     "radio", "textbox", "slider"],
+        "session_hash": random_session_hash(11)
+    }
+    p = "data/voices/" + random_str() + '.wav'
+    async with httpx.AsyncClient(timeout=200) as client:
+        r = await client.post(url, json=data)
+        newurl = "https://www.modelscope.cn/api/v1/studio/xzjosh/Azusa-Bert-VITS2-2.3/gradio/file=" + \
+                 r.json().get("data")[1].get("name")
+        async with httpx.AsyncClient(timeout=200) as client:
+            r = await client.get(newurl)
+            with open(p, "wb") as f:
+                f.write(r.content)
+            return p

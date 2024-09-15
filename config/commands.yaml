@@ -138,3 +138,19 @@ commands:
     enable: true
     rules:
       - startswith("steam查询")
+bluearchive:
+  selectMission:
+    enable: true
+    rules:
+      - startswith("/攻略")
+      - startswith("/mission")
+      - startswith("/arona")
+  addSUBgroup:
+    enable: true
+    rules:
+      - startswith("/订阅")
+  aronad:
+    enable: true
+    rules:
+      - fullmatch("/arona")
+      - fullmatch("/攻略")

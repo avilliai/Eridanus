@@ -156,7 +156,7 @@ def main(bot, bus, logger):
                                            checkIfRepFirstTime=True)
         if firstRep:
             await bot.send_group_message(event.group_id, [Reply(str(event.message_id)), Text("如对话异常请发送 /clear 以清理对话")])
-        if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
+        if len(r) < maxTextLen and random.randint(0, 100) < voiceRate and "出错，请重试" not in r:
             try:
                 voiceP = await tstt(r)
                 await bot.send_group_message(event.group_id, [Record(file=voiceP, url="")])
@@ -294,14 +294,14 @@ def main(bot, bus, logger):
     @bus.on(GroupMessageEvent)
     async def atReply(event:GroupMessageEvent):
         global trustUser, chatGLMCharacters, userdict,trustG,chattingUser
-        if check_cq_atcode(event.raw_message,bot.id)!=False or event.sender.user_id in chattingUser:
+        if check_cq_atcode(event.raw_message,bot.id) or event.sender.user_id in chattingUser:
             try:
                 if not wontrep(noRes1, wash_cqCode(event.raw_message).replace(" ", ""),
                                logger):
                     return
             except Exception as e:
                 logger.error(f"无法运行屏蔽词审核，请检查noResponse.yaml配置格式--{e}")
-        if (check_cq_atcode(event.raw_message,bot.id)!=False or event.sender.user_id in chattingUser) and (glmReply or (trustglmReply and str(
+        if (check_cq_atcode(event.raw_message,bot.id) or event.sender.user_id in chattingUser) and (glmReply or (trustglmReply and str(
                 event.sender.user_id) in trustUser) or event.group.id in trustG):
             logger.info("ai聊天启动")
         else:
@@ -323,7 +323,7 @@ def main(bot, bus, logger):
         user = event.sender.user_id
         if user in chattingUser:
             chattingUser[user] = datetime.datetime.now()
-        if len(r) < maxTextLen and random.randint(0, 100) < voiceRate:
+        if len(r) < maxTextLen and random.randint(0, 100) < voiceRate and "出错，请重试" not in r:
             try:
                 voiceP = await tstt(r)
                 await bot.send_group_message(event.group_id,[Record(file=voiceP,url="")])
