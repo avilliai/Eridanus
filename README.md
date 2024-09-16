@@ -1,3 +1,5 @@
+>快来新项目坐牢，孩子们
+
 基于[yiri-onebot](https://github.com/YiriMiraiProject/YiriOneBot)
 
 对项目Manyana进行重新规划，不再使用overflow作为中介，提高效率
