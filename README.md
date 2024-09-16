@@ -85,7 +85,7 @@ wash_cqCode(event.raw_message)
 
 At(bot.qq) in event.message_chain
 换成
-check_cq_atcode(event.raw_message,bot.id)!=False
+check_cq_atcode(event.raw_message,bot.id)  (返回的是一个bool，是否包含@bot)
 
 @bot.on(GroupMessage)
 换成
