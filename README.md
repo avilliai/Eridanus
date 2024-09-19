@@ -2,9 +2,7 @@
 
 基于[yiri-onebot](https://github.com/YiriMiraiProject/YiriOneBot)
 
-对项目Manyana进行重新规划，不再使用overflow作为中介，提高效率
-
-
+对项目Manyana进行重新规划，不再使用overflow作为连接onebot实现的媒介，提高效率。
 
 目前任务较为繁重，规划是，
 - [ ] 1.更明确的plugins和run对应关系
