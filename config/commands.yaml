@@ -1,4 +1,4 @@
-commands:
+FragmentsModule:
   #支持正则表达式
   #rules:
   #  - startswith("命令")
@@ -138,6 +138,10 @@ commands:
     enable: true
     rules:
       - startswith("steam查询")
+  handle_kankan:
+    enable: true
+    rules:
+      - startswith("看看"))
 bluearchive:
   selectMission:
     enable: true
@@ -155,9 +159,10 @@ bluearchive:
       - fullmatch("/arona")
       - fullmatch("/攻略")
 aiDraw:
-  enable: true
-  rules:
-    - startswith("画")
+  aiDraw:
+    enable: true
+    rules:
+      - startswith("画")
 musicPick:
   selectMusic:
     enable: true

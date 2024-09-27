@@ -15,7 +15,8 @@ from PIL import Image as Image1
 from yiriob.message import Text, Reply, Image, Node, Forward, Record
 
 from plugins.FragmentsCore import chaijun, beCrazy, pic, setuGet, hisToday, querys, news, danxianglii, moyu, xingzuo, \
-    get_joke, get_cp_mesg, arkOperator, sd, steamEpic, handwrite, minecraftSeverQuery, eganylist, solve
+    get_joke, get_cp_mesg, arkOperator, sd, steamEpic, handwrite, minecraftSeverQuery, eganylist, solve, \
+    search_and_download_image
 from plugins.RandomDrawing import genshinDraw, qianCao, tarotChoice
 from plugins.aiReplyCore import modelReply
 from plugins.emojimixhandle import emojimix_handle
@@ -29,14 +30,12 @@ def main(bot, bus, logger):
         with open(file_path, 'r', encoding='utf-8') as f:
             return yaml.load(f, Loader=yaml.FullLoader)
 
-    command_rules = load_command_rules('config/commands.yaml')['commands']
+    command_rules = load_command_rules('config/commands.yaml')['FragmentsModule']
     # 读取配置文件和API设置
-    with open('config/api.yaml', 'r', encoding='utf-8') as f:
-        result = yaml.load(f.read(), Loader=yaml.FullLoader)
+    result=bot.api
 
     api_KEY = result.get("心知天气")
     proxy = result.get("proxy")
-    moderateK = result.get("moderate")
     nasa_api = result.get("nasa_api")
 
     with open("data/text/odes.json", encoding="utf-8") as fp:
@@ -527,6 +526,18 @@ def main(bot, bus, logger):
             logger.error(e)
             logger.exception("详细错误如下：")
             await bot.send_group_message(event.group_id, [Text("查询失败，请检查网络连接")])
+    async def handle_kankan(event, message):
+        current_function_name = inspect.currentframe().f_code.co_name
+        rule = command_rules[current_function_name]["rules"][0]
+        rule_content = rule.split('(')[1][:-1].replace('"', '').replace("'", '')
+        text = wash_cqCode(event.raw_message).replace(rule_content, "")
+        try:
+            baidupath = await search_and_download_image(text)
+            logger.info("搜索图片开始" + text)
+            await bot.send(event, Image(file=fileUrl(baidupath), type='flash', url=""))
+            os.remove(baidupath)
+        except:
+            logger.error("搜索图片错误")
     '''async def handle_randomASMR(event, message):
         try:
             from plugins.youtube0 import ASMR_random, get_audio, get_img
@@ -584,11 +595,14 @@ def main(bot, bus, logger):
         "handle_colorfulanime": handle_colorfulanime,
         "handle_minecraftQuery": handle_minecraftQuery,
         "handle_grammaAnalysis": handle_grammaAnalysis,
-        "handle_steamQuery": handle_steamQuery
+        "handle_steamQuery": handle_steamQuery,
+        "handle_kankan": handle_kankan,
     }
     @bus.on(GroupMessageEvent)
     async def handle_command(event: GroupMessageEvent):
         message = wash_cqCode(event.raw_message)
+        logger.info(f"收到群{event.group_id}消息：{message}")
+        logger.info(f"发送者：{event.sender.nickname}({event.sender.user_id})")
         if len(wash_cqCode(event.raw_message)) == 2:  # 表情合成专用
             await emojimixer(event, message)
         for function_name, rules in command_rules.items():

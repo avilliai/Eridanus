@@ -14,7 +14,7 @@ def load_command_rules(file_path):
         return yaml.load(f, Loader=yaml.FullLoader)
 
 
-command_aiDraw_rules = load_command_rules('config/commands.yaml')['aiDraw']
+command_aiDraw_rules = load_command_rules('config/commands.yaml')['aiDraw']["aiDraw"]
 def check_command_rules(message):
     for rule in command_aiDraw_rules['rules']:
         if validate_rule(message, rule):
