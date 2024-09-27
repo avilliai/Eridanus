@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     sex TEXT,
     sign_in_days INTEGER DEFAULT 0,
     added_date TEXT NOT NULL,
-    city TEXT NOT NULL,
+    city TEXT NOT NULL
 )
 ''')
 
