@@ -2,9 +2,8 @@
 import sqlite3
 from datetime import datetime
 
-
-conn = sqlite3.connect('data/user_text_database.db')
-cursor = conn.cursor()
+with sqlite3.connect('data/user_text_database.db') as conn:
+    cursor = conn.cursor()
 
 
 cursor.execute('''
@@ -25,7 +24,7 @@ def add_text_TextDataBase(user_id, text):
         INSERT INTO user_texts (user_id, text, date) 
         VALUES (?, ?, ?)''', (user_id, text, date_added))
         conn.commit()
-        print(f"成功添加文本: {text}，用户 ID: {user_id}")
+        #print(f"成功添加文本: {text}，用户 ID: {user_id}")
     except sqlite3.Error as e:
         print(f"添加文本失败: {e}")
 def user_exists_TextDataBase(user_id):

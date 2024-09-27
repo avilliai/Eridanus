@@ -1,8 +1,8 @@
 import sqlite3
 from datetime import datetime
 
-conn = sqlite3.connect('data/user_database.db')
-cursor = conn.cursor()
+with sqlite3.connect('data/user_database.db') as conn:
+    cursor = conn.cursor()
 
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS users (

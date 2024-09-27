@@ -534,7 +534,8 @@ def main(bot, bus, logger):
         try:
             baidupath = await search_and_download_image(text)
             logger.info("搜索图片开始" + text)
-            await bot.send_group_message(event.group_id, Image(file=fileUrl(baidupath), type='flash', url=""))
+            print(baidupath)
+            await bot.send_group_message(event.group_id, [Image(file=fileUrl(baidupath), type='flash', url="")])
             os.remove(baidupath)
         except:
             logger.error("搜索图片错误")
