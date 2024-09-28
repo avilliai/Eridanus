@@ -13,7 +13,7 @@ from yiriob.interface import SendGroupMessageInterface, SendGroupMessageParams
 from yiriob.message import MessageChain, Text, At, Reply, Record
 
 from plugins.aiReplyCore import modelReply, clearAllPrompts, tstt, clearsinglePrompt
-from plugins.tookits import check_cq_atcode, extract_image_urls, CListen, wash_cqCode
+from plugins.toolkits import check_cq_atcode, extract_image_urls, CListen, wash_cqCode
 from plugins.wReply.wontRep import wontrep
 
 def main(bot, bus, logger):

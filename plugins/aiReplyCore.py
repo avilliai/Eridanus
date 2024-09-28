@@ -10,7 +10,7 @@ import yaml
 from plugins.ReplyModels import gptOfficial, gptUnofficial, anotherGPT35, chatGLM, Gemma, binggpt4, alcex_GPT3_5, catRep, \
     momoRep, sparkAI, wenxinAI, YuanQiTencent
 from plugins.googleGemini import geminirep
-from plugins.tookits import random_str, translate, newLogger
+from plugins.toolkits import random_str, translate, newLogger
 from plugins.vitsGenerate import voiceGenerate, superVG
 logger=newLogger()
 with open('config/api.yaml', 'r', encoding='utf-8') as f:

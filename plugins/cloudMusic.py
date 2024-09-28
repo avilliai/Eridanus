@@ -1,7 +1,7 @@
 import httpx
 import requests
 
-from plugins.tookits import get_headers
+from plugins.toolkits import get_headers
 
 
 # 定义请求的URL

@@ -4,6 +4,8 @@ import io
 import json
 import os
 import random
+import re
+import urllib
 from io import BytesIO
 
 import httpx
@@ -13,7 +15,7 @@ from bs4 import BeautifulSoup
 from emoji import is_emoji
 
 from plugins.steamSearch import get_steam_game_description, fetch_description, get_steam_game_search
-from plugins.tookits import get_headers, random_str
+from plugins.toolkits import get_headers, random_str
 
 
 async def news():
@@ -557,6 +559,11 @@ async def querys(city, API_KEY) -> str:
                    f'气温{data["results"][0]["now"]["temperature"]}℃。'
         except (httpx.NetworkError, httpx.HTTPStatusError, KeyError):
             return f'抱歉，没有找到{city}的天气数据。'
+async def fullQuery(city):
+    async with httpx.AsyncClient() as client:
+        r=await client.get(f"https://api.lolimi.cn/API/weather/?city={city}")
+        data=r.json()
+        return data["data"]
 with open('data/text/jokes.yaml', 'r', encoding='utf-8') as f:
     jokes = yaml.load(f.read(), Loader=yaml.FullLoader)
 def get_joke(joke_tp):

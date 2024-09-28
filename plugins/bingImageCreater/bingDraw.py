@@ -4,7 +4,7 @@ import httpx
 
 
 from plugins.bingImageCreater.bingImg import BingArt
-from plugins.tookits import random_str
+from plugins.toolkits import random_str
 
 
 async def bingCreate(sockProxy, prompt, _U, kiev):

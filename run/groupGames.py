@@ -9,7 +9,7 @@ import yaml
 from yiriob.event.events import GroupMessageEvent
 from yiriob.message import Text
 
-from plugins.tookits import wash_cqCode
+from plugins.toolkits import wash_cqCode
 
 Roulette = {}
 

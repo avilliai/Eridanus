@@ -12,7 +12,7 @@ from yiriob.event.events import GroupMessageEvent
 from yiriob.message import Record, Text
 
 from plugins.cloudMusic import newCloudMusicDown, cccdddm
-from plugins.tookits import wash_cqCode, validate_rule, fileUrl
+from plugins.toolkits import wash_cqCode, validate_rule, fileUrl
 
 
 def load_command_rules(file_path):

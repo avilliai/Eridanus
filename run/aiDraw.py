@@ -6,7 +6,7 @@ from yiriob.message import Image, Reply, Text
 
 from plugins.aiDrawer import SdDraw, draw2, airedraw, draw1, draw3, tiktokredraw, draw5, draw4, draw6, fluxDrawer
 from plugins.bingImageCreater.bingDraw import bingCreate
-from plugins.tookits import random_str, fileUrl, wash_cqCode, validate_rule
+from plugins.toolkits import random_str, fileUrl, wash_cqCode, validate_rule
 
 
 def load_command_rules(file_path):

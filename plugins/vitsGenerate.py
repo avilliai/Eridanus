@@ -8,7 +8,7 @@ import requests
 import websockets
 import yaml
 
-from plugins.tookits import translate,random_str,random_session_hash
+from plugins.toolkits import translate,random_str,random_session_hash
 
 try:
     from plugins.modelsLoader import modelLoader

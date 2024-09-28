@@ -6,7 +6,7 @@ import datetime
 import re
 from asyncio import sleep
 
-from plugins.tookits import screenshot_to_pdf_and_png
+from plugins.toolkits import screenshot_to_pdf_and_png
 from plugins.bangumisearch import bangumisearch, banguimiList
 
 

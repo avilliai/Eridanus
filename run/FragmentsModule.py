@@ -22,7 +22,7 @@ from plugins.aiReplyCore import modelReply
 from plugins.emojimixhandle import emojimix_handle
 from plugins.gacha import arkGacha, starRailGacha, bbbgacha
 from plugins.setuModerate import setuModerate
-from plugins.tookits import check_cq_atcode, wash_cqCode, fileUrl, random_str, newLogger, validate_rule
+from plugins.toolkits import check_cq_atcode, wash_cqCode, fileUrl, random_str, newLogger, validate_rule
 
 logger=newLogger()
 def main(bot, bus, logger):
