@@ -1,4 +1,4 @@
->当前任务应集中在sdk的调整和修改，尽可能降低迁移过来的成本。同时兼顾继续开发的易用性。
+>当前任务应集中在sdk的调整和修改，尽可能降低迁移过来的成本。同时兼顾继续开发的易用性，以及充分使用llob提供的api
 
 基于[yiri-onebot](https://github.com/YiriMiraiProject/YiriOneBot)
 
