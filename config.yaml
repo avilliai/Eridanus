@@ -1,7 +1,0 @@
-ReverseWebsocketHost: 127.0.0.1 #reverse ws的host
-ReverseWebsocketPort: 3003      #reverse ws端口
-access_token: "f"                #access_token，如果你onebot实现的access_token为空，你需要自己设置一个，并且与此配置项保持一致。yiriob在此项为空时无法正常工作
-bot_id: 337428814             #确保这里以及上面三项对应，下面的随便填填就行
-bot_name: eridantus
-master: 1840094972              #bot管理员，仅可填写1人
-mainGroup: 628763673            #主群，暂时没什么用
