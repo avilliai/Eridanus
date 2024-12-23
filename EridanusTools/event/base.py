@@ -4,7 +4,7 @@ from typing import (Any, Literal, Optional, Type, Unpack, final, get_args,
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from yiriob.utils import logger
+
 
 
 class EventBase(BaseModel, ABC):

@@ -1,17 +1,22 @@
 import logging
-
+import os
+from datetime import datetime
 import colorlog
 
 
 def createLogger():
-    # 创建一个logger对象
+    # 确保日志文件夹存在
+    log_folder = "log"
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+
+    # 创建一个 logger 对象
     logger = logging.getLogger("Eridanus")
-    # 设置日志级别为DEBUG，这样可以输出所有级别的日志
     logger.setLevel(logging.DEBUG)
-    # 创建一个StreamHandler对象，用于输出日志到控制台
+    logger.propagate = False  # 防止重复日志
+
+    # 设置控制台日志格式和颜色
     console_handler = logging.StreamHandler()
-    # 设置控制台输出的日志格式和颜色
-    logger.propagate = False
     console_format = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     console_colors = {
         'DEBUG': 'white',
@@ -22,15 +27,45 @@ def createLogger():
     }
     console_formatter = colorlog.ColoredFormatter(console_format, log_colors=console_colors)
     console_handler.setFormatter(console_formatter)
-    # 将控制台处理器添加到logger对象中
     logger.addHandler(console_handler)
-    # 使用不同级别的方法来记录不同重要性的事件
-    '''logger.debug('This is a debug message')
-    logger.info('This is an info message')
-    logger.warning('This is a warning message')
-    logger.error('This is an error message')
-    logger.critical('This is a critical message')'''
+
+    # 设置文件日志格式
+    file_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    file_formatter = logging.Formatter(file_format)
+
+    # 获取当前日期
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    log_file_path = os.path.join(log_folder, f"{current_date}.log")
+
+    # 创建文件处理器
+    file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
+
+    # 定义一个函数来更新日志文件（按日期切换）
+    def update_log_file():
+        nonlocal log_file_path, file_handler
+        new_date = datetime.now().strftime("%Y-%m-%d")
+        new_log_file_path = os.path.join(log_folder, f"{new_date}.log")
+        if new_log_file_path != log_file_path:
+            logger.removeHandler(file_handler)
+            file_handler.close()
+            log_file_path = new_log_file_path
+            file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
+            file_handler.setFormatter(file_formatter)
+            logger.addHandler(file_handler)
+
+    # 在 logger 上绑定更新日志文件的函数
+    logger.update_log_file = update_log_file
+
     return logger
-logger=createLogger()
+
+
+# 创建 logger 实例
+logger = createLogger()
+
+
 def get_logger():
+    # 每次获取 logger 时检查是否需要更新日志文件
+    logger.update_log_file()
     return logger
