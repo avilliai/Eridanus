@@ -1,43 +1,25 @@
-import logging
 
-import yaml
-from yiriob.adapters import ReverseWebsocketAdapter
-from yiriob.bot import Bot
-from yiriob.event import EventBus
+from EridanusTools.event.events import GroupMessageEvent, PrivateMessageEvent
+from EridanusTools.message.message_components import Image
+from EridanusTools.websocketAdapterAndBot import WebSocketBot
 
-from plugins.toolkits import newLogger
-from plugins.yiriob_fix.YamlDotDict import ExtendedBot
-from run import example, aiReply, FragmentsModule, aronaapi, aiDraw, musicPick, DataBase
+uri = "ws://127.0.0.1:3001"
 
-#读取配置
-with open('config.yaml', 'r', encoding='utf-8') as f:
-    config = yaml.load(f.read(), Loader=yaml.FullLoader)
-bus = EventBus()
-config_files = {
-    'api': 'config/api.yaml',
-    'settings': 'config/settings.yaml',
-    "controller": "config/controller.yaml",
-    "basicConfig": "config.yaml"
-}
-
-# 初始化扩展的机器人类
-bot = ExtendedBot(
-    adapter=ReverseWebsocketAdapter(
-        host=str(config['ReverseWebsocketHost']), port=int(config['ReverseWebsocketPort']), access_token=str(config['access_token']), bus=bus
-    ),
-    self_id=int(config['bot_id']),
-    config_files=config_files  # 传入多个 YAML 配置文件
-)
+bot = WebSocketBot(uri)
 
 
-logger=newLogger()
+@bot.on(PrivateMessageEvent)
+async def handle_private_message(event: PrivateMessageEvent):
+    print(f"收到私聊消息: {event.raw_message} 来自用户: {event.sender.nickname}")
 
-#与yiri mirai不同，我们需要传入bot和bus两个对象
-example.main(bot,bus,logger)  #这是一个测试示例，你可以参考它
-aiReply.main(bot,bus,logger)  #ai回复功能
-DataBase.main(bot,bus,logger)  #调用userDataBase插件
-musicPick.main(bot,bus,logger)  #调用musicPick插件
-aronaapi.main(bot,bus,logger)  #调用aronaapi插件
-FragmentsModule.main(bot,bus,logger)
-aiDraw.main(bot,bus,logger)  #调用aiDrawer插件
+    await bot.send_friend_message(event.sender.user_id, "你好，我测你的码")
+
+
+@bot.on(GroupMessageEvent)
+async def handle_group_message(event: GroupMessageEvent):
+    print(event)
+    print(f"收到群组消息: {event.raw_message}，来自群: {event.group_id}")
+    #await bot.send_friend_message(1840094972, "你好，我是机器人")
+    await bot.send(event,"我测你的码")
+
 bot.run()
