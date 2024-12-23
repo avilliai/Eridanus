@@ -84,6 +84,16 @@ class WebSocketBot:
 
     def on(self, event: Type[EventBase]):
         return self.event_bus.on(event)
+    """
+    以下内容为特殊函数实现
+    """
+    async def groupList(self):
+        #还需要进一步修改，需要使用echo参数判断专有返回值，目前还没有做
+        r=await self.websocket.send(json.dumps({"action": "get_group_list"}))
+        print(r)
+    """
+    以下为消息发送相关函数
+    """
     async def send_to_sever(self, event: EventBase, message: Union[MessageChain, dict]):
         """
         发送消息，可以接受 MessageChain 或原始字典格式的消息。

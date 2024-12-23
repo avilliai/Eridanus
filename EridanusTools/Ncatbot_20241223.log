@@ -1,6 +1,0 @@
-(2024-12-23 23:29:32,933) (wsAdapter.py:77) _connect 
- WebSocket 连接已建立
-(2024-12-23 23:29:43,290) (wsAdapter.py:65) _receive 
- 无法匹配事件类型，跳过处理。
-(2024-12-23 23:30:55,213) (wsAdapter.py:65) _receive 
- 无法匹配事件类型，跳过处理。
