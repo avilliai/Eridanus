@@ -38,8 +38,8 @@ class EventBus:
 
 
 class HTTPBot(MailMan):
-    def __init__(self,http_sever):
-        super().__init__(http_sever)
+    def __init__(self,http_sever,access_token):
+        super().__init__(http_sever,access_token)
         self.logger = get_logger()
         self.event_bus = EventBus()
 

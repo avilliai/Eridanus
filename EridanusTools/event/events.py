@@ -1,10 +1,12 @@
 # pyright: reportIncompatibleVariableOverride=false
-from typing import Literal, Optional
+from typing import Literal, Optional, Dict, Union, List
 
 from pydantic import BaseModel, ConfigDict
+from pydantic.v1 import root_validator
 
 from EridanusTools.event.base import EventBase
 from EridanusTools.message.message_chain import MessageChain
+from EridanusTools.utils.cq_code_handler import parse_message_with_cq_codes_to_list
 
 
 # Attention!
@@ -77,18 +79,40 @@ class MessageEvent(EventBase):
     message_id: int
     message: MessageChain
     original_message: Optional[MessageChain] = None
-    raw_message: str
+    _raw_message: str
     font: int
     sender: Sender
     to_me: bool = False
-    """
-    :说明: 消息是否与机器人有关
-    """
     reply: Optional[Reply] = None
-    """
-    :说明: 消息中提取的回复消息，内容为 ``get_msg`` API 返回结果
-    """
 
+    processed_message: List[Dict[str, Union[str, Dict]]] = []
+
+    @property
+    def raw_message(self):
+        return self._raw_message
+
+    @raw_message.setter
+    def raw_message(self, value: str):
+        self._raw_message = value
+        # 在赋值时调用 parse_message_with_cq_codes_to_list
+        self.processed_message = parse_message_with_cq_codes_to_list(value)
+
+    # 可选的，确保 processed_message 始终跟随 raw_message 更新
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # 如果 raw_message 在初始化时已经赋值，确保 processed_message 被设置
+        if hasattr(self, 'raw_message'):
+            self.processed_message = parse_message_with_cq_codes_to_list(self.raw_message)
+
+    def get(self, message_type: str):
+        """
+        按指定类型获取 processed_message 中的消息。
+
+        :param message_type: 要获取的消息类型，例如 'image', 'record' 等。
+        :return: 包含该类型消息的列表，或者 None（如果没有该类型的消息）。
+        """
+        result = [msg[message_type] for msg in self.processed_message if message_type in msg]
+        return result if result else None
 
 class PrivateMessageEvent(MessageEvent):
     """私聊消息"""
