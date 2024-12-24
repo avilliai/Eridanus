@@ -64,14 +64,14 @@ class YAMLManager:
 
 # 使用示例
 if __name__ == "__main__":
-    manager = YAMLManager(["config/llmConfig.yaml", "config/controller.yaml"])
+    manager = YAMLManager(["config/api.yaml", "config/controller.yaml"])
 
     # 访问 YAML 数据
-    print(manager.llmConfig["llm"]["apikey"])
+    print(manager.api["llm"]["apikey"])
 
     # 修改 YAML 数据onfig["llm"]["apikey"] = "new-api-key"
     #     manager.save
-    manager.llmC_yaml("llmConfig")
+    manager.llmC_yaml("api")
 
     # 再次访问以确认修改
-    print(manager.llmConfig["llm"]["apikey"])
+    print(manager.api["llm"]["apikey"])

@@ -1,6 +1,7 @@
 from typing import Union
 
 import httpx
+import requests
 
 from EridanusTools.event.base import EventBase
 from EridanusTools.message.message_chain import MessageChain
@@ -15,6 +16,7 @@ class MailMan:
         self.headers={
         "Authorization": f"Bearer {access_token}"
         }
+        self.info= self.get_login_info()
 
     async def get_status(self):
         """
@@ -589,4 +591,14 @@ class MailMan:
         async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
             r = await client.post(url,json={"group_id":group_id})  # 使用 `json=data`
             return r.json()
+    def get_login_info(self):
+        """
+        获取登录号信息
+        :return:
+        """
+        url=f"{self.http_server}/get_login_info"
+        r=requests.get(url,headers=self.headers)
+        self.id=int(r.json()["data"]["user_id"])
+        self.nickname=r.json()["data"]["nickname"]
+
 

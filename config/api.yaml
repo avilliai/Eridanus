@@ -1,0 +1,13 @@
+llm:
+  model: openai  #选择使用的模型，用什么配什么
+  system: "你现在是一只猫娘"
+  openai:
+    api_keys:
+    - YOUR_API_KEY_1
+    - YOUR_API_KEY_2
+    - YOUR_API_KEY_3
+    model: gemini-2.0-flash-exp
+    quest_url: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+proxy:
+  http_proxy: "http://127.0.0.1:10809"
+  socks_proxy: "socks5://127.0.0.1:10809"

@@ -2,7 +2,9 @@ pydantic
 colorlog
 pydantic_core
 websockets
-httpx
+httpx<0.28.0
 uvicorn
 fastapi
 ruamel.yaml
+requests
+aiosqlite

@@ -1,9 +1,0 @@
-llm:
-  model: Gemini #选择使用的模型，用什么配什么
-  openai:
-    api_key:
-    - YOUR_API_KEY
-    - YOUR_API_KEY_2
-    - YOUR_API_KEY_3
-    model: text-davinci-002
-    base_url: https://generativelanguage.googleapis.com/v1beta/openai
