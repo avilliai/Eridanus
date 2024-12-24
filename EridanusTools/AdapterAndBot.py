@@ -8,8 +8,7 @@ import uvicorn
 from EridanusTools.event.base import EventBase
 from EridanusTools.event.eventFactory import EventFactory
 from EridanusTools.interface.sendMes import MailMan
-from EridanusTools.message.message_chain import MessageChain
-from EridanusTools.message.message_components import MessageComponent, Text
+
 from EridanusTools.utils.logger import get_logger
 
 
@@ -65,9 +64,6 @@ class HTTPBot(MailMan):
         处理接收到的 HTTP 消息。
         """
         self.logger.info(f"收到消息: {data}")
-        if "echo" in data:
-            if data["echo"] in self.echo_dict:
-                self.echo_dict[data["echo"]] = data
         event_obj = EventFactory.create_event(data)
         if event_obj:
             await self.event_bus.emit(event_obj)

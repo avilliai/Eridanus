@@ -117,7 +117,7 @@ class Image(MessageComponent):
 class Record(MessageComponent):
     comp_type: str = "record"
     file: str = Field(description="语音文件路径")
-    url: Annotated[Optional[str], OnlyReceive] = Field(description="语音 URL")
+    url: Annotated[Optional[str], OnlyReceive] = Field(default="",description="语音 URL")
     cache: Annotated[Optional[bool], OnlySend] = Field(
         default=True,
         description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件",

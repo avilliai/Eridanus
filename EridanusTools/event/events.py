@@ -216,7 +216,7 @@ class NotifyEvent(NoticeEvent):
     notice_type: Literal["notify"]
     sub_type: str
     user_id: int
-    group_id: int
+    group_id: int=None
 
 
 class PokeNotifyEvent(NotifyEvent):

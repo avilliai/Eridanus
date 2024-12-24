@@ -1,4 +1,5 @@
-from EridanusTools.event.events import GroupMessageEvent, FriendRequestEvent
+from EridanusTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent
+from EridanusTools.message.message_components import Record
 
 
 def main(bot):
@@ -32,3 +33,21 @@ def main(bot):
             bot.logger.error(r)
             await bot.send(event,"已更换头像！")
             avatar=False
+        if event.raw_message=="给我管理" and event.sender.user_id==1840094972:
+            await bot.set_group_admin(event.group_id,event.sender.user_id,True)
+            await bot.send(event, "给你了！")
+        if event.raw_message=="取消管理" and event.sender.user_id==1840094972:
+            await bot.set_group_admin(event.group_id,event.sender.user_id,False)
+            await bot.send(event, "取消了！")
+        if event.raw_message.startswith("我要头衔"):
+            title=event.raw_message.split("我要头衔")[1].strip()
+            await bot.set_group_special_title(event.group_id,event.sender.user_id,title)
+            await bot.send(event, "已设置头衔！")
+        if event.raw_message=="禁言我":
+            await bot.mute(event.group_id,event.sender.user_id,60)
+        if event.raw_message=="测试":
+            await bot.send(event,Record(file="file://D:/python/Manyana/data/autoReply/voiceReply/a1axataxaWaQaia.wav"))
+    @bot.on(PrivateMessageEvent)
+    async def FriendMesHandler(event: PrivateMessageEvent):
+        if event.raw_message=="戳我":
+            await bot.friend_poke(event.sender.user_id)
