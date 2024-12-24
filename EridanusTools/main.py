@@ -1,7 +1,7 @@
 
 from EridanusTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from EridanusTools.message.message_components import Image
-from EridanusTools.websocketAdapterAndBot import WebSocketBot
+from EridanusTools.AdapterAndBot import WebSocketBot
 
 uri = "ws://127.0.0.1:3001"
 

@@ -60,7 +60,12 @@ class Status(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-
+class LifecycleMetaEvent(BaseModel):
+    time: int
+    sender: int
+    post_type: str
+    meta_event_type: str
+    sub_type: str
 # Message Events
 class MessageEvent(EventBase):
     """消息事件"""
