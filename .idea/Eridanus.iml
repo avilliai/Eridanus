@@ -5,7 +5,10 @@
       <sourceFolder url="file://$MODULE_DIR$/YiriOneBot" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (Eridanus) (3)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.11 (Eridanus) (5)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="removeUnused" value="true" />
   </component>
 </module>

@@ -1,5 +1,5 @@
 from EridanusTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent
-from EridanusTools.message.message_components import Record
+from EridanusTools.message.message_components import Record, Node, Text
 
 
 def main(bot):
@@ -46,6 +46,8 @@ def main(bot):
         if event.raw_message=="禁言我":
             await bot.mute(event.group_id,event.sender.user_id,60)
         if event.raw_message=="测试":
+            r=Node(content=[Text("你好，我是机器人！")])
+            await bot.send_group_forward_msg(event.group_id,r)
             await bot.send(event,Record(file="file://D:/python/Manyana/data/autoReply/voiceReply/a1axataxaWaQaia.wav"))
     @bot.on(PrivateMessageEvent)
     async def FriendMesHandler(event: PrivateMessageEvent):

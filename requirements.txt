@@ -1,0 +1,7 @@
+pydantic
+colorlog
+pydantic_core
+websockets
+httpx
+uvicorn
+fastapi

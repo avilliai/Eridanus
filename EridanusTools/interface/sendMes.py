@@ -29,6 +29,35 @@ class MailMan:
     """
     消息发送
     """
+
+    async def send_group_forward_msg(self, group_id: int, components: Union[str, list[Union[MessageComponent, str]]]):
+        """
+        发送群消息
+        :param group_id:
+        :param components:
+        :return:
+        """
+        # 如果是字符串，将其包装为 [Text(str)]
+        if isinstance(components, str):
+            components = [Text(components)]
+        if not isinstance(components,list):
+            components = [components]
+        else:
+            components = [
+                Text(component) if isinstance(component, str) else component
+                for component in components
+            ]
+
+        message = MessageChain(components)
+        data = {
+            "group_id": group_id,
+            "messages": message.to_dict(),
+        }
+        self.logger.info(f"发送消息: {data}")
+        url = f"{self.http_server}/send_group_forward_msg"
+        async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
+            r = await client.post(url, json=data)  # 使用 `json=data`
+            return r.json()
     async def send_to_server(self, event: EventBase, message: Union[MessageChain, dict]):
         """
         发送消息，可以接受 MessageChain 或原始字典格式的消息。
@@ -560,3 +589,4 @@ class MailMan:
         async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
             r = await client.post(url,json={"group_id":group_id})  # 使用 `json=data`
             return r.json()
+
