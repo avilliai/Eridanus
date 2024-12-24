@@ -2,7 +2,7 @@ from EridanusTools.event.events import GroupMessageEvent, FriendRequestEvent, Pr
 from EridanusTools.message.message_components import Record, Node, Text
 
 
-def main(bot):
+def main(bot,config):
     global avatar
     avatar=False
     @bot.on(GroupMessageEvent)

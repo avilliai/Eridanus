@@ -5,3 +5,4 @@ websockets
 httpx
 uvicorn
 fastapi
+ruamel.yaml
