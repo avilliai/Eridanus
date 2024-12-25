@@ -33,7 +33,8 @@ class EventBus:
             for handler in handlers:
                 await handler(event_instance)
         else:
-            print(f"未找到处理 {event_type} 的监听器")
+            pass
+            #print(f"未找到处理 {event_type} 的监听器")
 
 
 class HTTPBot(MailMan):
@@ -71,14 +72,16 @@ class HTTPBot(MailMan):
             self.logger.warning("无法匹配事件类型，跳过处理。")
 
 
-
-
-
     def run(self, host: str = "0.0.0.0", port: int = 8080):
         """
         启动 FastAPI 应用
         """
-        uvicorn.run(self.app, host=host, port=port)
+        startUp = {'time': 1735098202, 'self_id': 919467430, 'post_type': 'meta_event',
+                       'meta_event_type': 'startUp', 'status': {'online': True, 'good': True}, 'interval': 30000}
+        event_obj = EventFactory.create_event(startUp)
+        asyncio.run(self.event_bus.emit(event_obj)) #伪造一个startUp
+
+        uvicorn.run(self.app, host=host, port=port,log_level="warning")
 
 
 # 示例用法

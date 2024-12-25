@@ -1,4 +1,4 @@
-from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent
+from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent
 from developTools.message.message_components import Record, Node, Text
 
 
@@ -53,3 +53,7 @@ def main(bot,config):
     async def FriendMesHandler(event: PrivateMessageEvent):
         if event.raw_message=="戳我":
             await bot.friend_poke(event.sender.user_id)
+    @bot.on(startUpMetaEvent)
+    async def startUpHandler(event: startUpMetaEvent):
+        bot.logger.error("启动成功！")
+        #print(bot.id)

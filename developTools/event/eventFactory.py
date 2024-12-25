@@ -4,7 +4,7 @@ from developTools.event.base import EventBase
 from developTools.event.events import GroupUploadNoticeEvent, GroupMessageEvent, PrivateMessageEvent, \
     GroupAdminNoticeEvent, GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupBanNoticeEvent, \
     FriendAddNoticeEvent, GroupRecallNoticeEvent, FriendRecallNoticeEvent, NotifyEvent, FriendRequestEvent, \
-    GroupRequestEvent, LifecycleMetaEvent, HeartbeatMetaEvent
+    GroupRequestEvent, LifecycleMetaEvent, HeartbeatMetaEvent,startUpMetaEvent
 
 
 class EventFactory:
@@ -34,6 +34,7 @@ class EventFactory:
         "meta_event": {
             "lifecycle": LifecycleMetaEvent,
             "heartbeat": HeartbeatMetaEvent,
+            "startUp": startUpMetaEvent,
         },
     }
 

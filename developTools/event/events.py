@@ -282,6 +282,8 @@ class LifecycleMetaEvent(MetaEvent):
 
     meta_event_type: Literal["lifecycle"]
     sub_type: str
+class startUpMetaEvent(MetaEvent):
+    meta_event_type: Literal["startUp"]
 
 
 class HeartbeatMetaEvent(MetaEvent):
@@ -315,4 +317,5 @@ __all__ = [
     "MetaEvent",
     "LifecycleMetaEvent",
     "HeartbeatMetaEvent",
+    "startUpMetaEvent"
 ]
