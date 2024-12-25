@@ -28,7 +28,7 @@ def create_book_image(data):
     font_text = ImageFont.truetype("simhei.ttf", 18)
 
     # 计算每行显示的字数
-    max_chars_per_line = 20
+    max_chars_per_line = 25
 
     def split_text_by_line(text, max_chars):
         """将文本按指定字符数分行"""
