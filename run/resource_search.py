@@ -19,7 +19,7 @@ def main(bot,config):
             if user_info[6]>=config.controller["z_library"]["search_operate_level"]:
                 book_name = str(event.raw_message).split("搜书")[1]
                 await bot.send(event, "正在搜索中，请稍后...")
-                result=search_book(Z,book_name)
+                result=search_book(Z,book_name,config.api["z_library"]["search_num"])
                 forward_list=[]
                 for r in result:
                     forward_list.append(Node(content=[Text(r[0]),Image(file=r[1])]))

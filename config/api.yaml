@@ -20,6 +20,7 @@ llm:
 proxy:
   http_proxy: ""
   socks_proxy: ""
-z_library:
-  email: ""
-  password: "你的密码" #快填，Eridanus会偷走你的密码
+z_library: #填你的zlib账号
+  search_num: 4        #搜索返回结果数量，默认4本书
+  email: "你的邮箱"
+  password: "你的密码"  #快填，Eridanus会偷走你的账号密码
