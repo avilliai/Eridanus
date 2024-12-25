@@ -24,7 +24,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def changeAvatar(event: GroupMessageEvent):
         global avatar
-        #bot.logger.error(event.processed_message)
+        bot.logger.error(event.processed_message)
         #bot.logger.error(event.get("image"))
         if event.raw_message=="换头像" and event.sender.user_id==1840094972:
             await bot.send(event,"发来！")
@@ -35,6 +35,8 @@ def main(bot,config):
             bot.logger.error(r)
             await bot.send(event,"已更换头像！")
             avatar=False
+        if event.get("mface"):
+            await bot.send(event,f"你的彩色小人gif在这里{event.get('mface')[0]['url']}")
         if event.raw_message=="给我管理" and event.sender.user_id==1840094972:
             await bot.set_group_admin(event.group_id,event.sender.user_id,True)
             await bot.send(event, "给你了！")
