@@ -25,7 +25,16 @@ def func_map():
       ]
     return tools
 
-
+def gemini_func_map():
+    tools=[{
+        "google_search_retrieval": {
+            "dynamic_retrieval_config": {
+                "mode": "MODE_DYNAMIC",
+                "dynamic_threshold": 1,
+            }
+        }
+    }]
+    return tools
 
 async def call_func(func_name, params):
     """

@@ -3,6 +3,8 @@ llm:
   system: "你现在是一只猫娘"
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
+  Quote: False #回复时是否引用
+  focus_time: 60  #单次触发对话后持续有效时间，即艾特一次后，接下来不用艾特也能对话
   openai:
     api_keys:
     - YOUR_API_KEY_1

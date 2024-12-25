@@ -6,7 +6,7 @@ import httpx
 
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.core.utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
-from plugins.func_map import call_func
+from plugins.func_map import call_func, gemini_func_map
 
 proxies={"http://": "http://127.0.0.1:10809", "https://": "http://127.0.0.1:10809"}
 
@@ -105,8 +105,10 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
             {'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT', "threshold": "BLOCK_None"},
             {'category': 'HARM_CATEGORY_HATE_SPEECH', "threshold": "BLOCK_None"},
             {'category': 'HARM_CATEGORY_HARASSMENT', "threshold": "BLOCK_None"},
-            {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', "threshold": "BLOCK_None"}]
+            {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', "threshold": "BLOCK_None"}],
     }
+    if tools is not None:
+        pay_load["tools"] = tools
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
         print(r.json())

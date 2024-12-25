@@ -5,7 +5,7 @@ import requests
 
 from developTools.event.base import EventBase
 from developTools.message.message_chain import MessageChain
-from developTools.message.message_components import MessageComponent, Text
+from developTools.message.message_components import MessageComponent, Text, Reply
 from developTools.utils.logger import get_logger
 
 
@@ -86,12 +86,14 @@ class MailMan:
         except Exception as e:
             self.logger.error(f"发送消息时出现错误: {e}", exc_info=True)
 
-    async def send(self, event: EventBase, components: Union[str, list[Union[MessageComponent, str]]]):
+    async def send(self, event: EventBase, components: Union[str, list[Union[MessageComponent, str]]],Quote: bool=False):
         # 如果是字符串，将其包装为 [Text(str)]
         if isinstance(components, str):
             components = [Text(components)]
         if not isinstance(components,list):
             components = [components]
+        if Quote:
+            components.append(Reply(id=event.message_id)) #消息引用
         else:
             # 将列表中的字符串转换为 Text 对象
             components = [
