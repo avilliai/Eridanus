@@ -82,7 +82,7 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
         data["tool_choice"]="auto"
     async with httpx.AsyncClient(proxies=proxies, headers=headers, timeout=200) as client:
         r = await client.post(url, json=data)  # 使用 `json=data`
-        print(r.json())
+        #print(r.json())
         return r.json()["choices"][0]["message"]
 async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None):
     if proxy is not None and proxy !="":
@@ -111,7 +111,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
         pay_load["tools"] = tools
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
-        print(r.json())
+        #print(r.json())
 
         return r.json()['candidates'][0]["content"]
 
