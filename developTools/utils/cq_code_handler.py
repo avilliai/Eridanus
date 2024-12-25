@@ -1,6 +1,6 @@
 import re
+import html
 from typing import List, Dict, Union
-
 
 # 定义通用解析 CQ 码的函数
 def parse_message_with_cq_codes_to_list(message: str) -> List[Dict[str, Union[str, Dict]]]:
@@ -17,11 +17,15 @@ def parse_message_with_cq_codes_to_list(message: str) -> List[Dict[str, Union[st
         # 提取 CQ 码参数
         params = dict(param.split('=', 1) for param in cq_params.split(',') if '=' in param)
 
+        # 反转义参数值
+        for key, value in params.items():
+            params[key] = unescape_cq_value(value)
+
         # 如果 CQ 码前有普通文本，将其添加到结果
         if start > last_end:
             parsed_result.append({
                 "type": "text",
-                "text": message[last_end:start]
+                "text": unescape_cq_value(message[last_end:start])  # 反转义普通文本
             })
 
         # 根据 CQ 类型处理
@@ -35,7 +39,7 @@ def parse_message_with_cq_codes_to_list(message: str) -> List[Dict[str, Union[st
     if last_end < len(message):
         parsed_result.append({
             "type": "text",
-            "text": message[last_end:]
+            "text": unescape_cq_value(message[last_end:])  # 反转义普通文本
         })
 
     # 组装最终的结果结构
@@ -50,5 +54,9 @@ def parse_message_with_cq_codes_to_list(message: str) -> List[Dict[str, Union[st
 
     return result
 
-
-
+def unescape_cq_value(text: str) -> str:
+    """反转义 CQ 码中的 &, [, ] 和 ,"""
+    text = text.replace("[", "[")
+    text = text.replace("]", "]")
+    text = text.replace(",", ",")  # 新增对逗号的转义
+    return html.unescape(text)

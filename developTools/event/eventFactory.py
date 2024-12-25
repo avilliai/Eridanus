@@ -63,7 +63,7 @@ class EventFactory:
             event_class = sub_mapping.get("notify").get(sub_type)
         else:
             event_class = sub_mapping.get(sub_type)
-        print(type(event_class))
+        #print(type(event_class))
         if not event_class:
             return None
 

@@ -64,9 +64,9 @@ class HTTPBot(MailMan):
         """
         处理接收到的 HTTP 消息。
         """
-        #self.logger.info(f"收到消息: {data}")
+        self.logger.info(f"收到消息: {data}")
         event_obj = EventFactory.create_event(data)
-        self.logger.info(event_obj)
+        #self.logger.info(event_obj)
         if event_obj:
             await self.event_bus.emit(event_obj)
         else:

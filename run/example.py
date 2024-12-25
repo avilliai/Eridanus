@@ -40,6 +40,9 @@ def main(bot,config):
         if event.raw_message=="取消管理" and event.sender.user_id==1840094972:
             await bot.set_group_admin(event.group_id,event.sender.user_id,False)
             await bot.send(event, "取消了！")
+        if event.raw_message.startswith("改群名") and event.sender.user_id==1840094972:
+            name=event.raw_message.split("改群名")[1].strip()
+            await bot.set_group_name(event.group_id,name)
         if event.raw_message.startswith("我要头衔"):
             title=event.raw_message.split("我要头衔")[1].strip()
             await bot.set_group_special_title(event.group_id,event.sender.user_id,title)
