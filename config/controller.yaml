@@ -2,3 +2,6 @@ user_database:
   auto_register: true  #自动为发送消息的用户注册。确保所有人都在数据库中，不建议关。
   change_info_operate_level: 0     #相关指令所需操作权限等级。默认0级最低，数字越大等级越高
   permit_user_operate_level: 998   #允许使用授权#{目标QQ}#{level} 指令的操作权限等级
+z_library:
+  search_operate_level: 0    #书籍搜索所需等级
+  download_operate_level: 998  #书籍下载所需等级
