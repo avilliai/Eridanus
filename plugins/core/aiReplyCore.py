@@ -6,7 +6,8 @@ import httpx
 
 from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
-from plugins.core.utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
+from plugins.core.userDB import get_user
+from plugins.core.aiReply_utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
 from plugins.func_map import call_func, gemini_func_map
 
 
@@ -14,9 +15,12 @@ logger=get_logger()
 async def aiReplyCore(processed_message,user_id,config,tools=None):
     logger.info(f"aiReplyCore called with message: {processed_message}")
     reply_message = ""
+    system_instruction = config.api["llm"]["system"]
+    user_info=await get_user(user_id)
+    system_instruction=system_instruction.replace("{用户}",user_info[1])
     try:
         if config.api["llm"]["model"]=="openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message, user_id, config)
+            prompt, original_history = await construct_openai_standard_prompt(processed_message, user_id, system_instruction)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -30,7 +34,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None):
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, config)
-            system_instruction=config.api["llm"]["system"]
+
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],

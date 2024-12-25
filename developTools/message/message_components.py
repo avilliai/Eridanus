@@ -1,3 +1,4 @@
+import os
 from abc import ABC
 from typing import (TYPE_CHECKING, Annotated, Any, ClassVar, Literal, Optional,
                     TypeVar, Union)
@@ -93,24 +94,38 @@ class Face(MessageComponent):
 
 class Image(MessageComponent):
     comp_type: str = "image"
-    file: str = Field(description="图片文件路径或 URL")
+    file: str
     type: Optional[Literal["flash"]] = Field(
         default=None,
         description="图片类型，flash 表示闪照，无此参数表示普通图片"
     )
-    url: Optional[Annotated[str, OnlyReceive]] = Field(default="",description="图片 URL")
+    url: Optional[Annotated[str, OnlyReceive]] = Field(
+        default="",
+        description="图片 URL"
+    )
     cache: Annotated[Optional[bool], OnlySend] = Field(
         default=True,
-        description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件",
+        description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件"
     )
     proxy: Annotated[Optional[bool], OnlySend] = Field(
         default=True,
-        description="只在通过网络 URL 发送时有效，表示是否通过代理下载文件（需通过环境变量或配置文件配置代理）",
+        description="只在通过网络 URL 发送时有效，表示是否通过代理下载文件（需通过环境变量或配置文件配置代理）"
     )
     timeout: Annotated[Optional[int], OnlySend] = Field(
         default=30,
-        description="只在通过网络 URL 发送时有效，单位秒，表示下载网络文件的超时时间，默认不超时",
+        description="只在通过网络 URL 发送时有效，单位秒，表示下载网络文件的超时时间，默认不超时"
     )
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.file and not (
+            self.file.startswith("http://")
+            or self.file.startswith("file://")
+            or self.file.startswith("base64://")
+        ):
+            # 将相对路径转换为绝对路径并添加 file:// 前缀
+            abs_path = os.path.abspath(self.file).replace("\\", "/")
+            self.file = f"file://{abs_path}"
 
 
 

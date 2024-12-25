@@ -2,7 +2,7 @@ bot:
   name: "yucca"
 master:
   name: "owner"
-  id: 1234567890
+  id: 1840094972
 adapter:
   access_token: "any_access_token" #onebot实现部分为空则不用改
   http_sever:  #bot的运行端口，onebot事件上报到这里

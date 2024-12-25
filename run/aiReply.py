@@ -5,7 +5,7 @@ from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Reply
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.llmDB import delete_user_history
-from plugins.core.utils import prompt_elements_construct
+from plugins.core.aiReply_utils import prompt_elements_construct
 from plugins.func_map import func_map
 
 

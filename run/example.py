@@ -1,7 +1,7 @@
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text
-from plugins.core.userDB import update_user, add_user
+from plugins.core.userDB import update_user, add_user, get_user
 
 
 def main(bot,config):
@@ -12,9 +12,9 @@ def main(bot,config):
         if event.raw_message=="赞我":
             await bot.send_like(event.user_id)
             await bot.send(event, "已赞你！")
-        if event.raw_message.startswith("叫我"):
+        if event.raw_message.startswith("改备注"):
             await bot.send(event, "已修改")
-            remark = event.raw_message.split("叫我")[1].strip()
+            remark = event.raw_message.split("改备注")[1].strip()
             await bot.set_friend_remark(event.user_id, remark)
 
     @bot.on(FriendRequestEvent)
@@ -74,7 +74,9 @@ def main(bot,config):
         bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
         #以防万一，给master添加权限
         await add_user(master_id,master_name,master_name)
-        await update_user(master_id, permission=999)
+        await update_user(master_id, permission=999,nickname=master_name)
+        #r=await get_user(master_id)
+        #print(r)
     @bot.on(ProfileLikeEvent)
     async def profileLikeHandler(event: ProfileLikeEvent):
         bot.logger.info(f"{event.operator_id} 赞了你！")

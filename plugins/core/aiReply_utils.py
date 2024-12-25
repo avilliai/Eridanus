@@ -25,14 +25,14 @@ async def prompt_elements_construct(precessed_message):
             pass
             #prompt_elements.append({"type":"voice","voice":i["voice"]})
     return {"role": "user","content":prompt_elements}
-async def construct_openai_standard_prompt(processed_message, user_id, config):
+async def construct_openai_standard_prompt(processed_message, user_id, system_instruction):
     message=await prompt_elements_construct(processed_message)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
 
     full_prompt = [
-        {"role": "system", "content": [{"type": "text", "text": config.api["llm"]["system"]}]},
+        {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
     ]
     full_prompt.extend(history)
     await update_user_history(user_id, history)  # 更新数据库中的历史记录

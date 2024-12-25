@@ -2,8 +2,12 @@ import json
 import aiosqlite
 import datetime
 import asyncio
+
+from developTools.utils.logger import get_logger
+
 dbpath="data/dataBase/user_management.db"
 # 初始化数据库，新增注册时间字段
+logger=get_logger()
 async def initialize_db():
     async with aiosqlite.connect(dbpath) as db:
         await db.execute("""
@@ -27,6 +31,7 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
         # 检查用户是否已存在
         async with db.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,)) as cursor:
             if await cursor.fetchone():
+                #logger.warning(f"用户 {user_id} 已存在，无法重复注册。")
                 return f"用户 {user_id} 已存在，无法重复注册。"
         registration_date = datetime.date.today().isoformat()
         await db.execute("""
@@ -34,21 +39,57 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (user_id, nickname, card, sex, age, city, permission, "[]", registration_date))
         await db.commit()
+        #logger.info(f"用户 {user_id} 注册成功。")
         return f"用户 {user_id} 注册成功。"
 
 # 更新用户信息
 async def update_user(user_id, **kwargs):
+    user = await get_user(user_id)
+    if not user:
+        logger.info(f"用户 {user_id} 不存在，已创建默认用户。")
+        #print(f"用户 {user_id} 不存在，已创建默认用户。")
+    # 更新用户信息
     async with aiosqlite.connect(dbpath) as db:
         for key, value in kwargs.items():
             if key in ["nickname", "card", "sex", "age", "city", "permission"]:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
         await db.commit()
+    logger.info(f"用户 {user_id} 的信息已更新：{kwargs}")
+    return f"用户 {user_id} 的信息已更新：{kwargs}"
 
 # 获取用户信息
-async def get_user(user_id):
+async def get_user(user_id,nickname=""): #重要信息无非user_id和nickname，因此get时没有就直接创建。
     async with aiosqlite.connect(dbpath) as db:
         async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
-            return await cursor.fetchone()
+            result = await cursor.fetchone()
+            if result:
+                # 如果用户存在，直接返回信息
+                return result
+
+        # 如果用户不存在，创建新用户
+        registration_date = datetime.date.today().isoformat()
+        default_user = {
+            "user_id": user_id,
+            "nickname": f"{nickname}",
+            "card": "00000",
+            "sex": "0",
+            "age": 0,
+            "city": "通辽",
+            "permission": 0,
+            "signed_days": "[]",
+            "registration_date": registration_date,
+        }
+
+        await db.execute("""
+        INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, default_user["nickname"], default_user["card"], default_user["sex"],
+              default_user["age"], default_user["city"], default_user["permission"],
+              default_user["signed_days"], default_user["registration_date"]))
+        await db.commit()
+        logger.info(f"查询的用户 {user_id} 不存在，已创建默认用户。")
+        #print(f"用户 {user_id} 不存在，已创建默认用户。")
+        return tuple(default_user.values())  # 返回用户数据
 
 # 获取签到记录
 async def get_signed_days(user_id):
@@ -57,7 +98,7 @@ async def get_signed_days(user_id):
             result = await cursor.fetchone()
             return eval(result[0]) if result else []
 
-# 签到逻辑
+
 async def record_sign_in(user_id, nickname="DefaultUser", card="00000"):
     async with aiosqlite.connect(dbpath) as db:
         async with db.execute("SELECT signed_days FROM users WHERE user_id = ?", (user_id,)) as cursor:
@@ -69,7 +110,7 @@ async def record_sign_in(user_id, nickname="DefaultUser", card="00000"):
                 VALUES (?, ?, ?, ?, ?)
                 """, (user_id, nickname, card, "[]", registration_date))
                 await db.commit()
-                return f"用户 {user_id} 不存在，已创建新用户。"
+                print(f"用户 {user_id} 不存在，已创建新用户。")
                 signed_days = []
             else:
                 signed_days = json.loads(result[0])
@@ -84,19 +125,6 @@ async def record_sign_in(user_id, nickname="DefaultUser", card="00000"):
         else:
             return f"用户 {user_id} 今天已经签到过了！"
 
-# 示例代码
-'''async def main():
-    await initialize_db()
-
-    # 添加新用户
-    await add_user(1, "Alice", "12345")  # 不传 sex, age, city, permission，使用默认值
-    user = await get_user(1)
-    print("用户信息：", user)
-
-    # 签到
-    await record_sign_in(1)
-    signed_days = await get_signed_days(1)
-    print("签到记录：", signed_days)'''
 
 
 asyncio.run(initialize_db())
