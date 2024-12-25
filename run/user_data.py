@@ -4,6 +4,7 @@ from plugins.core.userDB import add_user
 
 def main(bot,config):
 
+
     @bot.on(GroupMessageEvent)
     async def handle_group_message(event):
         if event.raw_message == "注册":

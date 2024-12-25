@@ -1,6 +1,7 @@
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text
+from plugins.core.userDB import update_user, add_user
 
 
 def main(bot,config):
@@ -71,6 +72,9 @@ def main(bot,config):
         friend_list=friend_list["data"]
         bot.logger.info(f"读取群列表数量: {len(group_list)}")
         bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
+        #以防万一，给master添加权限
+        await add_user(master_id,master_name,master_name)
+        await update_user(master_id, permission=999)
     @bot.on(ProfileLikeEvent)
     async def profileLikeHandler(event: ProfileLikeEvent):
         bot.logger.info(f"{event.operator_id} 赞了你！")
