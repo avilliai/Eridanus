@@ -55,5 +55,6 @@ def main(bot,config):
             await bot.friend_poke(event.sender.user_id)
     @bot.on(startUpMetaEvent)
     async def startUpHandler(event: startUpMetaEvent):
-        bot.logger.error("启动成功！")
+        bot.logger.info("启动成功！")
+        bot.logger.info(f"Bot ID: {bot.id}  Bot Name: {bot.nickname}")
         #print(bot.id)
