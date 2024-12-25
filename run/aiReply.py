@@ -1,4 +1,4 @@
-from EridanusTools.event.events import GroupMessageEvent
+from developTools.event.events import GroupMessageEvent
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.llmDB import delete_user_history
 

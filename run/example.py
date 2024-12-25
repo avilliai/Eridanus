@@ -1,5 +1,5 @@
-from EridanusTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent
-from EridanusTools.message.message_components import Record, Node, Text
+from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent
+from developTools.message.message_components import Record, Node, Text
 
 
 def main(bot,config):

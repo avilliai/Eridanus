@@ -5,11 +5,11 @@ from typing import Type, Union
 from fastapi import FastAPI, Request
 import uvicorn
 
-from EridanusTools.event.base import EventBase
-from EridanusTools.event.eventFactory import EventFactory
-from EridanusTools.interface.sendMes import MailMan
+from developTools.event.base import EventBase
+from developTools.event.eventFactory import EventFactory
+from developTools.interface.sendMes import MailMan
 
-from EridanusTools.utils.logger import get_logger
+from developTools.utils.logger import get_logger
 
 
 class EventBus:

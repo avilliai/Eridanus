@@ -3,10 +3,10 @@ from typing import Union
 import httpx
 import requests
 
-from EridanusTools.event.base import EventBase
-from EridanusTools.message.message_chain import MessageChain
-from EridanusTools.message.message_components import MessageComponent, Text
-from EridanusTools.utils.logger import get_logger
+from developTools.event.base import EventBase
+from developTools.message.message_chain import MessageChain
+from developTools.message.message_components import MessageComponent, Text
+from developTools.utils.logger import get_logger
 
 
 class MailMan:

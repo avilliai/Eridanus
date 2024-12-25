@@ -1,5 +1,5 @@
 
-from EridanusTools.AdapterAndBot import HTTPBot
+from developTools.AdapterAndBot import HTTPBot
 from plugins.core.yamlLoader import YAMLManager
 from run import example, aiReply
 

@@ -1,7 +1,7 @@
 import asyncio
 from typing import Callable, Coroutine
 
-from EridanusTools.utils import logger
+from developTools.utils import logger
 
 
 class EventBus:

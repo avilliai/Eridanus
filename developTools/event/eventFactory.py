@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Type
 
-from EridanusTools.event.base import EventBase
-from EridanusTools.event.events import GroupUploadNoticeEvent, GroupMessageEvent, PrivateMessageEvent, \
+from developTools.event.base import EventBase
+from developTools.event.events import GroupUploadNoticeEvent, GroupMessageEvent, PrivateMessageEvent, \
     GroupAdminNoticeEvent, GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupBanNoticeEvent, \
     FriendAddNoticeEvent, GroupRecallNoticeEvent, FriendRecallNoticeEvent, NotifyEvent, FriendRequestEvent, \
     GroupRequestEvent, LifecycleMetaEvent, HeartbeatMetaEvent

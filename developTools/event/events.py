@@ -4,9 +4,9 @@ from typing import Literal, Optional, Dict, Union, List
 from pydantic import BaseModel, ConfigDict
 from pydantic.v1 import root_validator
 
-from EridanusTools.event.base import EventBase
-from EridanusTools.message.message_chain import MessageChain
-from EridanusTools.utils.cq_code_handler import parse_message_with_cq_codes_to_list
+from developTools.event.base import EventBase
+from developTools.message.message_chain import MessageChain
+from developTools.utils.cq_code_handler import parse_message_with_cq_codes_to_list
 
 
 # Attention!

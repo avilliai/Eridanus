@@ -1,4 +1,4 @@
-from EridanusTools.interface.sendMes import MailMan
+from developTools.interface.sendMes import MailMan
 
 
 def list_class_methods(cls):
