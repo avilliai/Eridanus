@@ -215,7 +215,7 @@ class NotifyEvent(NoticeEvent):
 
     notice_type: Literal["notify"]
     sub_type: str
-    user_id: int
+    user_id: int=None
     group_id: int=None
 
 
@@ -233,7 +233,11 @@ class LuckyKingNotifyEvent(NotifyEvent):
     sub_type: Literal["lucky_king"]
     target_id: int
 
-
+class ProfileLikeEvent(NotifyEvent):
+    sub_type: Literal["profile_like"]
+    operator_id: int
+    operator_nick: str
+    times: int
 class HonorNotifyEvent(NotifyEvent):
     """群荣誉变更提醒事件"""
 
@@ -309,6 +313,7 @@ __all__ = [
     "FriendRecallNoticeEvent",
     "NotifyEvent",
     "PokeNotifyEvent",
+    "ProfileLikeEvent",
     "LuckyKingNotifyEvent",
     "HonorNotifyEvent",
     "RequestEvent",

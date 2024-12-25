@@ -1,4 +1,5 @@
-from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent
+from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
+    ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text
 
 
@@ -58,3 +59,11 @@ def main(bot,config):
         bot.logger.info("启动成功！")
         bot.logger.info(f"Bot ID: {bot.id}  Bot Name: {bot.nickname}")
         #print(bot.id)
+    @bot.on(ProfileLikeEvent)
+    async def profileLikeHandler(event: ProfileLikeEvent):
+        bot.logger.info(f"{event.operator_id} 赞了你！")
+        await bot.send_friend_message(event.operator_id, "谢谢！")
+    @bot.on(PokeNotifyEvent)
+    async def pokeHandler(event: PokeNotifyEvent):
+        bot.logger.info(f"{event.user_id} 戳了你！")
+        await bot.send_friend_message(event.user_id, "你戳我干啥？")

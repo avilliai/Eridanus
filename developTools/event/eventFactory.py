@@ -4,7 +4,8 @@ from developTools.event.base import EventBase
 from developTools.event.events import GroupUploadNoticeEvent, GroupMessageEvent, PrivateMessageEvent, \
     GroupAdminNoticeEvent, GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupBanNoticeEvent, \
     FriendAddNoticeEvent, GroupRecallNoticeEvent, FriendRecallNoticeEvent, NotifyEvent, FriendRequestEvent, \
-    GroupRequestEvent, LifecycleMetaEvent, HeartbeatMetaEvent,startUpMetaEvent
+    GroupRequestEvent, LifecycleMetaEvent, HeartbeatMetaEvent, startUpMetaEvent, LuckyKingNotifyEvent, PokeNotifyEvent, \
+    ProfileLikeEvent, HonorNotifyEvent
 
 
 class EventFactory:
@@ -25,7 +26,12 @@ class EventFactory:
             "friend_add": FriendAddNoticeEvent,
             "group_recall": GroupRecallNoticeEvent,
             "friend_recall": FriendRecallNoticeEvent,
-            "notify": NotifyEvent,
+            "notify": {
+                "lucky_king": LuckyKingNotifyEvent,
+                "poke": PokeNotifyEvent,
+                "profile_like": ProfileLikeEvent,
+                "honor": HonorNotifyEvent
+                }
         },
         "request": {
             "friend": FriendRequestEvent,
@@ -52,7 +58,12 @@ class EventFactory:
 
         # 进一步匹配子类型
         sub_type = data.get("message_type") or data.get("notice_type") or data.get("request_type") or data.get("meta_event_type")
-        event_class = sub_mapping.get(sub_type)
+        if sub_type == "notify":
+            sub_type = data.get("sub_type")
+            event_class = sub_mapping.get("notify").get(sub_type)
+        else:
+            event_class = sub_mapping.get(sub_type)
+        print(type(event_class))
         if not event_class:
             return None
 
