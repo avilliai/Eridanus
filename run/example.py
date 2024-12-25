@@ -60,8 +60,17 @@ def main(bot,config):
     @bot.on(startUpMetaEvent)
     async def startUpHandler(event: startUpMetaEvent):
         bot.logger.info("启动成功！")
-        bot.logger.info(f"Bot ID: {bot.id}  Bot Name: {bot.nickname}")
-        #print(bot.id)
+        bot_name=config.basic_config["bot"]["name"]
+        bot.logger.info(f"Bot ID: {bot.id}  Bot Name: {bot.nickname} | {bot_name}")
+        master_id=config.basic_config["master"]["id"]
+        master_name=config.basic_config["master"]["name"]
+        bot.logger.info(f"Bot master ID: {master_id}  |  Bot master Name: {master_name}")
+        group_list=await bot.get_group_list()
+        group_list=group_list["data"]
+        friend_list=await bot.get_friend_list()
+        friend_list=friend_list["data"]
+        bot.logger.info(f"读取群列表数量: {len(group_list)}")
+        bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
     @bot.on(ProfileLikeEvent)
     async def profileLikeHandler(event: ProfileLikeEvent):
         bot.logger.info(f"{event.operator_id} 赞了你！")

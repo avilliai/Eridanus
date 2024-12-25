@@ -110,7 +110,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
             {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', "threshold": "BLOCK_None"}],
     }
     if tools is not None:
-        pay_load["tools"] = tools
+        pay_load["tools"] = tools  #h函数调用开个头得了。之后再做。
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
         #print(r.json())

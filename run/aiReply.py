@@ -15,8 +15,8 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def aiReply(event):
 
-        print(event.processed_message)
-        print(event.message_id,type(event.message_id))
+        #print(event.processed_message)
+        #print(event.message_id,type(event.message_id))
 
         trigger=False
         if event.user_id in last_trigger_time:
