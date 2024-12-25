@@ -4,13 +4,15 @@ import random
 
 import httpx
 
+from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.core.utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
 from plugins.func_map import call_func, gemini_func_map
 
-proxies={"http://": "http://127.0.0.1:10809", "https://": "http://127.0.0.1:10809"}
 
+logger=get_logger()
 async def aiReplyCore(processed_message,user_id,config,tools=None):
+    logger.info(f"aiReplyCore called with message: {processed_message}")
     reply_message = ""
     try:
         if config.api["llm"]["model"]=="openai":
@@ -37,8 +39,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None):
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
                 system_instruction=system_instruction)
-            print(response_message)
-
+            #print(response_message)
             reply_message=response_message["parts"][0]["text"]
         #更新数据库中的历史记录
         history = await get_user_history(user_id)
@@ -55,10 +56,11 @@ async def aiReplyCore(processed_message,user_id,config,tools=None):
             #return r
             #ask = await prompt_elements_construct(r)
             #response_message = await aiReplyCore(ask,user_id,config,tools=tools)
+        logger.info(f"aiReplyCore returned: {reply_message}")
         return reply_message
     except Exception as e:
         await update_user_history(user_id, original_history)
-        print(f"Error occurred: {e}")
+        logger.error(f"Error occurred: {e}")
         raise  # 继续抛出异常以便调用方处理
 
 
