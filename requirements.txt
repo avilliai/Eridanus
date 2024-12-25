@@ -8,3 +8,4 @@ fastapi
 ruamel.yaml
 requests
 aiosqlite
+pillow

@@ -11,7 +11,7 @@ from plugins.func_map import call_func
 proxies={"http://": "http://127.0.0.1:10809", "https://": "http://127.0.0.1:10809"}
 
 async def aiReplyCore(processed_message,user_id,config,tools=None):
-
+    reply_message = ""
     try:
         if config.api["llm"]["model"]=="openai":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, user_id, config)
@@ -24,11 +24,27 @@ async def aiReplyCore(processed_message,user_id,config,tools=None):
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
             )
-            print(response_message)
+            reply_message=response_message["content"]
+            #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, config)
+            system_instruction=config.api["llm"]["system"]
+            response_message = await geminiRequest(
+                prompt,
+                config.api["llm"]["gemini"]["base_url"],
+                random.choice(config.api["llm"]["gemini"]["api_keys"]),
+                config.api["llm"]["gemini"]["model"],
+                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                tools=tools,
+                system_instruction=system_instruction)
+            print(response_message)
+
+            reply_message=response_message["parts"][0]["text"]
         #更新数据库中的历史记录
         history = await get_user_history(user_id)
+        if len(history) > config.api["llm"]["max_history_length"]:
+            del history[0]
+            del history[0]
         history.append(response_message)
         await update_user_history(user_id, history)
         #处理工具调用，但没做完，一用gemini函数调用就给我RESOURCE_EXHAUSTED，受不了一点byd
@@ -39,7 +55,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None):
             #return r
             #ask = await prompt_elements_construct(r)
             #response_message = await aiReplyCore(ask,user_id,config,tools=tools)
-        return response_message
+        return reply_message
     except Exception as e:
         await update_user_history(user_id, original_history)
         print(f"Error occurred: {e}")
@@ -68,15 +84,23 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
         r = await client.post(url, json=data)  # 使用 `json=data`
         print(r.json())
         return r.json()["choices"][0]["message"]
-async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None):
+async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
     else:
         proxies=None
     url = f"{base_url}/v1beta/models/{model}:generateContent?key={apikey}"
     # print(requests.get(url,verify=False))
+
     pay_load={
-        "content": ask_prompt,
+        "contents": ask_prompt,
+        "systemInstruction": {
+            "parts": [
+                {
+                    "text": system_instruction,
+                }
+            ]
+        },
         "safetySettings": [
             {'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT', "threshold": "BLOCK_None"},
             {'category': 'HARM_CATEGORY_HATE_SPEECH', "threshold": "BLOCK_None"},
@@ -86,5 +110,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
         print(r.json())
-        return r.json()['candidates'][0]["content"]["parts"][0]["text"]
+
+        return r.json()['candidates'][0]["content"]
+
 #asyncio.run(openaiRequest("1"))
