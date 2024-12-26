@@ -1,0 +1,121 @@
+{
+        "function_declarations": [
+            {
+                "name": "call_user_data_register",
+                "description": "在数据库中注册用户"
+            },
+            {
+                "name": "call_user_data_query",
+                "description": "查询用户数据。eg.权限等级等内容。"
+            },
+            {
+                "name": "call_user_data_sign",
+                "description": "签到。实现签到行为。"
+            },
+            {
+                "name": "call_change_city",
+                "description": "修改用户数据中，所在城市信息。eg：修改城市为新乡",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "city": {
+                            "type": "string",
+                            "description": "用户所在的城市。eg：新乡"
+                        }
+                    },
+                    "required": [
+                        "city"
+                    ]
+                }
+            },
+            {
+                "name": "call_change_name",
+                "description": "修改对用户的称呼、称谓。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "用户昵称。"
+                        }
+                    },
+                    "required": [
+                        "name"
+                    ]
+                }
+            },
+            {
+                "name": "call_permit",
+                "description": "给指定用户授权",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_qq": {
+                            "type": "integer",
+                            "description": "所要授权的对象的qq号码"
+                        },
+                        "level": {
+                            "type": "integer",
+                            "description": "授权等级。1为最低，数字越大权限越高"
+                        }
+                    },
+                    "required": [
+                        "target_qq",
+                        "level"
+                    ]
+                }
+            },
+            {
+                "name": "set_light_color",
+                "description": "Set the light color. Lights must be enabled for this to work.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "rgb_hex": {
+                            "type": "string",
+                            "description": "The light color as a 6-digit hex string, e.g. ff0000 for red."
+                        }
+                    },
+                    "required": [
+                        "rgb_hex"
+                    ]
+                }
+            },
+            {
+                "name": "stop_lights",
+                "description": "Turn off the lighting system."
+            },
+            {
+                "name": "call_weather_query",
+                "description": "Get the current weather in a given location.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. 上海"
+                        }
+                    },
+                    "required": [
+                        "location"
+                    ]
+                }
+            },
+            {
+                "name": "call_weather_query",
+                "description": "Get the current weather in a given location.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. 上海"
+                        }
+                    },
+                    "required": [
+                        "location"
+                    ]
+                }
+            }
+        ]
+    }

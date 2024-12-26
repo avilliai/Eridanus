@@ -6,8 +6,7 @@ from developTools.message.message_components import Reply
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.llmDB import delete_user_history
 from plugins.core.aiReply_utils import prompt_elements_construct
-from plugins.func_map import func_map
-
+from plugins.func_map import func_map, gemini_func_map
 
 
 def main(bot,config):
@@ -30,8 +29,9 @@ def main(bot,config):
             last_trigger_time.pop(event.user_id)
         elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or trigger:
             bot.logger.info(f"接受消息{event.processed_message}")
-            r=await aiReplyCore(event.processed_message,event.user_id,config)
-            await bot.send(event,r,config.api["llm"]["Quote"])
+            r=await aiReplyCore(event.processed_message,event.user_id,config,tools=gemini_func_map(),bot=bot,event=event)
+            if r:
+                await bot.send(event,r,config.api["llm"]["Quote"])
             last_trigger_time[event.user_id] = time.time()
         elif event.raw_message=="/clear":
             await delete_user_history(event.user_id)

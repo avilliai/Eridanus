@@ -2,7 +2,8 @@
 import inspect
 import json
 
-from plugins.basic_plugin.weather_query import weather_query
+from run.basic_plugin import call_weather_query
+from run.user_data import call_user_data_register,call_user_data_query,call_user_data_sign,call_change_city,call_change_name,call_permit
 def func_map():
     tools=[
         {
@@ -26,17 +27,13 @@ def func_map():
     return tools
 
 def gemini_func_map():
-    tools=[{
-        "google_search_retrieval": {
-            "dynamic_retrieval_config": {
-                "mode": "MODE_DYNAMIC",
-                "dynamic_threshold": 1,
-            }
-        }
-    }]
+    with open('plugins/core/gemini_func_call.json', 'r',encoding='utf-8') as f:
+        data = json.load(f)
+    tools = data
     return tools
 
-async def call_func(func_name, params):
+async def call_func(bot,event,config,func_name, params):
+
     """
     动态调用已导入的函数。
 
@@ -47,6 +44,7 @@ async def call_func(func_name, params):
     返回:
         异步函数的返回值。
     """
+    print(f"Calling function '{func_name}' with parameters: {params}")
     # 从全局作用域中获取函数对象
     func = globals().get(func_name)
 
@@ -62,10 +60,7 @@ async def call_func(func_name, params):
         raise TypeError(f"'{func_name}' is not an async function.")
 
     # 将 JSON 字符串解析为字典
-    try:
-        params_dict = json.loads(params)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON string for parameters: {e}")
+
 
     # 调用函数并传入参数
-    return await func(**params_dict)
+    return await func(bot,event,config,**params)

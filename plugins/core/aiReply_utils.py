@@ -47,9 +47,11 @@ async def gemini_prompt_elements_construct(precessed_message):
     for i in precessed_message:
         if "text" in i:
             prompt_elements.append({"text": i["text"]})
-        elif "image" in i:
-
-            url=i["image"]["url"]
+        elif "image" in i or "mface" in i:
+            if "mface" in i:
+                url=i["mface"]["url"]
+            else:
+                url=i["image"]["url"]
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.get(url)
@@ -69,10 +71,12 @@ async def gemini_prompt_elements_construct(precessed_message):
                 img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
             prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
             #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
+
         elif "record" in i:
             pass
             #prompt_elements.append({"type":"voice","voice":i["voice"]})
-
+        else:
+            prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     return {"role": "user","parts": prompt_elements}
 async def construct_gemini_standard_prompt(processed_message, user_id, config):
     message=await gemini_prompt_elements_construct(processed_message)

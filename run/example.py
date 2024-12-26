@@ -24,7 +24,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def changeAvatar(event: GroupMessageEvent):
         global avatar
-        bot.logger.error(event.processed_message)
+        bot.logger.info(event.processed_message)
         #bot.logger.error(event.get("image"))
         if event.raw_message=="换头像" and event.sender.user_id==1840094972:
             await bot.send(event,"发来！")
