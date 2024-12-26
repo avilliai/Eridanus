@@ -1,4 +1,5 @@
-事件类型抄袭自[yiri-onebot](https://github.com/YiriMiraiProject/YiriOneBot)
+代码参考了[yiri-onebot](https://github.com/YiriMiraiProject/YiriOneBot)
+
 部署此项目，你需要
 1.启用onebot实现的http事件上报和http服务
 ```yaml
@@ -10,3 +11,5 @@ http://localhost:8080/
 那么，本项目主函数中，就是这样
 bot.run(host="0.0.0.0", port= 8080)
 ```
+
+[文档](https://eridanus-doc.netlify.app/)
