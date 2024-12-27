@@ -1,6 +1,9 @@
+import random
+
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text
+from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
 
 
@@ -85,5 +88,33 @@ def main(bot,config):
         await bot.send_friend_message(event.operator_id, "谢谢！")
     @bot.on(PokeNotifyEvent)
     async def pokeHandler(event: PokeNotifyEvent):
-        bot.logger.info(f"{event.user_id} 戳了你！")
-        await bot.send_friend_message(event.user_id, "你戳我干啥？")
+        if event.target_id==bot.id:
+            if event.group_id:
+                data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                user_name = data["data"]["nickname"]
+                bot_name=config.basic_config["bot"]["name"]
+                user_info=await get_user(event.user_id,user_name)
+
+                text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
+                bot.logger.info(text)
+                #print(text)
+                if config.api["llm"]["aiReplyCore"]:
+                    r = await aiReplyCore([{"text": text}], event.user_id, config)
+                else:
+                    reply_list=config.settings['api_implements']['nudge']['replylist']
+                    r=random.choice(reply_list)
+
+
+                await bot.send_group_message(event.group_id, r)
+            else:
+                bot_name = config.basic_config["bot"]["name"]
+                user_info = await get_user(event.user_id)
+                text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
+                bot.logger.info(text)
+                if config.api["llm"]["aiReplyCore"]:
+                    r = await aiReplyCore([{"text": text}], event.user_id, config)
+                else:
+                    reply_list = config.settings['api_implements']['nudge']['replylist']
+                    r = random.choice(reply_list)
+                await bot.send_friend_message(event.user_id, r)
+        #await bot.send_friend_message(event.user_id, "你戳我干啥？")

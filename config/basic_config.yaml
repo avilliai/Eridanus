@@ -1,7 +1,7 @@
 bot:
-  name: "yucca"
+  name: "Eridanus"
 master:
-  name: "owner"
+  name: "主人"
   id: 1840094972
 adapter:
   access_token: "any_access_token" #onebot实现部分为空则不用改

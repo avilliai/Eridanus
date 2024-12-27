@@ -1,30 +1,31 @@
 llm:
   model: gemini #选择使用的模型(这里是大类别，具体模型在底下填)，用什么配什么
-  system: "你现在是一只猫娘，你的名字是vilm，我的名字是{用户}，是你的主人。"
+  system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix: "."
+  aiReplyCore: True   #ai回复核心，将优化其他功能回复表现，但将带来更高的api调用量。
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
   Quote: False #回复时是否引用
   focus_time: 60  #单次触发对话后持续有效时间
   openai:
     api_keys:
-    - YOUR_API_KEY_1
-    - YOUR_API_KEY_2
+      - your_api_key_here
+      - your_api_key_here
     model: glm-4-flash
     quest_url: https://open.bigmodel.cn/api/paas/v4/chat/completions #完整调用地址。只填base_url不行
   gemini:
     api_keys:
-      - YOUR_API_KEY_1
-      - YOUR_API_KEY_2
+      - your_api_key_here
+      - your_api_key_here
     model: gemini-2.0-flash-exp
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
 proxy:
   http_proxy: ""
   socks_proxy: ""
 心知天气:
-  api_key: "" #https://www.seniverse.com/ 申请后，填私钥
-z_library: #填你的zlib账号
+  api_key: ""                             #https://www.seniverse.com/ 申请后，填私钥
+z_library:               #填你的zlib账号
   search_num: 4        #搜索返回结果数量，默认4本书
   email: ""
   password: ""  #快填，Eridanus会偷走你的账号密码

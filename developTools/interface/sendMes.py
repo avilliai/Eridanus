@@ -123,8 +123,8 @@ class MailMan:
             ]
 
         message = MessageChain(components)
-        self.logger.warning(message)
-        self.logger.warning(message.to_dict())
+        #self.logger.warning(message)
+        #self.logger.warning(message.to_dict())
         data = {
             "user_id": user_id,
             "message": message.to_dict(),

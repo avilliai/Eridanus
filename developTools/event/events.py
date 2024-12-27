@@ -225,6 +225,7 @@ class PokeNotifyEvent(NotifyEvent):
     sub_type: Literal["poke"]
     target_id: int
     group_id: Optional[int] = None
+    raw_info: list =None
 
 
 class LuckyKingNotifyEvent(NotifyEvent):

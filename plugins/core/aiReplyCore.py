@@ -18,7 +18,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
     if not system_instruction:
         system_instruction = config.api["llm"]["system"]
         user_info=await get_user(user_id)
-        system_instruction=system_instruction.replace("{用户}",user_info[1])
+        system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
     try:
         if config.api["llm"]["model"]=="openai":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, user_id, system_instruction)
@@ -78,7 +78,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #ask = await prompt_elements_construct(r)
             #response_message = await aiReplyCore(ask,user_id,config,tools=tools)
         logger.info(f"aiReplyCore returned: {reply_message}")
-        return reply_message
+        return reply_message.strip()
     except Exception as e:
         await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")

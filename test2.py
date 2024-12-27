@@ -4,7 +4,7 @@ from asyncio import sleep
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, GroupRecallNoticeEvent
 from developTools.message.message_components import Image
 from developTools.AdapterAndBot import HTTPBot
-from run import example
+from run import api_implements
 
 bot = HTTPBot(http_sever="http://127.0.0.1:3000",access_token="any_access_token")
 

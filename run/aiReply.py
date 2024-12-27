@@ -13,7 +13,7 @@ from plugins.func_map import func_map, gemini_func_map
 def main(bot,config):
     last_trigger_time = defaultdict(float) #持续注意用户发言
 
-    '''@bot.on(GroupMessageEvent) #异步场景测试
+    '''@bot.on(GroupMessageEvent) #测试异步
     async def aiReplys(event):
         await sleep(10)
         await bot.send(event,"async task over")'''
