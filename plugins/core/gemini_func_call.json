@@ -116,6 +116,22 @@
                         "location"
                     ]
                 }
+            },
+            {
+                "name": "search_book_info",
+                "description": "search book information by book_name or author_name",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "info": {
+                            "type": "string",
+                            "description": "book_name or author_name"
+                        }
+                    },
+                    "required": [
+                        "info"
+                    ]
+                }
             }
         ]
     }

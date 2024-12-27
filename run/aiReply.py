@@ -27,9 +27,16 @@ def main(bot,config):
 
         if event.raw_message=="退出" and event.user_id in last_trigger_time:
             last_trigger_time.pop(event.user_id)
-        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or trigger:
+        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or trigger or event.raw_message.startswith(config.api["llm"]["prefix"]):
             bot.logger.info(f"接受消息{event.processed_message}")
-            r=await aiReplyCore(event.processed_message,event.user_id,config,tools=gemini_func_map(),bot=bot,event=event)
+            if config.api["llm"]["func_calling"]:
+                if config.api["llm"]["model"]=="gemini":
+                    tools=gemini_func_map()
+                else:
+                    tools=func_map()
+            else:
+                tools=None
+            r=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
             if r:
                 await bot.send(event,r,config.api["llm"]["Quote"])
             last_trigger_time[event.user_id] = time.time()

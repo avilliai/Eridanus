@@ -12,8 +12,11 @@ def search_book(Z,book,num):
     #print(results)
     result=[]
     for book_result in results['books'][:num]:
-        p=create_book_image(book_result)
-        result.append([f"book_id: {book_result['id']}",p])
+        try:
+            p=create_book_image(book_result)
+            result.append([f"book_id: {book_result['id']}",p])
+        except:
+            continue
     return result
 def download_book(Z,book_id):
     Z.saveBook(book_id)

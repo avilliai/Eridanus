@@ -1,6 +1,8 @@
 llm:
   model: gemini #选择使用的模型(这里是大类别，具体模型在底下填)，用什么配什么
-  system: "你现在是一只猫娘，我的名字是{用户}，是你的主人。"
+  system: "你现在是一只猫娘，你的名字是vilm，我的名字是{用户}，是你的主人。"
+  func_calling: True #是否开启函数调用功能
+  prefix: "."
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
   Quote: False #回复时是否引用
@@ -20,7 +22,9 @@ llm:
 proxy:
   http_proxy: ""
   socks_proxy: ""
+心知天气:
+  api_key: "" #https://www.seniverse.com/ 申请后，填私钥
 z_library: #填你的zlib账号
   search_num: 4        #搜索返回结果数量，默认4本书
-  email: "你的邮箱"
-  password: "你的密码"  #快填，Eridanus会偷走你的账号密码
+  email: ""
+  password: ""  #快填，Eridanus会偷走你的账号密码
