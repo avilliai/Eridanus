@@ -39,7 +39,8 @@ def main(bot,config):
             await bot.send(event,"已更换头像！")
             avatar=False
         if event.get("mface"):
-            await bot.send(event,f"你的彩色小人gif在这里{event.get('mface')[0]['url']}")
+            pass
+            #await bot.send(event,f"你的彩色小人gif在这里{event.get('mface')[0]['url']}")
         if event.raw_message=="给我管理" and event.sender.user_id==1840094972:
             await bot.set_group_admin(event.group_id,event.sender.user_id,True)
             await bot.send(event, "给你了！")

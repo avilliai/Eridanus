@@ -33,6 +33,7 @@ def main(bot,config):
 
         if event.raw_message=="退出" and event.user_id in last_trigger_time:
             last_trigger_time.pop(event.user_id)
+            await bot.send(event,"那就先不聊啦~")
         elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or trigger or event.raw_message.startswith(config.api["llm"]["prefix"]):
             bot.logger.info(f"接受消息{event.processed_message}")
             if config.api["llm"]["func_calling"]:
