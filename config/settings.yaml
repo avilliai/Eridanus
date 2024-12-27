@@ -1,4 +1,5 @@
 api_implements: #花里胡哨
    nudge:               #戳一戳设置。
+     counter_probability: 100 #反击概率
      replylist:       #如果开启aiReplyCore，将不使用此处配置回复
        - "戳我干嘛呀！"

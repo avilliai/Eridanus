@@ -97,7 +97,6 @@ def main(bot,config):
                 user_name = data["data"]["nickname"]
                 bot_name=config.basic_config["bot"]["name"]
                 user_info=await get_user(event.user_id,user_name)
-
                 text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
                 bot.logger.info(text)
                 #print(text)
@@ -106,9 +105,9 @@ def main(bot,config):
                 else:
                     reply_list=config.settings['api_implements']['nudge']['replylist']
                     r=random.choice(reply_list)
-
-
                 await bot.send_group_message(event.group_id, r)
+                if random.randint(1,100)<config.settings['api_implements']['nudge']['counter_probability']:
+                    await bot.group_poke(event.group_id,event.user_id)
             else:
                 bot_name = config.basic_config["bot"]["name"]
                 user_info = await get_user(event.user_id)
@@ -120,4 +119,6 @@ def main(bot,config):
                     reply_list = config.settings['api_implements']['nudge']['replylist']
                     r = random.choice(reply_list)
                 await bot.send_friend_message(event.user_id, r)
+                if random.randint(1,100)<config.settings['api_implements']['nudge']['counter_probability']:
+                    await bot.friend_poke(event.user_id)
         #await bot.send_friend_message(event.user_id, "你戳我干啥？")

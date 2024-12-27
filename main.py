@@ -3,7 +3,7 @@ from developTools.AdapterAndBot import HTTPBot
 from plugins.core.yamlLoader import YAMLManager
 from run import api_implements, aiReply, user_data, resource_search, basic_plugin
 
-config = YAMLManager(["config/basic_config.yaml","config/api.yaml","config/controller.yaml"]) #这玩意用来动态加载和修改配置文件
+config = YAMLManager(["config/settings.yaml","config/basic_config.yaml","config/api.yaml","config/controller.yaml"]) #这玩意用来动态加载和修改配置文件
 #http_server地址，access_token
 bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"])
 
