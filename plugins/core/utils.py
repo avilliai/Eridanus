@@ -16,3 +16,4 @@ async def download_img(url,path,gray_layer=False):
             with open(path, 'wb') as f:
                 f.write(response.content)
         return path
+

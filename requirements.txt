@@ -10,3 +10,4 @@ requests
 aiosqlite
 pillow
 xpinyin
+

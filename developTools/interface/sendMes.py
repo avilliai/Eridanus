@@ -602,5 +602,14 @@ class MailMan:
         r=requests.get(url,headers=self.headers)
         self.id=int(r.json()["data"]["user_id"])
         self.nickname=r.json()["data"]["nickname"]
-
-
+    async def get_record(self,file: str,out_format="mp3"):
+        url=f"{self.http_server}/get_record"
+        async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
+            r = await client.post(url,json={"file":file,"out_format":out_format})  # 使用 `json=data`
+            return r.json()
+    async def get_video(self,url:str,path:str):
+        async with httpx.AsyncClient(timeout=200) as client:
+            r=await client.get(url)
+            with open(path,"wb") as f:
+                f.write(r.content)
+            return path

@@ -6,6 +6,7 @@ import httpx
 from PIL import Image
 
 from plugins.core.llmDB import get_user_history, update_user_history
+from plugins.utils.utils import random_str
 
 """
 从processed_message构造openai标准的prompt
@@ -40,7 +41,7 @@ async def construct_openai_standard_prompt(processed_message, user_id, system_in
 """
 gemini标准prompt构建
 """
-async def gemini_prompt_elements_construct(precessed_message):
+async def gemini_prompt_elements_construct(precessed_message,bot=None):
     prompt_elements=[]
 
     #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
@@ -73,13 +74,33 @@ async def gemini_prompt_elements_construct(precessed_message):
             #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
 
         elif "record" in i:
-            pass
+            origin_voice_url=i["record"]["file"]
+            r=await bot.get_record(origin_voice_url)
+            mp3_filepath=r["data"]["file"]
+            with open(mp3_filepath, "rb") as mp3_file:
+                mp3_data = mp3_file.read()
+                base64_encoded_data = base64.b64encode(mp3_data)
+                base64_message = base64_encoded_data.decode('utf-8')
+                prompt_elements.append({"inline_data": {"mime_type": "audio/mp3", "data": base64_message}})
             #prompt_elements.append({"type":"voice","voice":i["voice"]})
+        elif "video" in i:
+            video_url=i["video"]["url"]
+            try:
+                video=await bot.get_video(video_url,f"data/pictures/cache/{random_str()}.mp4")
+
+                with open(video, "rb") as mp4_file:
+                    mp4_data = mp4_file.read()
+                    base64_encoded_data = base64.b64encode(mp4_data)
+                    base64_message = base64_encoded_data.decode('utf-8')
+                    prompt_elements.append({"inline_data": {"mime_type": "video/mp4", "data": base64_message}})
+            except:
+                bot.logger.warning(f"下载视频失败:{video_url}")
+                prompt_elements.append({"text": str(i)})
         else:
             prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     return {"role": "user","parts": prompt_elements}
-async def construct_gemini_standard_prompt(processed_message, user_id, config):
-    message=await gemini_prompt_elements_construct(processed_message)
+async def construct_gemini_standard_prompt(processed_message, user_id, bot):
+    message=await gemini_prompt_elements_construct(processed_message,bot)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)

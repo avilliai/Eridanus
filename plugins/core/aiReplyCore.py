@@ -34,7 +34,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             reply_message=response_message["content"]
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
-            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, config)
+            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot)
 
             response_message = await geminiRequest(
                 prompt,
