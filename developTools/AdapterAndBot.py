@@ -30,7 +30,6 @@ class EventBus:
         event_type = type(event_instance)
         if handlers := self.handlers.get(event_type):
             tasks = [asyncio.create_task(handler(event_instance)) for handler in handlers]
-            # 使用 asyncio.gather 等待所有任务完成，如果你需要等待所有处理函数执行完毕，否则可删除这行。
             await asyncio.gather(*tasks)
         else:
             pass
@@ -43,8 +42,8 @@ class HTTPBot(MailMan):
         self.event_bus = EventBus()
 
         self.echo_dict = {}
-        self.app = FastAPI()  # 内部创建 FastAPI 应用
-        self._register_routes()  # 注册路由
+        self.app = FastAPI()
+        self._register_routes()
 
     def _register_routes(self):
         @self.app.post("/")
@@ -52,8 +51,8 @@ class HTTPBot(MailMan):
             """
             接收 HTTP 消息并传递给 HTTPBot
             """
-            data = await request.json()  # 获取事件数据
-            asyncio.create_task(self.receive(data)) #使用create_task创建一个新任务执行receive
+            data = await request.json()
+            await asyncio.create_task(self.receive(data))
             return {"status": "success"}
 
     def on(self, event: Type[EventBase]):
