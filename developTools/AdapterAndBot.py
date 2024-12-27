@@ -11,7 +11,6 @@ from developTools.interface.sendMes import MailMan
 
 from developTools.utils.logger import get_logger
 
-
 class EventBus:
     def __init__(self) -> None:
         self.handlers: dict[Type[EventBase], set] = {}
@@ -30,12 +29,12 @@ class EventBus:
     async def emit(self, event_instance: EventBase) -> None:
         event_type = type(event_instance)
         if handlers := self.handlers.get(event_type):
-            for handler in handlers:
-                await handler(event_instance)
+            tasks = [asyncio.create_task(handler(event_instance)) for handler in handlers]
+            # 使用 asyncio.gather 等待所有任务完成，如果你需要等待所有处理函数执行完毕，否则可删除这行。
+            await asyncio.gather(*tasks)
         else:
             pass
             #print(f"未找到处理 {event_type} 的监听器")
-
 
 class HTTPBot(MailMan):
     def __init__(self,http_sever,access_token):
@@ -54,7 +53,7 @@ class HTTPBot(MailMan):
             接收 HTTP 消息并传递给 HTTPBot
             """
             data = await request.json()  # 获取事件数据
-            await self.receive(data)  # 将消息传递给 HTTPBot 的 receive 方法
+            asyncio.create_task(self.receive(data)) #使用create_task创建一个新任务执行receive
             return {"status": "success"}
 
     def on(self, event: Type[EventBase]):
@@ -72,7 +71,6 @@ class HTTPBot(MailMan):
         else:
             self.logger.warning("无法匹配事件类型，跳过处理。")
 
-
     def run(self, host: str = "0.0.0.0", port: int = 8080):
         """
         启动 FastAPI 应用
@@ -83,7 +81,3 @@ class HTTPBot(MailMan):
         asyncio.run(self.event_bus.emit(event_obj)) #伪造一个startUp
 
         uvicorn.run(self.app, host=host, port=port,log_level="warning")
-
-
-# 示例用法
-

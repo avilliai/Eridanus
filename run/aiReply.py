@@ -1,4 +1,5 @@
 import time
+from asyncio import sleep
 from collections import defaultdict
 
 from developTools.event.events import GroupMessageEvent
@@ -11,6 +12,7 @@ from plugins.func_map import func_map, gemini_func_map
 
 def main(bot,config):
     last_trigger_time = defaultdict(float) #持续注意用户发言
+
     @bot.on(GroupMessageEvent)
     async def aiReply(event):
 
