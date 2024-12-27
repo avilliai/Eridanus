@@ -49,6 +49,7 @@ class EventFactory:
         """根据 JSON 数据创建事件实例"""
         post_type = data.get("post_type")
         if not post_type:
+            print(f"post_type未匹配，未知事件类型: {data}")
             return None
 
         # 根据事件类型找到子类型
@@ -65,6 +66,7 @@ class EventFactory:
             event_class = sub_mapping.get(sub_type)
         #print(type(event_class))
         if not event_class:
+            print(f"子类型未匹配，未知事件: {data}")
             return None
 
         # 动态实例化事件对象
