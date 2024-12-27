@@ -90,7 +90,7 @@ def main(bot,config):
     @bot.on(PokeNotifyEvent)
     async def pokeHandler(event: PokeNotifyEvent):
         """
-        戳一戳的功能实现
+        戳一戳的功能实现，之所以这么复杂，是因为要获取戳一戳的具体内容。
         """
         if event.target_id==bot.id:
             if event.group_id:
