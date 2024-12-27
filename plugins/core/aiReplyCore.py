@@ -49,7 +49,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
                 reply_message=None
-            #检查是否存在函数调用
+            #检查是否存在函数调用，如果还有提示词就发
+            status=False
+            for part in response_message["parts"]:
+                if "functionCall" in part:
+                    status=True
+            if status and reply_message is not None:
+                await bot.send(event,reply_message.strip())
 
             for part in response_message["parts"]:
                 if "functionCall" in part:               #目前不太确定多个函数调用的情况，先只处理第一个。
@@ -61,6 +67,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
+
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
 
@@ -78,7 +85,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #ask = await prompt_elements_construct(r)
             #response_message = await aiReplyCore(ask,user_id,config,tools=tools)
         logger.info(f"aiReplyCore returned: {reply_message}")
-        return reply_message.strip()
+        if reply_message is not None:
+            return reply_message.strip()
+        else:
+            return reply_message
     except Exception as e:
         await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")

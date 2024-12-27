@@ -9,7 +9,7 @@ from plugins.resource_search_plugin.zLibrary.zLibrary import Zlibrary
 global Z
 async def search_book_info(bot,event,config,info):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.controller["z_library"]["search_operate_level"]:
+    if user_info[6] >= config.controller["resource_search"]["z_library"]["search_operate_level"]:
 
         await bot.send(event, "正在搜索中，请稍候...")
         result = search_book(Z, info, config.api["z_library"]["search_num"])
@@ -24,8 +24,9 @@ async def search_book_info(bot,event,config,info):
 
 def main(bot,config):
     #实例化对象，进行进一步操作
-    global Z
-    Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"])
+    if config.api["z_library"]["email"]!="" and config.api["z_library"]["password"]!="":
+        global Z
+        Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"])
     @bot.on(GroupMessageEvent)
     async def book_resource_search(event):
 
@@ -37,7 +38,7 @@ def main(bot,config):
     async def book_resource_download(event):
         if str(event.raw_message).startswith("下载"):
             user_info = await get_user(event.user_id, event.sender.nickname)
-            if user_info[6]>=config.controller["z_library"]["download_operate_level"]:
+            if user_info[6]>=config.controller["resource_search"]["z_library"]["download_operate_level"]:
                 book_id = str(event.raw_message).split("下载")[1]
                 await bot.send(event, "正在下载中，请稍后...")
                 path=download_book(Z,book_id)

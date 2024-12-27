@@ -118,6 +118,29 @@
                 }
             },
             {
+                "name": "call_setu",
+                "description": "根据关键词搜索图片并返回图片。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "description": "所要求的关键词。eg.白丝 萝莉",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "num": {
+                            "type": "integer",
+                            "description": "返回的图片数量。"
+                        }
+                    },
+                    "required": [
+                        "tags"
+                    ]
+                }
+            },
+            {
                 "name": "search_book_info",
                 "description": "search book information by book_name or author_name",
                 "parameters": {
