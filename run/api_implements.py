@@ -88,6 +88,9 @@ def main(bot,config):
         await bot.send_friend_message(event.operator_id, "谢谢！")
     @bot.on(PokeNotifyEvent)
     async def pokeHandler(event: PokeNotifyEvent):
+        """
+        戳一戳的功能实现
+        """
         if event.target_id==bot.id:
             if event.group_id:
                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
