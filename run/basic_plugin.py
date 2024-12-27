@@ -3,7 +3,7 @@ import shutil
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image
-from plugins.basic_plugin.anime_setu import anime_setu
+from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.weather_query import weather_query
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import get_user
@@ -37,6 +37,25 @@ async def call_setu(bot,event,config,tags,num=3):
             except Exception as e:
                 bot.logger.error(f"Error downloading: {e}")
                 continue
+        if fordMes==[]:
+            bot.logger.warning("No setu found.Change resource")
+            r=await anime_setu1(tags,num,config.settings["basic_plugin"]["setu"]["r18mode"])
+            for i in r:
+                try:
+                    url=i["urls"]["regular"]
+                    title=i["title"]
+                    author=i["author"]
+                    tags=i["tags"]
+                    path = f"data/pictures/cache/{random_str()}.png"
+                    bot.logger.info(f"Downloading {url} to {path}")
+                    p = await download_img(url, path, config.settings["basic_plugin"]["setu"]["gray_layer"])
+                    r = Node(content=[Text(f"标题：{title}\n作者：{author}\n标签：{tags}\nurl：{url}"), Image(file=p)])
+                    fordMes.append(r)
+                except Exception as e:
+                    bot.logger.error(f"Error downloading: {e}")
+        if fordMes==[]:
+            await bot.send(event, "没有找到符合条件的涩图呢，换个标签试试吧")
+            return
         await bot.send_group_forward_msg(event.group_id, fordMes)
         for i in fordMes:
             path=i.content[1].file
