@@ -10,6 +10,7 @@ from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger
 from plugins.core.llmDB import delete_user_history
 from plugins.core.aiReply_utils import prompt_elements_construct
 from plugins.core.tts import tts
+from plugins.core.userDB import get_user
 from plugins.func_map_loader import func_map, gemini_func_map
 
 
@@ -37,7 +38,10 @@ def main(bot,config):
             await bot.send(event,"那就先不聊啦~")
         elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.raw_message),config.api["llm"]["prefix"]):
             bot.logger.info(f"接受消息{event.processed_message}")
-
+            user_info = await get_user(event.user_id, event.sender.nickname)
+            if not user_info[6] >= config.controller["core"]["ai_reply_group"]:
+                await bot.send(event,"你没有足够的权限使用该功能哦~")
+                return
             reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
             if reply_message:
                 if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
@@ -94,7 +98,10 @@ def main(bot,config):
           await bot.send(event, "历史记录已清除", True)
       else:
           bot.logger.info(f"私聊接受消息{event.processed_message}")
-
+          user_info = await get_user(event.user_id, event.sender.nickname)
+          if not user_info[6] >= config.controller["core"]["ai_reply_private"]:
+              await bot.send(event, "你没有足够的权限使用该功能哦~")
+              return
           reply_message = await aiReplyCore(event.processed_message, event.user_id, config, tools=tools, bot=bot,
                                             event=event)
           if reply_message:
