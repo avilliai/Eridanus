@@ -64,8 +64,7 @@ def main(bot,config):
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
         else:
-            reply_message = await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,
-                                              event=event)
+            reply_message = await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event)
             if reply_message:
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:

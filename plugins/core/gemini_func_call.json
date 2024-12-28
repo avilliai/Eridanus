@@ -21,6 +21,31 @@
                 "description": "在数据库中注册用户"
             },
             {
+                "name": "get_acgn_ai_speaker_list",
+                "description": "获取可用的语音合成角色列表。"
+            },
+            {
+                "name": "call_tts",
+                "description": "根据文本和语音合成角色，合成语音并播放。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "text": {
+                            "type": "string",
+                            "description": "要合成的文本。"
+                        },
+                        "speaker": {
+                            "type": "string",
+                            "description": "使用的语音合成角色。"
+                        }
+                    },
+                    "required": [
+                        "text",
+                        "speaker"
+                    ]
+                }
+            },
+            {
                 "name": "call_user_data_register",
                 "description": "在数据库中注册用户"
             },

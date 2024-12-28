@@ -26,7 +26,8 @@ async def tts(text, speaker=None, config=None):
 
     mode = config.api["tts"]["tts_engine"]
     if mode == "acgn_ai":
-        speaker=config.api["tts"]["acgn_ai"]["speaker"]
+        if speaker is None:
+            speaker=config.api["tts"]["acgn_ai"]["speaker"]
         return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker)
     else:
         pass
@@ -47,12 +48,14 @@ try:
     if local_config["tts"]["tts_engine"] == "acgn_ai":
         print("GPTSOVITS_SPEAKERS获取中")
         GPTSOVITS_SPEAKERS = asyncio.run(gptVitsSpeakers())
+        #print(GPTSOVITS_SPEAKERS)
 except:
     print("GPTSOVITS_SPEAKERS获取失败")
 
-
-async def acgn_ai_tts(token, config, text, speaker):
-    inclination = "中立"
+async def get_acgn_ai_speaker_list(a=None,b=None,c=None):
+    spks=list(GPTSOVITS_SPEAKERS.keys())
+    return spks
+async def acgn_ai_tts(token, config, text, speaker,inclination = "中立"):
     try:
         if len(GPTSOVITS_SPEAKERS[speaker]) > 1:
             prompt = [{"text": f"对下面的文本进行情感倾向分析，结果只能从下面的列表：{GPTSOVITS_SPEAKERS[speaker]} 中选取，直接输出结果，不要回复任何其他内容，下面是需要分析的文本:{text}"}]

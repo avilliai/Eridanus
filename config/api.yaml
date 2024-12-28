@@ -10,7 +10,7 @@ llm:
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
   Quote: False #回复时是否引用
-  focus_time: 600  #单次触发对话后持续有效时间
+  focus_time: 60  #单次触发对话后持续有效时间
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false

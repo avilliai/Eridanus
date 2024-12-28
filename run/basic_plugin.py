@@ -6,6 +6,7 @@ from developTools.message.message_components import Record, Node, Text, Image
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
+from plugins.core.tts import get_acgn_ai_speaker_list, tts
 
 from plugins.core.userDB import get_user
 from plugins.core.utils import download_img
@@ -102,6 +103,27 @@ async def call_image_search(bot,event,config,image_url=None):
         await bot.send(event, forMeslist)
     else:
         await bot.send(event, "权限不够呢.....")
+async def call_tts(bot,event,config,text,speaker):
+    speakers=await get_acgn_ai_speaker_list()
+    if speaker in speakers:
+        pass
+    elif f"{speaker}【鸣潮】" in speakers:
+        speaker=f"{speaker}【鸣潮】"
+    elif f"{speaker}【原神】" in speakers:
+        speaker=f"{speaker}【原神】"
+    elif f"{speaker}【崩坏3】" in speakers:
+        speaker=f"{speaker}【崩坏3】"
+    elif f"{speaker}【星穹铁道】" in speakers:
+        speaker=f"{speaker}【星穹铁道】"
+    else:
+        bot.logger.error(f"Invalid speaker: {speaker}")
+        return
+    try:
+        p=await tts(text,speaker,config)
+        await bot.send(event, Record(file=p))
+    except Exception as e:
+        bot.logger.error(f"Error in tts: {e}")
+
 def main(bot,config):
     global avatar
     avatar=False
@@ -129,4 +151,15 @@ def main(bot,config):
             image_search[event.sender.user_id] = []
         if ("搜图" in str(event.raw_message) or event.sender.user_id in image_search) and event.get('image'):
             await call_image_search(bot,event,config)
+    @bot.on(GroupMessageEvent)
+    async def tts(event: GroupMessageEvent):
+        if "说" in event.raw_message:
+            speaker=event.raw_message.split("说")[0].strip()
+            text=event.raw_message.split("说")[1].strip()
+            await call_tts(bot,event,config,text,speaker)
+        elif event.raw_message=="可用角色":
+            #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
+            ffff=await get_acgn_ai_speaker_list()
+
+            await bot.send(event, Node(content=[Text(f"可用角色：{ffff}")]))
 
