@@ -22,7 +22,7 @@ async def call_weather_query(bot,event,config,location):
     await bot.send(event, str(r))
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] > config.controller["basic_plugin"]["setu_operate_level"]:
+    if user_info[6] >= config.controller["basic_plugin"]["setu_operate_level"]:
         r=await anime_setu(tags,num,config.settings["basic_plugin"]["setu"]["r18mode"])
         fordMes=[]
         for i in r:
@@ -67,31 +67,35 @@ async def call_setu(bot,event,config,tags,num=3):
     else:
         await bot.send(event, "权限不够呢.....")
 async def call_image_search(bot,event,config,image_url=None):
+    user_info = await get_user(event.user_id, event.sender.nickname)
     bot.logger.info("接收来自群：" + str(event.group_id) + " 用户：" + str(event.sender.user_id) + " 的搜图指令")
-    image_search[event.sender.user_id] = []
-    if not image_url:
-        img_url = event.get("image")[0]["url"]
-    else:
-        img_url = image_url
-    results = await fetch_results(config.api["proxy"]["http_proxy"], img_url,
-                                  config.api["image_search"]["sauceno_api_key"])
-    image_search.pop(event.sender.user_id)
-    forMeslist = []
-    for name, result in results.items():
-        if result and result[0] != "":
-            bot.logger.info(f"{name} 成功返回: {result}")
-            try:
-                path = "data/pictures/cache/" + random_str() + ".png"
-                imgpath = await download_img(result[0], path, proxy=config.api["proxy"]["http_proxy"])
-                forMeslist.append(Node(content=[Text(result[1]), Image(file=imgpath)]))
-
-            except Exception as e:
-                bot.logger.error(f"预览图{name} 下载失败: {e}")
-                forMeslist.append(Node(content=[Text(result[1]), Image(file=result[0])]))
+    if user_info[6] >= config.controller["basic_plugin"]["search_image_resource_operate_level"]:
+        image_search[event.sender.user_id] = []
+        if not image_url:
+            img_url = event.get("image")[0]["url"]
         else:
-            bot.logger.error(f"{name} 返回失败或无结果")
-            forMeslist.append(Node(content=[Text(f"{name} 返回失败或无结果")]))
-    await bot.send_group_forward_msg(event.group_id, forMeslist)
+            img_url = image_url
+        results = await fetch_results(config.api["proxy"]["http_proxy"], img_url,
+                                      config.api["image_search"]["sauceno_api_key"])
+        image_search.pop(event.sender.user_id)
+        forMeslist = []
+        for name, result in results.items():
+            if result and result[0] != "":
+                bot.logger.info(f"{name} 成功返回: {result}")
+                try:
+                    path = "data/pictures/cache/" + random_str() + ".png"
+                    imgpath = await download_img(result[0], path, proxy=config.api["proxy"]["http_proxy"])
+                    forMeslist.append(Node(content=[Text(result[1]), Image(file=imgpath)]))
+
+                except Exception as e:
+                    bot.logger.error(f"预览图{name} 下载失败: {e}")
+                    forMeslist.append(Node(content=[Text(result[1]), Image(file=result[0])]))
+            else:
+                bot.logger.error(f"{name} 返回失败或无结果")
+                forMeslist.append(Node(content=[Text(f"{name} 返回失败或无结果")]))
+        await bot.send_group_forward_msg(event.group_id, forMeslist)
+    else:
+        await bot.send(event, "权限不够呢.....")
 def main(bot,config):
     global avatar
     avatar=False

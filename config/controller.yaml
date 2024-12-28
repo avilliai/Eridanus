@@ -8,3 +8,4 @@ resource_search:
     download_operate_level: 998  #书籍下载所需等级
 basic_plugin:
   setu_operate_level: 0    #色图功能所需等级
+  search_image_resource_operate_level: 0  #图片搜索功能所需等级
