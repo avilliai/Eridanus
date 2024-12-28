@@ -12,7 +12,7 @@ from plugins.core.aiReply_utils import construct_openai_standard_prompt, constru
 
 
 logger=get_logger()
-async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     reply_message = ""
     if not system_instruction:
@@ -34,7 +34,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             reply_message=response_message["content"]
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
-            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot)
+            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result)
 
             response_message = await geminiRequest(
                 prompt,
@@ -62,7 +62,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
                     try:
-                        from plugins.func_map import call_func, gemini_func_map #只能在这里导入，否则会循环导入，解释器会不给跑。
+                        from plugins.func_map import call_func #只能在这里导入，否则会循环导入，解释器会不给跑。
                         await call_func(bot, event, config,func_name, args)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")

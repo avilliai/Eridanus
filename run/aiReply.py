@@ -7,12 +7,14 @@ from developTools.message.message_components import Reply
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.llmDB import delete_user_history
 from plugins.core.aiReply_utils import prompt_elements_construct
-from plugins.func_map import func_map, gemini_func_map
+from plugins.func_map_loader import func_map, gemini_func_map
+
+
 
 
 def main(bot,config):
-    last_trigger_time = defaultdict(float) #持续注意用户发言
-
+      # 持续注意用户发言
+    last_trigger_time = defaultdict(float)
     '''@bot.on(GroupMessageEvent) #测试异步
     async def aiReplys(event):
         await sleep(10)

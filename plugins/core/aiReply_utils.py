@@ -41,7 +41,7 @@ async def construct_openai_standard_prompt(processed_message, user_id, system_in
 """
 gemini标准prompt构建
 """
-async def gemini_prompt_elements_construct(precessed_message,bot=None):
+async def gemini_prompt_elements_construct(precessed_message,bot=None,func_result=False):
     prompt_elements=[]
 
     #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
@@ -53,6 +53,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None):
                 url=i["mface"]["url"]
             else:
                 url=i["image"]["url"]
+            prompt_elements.append({"text": f"system:图片的url是{url}"})
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.get(url)
@@ -98,9 +99,11 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None):
                 prompt_elements.append({"text": str(i)})
         else:
             prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
+    if func_result:
+        return {"role": "system","parts":prompt_elements}
     return {"role": "user","parts": prompt_elements}
-async def construct_gemini_standard_prompt(processed_message, user_id, bot):
-    message=await gemini_prompt_elements_construct(processed_message,bot)
+async def construct_gemini_standard_prompt(processed_message, user_id, bot,func_result=False):
+    message=await gemini_prompt_elements_construct(processed_message,bot,func_result=False)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)

@@ -1,6 +1,22 @@
 {
         "function_declarations": [
             {
+                "name": "call_image_search",
+                "description": "搜索图片的来源。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "image_url": {
+                            "type": "string",
+                            "description": "图片的url"
+                        }
+                    },
+                    "required": [
+                        "image_url"
+                    ]
+                }
+            },
+            {
                 "name": "call_user_data_register",
                 "description": "在数据库中注册用户"
             },

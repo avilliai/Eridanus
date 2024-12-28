@@ -2,36 +2,10 @@
 import inspect
 import json
 
-from run.basic_plugin import call_weather_query,call_setu
+from run.basic_plugin import call_weather_query,call_setu,call_image_search
 from run.user_data import call_user_data_register,call_user_data_query,call_user_data_sign,call_change_city,call_change_name,call_permit
 from run.resource_search import search_book_info
-def func_map():
-    tools=[
-        {
-          "type": "function",
-          "function": {
-            "name": "weather_query",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "type": "object",
-              "properties": {
-                "location": {
-                  "type": "string",
-                  "description": "The city and state, e.g. 上海"
-                },
-              },
-              "required": ["location"]
-            }
-          }
-        }
-      ]
-    return tools
 
-def gemini_func_map():
-    with open('plugins/core/gemini_func_call.json', 'r',encoding='utf-8') as f:
-        data = json.load(f)
-    tools = data
-    return tools
 
 async def call_func(bot,event,config,func_name, params):
 
