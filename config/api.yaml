@@ -10,22 +10,24 @@ llm:
   focus_time: 60  #单次触发对话后持续有效时间
   openai:
     api_keys:
-      - your_api_key_here
-      - your_api_key_here
+    - Your_API_Key_Here
+    - Your_API_Key_Here
     model: glm-4-flash
     quest_url: https://open.bigmodel.cn/api/paas/v4/chat/completions #完整调用地址。只填base_url不行
   gemini:
     api_keys:
-      - your_api_key_here
-      - your_api_key_here
+      - Your_API_Key_Here
+      - Your_API_Key_Here
     model: gemini-2.0-flash-exp
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
 proxy:
   http_proxy: ""
   socks_proxy: ""
 心知天气:
-  api_key: ""                             #https://www.seniverse.com/ 申请后，填私钥
-z_library:               #填你的zlib账号
+  api_key: "" #https://www.seniverse.com/ 申请后，填私钥
+image_search:
+  sauceno_api_key: ""          #sauceno搜图api，你可以从https://saucenao.com/user.php注册并获取
+z_library: #填你的zlib账号，此功能需要开启代理。
   search_num: 4        #搜索返回结果数量，默认4本书
   email: ""
   password: ""  #快填，Eridanus会偷走你的账号密码

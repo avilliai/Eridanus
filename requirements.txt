@@ -2,7 +2,6 @@ pydantic
 colorlog
 pydantic_core
 websockets
-httpx<0.28.0
 uvicorn
 fastapi
 ruamel.yaml
@@ -10,4 +9,6 @@ requests
 aiosqlite
 pillow
 xpinyin
+PicImageSearch
+httpx<0.28.0
 

@@ -4,12 +4,15 @@ import shutil
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
+from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import get_user
 from plugins.core.utils import download_img
 from plugins.utils.utils import random_str
 
+global image_search
+image_search={}
 """
 供func call调用
 """
@@ -82,3 +85,33 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(f"Error in setu: {e}")
                 await bot.send(event, "出错，格式请按照\n/setu 数量 标签 标签")
+
+    @bot.on(GroupMessageEvent)
+    async def search_image(event):
+        global image_search
+        if str(event.raw_message) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
+            await bot.send(event, "请发送要搜索的图片")
+            image_search[event.sender.user_id] = []
+        if ("搜图" in str(event.raw_message) or event.sender.user_id in image_search) and event.get('image'):
+            bot.logger.info("接收来自群：" + str(event.group_id) + " 用户：" + str(event.sender.user_id) + " 的搜图指令")
+            image_search[event.sender.user_id] = []
+            img_url = event.get("image")[0]["url"]
+            results = await fetch_results(config.api["proxy"]["http_proxy"], img_url,config.api["image_search"]["sauceno_api_key"])
+            image_search.pop(event.sender.user_id)
+            forMeslist=[]
+            for name, result in results.items():
+                if result and result[0]!="":
+                    bot.logger.info(f"{name} 成功返回: {result}")
+                    try:
+                        path="data/pictures/cache/" + random_str() + ".png"
+                        imgpath=await download_img(result[0],path,proxy=config.api["proxy"]["http_proxy"])
+                        forMeslist.append(Node(content=[Text(result[1]),Image(file=imgpath)]))
+
+                    except Exception as e:
+                        bot.logger.error(f"预览图{name} 下载失败: {e}")
+                        forMeslist.append(Node(content=[Text(result[1]),Image(file=result[0])]))
+                else:
+                    bot.logger.error(f"{name} 返回失败或无结果")
+                    forMeslist.append(Node(content=[Text(f"{name} 返回失败或无结果")]))
+            await bot.send_group_forward_msg(event.group_id,forMeslist)
+
