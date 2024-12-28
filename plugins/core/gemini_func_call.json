@@ -17,6 +17,10 @@
                 }
             },
             {
+                "name": "call_tarot",
+                "description": "触发塔罗牌功能。"
+            },
+            {
                 "name": "call_quit_chat",
                 "description": "在数据库中注册用户"
             },

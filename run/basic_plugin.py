@@ -4,6 +4,7 @@ import shutil
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
+from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
 from plugins.core.tts import get_acgn_ai_speaker_list, tts
@@ -11,17 +12,15 @@ from plugins.core.tts import get_acgn_ai_speaker_list, tts
 from plugins.core.userDB import get_user
 from plugins.core.utils import download_img
 from plugins.utils.utils import random_str
-
+from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 global image_search
 image_search={}
 """
 供func call调用
 """
 async def call_weather_query(bot,event,config,location):
-    from plugins.core.aiReplyCore import aiReplyCore
     r=await weather_query(config.api["proxy"]["http_proxy"],config.api["心知天气"]["api_key"],location)
-    print(event)
-    r = await aiReplyCore([{"text":f"{r}"}], event.user_id, config,func_result=True)
+    r = await aiReplyCore_shadow([{"text":f"{r}"}], event.user_id, config,func_result=True)
     await bot.send(event, str(r))
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
@@ -123,7 +122,12 @@ async def call_tts(bot,event,config,text,speaker):
         await bot.send(event, Record(file=p))
     except Exception as e:
         bot.logger.error(f"Error in tts: {e}")
-
+async def call_tarot(bot,event,config):
+    txt, img = tarotChoice()
+    await bot.send(event,[Text(txt),Image(file=img)])
+    r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
+    if r and config.api["llm"]["aiReplyCore"]:
+        await bot.send(event, r)
 def main(bot,config):
     global avatar
     avatar=False
@@ -162,4 +166,9 @@ def main(bot,config):
             ffff=await get_acgn_ai_speaker_list()
 
             await bot.send(event, Node(content=[Text(f"可用角色：{ffff}")]))
+    @bot.on(GroupMessageEvent)
+    async def cyber_divination(event: GroupMessageEvent):
+        if event.raw_message=="今日塔罗":
+            txt, img = tarotChoice()
+            await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
 
