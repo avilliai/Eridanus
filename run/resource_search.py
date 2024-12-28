@@ -16,7 +16,7 @@ async def search_book_info(bot,event,config,info):
         forward_list = []
         for r in result:
             forward_list.append(Node(content=[Text(r[0]), Image(file=r[1])]))
-        await bot.send_group_forward_msg(event.group_id, forward_list)
+        await bot.send(event, forward_list)
         # await bot.send(event,Image(file=p)])
         # print(r)
     else:

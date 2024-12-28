@@ -145,6 +145,17 @@ class Record(MessageComponent):
         default=30,
         description="只在通过网络 URL 发送时有效，单位秒，表示下载网络文件的超时时间，默认不超时",
     )
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.file and not (
+            self.file.startswith("http://")
+            or self.file.startswith("file://")
+            or self.file.startswith("base64://")
+        ):
+            # 将相对路径转换为绝对路径并添加 file:// 前缀
+            abs_path = os.path.abspath(self.file).replace("\\", "/")
+            self.file = f"file://{abs_path}"
+
 
 
 class Video(MessageComponent):

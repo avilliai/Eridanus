@@ -2,7 +2,7 @@
         "function_declarations": [
             {
                 "name": "call_image_search",
-                "description": "搜索图片的来源。",
+                "description": "only trigger when user ask for search image source through url.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -15,6 +15,10 @@
                         "image_url"
                     ]
                 }
+            },
+            {
+                "name": "call_quit_chat",
+                "description": "在数据库中注册用户"
             },
             {
                 "name": "call_user_data_register",

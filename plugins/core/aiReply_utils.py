@@ -26,7 +26,7 @@ async def prompt_elements_construct(precessed_message):
             pass
             #prompt_elements.append({"type":"voice","voice":i["voice"]})
     return {"role": "user","content":prompt_elements}
-async def construct_openai_standard_prompt(processed_message, user_id, system_instruction):
+async def construct_openai_standard_prompt(processed_message, user_id, system_instruction=""):
     message=await prompt_elements_construct(processed_message)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
@@ -102,7 +102,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
     if func_result:
         return {"role": "system","parts":prompt_elements}
     return {"role": "user","parts": prompt_elements}
-async def construct_gemini_standard_prompt(processed_message, user_id, bot,func_result=False):
+async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,func_result=False):
     message=await gemini_prompt_elements_construct(processed_message,bot,func_result=False)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback

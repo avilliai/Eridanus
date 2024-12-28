@@ -58,7 +58,7 @@ def main(bot,config):
             await bot.mute(event.group_id,event.sender.user_id,60)
         if event.raw_message=="测试":
             r=Node(content=[Text("你好，我是机器人！")])
-            await bot.send_group_forward_msg(event.group_id,r)
+            await bot.send(event,r)
             await bot.send(event,Record(file="file://D:/python/Manyana/data/autoReply/voiceReply/a1axataxaWaQaia.wav"))
     @bot.on(PrivateMessageEvent)
     async def FriendMesHandler(event: PrivateMessageEvent):

@@ -1,17 +1,40 @@
 import asyncio
 import os
 import random
+import time
+from collections import defaultdict
 
 import httpx
 
+from developTools.message.message_components import Record
 from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
+from plugins.core.tts import tts
 from plugins.core.userDB import get_user
 from plugins.core.aiReply_utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
-
-
+from plugins.func_map import call_func
+last_trigger_time = defaultdict(float)
 
 logger=get_logger()
+async def judge_trigger(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False):
+    trigger = False
+    if event.user_id in last_trigger_time:
+        bot.logger.info(f"last_trigger_time: {last_trigger_time.get(event.user_id)}")
+        if (time.time() - last_trigger_time.get(event.user_id)) <= config.api["llm"]["focus_time"]:
+            trigger = True
+        else:
+            last_trigger_time.pop(event.user_id)
+            trigger = False
+    if trigger:
+        r=await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result)
+        return r
+    else:
+        return None
+async def end_chat(user_id):
+    try:
+        last_trigger_time.pop(user_id)
+    except:
+        print("end_chat error。已不存在对应trigger")
 async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     reply_message = ""
@@ -32,6 +55,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 tools=tools,
             )
             reply_message=response_message["content"]
+            last_trigger_time[user_id] = time.time()
+            """
+            openai标准函数调用还没做。待处理
+            """
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result)
@@ -49,27 +76,47 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
                 reply_message=None
+            last_trigger_time[user_id] = time.time()
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             for part in response_message["parts"]:
                 if "functionCall" in part:
                     status=True
-            if status and reply_message is not None:
-                await bot.send(event,reply_message.strip())
+            generate_voice=False
+            if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
+                if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
+                    if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
+                        await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                    generate_voice=True
+                else:
+                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
 
             for part in response_message["parts"]:
                 if "functionCall" in part:               #目前不太确定多个函数调用的情况，先只处理第一个。
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
                     try:
-                        from plugins.func_map import call_func #只能在这里导入，否则会循环导入，解释器会不给跑。
-                        await call_func(bot, event, config,func_name, args)
+                         #只能在这里导入，否则会循环导入，解释器会不给跑。
+                        r=await call_func(bot, event, config,func_name, args)
+                        if r==False:
+                            await end_chat(user_id)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
+
+            if generate_voice:
+                try:
+                    bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
+                    path = await tts(reply_message, config=config)
+                    await bot.send(event, Record(file=path))
+                    os.remove(path)  # 删除临时文件
+                except Exception as e:
+                    bot.logger.error(f"Error occurred when calling tts: {e}")
+                if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
+                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
 
         #更新数据库中的历史记录
         history = await get_user_history(user_id)

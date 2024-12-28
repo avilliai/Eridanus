@@ -2,29 +2,40 @@ llm:
   model: gemini #选择使用的模型(这里是大类别，具体模型在底下填)，用什么配什么
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
-  prefix: "."
+  prefix:
+    - "."
+    - "。"
+    - "测试机"
   aiReplyCore: True   #ai回复核心，将优化其他功能回复表现，但将带来更高的api调用量。
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
   Quote: False #回复时是否引用
-  focus_time: 60  #单次触发对话后持续有效时间
+  focus_time: 600  #单次触发对话后持续有效时间
+  语音回复几率: 30
+  语音回复附带文本: True
+  文本语音同时发送: false
   openai:
     api_keys:
-    - Your_API_Key_Here
-    - Your_API_Key_Here
+    - YOUR_API_KEY_1
+    - YOUR_API_KEY_2
     model: glm-4-flash
     quest_url: https://open.bigmodel.cn/api/paas/v4/chat/completions #完整调用地址。只填base_url不行
   gemini:
     api_keys:
-      - Your_API_Key_Here
-      - Your_API_Key_Here
+      - YOUR_API_KEY_1
+      - YOUR_API_KEY_2
     model: gemini-2.0-flash-exp
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
+tts:
+  tts_engine: acgn_ai     #选择使用的语音合成引擎，这里是acgn_ai，配了哪个填哪个。
+  acgn_ai:
+    token: ""             #https://getkey.acgnai.top/注册后，登录获取令牌
+    speaker: "玲可【星穹铁道】"
 proxy:
-  http_proxy: ""
-  socks_proxy: ""
+  http_proxy: "http://127.0.0.1:10809"
+  socks_proxy: "socks5://127.0.0.1:10809"
 心知天气:
-  api_key: "" #https://www.seniverse.com/ 申请后，填私钥
+  api_key: ""     #https://www.seniverse.com/ 申请后，填私钥
 image_search:
   sauceno_api_key: ""          #sauceno搜图api，你可以从https://saucenao.com/user.php注册并获取
 z_library: #填你的zlib账号，此功能需要开启代理。

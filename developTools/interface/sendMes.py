@@ -5,7 +5,7 @@ import requests
 
 from developTools.event.base import EventBase
 from developTools.message.message_chain import MessageChain
-from developTools.message.message_components import MessageComponent, Text, Reply
+from developTools.message.message_components import MessageComponent, Text, Reply, Node
 from developTools.utils.logger import get_logger
 
 
@@ -60,24 +60,61 @@ class MailMan:
         async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
             r = await client.post(url, json=data)  # 使用 `json=data`
             return r.json()
+    async def send_private_forward_msg(self,user_id: int, components: Union[str, list[Union[MessageComponent, str]]]):
+        """
+        发送私聊合并转发消息
+        :param user_id:
+        :param components:
+        :return:
+        """
+        # 如果是字符串，将其包装为 [Text(str)]
+        if isinstance(components, str):
+            components = [Text(components)]
+        if not isinstance(components,list):
+            components = [components]
+        else:
+            components = [
+                Text(component) if isinstance(component, str) else component
+                for component in components
+            ]
+
+        message = MessageChain(components)
+        data = {
+            "user_id": user_id,
+            "messages": message.to_dict(),
+        }
+        self.logger.info(f"发送消息: {data}")
+        url = f"{self.http_server}/send_private_forward_msg"
+        async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
+            r = await client.post(url, json=data)  # 使用 `json=data`
+            return r.json()
     async def send_to_server(self, event: EventBase, message: Union[MessageChain, dict]):
         """
         发送消息，可以接受 MessageChain 或原始字典格式的消息。
         """
         try:
+
+
             if event.message_type == "group":
                 data = {
                     "group_id": event.group_id,
                     "message": message.to_dict(),
                 }
-                url = f"{self.http_server}/send_group_msg"
+                if isinstance(message[0], Node):
+                    r=await self.send_group_forward_msg(event.group_id,message)
+                    return r
+                else:
+                    url=f"{self.http_server}/send_group_msg"
             elif event.message_type == "private":
                 data = {
                     "user_id": event.user_id,
                     "message": message.to_dict(),
                 }
-                url = f"{self.http_server}/send_private_msg"
-
+                if isinstance(message[0], Node):
+                    r=await self.send_private_forward_msg(event.user_id,message)
+                    return r
+                else:
+                    url=f"{self.http_server}/send_private_msg"
             self.logger.info(f"发送消息: {data}")
             async with httpx.AsyncClient(headers=self.headers,timeout=200) as client:
                 r = await client.post(url, json=data)  # 使用 `json=data` 代替 `data=data`
