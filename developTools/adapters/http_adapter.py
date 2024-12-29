@@ -7,7 +7,7 @@ import uvicorn
 
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
-from developTools.interface.sendMes import MailMan
+from developTools.interface.http_sendMes import http_mailman
 
 from developTools.utils.logger import get_logger
 
@@ -30,17 +30,18 @@ class EventBus:
         event_type = type(event_instance)
         if handlers := self.handlers.get(event_type):
             tasks = [asyncio.create_task(handler(event_instance)) for handler in handlers]
-            await asyncio.gather(*tasks)
+            asyncio.gather(*tasks)
         else:
             pass
             #print(f"未找到处理 {event_type} 的监听器")
 
-class HTTPBot(MailMan):
-    def __init__(self,http_sever,access_token):
+class HTTPBot(http_mailman):
+    def __init__(self,http_sever,access_token="",host="0.0.0.0",port=8000):
         super().__init__(http_sever,access_token)
         self.logger = get_logger()
         self.event_bus = EventBus()
-
+        self.host = host
+        self.port = port
         self.echo_dict = {}
         self.app = FastAPI()
         self._register_routes()
@@ -70,7 +71,7 @@ class HTTPBot(MailMan):
         else:
             self.logger.warning("无法匹配事件类型，跳过处理。")
 
-    def run(self, host: str = "0.0.0.0", port: int = 8080):
+    def run(self):
         """
         启动 FastAPI 应用
         """
@@ -79,4 +80,4 @@ class HTTPBot(MailMan):
         event_obj = EventFactory.create_event(startUp)
         asyncio.run(self.event_bus.emit(event_obj)) #伪造一个startUp
 
-        uvicorn.run(self.app, host=host, port=port,log_level="warning")
+        uvicorn.run(self.app, host=self.host, port=self.port,log_level="warning")

@@ -107,7 +107,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
 
-            if generate_voice:
+            if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
                     path = await tts(reply_message, config=config)

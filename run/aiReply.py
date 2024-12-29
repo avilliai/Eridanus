@@ -43,7 +43,7 @@ def main(bot,config):
                 await bot.send(event,"你没有足够的权限使用该功能哦~")
                 return
             reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
-            if reply_message:
+            if reply_message is not None:
                 if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                         await bot.send(event, reply_message, config.api["llm"]["Quote"])
@@ -65,7 +65,7 @@ def main(bot,config):
             await bot.send(event,"历史记录已清除",True)
         else:
             reply_message = await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event)
-            if reply_message:
+            if reply_message is not None:
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                         await bot.send(event, reply_message, config.api["llm"]["Quote"])
@@ -103,7 +103,7 @@ def main(bot,config):
               return
           reply_message = await aiReplyCore(event.processed_message, event.user_id, config, tools=tools, bot=bot,
                                             event=event)
-          if reply_message:
+          if reply_message is not None:
               if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                   if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                       await bot.send(event, reply_message, config.api["llm"]["Quote"])

@@ -9,7 +9,7 @@ from developTools.message.message_components import MessageComponent, Text, Repl
 from developTools.utils.logger import get_logger
 
 
-class MailMan:
+class http_mailman:
     def __init__(self, http_server,access_token=""):
         self.http_server = http_server
         self.logger = get_logger()

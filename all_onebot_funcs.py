@@ -1,4 +1,4 @@
-from developTools.interface.sendMes import MailMan
+from developTools.interface.http_sendMes import http_mailman
 
 
 def list_class_methods(cls):
@@ -16,4 +16,4 @@ def list_class_methods(cls):
 
 if __name__ == "__main__":
     from pprint import pprint
-    pprint(list_class_methods(MailMan))
+    pprint(list_class_methods(http_mailman))
