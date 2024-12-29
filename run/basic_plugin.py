@@ -135,13 +135,14 @@ async def call_tts(bot,event,config,text,speaker=None):
 async def call_text2img(bot,event,config,prompt):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"]:
+        bot.logger.info(f"Received text2img prompt: {prompt}")
         await bot.send(event, "正在绘制，请稍候...")
         proxy=config.api["proxy"]["http_proxy"]
         functions = [
             ideo_gram(prompt, proxy),
             bing_dalle3(prompt, proxy),
-            flux_speed(prompt, proxy),
-            recraft_v3(prompt, proxy),
+            #flux_speed(prompt, proxy), #也不要这个
+            #recraft_v3(prompt, proxy), #不要这个
             flux_ultra(prompt, proxy),
         ]
 
