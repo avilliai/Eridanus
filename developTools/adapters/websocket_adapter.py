@@ -141,6 +141,7 @@ class WebSocketBot:
 
 
     def run(self):
+
         asyncio.run(self._connect_and_run())
 
     def on(self, event: Type[EventBase]):

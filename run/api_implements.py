@@ -68,7 +68,7 @@ def main(bot,config):
     async def startUpHandler(event: startUpMetaEvent):
         bot.logger.info("启动成功！")
         bot_name=config.basic_config["bot"]["name"]
-        bot.logger.info(f"Bot ID: {bot.id}  Bot Name: {bot.nickname} | {bot_name}")
+        bot.logger.info(f"Bot Name: {bot_name}")
         master_id=config.basic_config["master"]["id"]
         master_name=config.basic_config["master"]["name"]
         bot.logger.info(f"Bot master ID: {master_id}  |  Bot master Name: {master_name}")
