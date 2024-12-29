@@ -56,6 +56,8 @@ async def get_acgn_ai_speaker_list(a=None,b=None,c=None):
     spks=list(GPTSOVITS_SPEAKERS.keys())
     return spks
 async def acgn_ai_tts(token, config, text, speaker,inclination = "中立"):
+    if speaker not in GPTSOVITS_SPEAKERS:
+        speaker = config.api["tts"]["acgn_ai"]["speaker"]
     try:
         if len(GPTSOVITS_SPEAKERS[speaker]) > 1:
             prompt = [{"text": f"对下面的文本进行情感倾向分析，结果只能从下面的列表：{GPTSOVITS_SPEAKERS[speaker]} 中选取，直接输出结果，不要回复任何其他内容，下面是需要分析的文本:{text}"}]
