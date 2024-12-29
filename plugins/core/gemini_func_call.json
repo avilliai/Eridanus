@@ -40,7 +40,7 @@
                         },
                         "speaker": {
                             "type": "string",
-                            "description": "使用的语音合成角色。"
+                            "description": "使用的语音合成角色。默认为玲可【星穹铁道】"
                         }
                     },
                     "required": [
