@@ -9,6 +9,7 @@ config = YAMLManager(["config/settings.yaml","config/basic_config.yaml","config/
 from developTools.adapters.websocket_adapter import WebSocketBot
 bot = WebSocketBot(config.basic_config["adapter"]["ws_client"]["ws_link"])
 
+
 basic_plugin.main(bot,config) #加载basic_plusine插件
 resource_search.main(bot,config) #加载资源搜索插件
 aiReply.main(bot,config) #加载ai回复插件
