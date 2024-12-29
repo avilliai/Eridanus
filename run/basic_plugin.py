@@ -139,7 +139,7 @@ async def call_text2img(bot,event,config,prompt):
         await bot.send(event, "正在绘制，请稍候...")
         proxy=config.api["proxy"]["http_proxy"]
         functions = [
-            ideo_gram(prompt, proxy),
+            #ideo_gram(prompt, proxy),
             bing_dalle3(prompt, proxy),
             #flux_speed(prompt, proxy), #也不要这个
             #recraft_v3(prompt, proxy), #不要这个
