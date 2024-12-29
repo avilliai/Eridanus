@@ -12,7 +12,6 @@ async def bing_dalle3(prompt,proxy=None):
     url=f"https://apiserver.alcex.cn/dall-e-3/generate-image?prompt={prompt}"
     async with httpx.AsyncClient(proxies=proxies,timeout=100) as client:
         response = await client.get(url)
-        print(response.json())
     if response:
         paths=[]
         d=response.json()["data"]
