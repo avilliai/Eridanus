@@ -156,12 +156,6 @@ async def call_text2img(bot,event,config,prompt):
             except Exception as e:
                 bot.logger.error(f"Task failed: {e}")
 
-        result =await bing_dalle3(prompt,)
-        if result is not []:
-            img_paths=[]
-            for r in result:
-                img_paths.append(Image(file=r))
-            await bot.send(event, img_paths,True)
 
     else:
         await bot.send(event, "你没有权限使用该功能")
