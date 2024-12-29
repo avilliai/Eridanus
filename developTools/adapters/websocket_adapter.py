@@ -72,13 +72,14 @@ class WebSocketBot:
                         future.set_result(data)
                 elif "post_type" in data:
                     event_obj = EventFactory.create_event(data)
-                    if event_obj.post_type=="meta_event":
-                        try:
+                    try:
+                        if event_obj.post_type=="meta_event":
+
                             if event_obj.meta_event_type=="lifecycle":
                                 self.id = int(event_obj.self_id)
                                 self.logger.info(f"Bot ID: {self.id}")
-                        except:
-                            pass
+                    except:
+                        pass
                     if event_obj:
                         asyncio.create_task(self.event_bus.emit(event_obj))  #不能await，否则会阻塞
                     else:
