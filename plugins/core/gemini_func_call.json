@@ -44,8 +44,7 @@
                         }
                     },
                     "required": [
-                        "text",
-                        "speaker"
+                        "text"
                     ]
                 }
             },

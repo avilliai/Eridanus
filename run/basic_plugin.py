@@ -13,7 +13,8 @@ from plugins.core.userDB import get_user
 from plugins.core.utils import download_img
 from plugins.utils.utils import random_str
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
-global image_search
+
+
 image_search={}
 """
 供func call调用
@@ -102,7 +103,10 @@ async def call_image_search(bot,event,config,image_url=None):
         await bot.send(event, forMeslist)
     else:
         await bot.send(event, "权限不够呢.....")
-async def call_tts(bot,event,config,text,speaker):
+async def call_tts(bot,event,config,text,speaker=None):
+    if speaker is None:
+        mode = config.api["tts"]["tts_engine"]
+        speaker=config.api["tts"][mode]["speaker"]
     speakers=await get_acgn_ai_speaker_list()
     if speaker in speakers:
         pass
@@ -123,7 +127,7 @@ async def call_tts(bot,event,config,text,speaker):
     except Exception as e:
         bot.logger.error(f"Error in tts: {e}")
 async def call_tarot(bot,event,config):
-    txt, img = tarotChoice()
+    txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
     r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
     if r and config.api["llm"]["aiReplyCore"]:
@@ -149,12 +153,12 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def search_image(event):
-        global image_search
         if str(event.raw_message) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
             await bot.send(event, "请发送要搜索的图片")
             image_search[event.sender.user_id] = []
         if ("搜图" in str(event.raw_message) or event.sender.user_id in image_search) and event.get('image'):
             await call_image_search(bot,event,config)
+            image_search.pop(event.sender.user_id)
     @bot.on(GroupMessageEvent)
     async def tts(event: GroupMessageEvent):
         if "说" in event.raw_message:
@@ -169,6 +173,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
         if event.raw_message=="今日塔罗":
-            txt, img = tarotChoice()
+            txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
 

@@ -45,7 +45,7 @@ tarot = [['愚者 (The Fool)',
          ['命运之轮 (The Wheel of Fortune)',
           '机会到来; 随机应变能力佳; 好运; 转换期; 意想不到的幸运; 升迁有望; 变化丰富; 好时机; 宿命的相逢; 一见钟情; 幸运的婚姻; 富贵的身份',
           '低潮期; 时机未到; 评估易出错; 时机不好; 没有头绪; 处于劣势; 生活艰苦; 情况恶化; 计划停滞需要再等待; 失恋; 短暂的恋情; 易错失良机; 不敌诱惑; 爱情无法持久',
-          'The Wheel of Fortune.jpg'],
+          'The Wheel of Fortune.jpg'], #
          ['正义 (Justice)',
           '公正; 严正的意见; 良好的均衡关系; 严守中立立场; 凡事合理化; 身兼两种工作; 协调者; 与裁判、法律相关者; 表里一致的公正人物; 以诚实之心光明正大地交往; 彼此能获得协调',
           '不公正; 不平衡; 不利的条件; 偏颇; 先入为主的观念; 偏见与独断; 纷争、诉讼; 问心有愧; 无法两全; 天平两边无法平衡; 性格不一致; 无视于社会道德观的恋情; 偏爱',
@@ -92,19 +92,30 @@ tarot = [['愚者 (The Fool)',
           'The World.jpg']]
 
 
-def tarotChoice(isAbstract=False):
+def tarotChoice(mode):
     ints = random.randint(0, 1)
     if ints == 0:
         tarots = random.choice(tarot)
         txt = tarots[0] + '\n' + '正位' + '\n' + tarots[1]
-        img = 'data/pictures/tarot/TarotImages/' + tarots[3]
-        img_folder = 'AbstractImages' if isAbstract else 'TarotImages'
+        mode_to_folder = {
+            "2233": "TarotImages",
+            "blueArchive": "blueArchive",  # 注意: 原代码是 'buleArchive'，可能是拼写错误，这里修正为 'blueArchive'
+            "AbstractImages": "AbstractImages"  # 假设参数为 'AbstractImages' 时，folder 也为 'AbstractImages'
+        }
+
+        img_folder = mode_to_folder.get(mode, "TarotImages")  # 默认值为 "TarotImages"
         img = f'data/pictures/tarot/{img_folder}/{tarots[3]}'
         return txt, img
     if ints == 1:
         tarots = random.choice(tarot)
         txt = tarots[0] + '\n' + '逆位' + '\n' + tarots[2]
-        img_folder = 'AbstractImages' if isAbstract else 'TarotImages'
+        mode_to_folder = {
+            "bilibili": "TarotImages",
+            "blueArchive": "blueArchive",
+            "AbstractImages": "AbstractImages"
+        }
+
+        img_folder = mode_to_folder.get(mode, "TarotImages")
         img1 = f'data/pictures/tarot/side{img_folder}/' + tarots[3]
         if not os.path.exists(f'data/pictures/tarot/side{img_folder}'):
             os.mkdir(f'data/pictures/tarot/side{img_folder}')
