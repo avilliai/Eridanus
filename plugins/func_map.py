@@ -2,7 +2,7 @@
 import inspect
 import json
 
-from run.basic_plugin import call_weather_query,call_setu,call_image_search,call_tts,call_tarot,call_text2img_bing_dalle3
+from run.basic_plugin import call_weather_query,call_setu,call_image_search,call_tts,call_tarot,call_text2img
 from run.user_data import call_user_data_register,call_user_data_query,call_user_data_sign,call_change_city,call_change_name,call_permit
 from run.resource_search import search_book_info
 

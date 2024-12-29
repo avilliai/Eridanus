@@ -1,9 +1,11 @@
 import os
 import shutil
 
+import asyncio
+
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image
-from plugins.basic_plugin.ai_text2img import bing_dalle3
+from plugins.basic_plugin.ai_text2img import bing_dalle3, ideo_gram, flux_speed, recraft_v3, flux_ultra
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
@@ -130,11 +132,31 @@ async def call_tts(bot,event,config,text,speaker=None):
         await bot.send(event, Record(file=p))
     except Exception as e:
         bot.logger.error(f"Error in tts: {e}")
-async def call_text2img_bing_dalle3(bot,event,config,prompt):
+async def call_text2img(bot,event,config,prompt):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"]:
         await bot.send(event, "正在绘制，请稍候...")
-        result =await bing_dalle3(prompt,config.api["proxy"]["http_proxy"])
+        proxy=config.api["proxy"]["http_proxy"]
+        functions = [
+            ideo_gram(prompt, proxy),
+            bing_dalle3(prompt, proxy),
+            flux_speed(prompt, proxy),
+            recraft_v3(prompt, proxy),
+            flux_ultra(prompt, proxy),
+        ]
+
+        for future in asyncio.as_completed(functions):
+            try:
+                result = await future
+                if result is not []:
+                    sendMes = []
+                    for r in result:
+                        sendMes.append(Node(content=[Image(file=r)]))
+                    await bot.send(event, sendMes)
+            except Exception as e:
+                bot.logger.error(f"Task failed: {e}")
+
+        result =await bing_dalle3(prompt,)
         if result is not []:
             img_paths=[]
             for r in result:
@@ -192,7 +214,7 @@ def main(bot,config):
     async def bing_dalle3_draw(event):
         if str(event.raw_message).startswith("画"):
             prompt = str(event.raw_message).split("画")[1]
-            await call_text2img_bing_dalle3(bot, event, config, prompt)
+            await call_text2img(bot, event, config, prompt)
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
         if event.raw_message=="今日塔罗":
