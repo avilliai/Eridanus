@@ -135,7 +135,7 @@
             },
             {
                 "name": "call_weather_query",
-                "description": "Get the current weather in a given location.",
+                "description": "Get the current weather.default 北京",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -143,10 +143,7 @@
                             "type": "string",
                             "description": "The city and state, e.g. 上海"
                         }
-                    },
-                    "required": [
-                        "location"
-                    ]
+                    }
                 }
             },
             {

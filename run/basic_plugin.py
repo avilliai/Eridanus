@@ -19,7 +19,10 @@ image_search={}
 """
 供func call调用
 """
-async def call_weather_query(bot,event,config,location):
+async def call_weather_query(bot,event,config,location=None):
+    user_info = await get_user(event.user_id, event.sender.nickname)
+    if location is None:
+        location = user_info[5]
     r=await weather_query(config.api["proxy"]["http_proxy"],config.api["心知天气"]["api_key"],location)
     r = await aiReplyCore_shadow([{"text":f"{r}"}], event.user_id, config,func_result=True)
     await bot.send(event, str(r))
