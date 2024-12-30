@@ -535,7 +535,7 @@ def main(bot,config):
     async def AiSdDraw(event):
         global turn #画 中空格的意义在于防止误触发，但fluxDrawer无所谓了，其他倒是可以做一做限制。
         global sd_user_args
-        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"]:
+        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"]!="":
             tag = str(event.raw_message).replace("画 ", "")
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起SDai绘画请求，path:{path}|prompt:{tag}")
