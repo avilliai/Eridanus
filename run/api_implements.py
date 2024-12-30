@@ -11,27 +11,10 @@ def main(bot,config):
     global avatar
     avatar=False
     @bot.on(GroupMessageEvent)
-    async def sendLike(event: GroupMessageEvent):
-        if str(event.raw_message) == '赞我':
-            try:
-                res = await bot.send_like(event.user_id)
-                if res == '':
-                    await bot.send(event,'已赞你',True)
-                else:
-                    await bot.send(event,res,True)
-            except:
-                await bot.send(event,'赞失败',True)
-        elif str(event.raw_message).startswith('赞'):
-            for element in event.processed_message:
-                if isinstance(element, dict) and 'at' in element:
-                    at_info = element['at']
-                    if isinstance(at_info, dict) and 'qq' in at_info:
-                        target_qq = at_info['qq']
-                        res = await bot.send_like(target_qq)
-                        if res == '':
-                            await bot.send(event, [Text('已赞'), At(target_qq)], True)
-                        else:
-                            await bot.send(event, res, True)
+        async def sendLike(event: GroupMessageEvent):
+        if event.raw_message=="赞我":
+            await bot.send_like(event.user_id)
+            await bot.send(event, "已赞你！")
         if event.raw_message.startswith("改备注"):
             await bot.send(event, "已修改")
             remark = event.raw_message.split("改备注")[1].strip()
