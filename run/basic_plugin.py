@@ -375,15 +375,15 @@ def main(bot,config):
                 async def process_image(image_url):
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        audit_result = await pic_audit_standalone(base64_image, return_none=True, url=config.api["sd审核和反推api"])
-                        if audit_result:
-                            bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
-                            return Text("太涩了")
-                        else:
-                            bot.logger.info(f"Image at URL {image_url} passed the audit")
-                            path=f"data/pictures/cache/{random_str()}.png"
-                            p=await download_img(image_url,path)
-                            return Image(file=p)
+                        if event.group_id in config.controller["ai绘画"]["no_nsfw_groups"]:
+                            audit_result = await pic_audit_standalone(base64_image, return_none=True, url=config.api["sd审核和反推api"])
+                            if audit_result:
+                                bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
+                                return Text("太涩了")
+                        bot.logger.info(f"Image at URL {image_url} passed the audit")
+                        path=f"data/pictures/cache/{random_str()}.png"
+                        p=await download_img(image_url,path)
+                        return Image(file=p)
                     except Exception as e:
                         bot.logger.error(f"Failed to process image at {image_url}: {e}")
                         return None
