@@ -1,4 +1,5 @@
 import httpx
+
 import random
 import zipfile
 from bs4 import BeautifulSoup
@@ -18,8 +19,12 @@ aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 
 
+from plugins.utils.random_str import random_str
+
+
+
 async def get_results(url,proxy=None):
-    if proxy is not None:
+    if proxy is not None and proxy!= "":
         proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
