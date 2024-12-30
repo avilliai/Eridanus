@@ -525,8 +525,8 @@ def main(bot,config):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
-                    await bot.send(event, [Image(file=p)], True)
                     turn -= 1
+                    await bot.send(event, [Image(file=p)], True)
             except Exception as e:
                 bot.logger.error(f"重绘失败: {e}")
                 await bot.send(event, "重绘失败了喵~", True)
@@ -551,8 +551,8 @@ def main(bot,config):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
-                    await bot.send(event, [Image(file=p)], True)
                     turn -= 1
+                    await bot.send(event, [Image(file=p)], True)
                     # logger.info("success")
                     #await bot.send(event, "防出色图加上rating_safe，如果色图请自行撤回喵~")
             except Exception as e:

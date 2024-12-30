@@ -160,7 +160,7 @@ async def n4(prompt, path, groupid, config):
                 img_file.write(image_data)
     return path
 
-async def n3(prompt, negative_prompt, path, groupid,config):
+async def n3(prompt, path, groupid,config):
     url = "https://image.novelai.net"
 
     if "方" in prompt:
