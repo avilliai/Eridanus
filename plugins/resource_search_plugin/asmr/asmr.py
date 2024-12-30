@@ -1,33 +1,36 @@
-import yaml
+import asyncio
+import os
+
 import httpx
 import random
 from pytubefix import Channel, YouTube
+from pytubefix.helpers import reset_cache
+from ruamel.yaml import YAML
 
-from plugins.newsEveryDay import get_headers
+from developTools.utils.logger import get_logger
+from plugins.core.utils import get_headers
 
+yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
-    result = yaml.load(f.read(), Loader=yaml.FullLoader)
-    proxy = result.get("proxy")
-    proxies = {
-        "http://": proxy,
-        "https://": proxy
-    }
-    pyproxies = {  # pytubefix代理
-        "http": proxy,
-        "https": proxy
-    }
-
-with open('config/settings.yaml', 'r', encoding='utf-8') as f:
-    result = yaml.load(f.read(), Loader=yaml.FullLoader)
-ASMR_channels = result.get("ASMR").get("channels")
-
-with open('data/ASMR.yaml', 'r', encoding='utf-8') as f:
-    ASMRpush = yaml.load(f.read(), Loader=yaml.FullLoader)
-pushed_videos = ASMRpush.get("已推送ASMR")
-
-client = httpx.AsyncClient(headers=get_headers(), timeout=100)
+    local_config = yaml.load(f)
+proxy = local_config.get("proxy").get("http_proxy")
 
 
+proxies = {
+    "http://": proxy,
+    "https://": proxy
+}
+pyproxies = {  # pytubefix代理
+    "http": proxy,
+    "https": proxy
+}
+
+
+
+
+ASMR_channels =local_config["youtube_asmr"]["channels"]
+
+logger=get_logger()
 async def ASMR_today():
     global ASMR_channels  # ASMR频道列表
     global pushed_videos  # 已推送ASMR列表
@@ -62,17 +65,20 @@ async def ASMR_random():
     yt = YouTube(url, proxies=pyproxies)
     title = yt.title
     length = yt.length
+    logger.info(f"选择{athor}频道的ASMR:{title}")
     return athor, title, video_id, length
 
 
 async def get_audio(video_id):
     url = f"https://www.youtube.com/watch?v={video_id}"
-    yt = YouTube(url=url, client='IOS', proxies=pyproxies)
-    path = f"data/music/musicCache/{video_id}.mp3"
+    #
+    yt = YouTube(url=url, client='IOS', proxies=pyproxies,use_oauth=True, allow_oauth_cache=True)
+
     ys = yt.streams.get_audio_only()
-    ys.download(mp3=True, output_path="data/music/musicCache/", filename=video_id)
-    audiourl = await file_chain(path)
-    return audiourl
+    ys.download(output_path="data/voice/cache/", filename=f"{video_id}.mp3")
+
+
+    return f"data/voice/cache/{video_id}.mp3"
 
 
 async def get_video(video_id):
@@ -90,8 +96,8 @@ async def get_video(video_id):
         'note': '1080p',
         'format': 137
     }
-
-    response = await client.post(url=url, data=data)
+    async with httpx.AsyncClient(headers=get_headers(), proxies=proxies, timeout=100) as client:
+        response = await client.post(url=url, data=data)
     videourl = response.json()['downloadUrlX']
     return videourl
 
@@ -99,12 +105,11 @@ async def get_video(video_id):
 async def get_img(video_id):
     path = f"data/pictures/cache/{video_id}.jpg"
     url = f"https://i.ytimg.com/vi/{video_id}/hq720.jpg"  # 下载视频封面
-    client = httpx.AsyncClient(headers=get_headers(), proxies=proxies, timeout=100)
-    response = await client.get(url)
+    async with httpx.AsyncClient(headers=get_headers(), proxies=proxies, timeout=100) as client:
+        response = await client.get(url)
     with open(path, 'wb') as f:
         f.write(response.content)
-    imgurl = await file_chain(path)
-    return imgurl
+    return path
 
 
 async def file_chain(path):  ##上传文件到ffsup.com并取得直链
@@ -112,5 +117,13 @@ async def file_chain(path):  ##上传文件到ffsup.com并取得直链
     url = 'https://upload.ffsup.com/'
     with open(path, 'rb') as f:
         files = {'file': f}
-        response = await client.post(url=url, files=files)
+        async with httpx.AsyncClient(headers=get_headers(), proxies=proxies, timeout=100) as client:
+            response = await client.post(url=url, files=files)
     return response.json()['data']['url']
+
+'''athor, title, video_id, length = asyncio.run(ASMR_random())
+imgurl =asyncio.run(get_img(video_id))
+print(imgurl)
+audiourl =asyncio.run(get_audio(video_id))
+print(audiourl)
+print(f"标题:{title}\n频道:{athor}\n视频id:{video_id}\n视频时长:{length}\n视频封面:{imgurl}\n音频:{audiourl}")'''

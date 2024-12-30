@@ -42,3 +42,7 @@ z_library: #填你的zlib账号，此功能需要开启代理。
   search_num: 4        #搜索返回结果数量，默认4本书
   email: ""
   password: ""  #快填，Eridanus会偷走你的账号密码
+youtube_asmr:
+  channels:      #频道来源。此功能需要配置proxy，并通过tools完成登录。
+    - '@emococh'
+    - '@-gabisroom-4153'

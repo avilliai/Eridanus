@@ -1,8 +1,9 @@
 import os
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Image, Node, Text
+from developTools.message.message_components import Image, Node, Text, File
 from plugins.core.userDB import get_user
+from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
 from plugins.resource_search_plugin.zLibrary.zLibrary import Zlibrary
 
@@ -21,6 +22,26 @@ async def search_book_info(bot,event,config,info):
         # print(r)
     else:
         await bot.send(event, "你没有权限使用该功能")
+async def call_asmr(bot,event,config,try_again=False):
+    user_info = await get_user(event.user_id, event.sender.nickname)
+    if user_info[6] >= config.controller["resource_search"]["asmr"]["asmr_level"]:
+        try:
+            athor, title, video_id, length = await ASMR_random()
+            imgurl =await get_img(video_id)
+            audiopath =await get_audio(video_id)
+            bot.logger.info(f"asmr\n标题:{title}\n频道:{athor}\n视频id:{video_id}\n视频时长:{length}\n视频封面:{imgurl}\n音频:{audiopath}")
+            await bot.send(event, [Text(f"随机奥术\n频道: {athor}\n标题: {title}\n时长: {length}"), Image(file=imgurl)])
+            await bot.send(event,File(file=audiopath))
+        except Exception as e:
+            bot.logger.error(f"asmr error:{e}")
+            if try_again==False:
+                bot.logger.warning("asmr try again!")
+                await call_asmr(bot,event,config,try_again=True)
+            if try_again==True:
+                await bot.send(event, "失败了！要不再试一次？")
+    else:
+        await bot.send(event, "你没有权限使用该功能")
+
 
 def main(bot,config):
     #实例化对象，进行进一步操作
@@ -45,4 +66,6 @@ def main(bot,config):
                 print(path)
             else:
                 await bot.send(event, "你没有权限使用该功能")
+        elif event.raw_message=="随机奥术" or event.raw_message=="随机asmr" or event.raw_message=="随机奥数":
+            await call_asmr(bot,event,config)
 
