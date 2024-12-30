@@ -5,9 +5,9 @@ from typing import (TYPE_CHECKING, Annotated, Any, ClassVar, Literal, Optional,
 
 from pydantic import BaseModel, Field, TypeAdapter, model_serializer
 
+
 OnlyReceive = TypeVar("OnlyReceive", bound=Any)
 OnlySend = TypeVar("OnlySend", bound=Any)
-
 
 class MessageComponent(BaseModel, ABC):
     """消息组件
@@ -27,6 +27,12 @@ class MessageComponent(BaseModel, ABC):
         for k, v in self:
             if k in ["type", "comp_type"]:
                 continue
+
+            field_info = self.model_fields[k]
+            # 检查 OnlySend 是否在元数据中
+            if any(arg is OnlySend for arg in field_info.metadata):
+                continue
+
             data[k] = TypeAdapter(type(v)).dump_python(v, mode="json")
 
         return {"type": self.comp_type, "data": data}
