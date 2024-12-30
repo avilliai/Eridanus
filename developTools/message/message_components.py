@@ -109,6 +109,7 @@ class Image(MessageComponent):
             self.file.startswith("http://")
             or self.file.startswith("file://")
             or self.file.startswith("base64://")
+            or self.file.startswith("https://")
         ):
             # 将相对路径转换为绝对路径并添加 file:// 前缀
             abs_path = os.path.abspath(self.file).replace("\\", "/")
@@ -127,6 +128,7 @@ class Record(MessageComponent):
             self.file.startswith("http://")
             or self.file.startswith("file://")
             or self.file.startswith("base64://")
+            or self.file.startswith("https://")
         ):
             # 将相对路径转换为绝对路径并添加 file:// 前缀
             abs_path = os.path.abspath(self.file).replace("\\", "/")

@@ -207,8 +207,8 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bing_dalle3_draw(event):
-        if str(event.raw_message).startswith("画"):
-            prompt = str(event.raw_message).split("画")[1]
+        if str(event.raw_message).startswith("画 "):
+            prompt = str(event.raw_message).split("画 ")[1]
             await call_text2img(bot, event, config, prompt)
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
