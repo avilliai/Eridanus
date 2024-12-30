@@ -1,6 +1,22 @@
 {
         "function_declarations": [
             {
+                "name": "call_text2img",
+                "description": "调用text to image模型，根据文本生成图片。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": {
+                            "type": "string",
+                            "description": "生成图片的提示词"
+                        }
+                    },
+                    "required": [
+                        "prompt"
+                    ]
+                }
+            },
+            {
                 "name": "call_image_search",
                 "description": "only trigger when user ask for search image source through url.",
                 "parameters": {
