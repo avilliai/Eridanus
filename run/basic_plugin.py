@@ -414,3 +414,45 @@ def main(bot,config):
                 bot.logger.info("Successfully sent the compiled message to the group.")
             except Exception as e:
                 bot.logger.error(f"Failed to send the compiled message to the group. Error: {e}")
+
+    @bot.on(GroupMessageEvent)
+    async def tagger(event):
+        global tag_user
+
+        if event.get('image') == None and (str(event.raw_message) == ("tag") or str(event.raw_message).startswith("tag ")):
+            tag_user[event.sender.user_id] = []
+            await bot.send(event, "请发送要识别的图片")
+
+        # 处理图片和重绘命令
+        if (str(event.raw_message).startswith("tag") or event.sender.user_id in tag_user) and event.get('image'):
+            if (str(event.raw_message).startswith("tag")) and event.get('image'):
+                tag_user[event.sender.user_id] = []
+
+            # 日志记录
+            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的tag反推指令")
+
+            # 获取图片路径
+            path = f"data/pictures/cache/{random_str()}.png"
+            img_url = event.get("image")[0]["url"]
+            bot.logger.info(f"发起反推tag请求，path:{path}")
+            tag_user.pop(event.sender.user_id)
+            
+            try:
+                b64_in = await url_to_base64(img_url)    
+                await bot.send(event, "tag反推中", True)
+                message,tags,tags_str = await pic_audit_standalone(b64_in,is_return_tags=True,url=config.api["sd审核和反推api"])
+                tags_str = tags_str.replace("_"," ")
+                await bot.send(event, Text(tags_str), True)
+            except Exception as e:
+                bot.logger.error(f"反推失败: {e}")
+                await bot.send(event, "反推失败了喵~", True)
+
+    async def url_to_base64(url):
+        async with httpx.AsyncClient(timeout=9000) as client:
+            response = await client.get(url)
+            if response.status_code == 200:
+                image_bytes = response.content
+                encoded_string = base64.b64encode(image_bytes).decode('utf-8')
+                return encoded_string
+            else:
+                raise Exception(f"Failed to retrieve image: {response.status_code}")
