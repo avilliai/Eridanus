@@ -243,6 +243,7 @@ def main(bot,config):
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):
             song_name = event.raw_message.split("点歌 ")[1]
+            await call_pick_music(bot, event, config, song_name)
 
 
     @bot.on(GroupMessageEvent)
