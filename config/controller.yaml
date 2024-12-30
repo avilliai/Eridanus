@@ -15,6 +15,7 @@ basic_plugin:
   bing_dalle3_operate_level: 0  #bing_dalle3绘图功能所需等级
 ai绘画:
   sd画图: true
+  sd默认启动模型: 'noobaiXLNAIXL_vPred10Version.safetensors'
   novel_ai画图: true
   no_nsfw_groups:               #禁止色图的群号
   - '111'
