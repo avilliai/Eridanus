@@ -267,11 +267,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in,args):
     headers = {
         "Authorization": f"Bearer {config.api['nai_key']}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
@@ -324,11 +320,7 @@ async def SdDraw0(prompt, path, config,groupid,args):
     headers = {
         "Authorization": f"Bearer {config.api['nai_key']}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
     #我的建议是，直接返回base64，让它去审查
