@@ -5,9 +5,9 @@ from typing import (TYPE_CHECKING, Annotated, Any, ClassVar, Literal, Optional,
 
 from pydantic import BaseModel, Field, TypeAdapter, model_serializer
 
+
 OnlyReceive = TypeVar("OnlyReceive", bound=Any)
 OnlySend = TypeVar("OnlySend", bound=Any)
-
 
 class MessageComponent(BaseModel, ABC):
     """消息组件
@@ -27,6 +27,12 @@ class MessageComponent(BaseModel, ABC):
         for k, v in self:
             if k in ["type", "comp_type"]:
                 continue
+
+            field_info = self.model_fields[k]
+            # 检查 OnlySend 是否在元数据中
+            if any(arg is OnlySend for arg in field_info.metadata):
+                continue
+
             data[k] = TypeAdapter(type(v)).dump_python(v, mode="json")
 
         return {"type": self.comp_type, "data": data}
@@ -99,7 +105,7 @@ class Image(MessageComponent):
         default=None,
         description="图片类型，flash 表示闪照，无此参数表示普通图片"
     )
-    url: Optional[Annotated[str, OnlyReceive]] = Field(
+    url: Optional[Annotated[str, OnlySend]] = Field(
         default="",
         description="图片 URL"
     )
@@ -132,7 +138,7 @@ class Image(MessageComponent):
 class Record(MessageComponent):
     comp_type: str = "record"
     file: str = Field(description="语音文件路径")
-    url: Annotated[Optional[str], OnlyReceive] = Field(default="",description="语音 URL")
+    url: Annotated[Optional[str], OnlySend] = Field(default="",description="语音 URL")
     cache: Annotated[Optional[bool], OnlySend] = Field(
         default=True,
         description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件",

@@ -165,7 +165,7 @@ class WebSocketBot:
         try:
             if self.websocket:
 
-                #self.logger.info(f"发送的消息: {message}")
+
                 if event.message_type=="group":
                     data={
                         "action": "send_group_msg",
@@ -188,6 +188,7 @@ class WebSocketBot:
                     if isinstance(message[0], Node):
                         r = await self.send_private_forward_msg(event.user_id, message)
                         return r
+                print(f"发送的消息: {message.to_dict()}")
                 await self.websocket.send(json.dumps(data))
 
             else:
