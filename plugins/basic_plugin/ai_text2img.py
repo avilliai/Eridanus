@@ -264,7 +264,14 @@ async def SdreDraw(prompt, path, config, groupid, b64_in,args):
             },
         "override_settings_restore_afterwards": False,
     }  #manba out
-    async with httpx.AsyncClient(timeout=1000) as client:
+    headers = {
+        "Authorization": f"Bearer {config.api['nai_key']}"
+    }
+    if config.api["proxy"]["http_proxy"] is not None:
+        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    else:
+        proxies = None
+    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
@@ -314,7 +321,14 @@ async def SdDraw0(prompt, path, config,groupid,args):
             },
         "override_settings_restore_afterwards": False,
     }  #manba out
-    async with httpx.AsyncClient(timeout=1000) as client:
+    headers = {
+        "Authorization": f"Bearer {config.api['nai_key']}"
+    }
+    if config.api["proxy"]["http_proxy"] is not None:
+        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    else:
+        proxies = None
+    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
     #我的建议是，直接返回base64，让它去审查
@@ -329,9 +343,16 @@ async def SdDraw0(prompt, path, config,groupid,args):
     #image.save(f'{path}')
     return path
 
-async def getloras(sdurl="http://166.0.199.118:17858"):
-    url = f'{sdurl}/sdapi/v1/loras'
-    async with httpx.AsyncClient(timeout=10.0) as client:
+async def getloras(config):
+    url = f'{config.api["sdUrl"]}/sdapi/v1/loras'
+    headers = {
+        "Authorization": f"Bearer {config.api['nai_key']}"
+    }
+    if config.api["proxy"]["http_proxy"] is not None:
+        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    else:
+        proxies = None
+    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
         response = await client.get(url)
         r = response.json()
         result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
@@ -342,9 +363,16 @@ async def ckpt2(model):
     global ckpt
     ckpt = model
 
-async def getcheckpoints(sdurl="http://166.0.199.118:17858"):
-    url = f'{sdurl}/sdapi/v1/sd-models'
-    async with httpx.AsyncClient(timeout=10.0) as client:
+async def getcheckpoints(config):
+    url = f'{config.api["sdUrl"]}/sdapi/v1/sd-models'
+    headers = {
+        "Authorization": f"Bearer {config.api['nai_key']}"
+    }
+    if config.api["proxy"]["http_proxy"] is not None:
+        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    else:
+        proxies = None
+    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
         response = await client.get(url)
         r = response.json()
         model_lines = [f'{model.get("model_name", "未知")}' for model in r]
