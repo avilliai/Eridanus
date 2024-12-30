@@ -101,26 +101,7 @@ class Face(MessageComponent):
 class Image(MessageComponent):
     comp_type: str = "image"
     file: str
-    type: Optional[Literal["flash"]] = Field(
-        default=None,
-        description="图片类型，flash 表示闪照，无此参数表示普通图片"
-    )
-    url: Optional[Annotated[str, OnlySend]] = Field(
-        default="",
-        description="图片 URL"
-    )
-    cache: Annotated[Optional[bool], OnlySend] = Field(
-        default=True,
-        description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件"
-    )
-    proxy: Annotated[Optional[bool], OnlySend] = Field(
-        default=True,
-        description="只在通过网络 URL 发送时有效，表示是否通过代理下载文件（需通过环境变量或配置文件配置代理）"
-    )
-    timeout: Annotated[Optional[int], OnlySend] = Field(
-        default=30,
-        description="只在通过网络 URL 发送时有效，单位秒，表示下载网络文件的超时时间，默认不超时"
-    )
+
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -139,18 +120,7 @@ class Record(MessageComponent):
     comp_type: str = "record"
     file: str = Field(description="语音文件路径")
     url: Annotated[Optional[str], OnlySend] = Field(default="",description="语音 URL")
-    cache: Annotated[Optional[bool], OnlySend] = Field(
-        default=True,
-        description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件",
-    )
-    proxy: Annotated[Optional[bool], OnlySend] = Field(
-        default=True,
-        description="只在通过网络 URL 发送时有效，表示是否通过代理下载文件（需通过环境变量或配置文件配置代理）",
-    )
-    timeout: Annotated[Optional[int], OnlySend] = Field(
-        default=30,
-        description="只在通过网络 URL 发送时有效，单位秒，表示下载网络文件的超时时间，默认不超时",
-    )
+
     def __init__(self, **data):
         super().__init__(**data)
         if self.file and not (
@@ -168,18 +138,7 @@ class Video(MessageComponent):
     comp_type: str = "video"
     file: Optional[str] = Field(description="视频文件路径")
     url: Annotated[Optional[str], OnlyReceive] = Field(description="视频 URL")
-    cache: Annotated[Optional[bool], OnlySend] = Field(
-        default=True,
-        description="只在通过网络 URL 发送时有效，表示是否使用已缓存的文件",
-    )
-    proxy: Annotated[Optional[bool], OnlySend] = Field(
-        default=True,
-        description="只在通过网络 URL 发送时有效，表示是否通过代理下载文件（需通过环境变量或配置文件配置代理）",
-    )
-    timeout: Annotated[Optional[int], OnlySend] = Field(
-        default=30,
-        description="只在通过网络 URL 发送时有效，单位秒，表示下载网络文件的超时时间，默认不超时",
-    )
+
 
 
 class At(MessageComponent):
