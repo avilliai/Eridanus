@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image
-from plugins.basic_plugin.ai_text2img import bing_dalle3, ideo_gram, flux_speed, recraft_v3, flux_ultra, n4, n3
+from plugins.basic_plugin.ai_text2img import bing_dalle3, ideo_gram, flux_speed, recraft_v3, flux_ultra, n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
@@ -19,7 +19,7 @@ from plugins.basic_plugin.setu_moderate import pic_audit_standalone
 
 from plugins.core.userDB import get_user
 from plugins.core.utils import download_img
-from plugins.utils.utils import random_str
+from plugins.utils.utils import random_str, url_to_base64, parse_arguments
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 
 
@@ -446,13 +446,128 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(f"反推失败: {e}")
                 await bot.send(event, "反推失败了喵~", True)
+            
+    @bot.on(GroupMessageEvent)
+    async def sdsettings(event):
+        if str(event.raw_message).startswith("setsd "):
+            global sd_user_args
+            command = str(event.raw_message).replace("setsd ", "")
+            cmd_dict = parse_arguments(command)  # 不需要 await
+            sd_user_args[event.sender.user_id] = cmd_dict
+            await bot.send(event, f"当前绘画参数设置: {sd_user_args[event.sender.user_id]}", True)
+    
+    @bot.on(GroupMessageEvent)
+    async def sdresettings(event):
+        if str(event.raw_message).startswith("setre "):
+            global sd_re_args
+            command = str(event.raw_message).replace("setre ", "")
+            cmd_dict = parse_arguments(command)  # 不需要 await
+            sd_re_args[event.sender.user_id] = cmd_dict
+            await bot.send(event, f"当前重绘参数设置: {sd_re_args[event.sender.user_id]}", True)
+            
+    @bot.on(GroupMessageEvent)
+    async def sdreDrawRun(event):
+        global UserGet
+        global turn
 
-    async def url_to_base64(url):
-        async with httpx.AsyncClient(timeout=9000) as client:
-            response = await client.get(url)
-            if response.status_code == 200:
-                image_bytes = response.content
-                encoded_string = base64.b64encode(image_bytes).decode('utf-8')
-                return encoded_string
-            else:
-                raise Exception(f"Failed to retrieve image: {response.status_code}")
+        if event.get('image') == None and (str(event.raw_message) == ("重绘") or str(event.raw_message).startswith("重绘 ")):
+            prompt = str(event.raw_message).replace("重绘", "").strip()
+            UserGet[event.sender.user_id] = [prompt]
+            await bot.send(event, "请发送要重绘的图片")
+
+        # 处理图片和重绘命令
+        if (str(event.raw_message).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
+            if (str(event.raw_message).startswith("重绘")) and event.raw_message.count(Image):
+                prompt = str(event.raw_message).replace("重绘", "").strip()
+                UserGet[event.sender.user_id] = [prompt]
+
+            # 日志记录
+            prompts = ', '.join(UserGet[event.sender.user_id])
+            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
+
+            # 获取图片路径
+            path = f"data/pictures/cache/{random_str()}.png"
+            img_url = event.get("image")[0]["url"]
+            bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
+            prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' ' + positive_prompt
+            UserGet.pop(event.sender.user_id)
+            
+
+            try:
+                args = sd_re_args.get(event.sender.user_id, {})
+                b64_in = await url_to_base64(img_url)
+                
+                await bot.send(event, f"开始重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
+                turn += 1
+                # 将 UserGet[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
+                p = await SdreDraw(prompts_str, path, config, event.group_id, b64_in, args)
+                if p == False:
+                    turn -= 1
+                    bot.logger.info("色图已屏蔽")
+                    await bot.send(event, "杂鱼，色图不给你喵~", True)
+                else:
+                    await bot.send(event, [Image(file=p)], True)
+                    turn -= 1
+            except Exception as e:
+                bot.logger.error(f"重绘失败: {e}")
+                await bot.send(event, "重绘失败了喵~", True)
+                
+    @bot.on(GroupMessageEvent)
+    async def AiSdDraw(event):
+        global turn #画 中空格的意义在于防止误触发，但fluxDrawer无所谓了，其他倒是可以做一做限制。
+        global sd_user_args
+        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"]:
+            tag = str(event.raw_message).replace("画 ", "")
+            path = f"data/pictures/cache/{random_str()}.png"
+            bot.logger.info(f"发起SDai绘画请求，path:{path}|prompt:{tag}")
+            try:
+                await bot.send(event, f'sd前面排队{turn}人，请耐心等待喵~', True)
+                turn += 1
+                # 没啥好审的，controller直接自个写了。
+                args = sd_user_args.get(event.sender.user_id, {})
+                p = await SdDraw0(tag, path, config, event.group_id, args)
+                # logger.error(str(p))
+                if p == False:
+                    turn -= 1
+                    bot.logger.info("色图已屏蔽")
+                    await bot.send(event, "杂鱼，色图不给你喵~", True)
+                else:
+                    await bot.send(event, [Image(file=p)], True)
+                    turn -= 1
+                    # logger.info("success")
+                    #await bot.send(event, "防出色图加上rating_safe，如果色图请自行撤回喵~")
+            except Exception as e:
+                bot.logger.error(e)
+                turn -= 1
+                await bot.send(event,"sd只因了，联系master喵~")
+                
+        if str(event.raw_message) == "lora" and config.controller["ai绘画"]["sd画图"]:   #获取lora列表
+            bot.logger.info('查询loras中...')
+            try:
+                p = await getloras(config.api["sdUrl"])
+                bot.logger.info(str(p))
+                await bot.send(event, p, True)
+                # logger.info("success")
+            except Exception as e:
+                bot.logger.error(e)
+                
+        if str(event.raw_message) == "ckpt" and config.controller["ai绘画"]["sd画图"]:   #获取lora列表
+            bot.logger.info('查询checkpoints中...')
+            try:
+                p = await getcheckpoints(config.api["sdUrl"])
+                bot.logger.info(str(p))
+                await bot.send(event, p, True)
+                # logger.info("success")
+            except Exception as e:
+                bot.logger.error(e)
+                
+        if str(event.raw_message).startswith("ckpt2 ") and config.controller["ai绘画"]["sd画图"]:
+            tag = str(event.raw_message).replace("ckpt2 ", "")
+            bot.logger.info('切换ckpt中')
+            try:
+                await ckpt2(tag)
+                await bot.send(event, "切换成功喵~第一次会慢一点~", True)
+                # logger.info("success")
+            except Exception as e:
+                bot.logger.error(e)
+                await bot.send(event, "ckpt切换失败", True)
