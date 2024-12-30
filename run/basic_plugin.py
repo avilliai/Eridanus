@@ -544,7 +544,7 @@ def main(bot,config):
         if str(event.raw_message) == "lora" and config.controller["ai绘画"]["sd画图"]:   #获取lora列表
             bot.logger.info('查询loras中...')
             try:
-                p = await getloras(config.api["sdUrl"])
+                p = await getloras(config)
                 bot.logger.info(str(p))
                 await bot.send(event, p, True)
                 # logger.info("success")
@@ -554,7 +554,7 @@ def main(bot,config):
         if str(event.raw_message) == "ckpt" and config.controller["ai绘画"]["sd画图"]:   #获取lora列表
             bot.logger.info('查询checkpoints中...')
             try:
-                p = await getcheckpoints(config.api["sdUrl"])
+                p = await getcheckpoints(config)
                 bot.logger.info(str(p))
                 await bot.send(event, p, True)
                 # logger.info("success")
