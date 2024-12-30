@@ -6,6 +6,16 @@ import io
 import base64
 from plugins.utils.utils import random_str
 from .setu_moderate import pic_audit_standalone
+import ruamel.yaml
+import json
+from PIL import Image
+
+yaml = ruamel.yaml.YAML()
+yaml.preserve_quotes = True
+with open('config/controller.yaml', 'r', encoding='utf-8') as f:
+    controller = yaml.load(f)
+aiDrawController = controller.get("ai绘画")
+ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 
 
 async def get_results(url,proxy=None):
@@ -220,3 +230,123 @@ async def n3(prompt, negative_prompt, path, groupid,config):
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
     return path
+
+async def SdreDraw(prompt, path, config, groupid, b64_in,args):
+    url = config.api["sdUrl"]
+    args = args
+    width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+    height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+
+    payload = {
+        "init_images": [b64_in],
+        "denoising_strength": 0.7,
+        "enable_hr": 'true',
+        "hr_scale": 1.5,
+        "hr_second_pass_steps" : 15,
+        "hr_upscaler" : 'SwinIR_4x',
+        "prompt": f'score_9,score_8_up,score_7_up,{prompt},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,',
+        "negative_prompt": '((nsfw)),score_6,score_5,score_4,((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly, poorly drawn,(censor),blurry,watermark,simple background,transparent background',
+        "seed": -1,
+        "batch_size": 1,
+        "n_iter": 1,
+        "steps": 35,
+        "cfg_scale": 6.5,
+        "width": width,
+        "height": height,
+        "restore_faces": False,
+        "tiling": False,
+        "sampler_name": 'Euler a',
+        "scheduler": 'Align Your Steps',
+        "clip_skip_steps": 2,
+        "override_settings": {
+            "CLIP_stop_at_last_layers": 2,
+            "sd_model_checkpoint": ckpt,  # 指定大模型
+            },
+        "override_settings_restore_afterwards": False,
+    }  #manba out
+    async with httpx.AsyncClient(timeout=1000) as client:
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
+    r = response.json()
+    if 'images' not in r or len(r['images']) == 0:
+        return None
+    #我的建议是，直接返回base64，让它去审查
+    b64 = r['images'][0]
+    if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
+        check = await pic_audit_standalone(b64, return_none=True,url = config.api["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
+        if check:                                                  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
+            return False                                           # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
+    image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
+    #image = Image.open(io.BytesIO(base64.b64decode(p)))
+    image.save(f'{path}')
+    #image.save(f'{path}')
+    return path 
+
+async def SdDraw0(prompt, path, config,groupid,args):
+    url = config.api["sdUrl"]
+
+    args = args
+    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    height = (args.get('h', 1600) if args.get('h', 1600) > 0 else 1600) if isinstance(args, dict) else 1600
+    
+    payload = {
+        "denoising_strength": 0.5,
+        "enable_hr": 'false',
+        "hr_scale": 1.5,
+        "hr_second_pass_steps" : 15,
+        "hr_upscaler" : 'SwinIR_4x',
+        "prompt": f'score_9,score_8_up,score_7_up,{prompt},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,',
+        "negative_prompt": '((nsfw)),score_6,score_5,score_4,((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly, poorly drawn,(censor),blurry,watermark,simple background,transparent background',
+        "seed": -1,
+        "batch_size": 1,
+        "n_iter": 1,
+        "steps": 35,
+        "cfg_scale": 6.5,
+        "width": width,
+        "height": height,
+        "restore_faces": False,
+        "tiling": False,
+        "sampler_name": 'Euler a',
+        "scheduler": 'Align Your Steps',
+        "clip_skip_steps": 2,
+        "override_settings": {
+            "CLIP_stop_at_last_layers": 2,
+            "sd_model_checkpoint": ckpt,  # 指定大模型
+            },
+        "override_settings_restore_afterwards": False,
+    }  #manba out
+    async with httpx.AsyncClient(timeout=1000) as client:
+        response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+    r = response.json()
+    #我的建议是，直接返回base64，让它去审查
+    b64 = r['images'][0]
+    if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
+        check = await pic_audit_standalone(b64, return_none=True,url = config.api["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
+        if check:                                                  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
+            return False                                           # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
+    image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
+    #image = Image.open(io.BytesIO(base64.b64decode(p)))
+    image.save(f'{path}')
+    #image.save(f'{path}')
+    return path
+
+async def getloras(sdurl="http://166.0.199.118:17858"):
+    url = f'{sdurl}/sdapi/v1/loras'
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.get(url)
+        r = response.json()
+        result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
+        result = '以下是可用的lora：\n' + '\n'.join(result_lines) + '\n'
+        return result
+
+async def ckpt2(model):
+    global ckpt
+    ckpt = model
+
+async def getcheckpoints(sdurl="http://166.0.199.118:17858"):
+    url = f'{sdurl}/sdapi/v1/sd-models'
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.get(url)
+        r = response.json()
+        model_lines = [f'{model.get("model_name", "未知")}' for model in r]
+        result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines) + '\n'
+        return result 
