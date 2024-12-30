@@ -243,6 +243,7 @@ def main(bot,config):
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):
             song_name = event.raw_message.split("点歌 ")[1]
+            await call_pick_music(bot, event, config, song_name)
 
 
     @bot.on(GroupMessageEvent)
@@ -394,7 +395,7 @@ def main(bot,config):
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
                         if event.group_id in config.controller["ai绘画"]["no_nsfw_groups"]:
-                            audit_result = await pic_audit_standalone(base64_image, return_none=True, url=config.api["sd审核和反推api"])
+                            audit_result = await pic_audit_standalone(base64_image, return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                             if audit_result:
                                 bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
                                 return Text("太涩了")
@@ -458,7 +459,7 @@ def main(bot,config):
             try:
                 b64_in = await url_to_base64(img_url)    
                 await bot.send(event, "tag反推中", True)
-                message,tags,tags_str = await pic_audit_standalone(b64_in,is_return_tags=True,url=config.api["sd审核和反推api"])
+                message,tags,tags_str = await pic_audit_standalone(b64_in,is_return_tags=True,url=config.api["ai绘画"]["sd审核和反推api"])
                 tags_str = tags_str.replace("_"," ")
                 await bot.send(event, Text(tags_str), True)
             except Exception as e:
@@ -507,7 +508,7 @@ def main(bot,config):
             path = f"data/pictures/cache/{random_str()}.png"
             img_url = event.get("image")[0]["url"]
             bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
-            prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' ' + positive_prompt
+            prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
             UserGet.pop(event.sender.user_id)
             
 

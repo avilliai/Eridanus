@@ -226,8 +226,6 @@ class Reply(MessageComponent):
     comp_type: str = "reply"
     id: int = Field(description="回复时引用的消息 ID")
 
-    def __init__(self, id: int) -> None:
-        BaseModel.__init__(self, id=id)
 
 
 class Forward(MessageComponent):

@@ -5,7 +5,7 @@ import zipfile
 from bs4 import BeautifulSoup
 import io
 import base64
-from plugins.utils.utils import random_str
+
 from .setu_moderate import pic_audit_standalone
 import ruamel.yaml
 import json
@@ -133,7 +133,7 @@ async def n4(prompt, path, groupid, config):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
@@ -153,7 +153,7 @@ async def n4(prompt, path, groupid, config):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
             if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:
-                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True, url=config.api["sd审核和反推api"])
+                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                 if check:
                     return False
             with open(path, 'wb') as img_file:
@@ -209,7 +209,7 @@ async def n3(prompt, negative_prompt, path, groupid,config):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
@@ -229,7 +229,7 @@ async def n3(prompt, negative_prompt, path, groupid,config):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
             if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:
-                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True, url=config.api["sd审核和反推api"])
+                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                 if check:
                     return False
             with open(path, 'wb') as img_file:
@@ -237,7 +237,7 @@ async def n3(prompt, negative_prompt, path, groupid,config):
     return path
 
 async def SdreDraw(prompt, path, config, groupid, b64_in,args):
-    url = config.api["sdUrl"]
+    url = config.api["ai绘画"]["sdUrl"]
     args = args
     width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
     height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
@@ -270,7 +270,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in,args):
         "override_settings_restore_afterwards": False,
     }  #manba out
     headers = {
-        "Authorization": f"Bearer {config.api['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
@@ -280,7 +280,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in,args):
     #我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
     if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
-        check = await pic_audit_standalone(b64, return_none=True,url = config.api["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
+        check = await pic_audit_standalone(b64, return_none=True,url = config.api["ai绘画"]["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
         if check:                                                  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
             return False                                           # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
@@ -290,7 +290,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in,args):
     return path 
 
 async def SdDraw0(prompt, path, config,groupid,args):
-    url = config.api["sdUrl"]
+    url = config.api["ai绘画"]["sdUrl"]
 
     args = args
     width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
@@ -323,7 +323,7 @@ async def SdDraw0(prompt, path, config,groupid,args):
         "override_settings_restore_afterwards": False,
     }  #manba out
     headers = {
-        "Authorization": f"Bearer {config.api['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
@@ -331,7 +331,7 @@ async def SdDraw0(prompt, path, config,groupid,args):
     #我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
     if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
-        check = await pic_audit_standalone(b64, return_none=True,url = config.api["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
+        check = await pic_audit_standalone(b64, return_none=True,url = config.api["ai绘画"]["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
         if check:                                                  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
             return False                                           # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
@@ -341,9 +341,9 @@ async def SdDraw0(prompt, path, config,groupid,args):
     return path
 
 async def getloras(config):
-    url = f'{config.api["sdUrl"]}/sdapi/v1/loras'
+    url = f'{config.api["ai绘画"]["sdUrl"]}/sdapi/v1/loras'
     headers = {
-        "Authorization": f"Bearer {config.api['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
@@ -361,9 +361,9 @@ async def ckpt2(model):
     ckpt = model
 
 async def getcheckpoints(config):
-    url = f'{config.api["sdUrl"]}/sdapi/v1/sd-models'
+    url = f'{config.api["ai绘画"]["sdUrl"]}/sdapi/v1/sd-models'
     headers = {
-        "Authorization": f"Bearer {config.api['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
