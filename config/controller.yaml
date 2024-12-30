@@ -13,3 +13,10 @@ basic_plugin:
   setu_operate_level: 0    #色图功能所需等级
   search_image_resource_operate_level: 0  #图片搜索功能所需等级
   bing_dalle3_operate_level: 0  #bing_dalle3绘图功能所需等级
+ai绘画:
+  sd画图: true
+  novel_ai画图: true
+  no_nsfw_groups:               #禁止色图的群号
+  - '111'
+  - '222'
+  - '333'
