@@ -11,7 +11,7 @@ def main(bot,config):
     global avatar
     avatar=False
     @bot.on(GroupMessageEvent)
-        async def sendLike(event: GroupMessageEvent):
+    async def sendLike(event: GroupMessageEvent):
         if event.raw_message=="赞我":
             await bot.send_like(event.user_id)
             await bot.send(event, "已赞你！")
