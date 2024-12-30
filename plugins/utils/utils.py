@@ -25,3 +25,28 @@ async def url_to_base64(url):
             return encoded_string
         else:
             raise Exception(f"Failed to retrieve image: {response.status_code}")
+
+def parse_arguments(arg_string):
+    args = arg_string.split()
+    print(f"Split arguments: {args}")  # 调试信息
+    result = {}
+    for arg in args:
+        if arg.startswith('-') and len(arg) > 1:
+            # 找到第一个数字的位置
+            for i, char in enumerate(arg[1:], start=1):
+                if char.isdigit():
+                    break
+            else:
+                continue
+            
+            key = arg[1:i]
+            value = arg[i:]
+            try:
+                value = int(value)
+            except ValueError:
+                print(f"Warning: Invalid value for key '{key}'")  # 调试信息
+                continue
+            result[key] = value
+        else:
+            print(f"Warning: Invalid argument format '{arg}'")  # 调试信息
+    return result
