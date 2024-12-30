@@ -1,6 +1,6 @@
 import httpx
 
-from plugins.utils.utils import random_str
+from plugins.utils.random_str import random_str
 
 
 async def get_results(url,proxy=None):

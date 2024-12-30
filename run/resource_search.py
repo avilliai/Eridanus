@@ -1,7 +1,7 @@
 import os
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Image, Node, Text, File, Music
+from developTools.message.message_components import Image, Node, Text, File, Music, Record
 from plugins.core.userDB import get_user
 from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
@@ -31,7 +31,10 @@ async def call_asmr(bot,event,config,try_again=False):
             audiopath =await get_audio(video_id)
             bot.logger.info(f"asmr\n标题:{title}\n频道:{athor}\n视频id:{video_id}\n视频时长:{length}\n视频封面:{imgurl}\n音频:{audiopath}")
             await bot.send(event, [Text(f"随机奥术\n频道: {athor}\n标题: {title}\n时长: {length}"), Image(file=imgurl)])
-            await bot.send(event,File(file=audiopath))
+            if config.api["youtube_asmr"]["send_type"]=="file":
+                await bot.send(event,File(file=audiopath))
+            elif config.api["youtube_asmr"]["send_type"]=="record":
+                await bot.send(event,Record(file=audiopath))
         except Exception as e:
             bot.logger.error(f"asmr error:{e}")
             if try_again==False:
@@ -67,6 +70,6 @@ def main(bot,config):
             else:
                 await bot.send(event, "你没有权限使用该功能")
         elif event.raw_message=="随机奥术" or event.raw_message=="随机asmr" or event.raw_message=="随机奥数":
-            await bot.send(event,Music(type="163",id=1916256128))
-            #await call_asmr(bot,event,config)
+
+            await call_asmr(bot,event,config)
 

@@ -1,6 +1,22 @@
 {
         "function_declarations": [
             {
+                "name": "call_pick_music",
+                "description": "触发音乐选取功能。根据歌曲名或歌手名搜索点歌。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "aim": {
+                            "type": "string",
+                            "description": "歌曲名、歌手名或者二者混合。eg.周杰伦 eg.屋顶 eg.周杰伦 屋顶"
+                        }
+                    },
+                    "required": [
+                        "aim"
+                    ]
+                }
+            },
+            {
                 "name": "call_asmr",
                 "description": "向用户发送asmr助眠音频。"
             },

@@ -1,14 +1,10 @@
-import asyncio
-import os
-
 import httpx
 import random
 from pytubefix import Channel, YouTube
-from pytubefix.helpers import reset_cache
 from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
-from plugins.core.utils import get_headers
+from plugins.utils.utils import get_headers
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:

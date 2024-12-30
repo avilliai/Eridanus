@@ -6,7 +6,7 @@ import httpx
 from PIL import Image
 
 from plugins.core.llmDB import get_user_history, update_user_history
-from plugins.utils.utils import random_str
+from plugins.utils.random_str import random_str
 
 """
 从processed_message构造openai标准的prompt

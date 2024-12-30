@@ -156,9 +156,9 @@ class Video(MessageComponent):
 
 class At(MessageComponent):
     comp_type: str = "at"
-    qq: str = Field(description="@的 QQ 号，all 表示全体成员")
+    qq: int = Field(description="@的 QQ 号，all 表示全体成员")
 
-    def __init__(self, qq: str) -> None:
+    def __init__(self, qq: int) -> None:
         BaseModel.__init__(self, qq=qq)
 
 
