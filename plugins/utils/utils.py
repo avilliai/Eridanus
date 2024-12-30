@@ -15,3 +15,13 @@ def random_str(random_length=7, chars='AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtU
     for i in range(random_length):
         string += (chars[random.randint(0, length)])
     return string
+
+async def url_to_base64(url):
+    async with httpx.AsyncClient(timeout=9000) as client:
+        response = await client.get(url)
+        if response.status_code == 200:
+            image_bytes = response.content
+            encoded_string = base64.b64encode(image_bytes).decode('utf-8')
+            return encoded_string
+        else:
+            raise Exception(f"Failed to retrieve image: {response.status_code}")
