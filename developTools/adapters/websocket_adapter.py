@@ -1,4 +1,5 @@
 import asyncio
+import os
 import threading
 import uuid
 
@@ -14,7 +15,7 @@ from collections.abc import Callable, Coroutine
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
 from developTools.message.message_chain import MessageChain
-from developTools.message.message_components import MessageComponent, Text, Reply, Node
+from developTools.message.message_components import MessageComponent, Text, Reply, Node, File
 from developTools.utils.logger import get_logger
 
 
@@ -319,6 +320,7 @@ class WebSocketBot:
         return await self._call_api("send_private_forward_msg", data)
 
 
+
     """
     撤回、禁言等群管类
     """
@@ -406,7 +408,7 @@ class WebSocketBot:
         data={"user_id":user_id}
         return await self._call_api("friend_poke", data)
 
-    async def upload_private_file(self,user_id: int,file: str,name: str):
+    async def upload_private_file(self,user_id: int,file: str,name: str=None):
         """
         上传私聊文件
         :param user_id:
@@ -420,6 +422,9 @@ class WebSocketBot:
         :param name:
         :return:
         """
+        if name is None:
+            file_name = os.path.basename(file)
+            name = file_name
         data={"user_id":user_id,"file":file,"name":name}
         return await self._call_api("upload_private_file", data)
 
@@ -610,7 +615,7 @@ class WebSocketBot:
         """
         data={"group_id":group_id}
         return await self._call_api("get_group_root_files", data)
-    async def upload_group_file(self,group_id: int,file: str,name: str):
+    async def upload_group_file(self,group_id: int,file: str,name: str=None):
         """
         上传群文件。传好东西
         :param group_id:
@@ -618,6 +623,9 @@ class WebSocketBot:
         :param name:
         :return:
         """
+        if name is None:
+            file_name = os.path.basename(file)
+            name = file_name
         data={"group_id":group_id,"file":file,"name":name}
         return await self._call_api("upload_group_file", data)
 

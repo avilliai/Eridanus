@@ -1,10 +1,10 @@
 import httpx
 
-from plugins.utils.utils import random_str
+from plugins.utils.random_str import random_str
 
 
 async def get_results(url,proxy=None):
-    if proxy is not None:
+    if proxy is not None and proxy!= "":
         proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None

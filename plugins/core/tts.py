@@ -8,7 +8,7 @@ from ruamel.yaml import YAML
 
 from plugins.core.simple_aiReplyCore import simple_aiReplyCore
 from plugins.core.yamlLoader import YAMLManager
-from plugins.utils.utils import random_str
+from plugins.utils.random_str import random_str
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:

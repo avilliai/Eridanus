@@ -1,20 +1,20 @@
 import os
-import shutil
 
 import asyncio
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Record, Node, Text, Image
-from plugins.basic_plugin.ai_text2img import bing_dalle3, ideo_gram, flux_speed, recraft_v3, flux_ultra
+from developTools.message.message_components import Record, Node, Text, Image, Music
+from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
+from plugins.basic_plugin.cloudMusic import cccdddm
 from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
 from plugins.core.tts import get_acgn_ai_speaker_list, tts
 
 from plugins.core.userDB import get_user
-from plugins.core.utils import download_img
-from plugins.utils.utils import random_str
+from plugins.utils.utils import download_img
+from plugins.utils.random_str import random_str
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 
 
@@ -166,6 +166,14 @@ async def call_tarot(bot,event,config):
     r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
     if r and config.api["llm"]["aiReplyCore"]:
         await bot.send(event, r)
+async def call_pick_music(bot,event,config,aim):
+    try:
+        r=await cccdddm(aim)
+        print(r)
+        await bot.send(event, Music(type="163", id=r[0][1]))
+    except Exception as e:
+        bot.logger.error(f"Error in pick_music: {e}")
+        await bot.send(event, "出错了，再试一次看看？")
 def main(bot,config):
     global avatar
     avatar=False
@@ -207,12 +215,17 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bing_dalle3_draw(event):
-        if str(event.raw_message).startswith("画"):
-            prompt = str(event.raw_message).split("画")[1]
+        if str(event.raw_message).startswith("画 "):
+            prompt = str(event.raw_message).split("画 ")[1]
             await call_text2img(bot, event, config, prompt)
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
         if event.raw_message=="今日塔罗":
             txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
+    @bot.on(GroupMessageEvent)
+    async def pick_music(event: GroupMessageEvent):
+        if event.raw_message.startswith("点歌 "):
+            song_name = event.raw_message.split("点歌 ")[1]
+
 

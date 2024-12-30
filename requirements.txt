@@ -10,5 +10,6 @@ aiosqlite
 pillow
 xpinyin
 PicImageSearch
+pytubefix
 httpx<0.28.0
 
