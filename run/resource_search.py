@@ -1,7 +1,7 @@
 import os
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Image, Node, Text, File
+from developTools.message.message_components import Image, Node, Text, File, Music
 from plugins.core.userDB import get_user
 from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
@@ -67,5 +67,6 @@ def main(bot,config):
             else:
                 await bot.send(event, "你没有权限使用该功能")
         elif event.raw_message=="随机奥术" or event.raw_message=="随机asmr" or event.raw_message=="随机奥数":
-            await call_asmr(bot,event,config)
+            await bot.send(event,Music(type="163",id=1916256128))
+            #await call_asmr(bot,event,config)
 

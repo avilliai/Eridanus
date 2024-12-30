@@ -112,14 +112,7 @@ async def get_img(video_id):
     return path
 
 
-async def file_chain(path):  ##上传文件到ffsup.com并取得直链
 
-    url = 'https://upload.ffsup.com/'
-    with open(path, 'rb') as f:
-        files = {'file': f}
-        async with httpx.AsyncClient(headers=get_headers(), proxies=proxies, timeout=100) as client:
-            response = await client.post(url=url, files=files)
-    return response.json()['data']['url']
 
 '''athor, title, video_id, length = asyncio.run(ASMR_random())
 imgurl =asyncio.run(get_img(video_id))

@@ -25,7 +25,7 @@ class MessageComponent(BaseModel, ABC):
     def to_dict(self, *args, **kwargs) -> dict[str, Any]:
         data = {}
         for k, v in self:
-            if k in ["type", "comp_type"]:
+            if k in [ "comp_type"]:
                 continue
 
             field_info = self.model_fields[k]
@@ -212,9 +212,15 @@ class Location(MessageComponent):
 
 class Music(MessageComponent):
     comp_type: str = "music"
-    type: Annotated[str, OnlySend] = Field(description="音乐类型")
-    id: Annotated[str, OnlySend] = Field(description="歌曲 ID")
-
+    type: str
+    id: int
+class Card(MessageComponent):
+    comp_type: str = "music"
+    type: str="custom"
+    url: str="https://music.qq.com"
+    audio: str = Field(description="音频url")
+    title: str= Field(description="音乐标题")
+    image: str= Field(description="音乐封面url")
 
 class Reply(MessageComponent):
     comp_type: str = "reply"
