@@ -11,4 +11,5 @@ pillow
 xpinyin
 PicImageSearch
 httpx<0.28.0
+ruamel.yaml
 
