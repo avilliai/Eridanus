@@ -1,5 +1,6 @@
 import random
 import httpx
+import base64
 
 def random_str(random_length=7, chars='AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789'):
     """
