@@ -329,7 +329,7 @@ async def SdDraw0(prompt, path, config,groupid,args):
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
-    #我的建议是，直接返回base64，让它去审查
+
     b64 = r['images'][0]
     if groupid in no_nsfw_groups:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
         check = await pic_audit_standalone(b64, return_none=True,url = config.api["ai绘画"]["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
