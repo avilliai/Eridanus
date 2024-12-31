@@ -5,6 +5,7 @@ import httpx
 import base64
 from io import BytesIO
 from bs4 import BeautifulSoup
+import ruamel.yaml
 
 from developTools.event.events import GroupMessageEvent
 
@@ -35,6 +36,8 @@ tag_user = {}
 sd_user_args = {}
 sd_re_args = {}
 UserGet1 = {}
+yaml = ruamel.yaml.YAML()
+yaml.preserve_quotes = True
 with open('config/controller.yaml', 'r', encoding='utf-8') as f:
     controller = yaml.load(f)
 aiDrawController = controller.get("ai绘画")
