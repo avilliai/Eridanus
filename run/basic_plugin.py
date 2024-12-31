@@ -410,7 +410,7 @@ def main(bot,config):
                         bot.logger.info(f"Image at URL {image_url} passed the audit")
                         path=f"data/pictures/cache/{random_str()}.png"
                         p=await download_img(image_url,path)
-                        return Image(file=p)
+                        return [Image(file=p), Text(image_url)]
                     except Exception as e:
                         bot.logger.error(f"Failed to process image at {image_url}: {e}")
                         return None
@@ -425,7 +425,7 @@ def main(bot,config):
                     # 创建 ForwardMessageNode 列表
                     forward_messages = [
                         Node(
-                            content=[result]
+                            content=result
                         )
                         for result in filtered_results
                     ]
