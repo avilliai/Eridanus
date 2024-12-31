@@ -394,7 +394,7 @@ def main(bot,config):
                 async def process_image(image_url):
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id in config.controller["ai绘画"]["no_nsfw_groups"]:
+                        if event.group_id in [int(item) for item in config.controller.get("ai绘画", {}).get("no_nsfw_groups", [])]:
                             audit_result = await pic_audit_standalone(base64_image, return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                             if audit_result:
                                 bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
