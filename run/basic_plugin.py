@@ -314,7 +314,7 @@ def main(bot,config):
         if str(event.raw_message).startswith("dan "):
             tag = str(event.raw_message).replace("dan ", "")
             bot.logger.info(f"收到来自群{event.group_id}的请求，prompt:{tag}")
-            limit = 3
+            limit = 5
             if config.api["proxy"]["http_proxy"] is not None:
                 proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
             else:
