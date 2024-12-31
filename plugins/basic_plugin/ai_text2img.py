@@ -17,6 +17,7 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
     controller = yaml.load(f)
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
+no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 
 
 from plugins.utils.random_str import random_str
@@ -152,7 +153,7 @@ async def n4(prompt, path, groupid, config):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:
+            if groupid in no_nsfw_groups:
                 check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                 if check:
                     return False
@@ -228,7 +229,7 @@ async def n3(prompt, path, groupid,config):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:
+            if groupid in no_nsfw_groups:
                 check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                 if check:
                     return False
@@ -279,7 +280,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in,args):
         return None
     #我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
+    if groupid in no_nsfw_groups:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
         check = await pic_audit_standalone(b64, return_none=True,url = config.api["ai绘画"]["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
         if check:                                                  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
             return False                                           # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
@@ -330,7 +331,7 @@ async def SdDraw0(prompt, path, config,groupid,args):
     r = response.json()
     #我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid in config.controller["ai绘画"]["no_nsfw_groups"]:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
+    if groupid in no_nsfw_groups:                                   # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
         check = await pic_audit_standalone(b64, return_none=True,url = config.api["ai绘画"]["sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
         if check:                                                  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
             return False                                           # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
