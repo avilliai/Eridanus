@@ -406,7 +406,7 @@ def main(bot,config):
                             audit_result = await pic_audit_standalone(base64_image, return_none=True, url=config.api["ai绘画"]["sd审核和反推api"])
                             if audit_result:
                                 bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
-                                return Text("太涩了")
+                                return Text(f"太涩了{image_url}")
                         bot.logger.info(f"Image at URL {image_url} passed the audit")
                         path=f"data/pictures/cache/{random_str()}.png"
                         p=await download_img(image_url,path)
