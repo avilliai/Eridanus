@@ -47,3 +47,6 @@ youtube_asmr:
   channels:      #频道来源。此功能需要配置proxy，并通过tools完成登录。
     - '@emococh'
     - '@-gabisroom-4153'
+today_wife:
+  api: 'https://api.iw233.cn/api.php?sort=top'  #今日老婆的获取api，可以替换成自己的图床
+  wifePrefix: '/'   #透群友的指令前缀
