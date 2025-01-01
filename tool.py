@@ -23,20 +23,20 @@ logger.info(f"git_path: {git_path}")
 custom_python_path = os.path.join(parent_dir, "environments", "Python311", "python.exe")
 if os.path.exists(custom_python_path):
     python_path = custom_python_path
-elif os.path.exists("./venv/Scripts/python.exe"):
-    python_path = "./venv/Scripts/python.exe"
+elif os.path.exists(os.path.join("venv", "Scripts", "python.exe")):
+    python_path = os.path.join("venv", "Scripts", "python.exe")
 else:
     python_path = "python"
 logger.info(f"python_path: {python_path}")
 custom_pip_path = os.path.join(parent_dir, "environments", "Python311", "Scripts", "pip.exe")
 if os.path.exists(custom_pip_path):
     pip_path = custom_pip_path
-elif os.path.exists("./venv/Scripts/pip.exe"):
-    pip_path = "./venv/Scripts/pip.exe"
+elif os.path.exists(os.path.join("venv", "Scripts", "pip.exe")):
+    pip_path = os.path.join("venv", "Scripts", "pip.exe")
 else:
     pip_path = "pip"
 logger.info(f"pip_path: {pip_path}")
-
+os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/")
 async def main():
     logger.info("""请输入要执行的指令：
         1 youtube登录
@@ -44,7 +44,6 @@ async def main():
         3 开发者工具""")
     sleep(1)
     user_input=input("请输入指令序号：")
-    print(user_input)
     if user_input=="1":
         logger.info("youtube登录")
         logger.warning(
@@ -89,20 +88,8 @@ async def main():
             convert_gemini_to_openai(r)
             logger.info("同步完成")
 
-def updaat(f=False,jump=False,source=None,yamls={}):
-    if jump==False:
-        logger.warning("是否补全依赖？如已使用最新整合包请输入1以跳过。(更新的新功能可能需要执行此步骤)。可以按1跳过，如果更新后启动报错/提示功能无法启用，请回来执行这一步")
-        if input("在这里输入:") != "1":
-            logger.warning("即将开始更新依赖库，请确保已关闭代理，否则无法安装依赖库")
-            input("按任意键继续：")
-            os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/")
-            #print(str(custom_pip_path)+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!5555555!!!!!!!!!!!!!!!")
-            os.system(f"\"{python_path}\" -m pip install --upgrade jmcomic")
-            os.system(f"\"{python_path}\" -m pip install img2pdf")
-            os.system(f"\"{python_path}\" -m pip install --upgrade lanzou-api")
-            os.system(f"\"{python_path}\" -m pip install --upgrade pytubefix")
-            os.system(f"\"{python_path}\" -m pip install --upgrade PicImageSearch")
-            os.system(f"\"{python_path}\" -m pip install httpx==0.27.2")
+def updaat(f=False,source=None,yamls={}):
+
     if source==None:
         logger.info("拉取bot代码\n--------------------")
         logger.info("选择更新源(git源 镜像源相互兼容)：\n1 git源\n2 git代理源1\n3 git代理源2")
@@ -147,7 +134,10 @@ def updaat(f=False,jump=False,source=None,yamls={}):
             #shutil.rmtree("./temp")
         logger.info("处理冲突文件完成")
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
-        logger.info("你可以关闭此窗口了")
+        logger.warning("开始检查依赖....")
+        check_requirements("requirements.txt", pip_path)
+        logger.warning("依赖检查完成")
+        logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()
     # 逐行检查错误信息
     for line in stderr.split('\n'):
@@ -203,7 +193,7 @@ def updaat(f=False,jump=False,source=None,yamls={}):
             #logger.warning("请自行决定删除或修改文件名称，在重新拉取后根据旧文件重新填写新文件")
     logger.warning("开始处理冲突文件")
     logger.info("即将再次执行拉取操作")
-    updaat(True,True,str(source),yamls)
+    updaat(True,str(source),yamls)
 
     p.wait()
 
@@ -259,5 +249,83 @@ def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yam
     # 把新的YAML数据保存到新的文件中，保留注释
     with open(file_new, 'w', encoding="utf-8") as file:
         yaml.dump(new_data, file)
+"""
+依赖检测
+"""
+def parse_requirements(file_path):
+    """
+    解析 requirements.txt 文件，返回包名和版本需求信息。
+    """
+    requirements = {}
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):  # 跳过空行和注释
+                continue
+            if any(op in line for op in ['<', '>', '=', '!', '~']):
+                pkg, spec = line.split(maxsplit=1)
+                requirements[pkg.strip()] = spec.strip()
+            else:
+                requirements[line.strip()] = None  # 没有版本约束
+    return requirements
+
+def get_installed_packages(python_path):
+    """
+    使用指定的 Python 解释器获取已安装的包和版本信息。
+    """
+    command = f"\"{python_path}\" -m pip list --format=freeze"
+    result = subprocess.run(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    installed_packages = {}
+    if result.returncode == 0:
+        for line in result.stdout.splitlines():
+            if '==' in line:
+                pkg, version = line.split('==')
+                installed_packages[pkg.strip()] = version.strip()
+    else:
+        print(f"获取已安装包失败：{result.stderr}")
+    return installed_packages
+
+def check_requirements(requirements_file, python_path):
+    """
+    检查 requirements.txt 中的依赖是否已安装，并满足版本约束。
+    """
+    if not os.path.exists(requirements_file):
+        print(f"文件 {requirements_file} 不存在！")
+        return
+
+    requirements = parse_requirements(requirements_file)
+    installed_packages = get_installed_packages(python_path)
+
+    missing = []
+    mismatched = []
+
+    for pkg, spec in requirements.items():
+        if pkg not in installed_packages:
+            missing.append(pkg)
+        elif spec:  # 存在版本约束
+            installed_version = Version(installed_packages[pkg])
+            specifier = SpecifierSet(spec)
+            if installed_version not in specifier:
+                mismatched.append((pkg, spec, installed_packages[pkg]))
+
+    if missing:
+        print("缺失的包：")
+        for pkg in missing:
+            print(f"  - {pkg}")
+            os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
+
+    if mismatched:
+        print("\n版本不匹配的包：")
+        for pkg, required_version, installed_version in mismatched:
+            print(f"  - {pkg}: 需要 {required_version}, 已安装 {installed_version}")
+
+    if not missing and not mismatched:
+        print("所有依赖都已正确安装！")
 
 asyncio.run(main())
