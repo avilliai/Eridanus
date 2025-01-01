@@ -23,16 +23,16 @@ logger.info(f"git_path: {git_path}")
 custom_python_path = os.path.join(parent_dir, "environments", "Python311", "python.exe")
 if os.path.exists(custom_python_path):
     python_path = custom_python_path
-elif os.path.exists("./venv/Scripts/python.exe"):
-    python_path = "./venv/Scripts/python.exe"
+elif os.path.exists("venv/Scripts/python.exe"):
+    python_path = "venv/Scripts/python.exe"
 else:
     python_path = "python"
 logger.info(f"python_path: {python_path}")
 custom_pip_path = os.path.join(parent_dir, "environments", "Python311", "Scripts", "pip.exe")
 if os.path.exists(custom_pip_path):
     pip_path = custom_pip_path
-elif os.path.exists("./venv/Scripts/pip.exe"):
-    pip_path = "./venv/Scripts/pip.exe"
+elif os.path.exists("venv/Scripts/pip.exe"):
+    pip_path = "venv/Scripts/pip.exe"
 else:
     pip_path = "pip"
 logger.info(f"pip_path: {pip_path}")
