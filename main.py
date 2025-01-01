@@ -1,7 +1,7 @@
 
 from plugins.core.yamlLoader import YAMLManager
 from run import api_implements, aiReply, user_data, resource_search, basic_plugin, group_manager,\
-    galgame,SDU_elect_check,manshuo_test
+    galgame,wifeyouwant
 
 
 config = YAMLManager(["config/settings.yaml","config/basic_config.yaml","config/api.yaml","config/controller.yaml"]) #这玩意用来动态加载和修改配置文件
@@ -19,8 +19,6 @@ user_data.main(bot,config)
 api_implements.main(bot,config)
 group_manager.main(bot,config)
 galgame.main(bot,config)#加载galgame回复插件
-SDU_elect_check.main(bot,config)
-manshuo_test.main(bot,config)
 wifeyouwant.main(bot,config)
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
