@@ -6,8 +6,9 @@ async def call_operate_user_blacklist(bot,event,config,target_user_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.settings["bot_config"]["user_handle_logic_operate_level"]:
         if status:
-            config.censor_user["blacklist"].append(target_user_id)
-            config.save_yaml(str("censor_user"))
+            if target_user_id not in config.censor_user["blacklist"]:
+                config.censor_user["blacklist"].append(target_user_id)
+                config.save_yaml(str("censor_user"))
             await bot.send(event, f"已将{target_user_id}加入黑名单")
         else:
             try:
@@ -21,8 +22,9 @@ async def call_operate_user_whitelist(bot,event,config,target_user_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.settings["bot_config"]["user_handle_logic_operate_level"]:
         if status:
-            config.censor_user["whitelist"].append(target_user_id)
-            config.save_yaml(str("censor_user"))
+            if target_user_id not in config.censor_user["whitelist"]:
+                config.censor_user["whitelist"].append(target_user_id)
+                config.save_yaml(str("censor_user"))
             await bot.send(event, f"已将{target_user_id}加入白名单")
         else:
             try:
@@ -36,8 +38,9 @@ async def call_operate_group_blacklist(bot,event,config,target_group_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.settings["bot_config"]["group_handle_logic_operate_level"]:
         if status:
-            config.censor_group["blacklist"].append(target_group_id)
-            config.save_yaml(str("censor_group"))
+            if target_group_id not in config.censor_group["blacklist"]:
+                config.censor_group["blacklist"].append(target_group_id)
+                config.save_yaml(str("censor_group"))
             await bot.send(event, f"已将群{target_group_id}加入黑名单")
         else:
             try:
@@ -51,8 +54,9 @@ async def call_operate_group_whitelist(bot,event,config,target_group_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.settings["bot_config"]["group_handle_logic_operate_level"]:
         if status:
-            config.censor_group["whitelist"].append(target_group_id)
-            config.save_yaml(str("censor_group"))
+            if target_group_id not in config.censor_group["whitelist"]:
+                config.censor_group["whitelist"].append(target_group_id)
+                config.save_yaml(str("censor_group"))
             await bot.send(event, f"已将群{target_group_id}加入白名单")
         else:
             try:
