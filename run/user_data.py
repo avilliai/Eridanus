@@ -1,6 +1,7 @@
 from asyncio import sleep
 
 from developTools.event.events import GroupMessageEvent
+from plugins.core.llmDB import delete_user_history, clear_all_history
 from plugins.core.userDB import add_user, get_user, record_sign_in, update_user
 async def call_user_data_register(bot,event,config):
     data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
@@ -39,6 +40,17 @@ async def call_permit(bot,event,config,target_qq,level):
         await bot.send(event, f"已将{target_qq}的权限设置为{level}")
     else:
         await bot.send(event,"权限不足以进行此操作。")
+async def call_delete_user_history(bot,event,config):
+    await delete_user_history(event.user_id)
+    await bot.send(event, "已清理对话记录")
+async def call_clear_all_history(bot,event,config):
+    if event.user_id==config.basic_config["master"]["id"]:
+        await clear_all_history()
+        await bot.send(event, "已清理所有用户的对话记录")
+    else:
+        await bot.send(event, "你不是master，没有权限进行此操作。")
+
+
 def main(bot,config):
     """
     数据库提供指令

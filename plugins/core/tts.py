@@ -64,7 +64,7 @@ async def acgn_ai_tts(token, config, text, speaker,inclination = "中立"):
             r = await simple_aiReplyCore(
                 prompt,
                 config,
-                "gemini-1.5-flash"
+                config.api["llm"]["model"]
             )
             for i in GPTSOVITS_SPEAKERS[speaker]:
                 if i in r:

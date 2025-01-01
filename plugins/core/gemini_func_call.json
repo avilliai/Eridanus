@@ -1,6 +1,14 @@
 {
         "function_declarations": [
             {
+                "name": "call_delete_user_history",
+                "description": "清理当前对话记录"
+            },
+            {
+                "name": "call_clear_all_history",
+                "description": "清理所有用户的对话记录"
+            },
+            {
                 "name": "call_pick_music",
                 "description": "触发音乐选取功能。根据歌曲名或歌手名搜索点歌。",
                 "parameters": {
