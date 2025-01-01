@@ -1,8 +1,9 @@
 
 from plugins.core.yamlLoader import YAMLManager
 
+
 from plugins.utils.websocket_fix import ExtendBot
-from run import api_implements, aiReply, user_data, resource_search, basic_plugin, galgame, aiDraw,wifeyouwant
+from run import api_implements, aiReply, user_data, resource_search, basic_plugin, galgame, aiDraw,SDU_elect_check,manshuo_test
 from run.groupManager import group_manager,self_Manager
 
 
@@ -27,7 +28,10 @@ api_implements.main(bot,config)
 self_Manager.main(bot,config)
 group_manager.main(bot, config)
 galgame.main(bot,config)#加载galgame回复插件
-wifeyouwant.main(bot,config)
+
+SDU_elect_check.main(bot,config)
+manshuo_test.main(bot,config)
+
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
