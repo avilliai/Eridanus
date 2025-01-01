@@ -14,13 +14,13 @@ llm:
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
-  openai:
+  openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
     api_keys:
     - YOUR_API_KEY_1
     - YOUR_API_KEY_2
-    model: glm-4-flash
-    quest_url: https://open.bigmodel.cn/api/paas/v4/chat/completions #完整调用地址。只填base_url不行
-  gemini:
+    model: gpt-4o-mini
+    quest_url: https://api.openai.com/v1/chat/completions   #完整调用地址。只填base_url不行
+  gemini:         #https://ai.google.dev/
     api_keys:
       - YOUR_API_KEY_1
       - YOUR_API_KEY_2

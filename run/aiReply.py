@@ -11,9 +11,7 @@ from plugins.core.llmDB import delete_user_history
 from plugins.core.aiReply_utils import prompt_elements_construct
 from plugins.core.tts import tts
 from plugins.core.userDB import get_user
-from plugins.func_map_loader import func_map, gemini_func_map
-
-
+from plugins.func_map_loader import func_map, gemini_func_map, openai_func_map
 
 
 def main(bot,config):
@@ -22,7 +20,7 @@ def main(bot,config):
         if config.api["llm"]["model"] == "gemini":
             tools = gemini_func_map()
         else:
-            tools = func_map()
+            tools = openai_func_map()
     else:
         tools = None
     '''@bot.on(GroupMessageEvent) #测试异步
