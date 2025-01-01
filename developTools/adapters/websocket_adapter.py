@@ -172,32 +172,28 @@ class WebSocketBot:
         try:
             if self.websocket:
 
-
                 if event.message_type=="group":
-                    data={
-                        "action": "send_group_msg",
-                        "params": {
+                    action = "send_group_msg"
+                    params = {
                             "group_id": event.group_id,
                             "message": message.to_dict()
-                        },
-                    }
+                        }
+
                     if isinstance(message[0], Node):
                         r = await self.send_group_forward_msg(event.group_id, message)
                         return r
                 elif event.message_type=="private":
-                    data={
-                        "action": "send_private_msg",
-                        "params": {
+                    action = "send_private_msg"
+                    params = {
                             "user_id": event.user_id,
                             "message": message.to_dict()
-                        },
-                    }
+                        }
+
                     if isinstance(message[0], Node):
                         r = await self.send_private_forward_msg(event.user_id, message)
                         return r
                 print(f"发送的消息: {message.to_dict()}")
-                await self.websocket.send(json.dumps(data))
-
+                return await self._call_api(action, params)
             else:
                 self.logger.warning("WebSocket 未连接，无法发送消息")
         except Exception as e:
@@ -226,7 +222,7 @@ class WebSocketBot:
                 ]
 
             message_chain = MessageChain(components)
-            await self.send_to_server(event, message_chain)
+            return await self.send_to_server(event, message_chain)
         except Exception as e:
             self.logger.error(f"发送消息时出现错误: {e}", exc_info=True)
     async def send_friend_message(self, user_id: int, components: list[Union[MessageComponent, str]]):
@@ -245,7 +241,7 @@ class WebSocketBot:
             }
         }
 
-        await self.websocket.send(json.dumps(data))
+        return await self._call_api(data["action"], data["params"])
     async def send_group_message(self, group_id: int, components: list[Union[MessageComponent, str]]):
         processed_components = [
             Text(component) if isinstance(component, str) else component
@@ -261,7 +257,7 @@ class WebSocketBot:
             }
         }
 
-        await self.websocket.send(json.dumps(data))
+        return await self._call_api(data["action"], data["params"])
 
     async def get_status(self):
         """

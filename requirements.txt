@@ -14,4 +14,4 @@ pytubefix
 Beautifulsoup4
 httpx<0.28.0
 aiofiles
-
+apscheduler
