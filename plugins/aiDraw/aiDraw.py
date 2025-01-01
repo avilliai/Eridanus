@@ -334,6 +334,6 @@ async def getcheckpoints(config):
     async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
         response = await client.get(url)
         r = response.json()
-        model_lines = [f'{model.get("model_name", "未知")}' for model in r]
+        model_lines = [f'{model.get("model_name", "未知")}.safetensors' for model in r]
         result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines) + '\n'
         return result
