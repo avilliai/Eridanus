@@ -13,8 +13,10 @@ from developTools.message.message_components import Record, Node, Text, Image,At
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
 from plugins.game_plugin.galgame import get_game_image
+
 from plugins.game_plugin.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker
 from datetime import datetime
+
 
 
 
@@ -25,6 +27,7 @@ def main(bot,config):
     if not os.path.exists(filepath):
         os.makedirs(filepath)
     asyncio.run(initialize_db())
+
     bot.logger.info(f"今日老婆功能成功加载！")
 
     @bot.on(GroupMessageEvent)
@@ -142,6 +145,7 @@ def main(bot,config):
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
             await manage_group_status(current_day, current_year_month, target_id,1)
+
             if await PIL_lu_maker(current_date,target_id):
                 bot.logger.info('制作成功，开始发送~~')
                 await bot.send(event,[At(qq=target_id), f' 今天🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
@@ -155,6 +159,7 @@ def main(bot,config):
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
             await manage_group_status(current_day, current_year_month, target_id,2)
+
             if await PIL_lu_maker(current_date,target_id):
                 bot.logger.info('制作成功，开始发送~~')
                 await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
@@ -427,6 +432,7 @@ def main(bot,config):
                         type = 'day'
                     list_from, list_target = await manage_group_check(target_group, type)
                     #print(list_from, list_target)
+
                     friendlist_get = await bot.get_group_member_list(event.group_id)
                     context_from='以下是透别人的次数~\n'
                     context_target = '以下是被别人透的次数~\n'

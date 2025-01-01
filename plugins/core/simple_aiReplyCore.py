@@ -13,17 +13,17 @@ async def simple_aiReplyCore(processed_message,config,model=None): #后面几个
     logger.info(f"simple_aiReplyCore called with message: {processed_message}")
     reply_message = ""
     try:
-        if config.api["llm"]["model"]=="openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message, 00000)
+        if config.api["llm"]["model"] == "openai":
+            prompt, original_history = await construct_openai_standard_prompt(processed_message, "你是一个ai助手",00000)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
                 random.choice(config.api["llm"]["openai"]["api_keys"]),
-                config.api["llm"]["openai"]["model"] if model is None else model,
+                config.api["llm"]["openai"]["model"],
                 False,
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
             )
-            reply_message=response_message["content"]
+            reply_message = response_message["content"]
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, 00000)
