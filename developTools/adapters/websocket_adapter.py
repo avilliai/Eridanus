@@ -223,7 +223,7 @@ class WebSocketBot:
                 ]
 
             message_chain = MessageChain(components)
-            await self.send_to_server(event, message_chain)
+            return await self.send_to_server(event, message_chain)
         except Exception as e:
             self.logger.error(f"发送消息时出现错误: {e}", exc_info=True)
     async def send_friend_message(self, user_id: int, components: list[Union[MessageComponent, str]]):
