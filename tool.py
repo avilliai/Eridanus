@@ -89,20 +89,8 @@ async def main():
             convert_gemini_to_openai(r)
             logger.info("同步完成")
 
-def updaat(f=False,jump=False,source=None,yamls={}):
-    if jump==False:
-        logger.warning("是否补全依赖？如已使用最新整合包请输入1以跳过。(更新的新功能可能需要执行此步骤)。可以按1跳过，如果更新后启动报错/提示功能无法启用，请回来执行这一步")
-        if input("在这里输入:") != "1":
-            logger.warning("即将开始更新依赖库，请确保已关闭代理，否则无法安装依赖库")
-            input("按任意键继续：")
-            os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/")
-            #print(str(custom_pip_path)+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!5555555!!!!!!!!!!!!!!!")
-            os.system(f"\"{python_path}\" -m pip install --upgrade jmcomic")
-            os.system(f"\"{python_path}\" -m pip install img2pdf")
-            os.system(f"\"{python_path}\" -m pip install --upgrade lanzou-api")
-            os.system(f"\"{python_path}\" -m pip install --upgrade pytubefix")
-            os.system(f"\"{python_path}\" -m pip install --upgrade PicImageSearch")
-            os.system(f"\"{python_path}\" -m pip install httpx==0.27.2")
+def updaat(f=False,source=None,yamls={}):
+
     if source==None:
         logger.info("拉取bot代码\n--------------------")
         logger.info("选择更新源(git源 镜像源相互兼容)：\n1 git源\n2 git代理源1\n3 git代理源2")
@@ -147,7 +135,8 @@ def updaat(f=False,jump=False,source=None,yamls={}):
             #shutil.rmtree("./temp")
         logger.info("处理冲突文件完成")
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
-        logger.info("你可以关闭此窗口了")
+        logger.warning("开始检查依赖....")
+        check_requirements("requirements.txt", pip_path)
         input()
     # 逐行检查错误信息
     for line in stderr.split('\n'):
@@ -203,7 +192,7 @@ def updaat(f=False,jump=False,source=None,yamls={}):
             #logger.warning("请自行决定删除或修改文件名称，在重新拉取后根据旧文件重新填写新文件")
     logger.warning("开始处理冲突文件")
     logger.info("即将再次执行拉取操作")
-    updaat(True,True,str(source),yamls)
+    updaat(True,str(source),yamls)
 
     p.wait()
 
@@ -259,5 +248,77 @@ def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yam
     # 把新的YAML数据保存到新的文件中，保留注释
     with open(file_new, 'w', encoding="utf-8") as file:
         yaml.dump(new_data, file)
+"""
+依赖检测
+"""
+def parse_requirements(file_path):
+    """
+    解析 requirements.txt 文件，返回包名和版本信息。
+    """
+    requirements = {}
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):  # 跳过空行和注释
+                continue
+            if '==' in line:
+                pkg, version = line.split('==')
+                requirements[pkg.strip()] = version.strip()
+            else:
+                requirements[line.strip()] = None  # 没有指定版本
+    return requirements
+
+def get_installed_packages(pip_path):
+    """
+    使用 pip 获取已安装的包和版本信息。
+    """
+    result = subprocess.run(
+        [pip_path, 'list', '--format=freeze'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    installed_packages = {}
+    if result.returncode == 0:
+        for line in result.stdout.splitlines():
+            if '==' in line:
+                pkg, version = line.split('==')
+                installed_packages[pkg.strip()] = version.strip()
+    else:
+        print(f"获取已安装包失败：{result.stderr}")
+    return installed_packages
+
+def check_requirements(requirements_file, pip_path):
+    """
+    检查 requirements.txt 中的依赖是否已安装。
+    """
+    if not os.path.exists(requirements_file):
+        print(f"文件 {requirements_file} 不存在！")
+        return
+
+    requirements = parse_requirements(requirements_file)
+    installed_packages = get_installed_packages(pip_path)
+
+    missing = []
+    mismatched = []
+
+    for pkg, required_version in requirements.items():
+        if pkg not in installed_packages:
+            missing.append(pkg)
+        elif required_version and installed_packages[pkg] != required_version:
+            mismatched.append((pkg, required_version, installed_packages[pkg]))
+
+    if missing:
+        print("缺失的包：")
+        for pkg in missing:
+            print(f"  - {pkg}")
+
+    if mismatched:
+        print("\n版本不匹配的包：")
+        for pkg, required_version, installed_version in mismatched:
+            print(f"  - {pkg}: 需要 {required_version}, 已安装 {installed_version}")
+
+    if not missing and not mismatched:
+        print("所有依赖都已正确安装！")
 
 asyncio.run(main())
