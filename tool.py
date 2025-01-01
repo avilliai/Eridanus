@@ -76,7 +76,7 @@ async def main():
         ys = yt.streams.get_audio_only()
         #ys.download(output_path="data/voice/cache/", filename="PZnXXFrjSjg")
     elif user_input=="2":
-        pass
+        updaat()
     elif user_input=="3":
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
