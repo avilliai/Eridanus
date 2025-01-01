@@ -93,7 +93,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
                         path = await tts(reply_message, config=config)
                         await bot.send(event, Record(file=path))
-                        os.remove(path)  # 删除临时文件
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
                     if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
@@ -151,7 +150,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
                     path = await tts(reply_message, config=config)
                     await bot.send(event, Record(file=path))
-                    os.remove(path)  # 删除临时文件
                 except Exception as e:
                     bot.logger.error(f"Error occurred when calling tts: {e}")
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
