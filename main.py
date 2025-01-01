@@ -21,6 +21,7 @@ group_manager.main(bot,config)
 galgame.main(bot,config)#加载galgame回复插件
 SDU_elect_check.main(bot,config)
 manshuo_test.main(bot,config)
+wifeyouwant.main(bot,config)
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
