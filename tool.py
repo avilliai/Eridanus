@@ -336,5 +336,5 @@ def check_requirements(requirements_file, pip_path):
 
     if not missing and not mismatched:
         print("所有依赖都已正确安装！")
-
-asyncio.run(main())
+conflict_file_dealter("api.yaml","api2.yaml")
+#asyncio.run(main())
