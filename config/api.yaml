@@ -40,6 +40,7 @@ image_search:
   sauceno_api_key: ""          #sauceno搜图api，你可以从https://saucenao.com/user.php注册并获取
 z_library:       #填你的zlib账号，此功能需要开启代理。
   search_num: 4        #搜索返回结果数量，默认4本书
+  download_prefix: ""       #下载指令前缀
   email: ""
   password: ""  #快填，Eridanus会偷走你的账号密码
 youtube_asmr:
