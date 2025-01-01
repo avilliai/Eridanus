@@ -1,5 +1,5 @@
 llm:
-  model: gemini #选择使用的模型(这里是大类别，具体模型在底下填)，用什么配什么
+  model: gemini #选择使用的模型大类。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix:
@@ -14,13 +14,13 @@ llm:
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
-  openai:
+  openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
     api_keys:
     - YOUR_API_KEY_1
     - YOUR_API_KEY_2
-    model: glm-4-flash
-    quest_url: https://open.bigmodel.cn/api/paas/v4/chat/completions #完整调用地址。只填base_url不行
-  gemini:
+    model: gpt-4o-mini
+    quest_url: https://api.openai.com/v1/chat/completions   #完整调用地址。只填base_url不行
+  gemini:         #https://ai.google.dev/
     api_keys:
       - YOUR_API_KEY_1
       - YOUR_API_KEY_2
@@ -38,15 +38,21 @@ proxy:
   api_key: ""     #https://www.seniverse.com/ 申请后，填私钥
 image_search:
   sauceno_api_key: ""          #sauceno搜图api，你可以从https://saucenao.com/user.php注册并获取
-z_library: #填你的zlib账号，此功能需要开启代理。
+z_library:       #填你的zlib账号，此功能需要开启代理。
   search_num: 4        #搜索返回结果数量，默认4本书
   email: ""
   password: ""  #快填，Eridanus会偷走你的账号密码
 youtube_asmr:
   send_type: file   #record或者file，record是语音，file是文件
-  channels:      #频道来源。此功能需要配置proxy，并通过tools完成登录。
+  channels:          #频道来源。此功能需要配置proxy，并通过tools完成登录。
     - '@emococh'
     - '@-gabisroom-4153'
 today_wife:
   api: 'https://api.iw233.cn/api.php?sort=top'  #今日老婆的获取api，可以替换成自己的图床
   wifePrefix: '/'   #透群友的指令前缀
+
+ai绘画:
+  sdUrl: '' #你自己搭建的sd，地址，示例http://127.0.0.1:17858（示例≠你能直接填示例用），部署https://www.bilibili.com/video/BV1iM4y1y7oA/
+  sd审核和反推api: ''        # 如果你的sd有反推插件https://github.com/spawner1145/stable-diffusion-webui-wd14-tagger.git，可以直接使用你的sdurl的api
+  nai_key: ''
+

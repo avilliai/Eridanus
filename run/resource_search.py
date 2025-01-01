@@ -1,5 +1,8 @@
 import os
 
+import asyncio
+from concurrent.futures.thread import ThreadPoolExecutor
+
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text, File, Music, Record
 from plugins.core.userDB import get_user
@@ -26,9 +29,15 @@ async def call_asmr(bot,event,config,try_again=False):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["resource_search"]["asmr"]["asmr_level"]:
         try:
-            athor, title, video_id, length = await ASMR_random()
+            loop = asyncio.get_running_loop()
+            with ThreadPoolExecutor() as executor:
+                athor, title, video_id, length = await loop.run_in_executor(executor, ASMR_random)
+
             imgurl =await get_img(video_id)
-            audiopath =await get_audio(video_id)
+            with ThreadPoolExecutor() as executor:
+                audiopath = await loop.run_in_executor(executor, get_audio, video_id)
+
+
             bot.logger.info(f"asmr\n标题:{title}\n频道:{athor}\n视频id:{video_id}\n视频时长:{length}\n视频封面:{imgurl}\n音频:{audiopath}")
             await bot.send(event, [Text(f"随机奥术\n频道: {athor}\n标题: {title}\n时长: {length}"), Image(file=imgurl)])
             if config.api["youtube_asmr"]["send_type"]=="file":

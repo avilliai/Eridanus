@@ -22,11 +22,14 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
     reply_message = ""
     if not system_instruction:
         system_instruction = config.api["llm"]["system"]
-        user_info=await get_user(user_id)
-        system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
+        user_info = await get_user(user_id)
+        system_instruction = system_instruction.replace("{用户}", user_info[1]).replace("{bot_name}",
+                                                                                        config.basic_config["bot"][
+                                                                                            "name"])
     try:
-        if config.api["llm"]["model"]=="openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message, user_id, system_instruction)
+        if config.api["llm"]["model"] == "openai":
+            prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
+                                                                              user_id)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -34,15 +37,13 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
                 config.api["llm"]["openai"]["model"],
                 False,
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                tools=tools,
             )
-            reply_message=response_message["content"]
-
-            """
-            aiReplyCore_shadow不提供任何函数调用。
-            """
-            #print(response_message)
-        elif config.api["llm"]["model"]=="gemini":
-            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result)
+            reply_message = response_message["content"]
+            # print(response_message)
+        elif config.api["llm"]["model"] == "gemini":
+            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
+                                                                              func_result)
 
             response_message = await geminiRequest(
                 prompt,
@@ -50,25 +51,28 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
                 random.choice(config.api["llm"]["gemini"]["api_keys"]),
                 config.api["llm"]["gemini"]["model"],
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                tools=tools,
                 system_instruction=system_instruction)
-            #print(response_message)
+            # print(response_message)
+            try:
+                reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
+            except:
+                reply_message = None
 
-            reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
 
-
-        #更新数据库中的历史记录
+        # 更新数据库中的历史记录
         history = await get_user_history(user_id)
         if len(history) > config.api["llm"]["max_history_length"]:
             del history[0]
             del history[0]
         history.append(response_message)
         await update_user_history(user_id, history)
-        #处理工具调用，但没做完，一用gemini函数调用就给我RESOURCE_EXHAUSTED，受不了一点byd
+        # 处理工具调用，但没做完，一用gemini函数调用就给我RESOURCE_EXHAUSTED，受不了一点byd
 
-            #print(f"funccall result:{r}")
-            #return r
-            #ask = await prompt_elements_construct(r)
-            #response_message = await aiReplyCore(ask,user_id,config,tools=tools)
+        # print(f"funccall result:{r}")
+        # return r
+        # ask = await prompt_elements_construct(r)
+        # response_message = await aiReplyCore(ask,user_id,config,tools=tools)
         logger.info(f"aiReplyCore returned: {reply_message}")
         if reply_message is not None:
             return reply_message.strip()
@@ -78,10 +82,7 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
         await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")
         raise  # 继续抛出异常以便调用方处理
-
-
-
-async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None):
+async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
     else:
@@ -100,7 +101,7 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
         data["tool_choice"]="auto"
     async with httpx.AsyncClient(proxies=proxies, headers=headers, timeout=200) as client:
         r = await client.post(url, json=data)  # 使用 `json=data`
-        #print(r.json())
+        print(r.json())
         return r.json()["choices"][0]["message"]
 async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None):
     if proxy is not None and proxy !="":
@@ -132,5 +133,4 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
         r = await client.post(url, json=pay_load)
         print(r.json())
         return r.json()['candidates'][0]["content"]
-
 #asyncio.run(openaiRequest("1"))

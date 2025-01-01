@@ -79,6 +79,8 @@ def main(bot,config):
         bot.logger.info(f"读取群列表数量: {len(group_list)}")
         bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
         #以防万一，给master添加权限
+        master_id = config.basic_config["master"]["id"]
+        master_name = config.basic_config["master"]["name"]
         await add_user(master_id,master_name,master_name)
         await update_user(master_id, permission=999,nickname=master_name)
         #r=await get_user(master_id)

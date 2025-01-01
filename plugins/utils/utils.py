@@ -1,11 +1,52 @@
 import base64
 import random
+
+import httpx
+import base64
+
 import re
 from io import BytesIO
 
-import httpx
 from PIL import Image
 
+
+
+
+
+async def url_to_base64(url):
+    async with httpx.AsyncClient(timeout=9000) as client:
+        response = await client.get(url)
+        if response.status_code == 200:
+            image_bytes = response.content
+            encoded_string = base64.b64encode(image_bytes).decode('utf-8')
+            return encoded_string
+        else:
+            raise Exception(f"Failed to retrieve image: {response.status_code}")
+
+def parse_arguments(arg_string):
+    args = arg_string.split()
+    print(f"Split arguments: {args}")  # 调试信息
+    result = {}
+    for arg in args:
+        if arg.startswith('-') and len(arg) > 1:
+            # 找到第一个数字的位置
+            for i, char in enumerate(arg[1:], start=1):
+                if char.isdigit():
+                    break
+            else:
+                continue
+            
+            key = arg[1:i]
+            value = arg[i:]
+            try:
+                value = int(value)
+            except ValueError:
+                print(f"Warning: Invalid value for key '{key}'")  # 调试信息
+                continue
+            result[key] = value
+        else:
+            print(f"Warning: Invalid argument format '{arg}'")  # 调试信息
+    return result
 
 async def download_img(url,path,gray_layer=False,proxy=None):
     if url.startswith("data:image"):
@@ -59,4 +100,5 @@ def get_headers():
     userAgent = random.choice(user_agent_list)
     headers = {'User-Agent': userAgent}
     return headers
+
 

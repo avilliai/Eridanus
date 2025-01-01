@@ -13,31 +13,45 @@ from plugins.utils.random_str import random_str
 """
 
 
-async def prompt_elements_construct(precessed_message):
-    prompt_elements=[]
+async def prompt_elements_construct(precessed_message,bot=None,func_result=False):
+    prompt_elements = []
 
-    #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
     for i in precessed_message:
         if "text" in i:
-            prompt_elements.append({"type":"text","text":i["text"]})
-        elif "image" in i:
-            prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
-        elif "record" in i:
-            pass
-            #prompt_elements.append({"type":"voice","voice":i["voice"]})
-    return {"role": "user","content":prompt_elements}
-async def construct_openai_standard_prompt(processed_message, user_id, system_instruction=""):
-    message=await prompt_elements_construct(processed_message)
+            prompt_elements.append({"type":"text", "text":i["text"]})
+        elif "image" in i or "mface" in i:
+            if "mface" in i:
+                url = i["mface"]["url"]
+            else:
+                url = i["image"]["url"]
+            prompt_elements.append({"type":"text","text": f"system:图片的url是{url}"})
+            # 下载图片转base64
+            async with httpx.AsyncClient(timeout=60) as client:
+                res = await client.get(url)
+                img_base64 =base64.b64encode(res.content).decode("utf-8")
+
+            prompt_elements.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}
+                })
+
+        else:
+            prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
+    if func_result:
+        return {"role": "system", "content": prompt_elements}
+    return {"role": "user", "content": prompt_elements}
+async def construct_openai_standard_prompt(processed_message,system_instruction,user_id):
+    message=await prompt_elements_construct(processed_message,func_result=False)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
-
     full_prompt = [
         {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
     ]
     full_prompt.extend(history)
     await update_user_history(user_id, history)  # 更新数据库中的历史记录
     return full_prompt, original_history
+
 """
 gemini标准prompt构建
 """

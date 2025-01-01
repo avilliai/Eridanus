@@ -51,7 +51,7 @@ async def ASMR_today():
     return athor, title, video_id, length
 
 
-async def ASMR_random():
+def ASMR_random():
     global ASMR_channels  # ASMR频道列表
     channel = random.choice(ASMR_channels)
     c = Channel(url=f'https://www.youtube.com/{channel}', proxies=pyproxies)
@@ -65,7 +65,7 @@ async def ASMR_random():
     return athor, title, video_id, length
 
 
-async def get_audio(video_id):
+def get_audio(video_id):
     url = f"https://www.youtube.com/watch?v={video_id}"
     #
     yt = YouTube(url=url, client='IOS', proxies=pyproxies,use_oauth=True, allow_oauth_cache=True)

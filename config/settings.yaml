@@ -1,3 +1,8 @@
+bot_config:
+  user_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist下，屏蔽指定用户，whitelist下，只处理指定用户。
+  user_handle_logic_operate_level: 1000 #拉黑、解黑用户所需操作权限
+  group_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist下，屏蔽指定群，whitelist下，只处理指定群。
+  group_handle_logic_operate_level: 1000 #拉黑、解黑群所需操作权限
 api_implements: #花里胡哨
    nudge:               #戳一戳设置。
      counter_probability: 100 #反击概率
@@ -5,7 +10,7 @@ api_implements: #花里胡哨
        - "戳我干嘛呀！"
 basic_plugin:
   setu:
-    r18mode: false
+    r18mode: true
     gray_layer: true #是否开启灰度图功能
   tarot:
     lock: false #是否开启卡片锁定功能
