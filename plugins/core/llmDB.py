@@ -4,8 +4,16 @@ import json
 import aiosqlite
 import httpx
 
+from ruamel.yaml import YAML
 
-DATABASE_FILE = "data/dataBase/conversation.db"
+
+yaml = YAML(typ='safe')
+with open('config/api.yaml', 'r', encoding='utf-8') as f:
+    local_config = yaml.load(f)
+if local_config["llm"]["model"]=="gemini":
+    DATABASE_FILE = "data/dataBase/conversation.db"
+else:
+    DATABASE_FILE = "data/dataBase/openai_conversation.db"
 
 # --- 异步数据库操作 ---
 
