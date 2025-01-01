@@ -4,6 +4,8 @@ import shutil
 import subprocess
 from time import sleep
 
+from packaging.specifiers import SpecifierSet
+from packaging.version import Version
 from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
