@@ -194,7 +194,6 @@ class WebSocketBot:
                         return r
                 print(f"发送的消息: {message.to_dict()}")
                 return await self._call_api(action, params)
-
             else:
                 self.logger.warning("WebSocket 未连接，无法发送消息")
         except Exception as e:
