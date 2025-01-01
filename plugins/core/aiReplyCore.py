@@ -72,6 +72,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 tools=tools,
                 system_instruction=system_instruction)
             #print(response_message)
+            if response_message is None:return
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
@@ -162,7 +163,8 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
         data["tool_choice"]="auto"
     async with httpx.AsyncClient(proxies=proxies, headers=headers, timeout=200) as client:
         r = await client.post(url, json=data)  # 使用 `json=data`
-        #print(r.json())
+        print(r)
+        print(r.json())
         return r.json()["choices"][0]["message"]
 async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None):
     if proxy is not None and proxy !="":
@@ -193,6 +195,9 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
         print(r.json())
-        return r.json()['candidates'][0]["content"]
+        if 'error' in r.json():
+            return None
+        if 'candidates' in r.json():
+            return r.json()['candidates'][0]["content"]
 
 #asyncio.run(openaiRequest("1"))
