@@ -89,6 +89,9 @@ class WebSocketBot:
                     self.logger.warning("收到未知消息格式，已忽略。")
         except websockets.exceptions.ConnectionClosedError as e:
             self.logger.warning(f"WebSocket 连接关闭: {e}")
+            self.logger.warning("5秒后尝试重连")
+            await asyncio.sleep(5)
+            await self._connect_and_run()
         except Exception as e:
             self.logger.error(f"接收消息时发生错误: {e}", exc_info=True)
         finally:
@@ -116,6 +119,9 @@ class WebSocketBot:
 
         except Exception as e:
             self.logger.error(f"WebSocket 连接出现错误: {e}")
+            self.logger.warning("WebSocket 连接失败，5秒后尝试重连")
+            await asyncio.sleep(5)
+            await self._connect_and_run()
 
     async def _call_api(self, action: str, params: dict, timeout: int = 20) -> dict:
         """

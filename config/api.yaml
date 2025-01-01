@@ -1,5 +1,5 @@
 llm:
-  model: gemini #选择使用的模型(这里是大类别，具体模型在底下填)，用什么配什么
+  model: gemini #选择使用的模型大类。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix:
@@ -14,13 +14,13 @@ llm:
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
-  openai:
+  openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
     api_keys:
     - YOUR_API_KEY_1
     - YOUR_API_KEY_2
-    model: glm-4-flash
-    quest_url: https://open.bigmodel.cn/api/paas/v4/chat/completions #完整调用地址。只填base_url不行
-  gemini:
+    model: gpt-4o-mini
+    quest_url: https://api.openai.com/v1/chat/completions   #完整调用地址。只填base_url不行
+  gemini:         #https://ai.google.dev/
     api_keys:
       - YOUR_API_KEY_1
       - YOUR_API_KEY_2
@@ -54,3 +54,4 @@ ai绘画:
   sdUrl: '' #你自己搭建的sd，地址，示例http://127.0.0.1:17858（示例≠你能直接填示例用），部署https://www.bilibili.com/video/BV1iM4y1y7oA/
   sd审核和反推api: ''        # 如果你的sd有反推插件https://github.com/spawner1145/stable-diffusion-webui-wd14-tagger.git，可以直接使用你的sdurl的api
   nai_key: ''
+
