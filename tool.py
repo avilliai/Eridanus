@@ -137,6 +137,8 @@ def updaat(f=False,source=None,yamls={}):
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
         logger.warning("开始检查依赖....")
         check_requirements("requirements.txt", pip_path)
+        logger.warning("依赖检查完成")
+        logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()
     # 逐行检查错误信息
     for line in stderr.split('\n'):
