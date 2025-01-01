@@ -36,7 +36,7 @@ elif os.path.exists(os.path.join("venv", "Scripts", "pip.exe")):
 else:
     pip_path = "pip"
 logger.info(f"pip_path: {pip_path}")
-
+os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/")
 async def main():
     logger.info("""请输入要执行的指令：
         1 youtube登录
@@ -44,7 +44,6 @@ async def main():
         3 开发者工具""")
     sleep(1)
     user_input=input("请输入指令序号：")
-    print(user_input)
     if user_input=="1":
         logger.info("youtube登录")
         logger.warning(
@@ -255,7 +254,7 @@ def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yam
 """
 def parse_requirements(file_path):
     """
-    解析 requirements.txt 文件，返回包名和版本信息。
+    解析 requirements.txt 文件，返回包名和版本需求信息。
     """
     requirements = {}
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -263,19 +262,21 @@ def parse_requirements(file_path):
             line = line.strip()
             if not line or line.startswith('#'):  # 跳过空行和注释
                 continue
-            if '==' in line:
-                pkg, version = line.split('==')
-                requirements[pkg.strip()] = version.strip()
+            if any(op in line for op in ['<', '>', '=', '!', '~']):
+                pkg, spec = line.split(maxsplit=1)
+                requirements[pkg.strip()] = spec.strip()
             else:
-                requirements[line.strip()] = None  # 没有指定版本
+                requirements[line.strip()] = None  # 没有版本约束
     return requirements
 
-def get_installed_packages(pip_path):
+def get_installed_packages(python_path):
     """
-    使用 pip 获取已安装的包和版本信息。
+    使用指定的 Python 解释器获取已安装的包和版本信息。
     """
+    command = f"\"{python_path}\" -m pip list --format=freeze"
     result = subprocess.run(
-        [pip_path, 'list', '--format=freeze'],
+        command,
+        shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -290,25 +291,28 @@ def get_installed_packages(pip_path):
         print(f"获取已安装包失败：{result.stderr}")
     return installed_packages
 
-def check_requirements(requirements_file, pip_path):
+def check_requirements(requirements_file, python_path):
     """
-    检查 requirements.txt 中的依赖是否已安装。
+    检查 requirements.txt 中的依赖是否已安装，并满足版本约束。
     """
     if not os.path.exists(requirements_file):
         print(f"文件 {requirements_file} 不存在！")
         return
 
     requirements = parse_requirements(requirements_file)
-    installed_packages = get_installed_packages(pip_path)
+    installed_packages = get_installed_packages(python_path)
 
     missing = []
     mismatched = []
 
-    for pkg, required_version in requirements.items():
+    for pkg, spec in requirements.items():
         if pkg not in installed_packages:
             missing.append(pkg)
-        elif required_version and installed_packages[pkg] != required_version:
-            mismatched.append((pkg, required_version, installed_packages[pkg]))
+        elif spec:  # 存在版本约束
+            installed_version = Version(installed_packages[pkg])
+            specifier = SpecifierSet(spec)
+            if installed_version not in specifier:
+                mismatched.append((pkg, spec, installed_packages[pkg]))
 
     if missing:
         print("缺失的包：")
