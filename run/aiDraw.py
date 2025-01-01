@@ -10,6 +10,7 @@ from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2
+from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
 turn = 0
@@ -23,6 +24,9 @@ def main(bot,config):
     async def naiDraw4(event):
         if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n4 ", "")
+            tag,log = await replace_wildcards(tag)
+            if log:
+                await bot.send(event, log, True)
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起nai4绘画请求，path:{path}|prompt:{tag}")
             await bot.send(event, '正在进行nai4画图', True)
@@ -51,6 +55,9 @@ def main(bot,config):
     async def naiDraw3(event):
         if str(event.raw_message).startswith("n3 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n3 ", "")
+            tag,log = await replace_wildcards(tag)
+            if log:
+                await bot.send(event, log, True)
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起nai3绘画请求，path:{path}|prompt:{tag}")
             await bot.send(event, '正在进行nai3画图', True)
@@ -276,6 +283,9 @@ def main(bot,config):
 
             # 日志记录
             prompts = ', '.join(UserGet[event.sender.user_id])
+            prompts,log = await replace_wildcards(prompts)
+            if log:
+                await bot.send(event, log, True)
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
 
             # 获取图片路径
@@ -308,9 +318,11 @@ def main(bot,config):
     async def AiSdDraw(event):
         global turn  # 画 中空格的意义在于防止误触发，但fluxDrawer无所谓了，其他倒是可以做一做限制。
         global sd_user_args
-        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"][
-            "sdUrl"] != "":
+        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] != "":
             tag = str(event.raw_message).replace("画 ", "")
+            tag,log = await replace_wildcards(tag)
+            if log:
+                await bot.send(event, log, True)
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起SDai绘画请求，path:{path}|prompt:{tag}")
             try:
@@ -364,3 +376,9 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, "ckpt切换失败", True)
+
+    @bot.on(GroupMessageEvent)
+    async def wdcard(event):
+        if str(event.raw_message) == 'getwd':
+            r = await get_available_wildcards()
+            await bot.send(event, r, True)
