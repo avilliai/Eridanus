@@ -1,5 +1,5 @@
 llm:
-  model: gemini #选择使用的模型(这里是大类别，具体模型在底下填)，用什么配什么
+  model: gemini #选择使用的模型大类。更换模型大类后，必须使用/clearall指令清理所有人对话记录。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix:
