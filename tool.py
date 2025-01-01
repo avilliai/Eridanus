@@ -315,7 +315,10 @@ def check_requirements(requirements_file, pip_path):
         print("缺失的包：")
         for pkg in missing:
             print(f"  - {pkg}")
-            os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
+            if "<" in pkg or ">" in pkg or "=" in pkg:
+                os.system(f"\"{python_path}\" -m pip install {pkg}")
+            else:
+                os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
 
     if mismatched:
         print("\n版本不匹配的包：")
