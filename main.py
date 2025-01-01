@@ -1,7 +1,7 @@
 
 from plugins.core.yamlLoader import YAMLManager
-from run import api_implements, aiReply, user_data, resource_search, basic_plugin, group_manager,\
-    galgame
+from run import api_implements, aiReply, user_data, resource_search, basic_plugin, group_manager, \
+    galgame, aiDraw
 
 config = YAMLManager(["config/settings.yaml","config/basic_config.yaml","config/api.yaml","config/controller.yaml"]) #这玩意用来动态加载和修改配置文件
 #from developTools.adapters.http_adapter import HTTPBot
@@ -11,6 +11,7 @@ from developTools.adapters.websocket_adapter import WebSocketBot
 bot = WebSocketBot(config.basic_config["adapter"]["ws_client"]["ws_link"])
 
 
+aiDraw.main(bot,config) #加载aiDraw插件
 basic_plugin.main(bot,config) #加载basic_plusine插件
 resource_search.main(bot,config) #加载资源搜索插件
 aiReply.main(bot,config) #加载ai回复插件
