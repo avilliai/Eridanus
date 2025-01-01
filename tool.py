@@ -51,6 +51,7 @@ async def main():
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
         2 没想好呢""")
+        sleep(1)
         user_input2=input("请输入开发者工具序号：")
         if user_input2=="1":
             logger.info("同步gemini函数调用到openai函数调用")

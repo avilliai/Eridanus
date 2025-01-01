@@ -1,5 +1,7 @@
 from asyncio import sleep
 
+import asyncio
+
 from developTools.event.events import GroupMessageEvent
 from plugins.core.llmDB import delete_user_history, clear_all_history
 from plugins.core.userDB import add_user, get_user, record_sign_in, update_user
@@ -62,6 +64,13 @@ def main(bot,config):
     授权#{target_qq}#{level} #授权某人相应权限，为高等级权限专有指令
     """
     bot.logger.info("user_data plugin loaded")
+    master_id = config.basic_config["master"]["id"]
+    master_name = config.basic_config["master"]["name"]
+    asyncio.run(add_user(master_id, master_name, master_name))
+    asyncio.run(update_user(master_id, permission=9999, nickname=master_name))
+    if master_id not in config.censor_user["whitelist"]:
+        config.censor_user["whitelist"].append(master_id)
+        config.save_yaml(str("censor_user"))
     @bot.on(GroupMessageEvent)
     async def handle_group_message(event):
         await sleep(1) #让auto_register指令优先执行
