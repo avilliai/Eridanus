@@ -162,6 +162,7 @@ def main(bot,config):
                 subjectlist = resu[1]
                 crtlist = resu[2]
                 order = int(str(event.raw_message))
+                searchtask.pop(event.sender.user_id)
                 await bot.recall(recall_id['data']['message_id'])
                 recall_id = await bot.send(event, "正在获取，请稍后~~~")
                 if str(event.raw_message).startswith("0") and order <= len(crtlist):
