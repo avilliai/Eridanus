@@ -128,7 +128,7 @@ def updaat(f=False,source=None,yamls={}):
             for i in yamls:
                 logger.info("开始处理"+i)
                 if os.path.exists(i):
-                    conflict_file_dealter(i,yamls[i])
+                    conflict_file_dealter(yamls[i],i)
                 else:
                     logger.warning("文件"+i+"于新代码中不存在，跳过")
 
