@@ -1,6 +1,7 @@
 import asyncio
 import base64
 from io import BytesIO
+import ruamel.yaml
 
 import httpx
 from bs4 import BeautifulSoup
@@ -10,6 +11,7 @@ from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2
+from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
 turn = 0
@@ -18,11 +20,21 @@ tag_user = {}
 sd_user_args = {}
 sd_re_args = {}
 UserGet1 = {}
+yaml = ruamel.yaml.YAML()
+yaml.preserve_quotes = True
+with open('config/controller.yaml', 'r', encoding='utf-8') as f:
+    controller = yaml.load(f)
+aiDrawController = controller.get("ai绘画")
+ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
+no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
         if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n4 ", "")
+            tag,log = await replace_wildcards(tag)
+            if log:
+                await bot.send(event, log, True)
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起nai4绘画请求，path:{path}|prompt:{tag}")
             await bot.send(event, '正在进行nai4画图', True)
@@ -51,6 +63,9 @@ def main(bot,config):
     async def naiDraw3(event):
         if str(event.raw_message).startswith("n3 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n3 ", "")
+            tag,log = await replace_wildcards(tag)
+            if log:
+                await bot.send(event, log, True)
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起nai3绘画请求，path:{path}|prompt:{tag}")
             await bot.send(event, '正在进行nai3画图', True)
@@ -79,7 +94,7 @@ def main(bot,config):
         if str(event.raw_message).startswith("dan "):
             tag = str(event.raw_message).replace("dan ", "")
             bot.logger.info(f"收到来自群{event.group_id}的请求，prompt:{tag}")
-            limit = 3
+            limit = 5
             if config.api["proxy"]["http_proxy"] is not None:
                 proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
             else:
@@ -163,16 +178,16 @@ def main(bot,config):
                 async def process_image(image_url):
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id in config.controller["ai绘画"]["no_nsfw_groups"]:
+                        if event.group_id in no_nsfw_groups:
                             audit_result = await pic_audit_standalone(base64_image, return_none=True,
                                                                       url=config.api["ai绘画"]["sd审核和反推api"])
                             if audit_result:
                                 bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
-                                return Text("太涩了")
+                                return [Text(f"太涩了{image_url}")]
                         bot.logger.info(f"Image at URL {image_url} passed the audit")
                         path = f"data/pictures/cache/{random_str()}.png"
                         p = await download_img(image_url, path)
-                        return Image(file=p)
+                        return [Image(file=p), Text(image_url)]
                     except Exception as e:
                         bot.logger.error(f"Failed to process image at {image_url}: {e}")
                         return None
@@ -188,7 +203,7 @@ def main(bot,config):
                     # 创建 ForwardMessageNode 列表
                     forward_messages = [
                         Node(
-                            content=[result]
+                            content=result
                         )
                         for result in filtered_results
                     ]
@@ -276,6 +291,9 @@ def main(bot,config):
 
             # 日志记录
             prompts = ', '.join(UserGet[event.sender.user_id])
+            prompts,log = await replace_wildcards(prompts)
+            if log:
+                await bot.send(event, log, True)
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
 
             # 获取图片路径
@@ -308,9 +326,11 @@ def main(bot,config):
     async def AiSdDraw(event):
         global turn  # 画 中空格的意义在于防止误触发，但fluxDrawer无所谓了，其他倒是可以做一做限制。
         global sd_user_args
-        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"][
-            "sdUrl"] != "":
+        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] != "":
             tag = str(event.raw_message).replace("画 ", "")
+            tag,log = await replace_wildcards(tag)
+            if log:
+                await bot.send(event, log, True)
             path = f"data/pictures/cache/{random_str()}.png"
             bot.logger.info(f"发起SDai绘画请求，path:{path}|prompt:{tag}")
             try:
@@ -364,3 +384,9 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, "ckpt切换失败", True)
+
+    @bot.on(GroupMessageEvent)
+    async def wdcard(event):
+        if str(event.raw_message) == 'getwd':
+            r = await get_available_wildcards()
+            await bot.send(event, r, True)
