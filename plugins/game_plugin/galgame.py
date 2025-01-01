@@ -1,4 +1,6 @@
 import random
+from asyncio import sleep
+
 import httpx
 import requests
 import os
@@ -135,6 +137,7 @@ async def get_game_image(url,filepath):
         return None
 async def remove_game_image(file_path):
     if os.path.exists(file_path):
+        await sleep(30)
         os.remove(file_path)
         print(f"文件 '{file_path}' 已删除。")
     else:

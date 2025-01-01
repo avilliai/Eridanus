@@ -1,6 +1,8 @@
 import os
 
 import asyncio
+from asyncio import sleep
+
 import httpx
 import base64
 from io import BytesIO
@@ -85,6 +87,7 @@ async def call_setu(bot,event,config,tags,num=3):
         await bot.send(event, fordMes)
         for i in fordMes:
             path=i.content[1].file
+            await sleep(30)
             os.remove(path.replace("file://",""))
             bot.logger.info(f"Deleted {path}")
     else:
