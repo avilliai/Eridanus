@@ -60,7 +60,7 @@ def main(bot,config):
                     flag = 5
                 bot.logger.info(f'access_token：{access_token}，flag:{flag}，gal查询目标：{keyword}')
 
-        if "新作" in str(event.raw_message) and event.get("at") and event.get("at")[0]["qq"]==str(bot.id):
+        if "新作" in str(event.raw_message):
             now = datetime.datetime.now().date()
             flag=7
             month = datetime.datetime.now().date().month
@@ -78,6 +78,8 @@ def main(bot,config):
                 date = datetime.date(year, month - 1, day)
                 flag_check_test = 3
                 bot.logger.info(f'本月新作查询')
+            else:
+                return
 
         if ("galgame推荐" == str(event.raw_message) or "Galgame推荐" == str(event.raw_message) or "gal推荐" == str(event.raw_message)or "Gal推荐" == str(event.raw_message)
                 or ("随机" in str(event.raw_message) and ("gal" in str(event.raw_message) or "Gal" in str(event.raw_message)))):
