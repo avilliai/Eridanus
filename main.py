@@ -1,8 +1,10 @@
 
 from plugins.core.yamlLoader import YAMLManager
+
 from plugins.utils.websocket_fix import ExtendBot
-from run import api_implements, aiReply, user_data, resource_search, basic_plugin, galgame, aiDraw
+from run import api_implements, aiReply, user_data, resource_search, basic_plugin, galgame, aiDraw,wifeyouwant
 from run.groupManager import group_manager,self_Manager
+
 
 config = YAMLManager(["config/settings.yaml",
                       "config/basic_config.yaml",
@@ -25,6 +27,7 @@ api_implements.main(bot,config)
 self_Manager.main(bot,config)
 group_manager.main(bot, config)
 galgame.main(bot,config)#加载galgame回复插件
+wifeyouwant.main(bot,config)
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
