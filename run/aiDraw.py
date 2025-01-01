@@ -1,6 +1,7 @@
 import asyncio
 import base64
 from io import BytesIO
+import ruamel.yaml
 
 import httpx
 from bs4 import BeautifulSoup
@@ -19,6 +20,13 @@ tag_user = {}
 sd_user_args = {}
 sd_re_args = {}
 UserGet1 = {}
+yaml = ruamel.yaml.YAML()
+yaml.preserve_quotes = True
+with open('config/controller.yaml', 'r', encoding='utf-8') as f:
+    controller = yaml.load(f)
+aiDrawController = controller.get("ai绘画")
+ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
+no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
@@ -86,7 +94,7 @@ def main(bot,config):
         if str(event.raw_message).startswith("dan "):
             tag = str(event.raw_message).replace("dan ", "")
             bot.logger.info(f"收到来自群{event.group_id}的请求，prompt:{tag}")
-            limit = 3
+            limit = 5
             if config.api["proxy"]["http_proxy"] is not None:
                 proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
             else:
@@ -170,16 +178,16 @@ def main(bot,config):
                 async def process_image(image_url):
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id in config.controller["ai绘画"]["no_nsfw_groups"]:
+                        if event.group_id in no_nsfw_groups:
                             audit_result = await pic_audit_standalone(base64_image, return_none=True,
                                                                       url=config.api["ai绘画"]["sd审核和反推api"])
                             if audit_result:
                                 bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
-                                return Text("太涩了")
+                                return [Text(f"太涩了{image_url}")]
                         bot.logger.info(f"Image at URL {image_url} passed the audit")
                         path = f"data/pictures/cache/{random_str()}.png"
                         p = await download_img(image_url, path)
-                        return Image(file=p)
+                        return [Image(file=p), Text(image_url)]
                     except Exception as e:
                         bot.logger.error(f"Failed to process image at {image_url}: {e}")
                         return None
@@ -195,7 +203,7 @@ def main(bot,config):
                     # 创建 ForwardMessageNode 列表
                     forward_messages = [
                         Node(
-                            content=[result]
+                            content=result
                         )
                         for result in filtered_results
                     ]
