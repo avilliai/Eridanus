@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import shutil
 import subprocess
 from time import sleep
@@ -254,29 +255,30 @@ def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yam
 """
 def parse_requirements(file_path):
     """
-    解析 requirements.txt 文件，返回包名和版本信息。
+    解析 requirements.txt 文件，返回包名和版本需求信息。
     """
     requirements = {}
+    requirement_pattern = re.compile(r'([a-zA-Z0-9_.-]+)([<>=!~].*)?')
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith('#'):  # 跳过空行和注释
                 continue
-            if '==' in line:
-                pkg, version = line.split('==')
-                requirements[pkg.strip()] = version.strip()
+            match = requirement_pattern.match(line)
+            if match:
+                pkg = match.group(1).lower()  # 包名
+                spec = match.group(2)  # 版本约束
+                requirements[pkg] = spec.strip() if spec else None
             else:
-                requirements[line.strip()] = None  # 没有指定版本
+                print(f"无法解析行：'{line}'，请检查格式是否正确。")
     return requirements
 
-def get_installed_packages(python_path):
+def get_installed_packages(pip_path):
     """
-    使用指定的 Python 解释器获取已安装的包和版本信息。
+    使用 pip 获取已安装的包和版本信息。
     """
-    command = f"\"{python_path}\" -m pip list --format=freeze"
     result = subprocess.run(
-        command,
-        shell=True,  # 使用 shell 执行命令，确保正确解析
+        [pip_path, 'list', '--format=freeze'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -300,7 +302,14 @@ def check_requirements(requirements_file, pip_path):
         return
 
     requirements = parse_requirements(requirements_file)
+
     installed_packages = get_installed_packages(pip_path)
+
+    def normalize_package_name(name):
+        return name.lower().replace('_', '-')
+
+    installed_packages = {normalize_package_name(k): v for k, v in installed_packages.items()}
+    requirements = {normalize_package_name(k): v for k, v in requirements.items()}
 
     missing = []
     mismatched = []
@@ -321,7 +330,7 @@ def check_requirements(requirements_file, pip_path):
                 os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
 
     if mismatched:
-        print("\n版本不匹配的包：")
+        print("\n版本不匹配的包(一般不用管这个)：")
         for pkg, required_version, installed_version in mismatched:
             print(f"  - {pkg}: 需要 {required_version}, 已安装 {installed_version}")
 
