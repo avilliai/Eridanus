@@ -1,6 +1,90 @@
 {
         "function_declarations": [
             {
+                "name": "call_operate_user_blacklist",
+                "description": "操作用户黑名单。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_user_id": {
+                            "type": "integer",
+                            "description": "要操作的目标QQ"
+                        },
+                        "status": {
+                            "type": "boolean",
+                            "description": "true为加入黑名单，false为移出黑名单"
+                        }
+                    },
+                    "required": [
+                        "target_user_id",
+                        "status"
+                    ]
+                }
+            },
+            {
+                "name": "call_operate_user_whitelist",
+                "description": "操作用户白名单。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_user_id": {
+                            "type": "integer",
+                            "description": "要操作的目标QQ"
+                        },
+                        "status": {
+                            "type": "boolean",
+                            "description": "true为加入白名单，false为移出白名单"
+                        }
+                    },
+                    "required": [
+                        "target_user_id",
+                        "status"
+                    ]
+                }
+            },
+            {
+                "name": "call_operate_group_blacklist",
+                "description": "操作群黑名单。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_group_id": {
+                            "type": "integer",
+                            "description": "要操作的目标群号"
+                        },
+                        "status": {
+                            "type": "boolean",
+                            "description": "true为加入黑名单，false为移出黑名单"
+                        }
+                    },
+                    "required": [
+                        "target_group_id",
+                        "status"
+                    ]
+                }
+            },
+            {
+                "name": "call_operate_group_whitelist",
+                "description": "操作用户白名单。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_group_id": {
+                            "type": "integer",
+                            "description": "要操作的目标群号"
+                        },
+                        "status": {
+                            "type": "boolean",
+                            "description": "true为加入白名单，false为移出白名单"
+                        }
+                    },
+                    "required": [
+                        "target_group_id",
+                        "status"
+                    ]
+                }
+            },
+            {
                 "name": "call_delete_user_history",
                 "description": "清理当前对话记录"
             },
