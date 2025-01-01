@@ -72,32 +72,32 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     generate_voice=True
                 else:
                     await bot.send(event, reply_message, config.api["llm"]["Quote"])
+            if "tool_calls" in response_message:
+                for part in response_message['tool_calls']:
+                #目前不太确定多个函数调用的情况，先只处理第一个。
+                    func_name = part['function']["name"]
+                    args = part['function']['arguments']
+                    try:
+                        r=await call_func(bot, event, config,func_name, json.loads(args)) #真是到处都不想相互兼容。
+                        if r==False:
+                            await end_chat(user_id)
+                    except Exception as e:
+                        #logger.error(f"Error occurred when calling function: {e}")
+                        raise Exception(f"Error occurred when calling function: {e}")
 
-            for part in response_message['tool_calls']:
-            #目前不太确定多个函数调用的情况，先只处理第一个。
-                func_name = part['function']["name"]
-                args = part['function']['arguments']
-                try:
-                    r=await call_func(bot, event, config,func_name, json.loads(args)) #真是到处都不想相互兼容。
-                    if r==False:
-                        await end_chat(user_id)
-                except Exception as e:
-                    #logger.error(f"Error occurred when calling function: {e}")
-                    raise Exception(f"Error occurred when calling function: {e}")
+                    #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
+                    reply_message=None
 
-                #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
-                reply_message=None
-
-            if generate_voice and reply_message:
-                try:
-                    bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                    path = await tts(reply_message, config=config)
-                    await bot.send(event, Record(file=path))
-                    os.remove(path)  # 删除临时文件
-                except Exception as e:
-                    bot.logger.error(f"Error occurred when calling tts: {e}")
-                if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+                if generate_voice and reply_message:
+                    try:
+                        bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
+                        path = await tts(reply_message, config=config)
+                        await bot.send(event, Record(file=path))
+                        os.remove(path)  # 删除临时文件
+                    except Exception as e:
+                        bot.logger.error(f"Error occurred when calling tts: {e}")
+                    if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
+                        await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result)
