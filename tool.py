@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 import shutil
 import subprocess
 from time import sleep
@@ -127,7 +128,7 @@ def updaat(f=False,source=None,yamls={}):
             for i in yamls:
                 logger.info("开始处理"+i)
                 if os.path.exists(i):
-                    conflict_file_dealter(i,yamls[i])
+                    conflict_file_dealter(yamls[i],i)
                 else:
                     logger.warning("文件"+i+"于新代码中不存在，跳过")
 
@@ -219,8 +220,12 @@ def merge_dicts(old, new):
             merge_dicts(v, new[k])
         # 如果值是列表，且新旧值都是列表，则合并并去重
         elif isinstance(v, list) and k in new and isinstance(new[k], list):
-            logger.info(f"合并列表 key: {k}")
-            new[k] = list(dict.fromkeys(new[k] + v))  # 保持顺序去重
+            if k == "api_keys":  # 特殊处理 api_keys
+                logger.info(f"覆盖列表 key: {k}")
+                new[k] = v  # 使用旧的列表覆盖新的列表
+            else:
+                logger.info(f"合并列表 key: {k}")
+                new[k] = list(dict.fromkeys(new[k] + v))  # 保持顺序去重
         # 如果键在新的yaml文件中，但值类型不同，以新值为准
         elif k in new and type(v) != type(new[k]):
             logger.info(f"类型冲突，保留新的值 key: {k}, old value type: {type(v)}, new value type: {type(new[k])}")
@@ -254,29 +259,30 @@ def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yam
 """
 def parse_requirements(file_path):
     """
-    解析 requirements.txt 文件，返回包名和版本信息。
+    解析 requirements.txt 文件，返回包名和版本需求信息。
     """
     requirements = {}
+    requirement_pattern = re.compile(r'([a-zA-Z0-9_.-]+)([<>=!~].*)?')
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith('#'):  # 跳过空行和注释
                 continue
-            if '==' in line:
-                pkg, version = line.split('==')
-                requirements[pkg.strip()] = version.strip()
+            match = requirement_pattern.match(line)
+            if match:
+                pkg = match.group(1).lower()  # 包名
+                spec = match.group(2)  # 版本约束
+                requirements[pkg] = spec.strip() if spec else None
             else:
-                requirements[line.strip()] = None  # 没有指定版本
+                print(f"无法解析行：'{line}'，请检查格式是否正确。")
     return requirements
 
-def get_installed_packages(python_path):
+def get_installed_packages(pip_path):
     """
-    使用指定的 Python 解释器获取已安装的包和版本信息。
+    使用 pip 获取已安装的包和版本信息。
     """
-    command = f"\"{python_path}\" -m pip list --format=freeze"
     result = subprocess.run(
-        command,
-        shell=True,  # 使用 shell 执行命令，确保正确解析
+        [pip_path, 'list', '--format=freeze'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -300,7 +306,14 @@ def check_requirements(requirements_file, pip_path):
         return
 
     requirements = parse_requirements(requirements_file)
+
     installed_packages = get_installed_packages(pip_path)
+
+    def normalize_package_name(name):
+        return name.lower().replace('_', '-')
+
+    installed_packages = {normalize_package_name(k): v for k, v in installed_packages.items()}
+    requirements = {normalize_package_name(k): v for k, v in requirements.items()}
 
     missing = []
     mismatched = []
@@ -315,10 +328,13 @@ def check_requirements(requirements_file, pip_path):
         print("缺失的包：")
         for pkg in missing:
             print(f"  - {pkg}")
-            os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
+            if "<" in pkg or ">" in pkg or "=" in pkg:
+                os.system(f"\"{python_path}\" -m pip install {pkg}")
+            else:
+                os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
 
     if mismatched:
-        print("\n版本不匹配的包：")
+        print("\n版本不匹配的包(一般不用管这个)：")
         for pkg, required_version, installed_version in mismatched:
             print(f"  - {pkg}: 需要 {required_version}, 已安装 {installed_version}")
 
