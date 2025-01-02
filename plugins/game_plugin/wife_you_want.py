@@ -2,8 +2,6 @@ import aiosqlite
 import asyncio
 import threading
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import calendar
@@ -321,19 +319,23 @@ async def PIL_lu_maker(today , target_id):
     canvas.save("data/pictures/wife_you_want_img/lulululu.png")  # 保存图片为文件
     return True
 
+
 async def daily_task():
-    print(f"Task started at {datetime.now()}")
+    today = datetime.today()
+    weekday = today.weekday()
+    month = datetime.now().month
+    day = datetime.now().day
     await delete_category('wife_from_day')
     await delete_category('wife_target_day')
-    print(f"Task finished at {datetime.now()}")
-# 主函数
-async def task_check():
-    print('开始进入定时任务')
-    scheduler = AsyncIOScheduler()
-    # 添加每天零点执行的任务
-    scheduler.add_job(daily_task, 'cron', hour=0, minute=59)
-    # 启动调度器
-    scheduler.start()
+    if int(weekday) == 0:
+        await delete_category('wife_from_week')
+        await delete_category('wife_target_week')
+    if int(day) == 1:
+        await delete_category('wife_from_month')
+        await delete_category('wife_target_month')
+    print(f"每日今日老婆已重置")
 
-#asyncio.run(task_check())
+# 包装一个同步任务来调用异步任务
+def run_async_task():
+    asyncio.run(daily_task())
 
