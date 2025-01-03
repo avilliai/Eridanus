@@ -10,15 +10,49 @@ import json
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text, Image,At
-from plugins.core.aiReplyCore import aiReplyCore
 from asyncio import sleep
-from plugins.game_plugin.bangumisearch import banguimiList,bangumisearch,screenshot_to_pdf_and_png,\
-    delete_msg_async,get_headers
+from plugins.game_plugin.bangumisearch import banguimiList,bangumisearch,screenshot_to_pdf_and_png
+
+async def call_bangumi_search(bot,event,config,keywords,cat):
+    try:
+        dic={"番剧": 'all',"动画":2,"书籍":1,"游戏":4,"音乐":3,"三次元":6}
+        url = f"https://bgm.tv/subject_search/{keywords}?cat={dic[cat]}"
+        resu = await bangumisearch(url)
+        subjectlist = resu[1]
+        crtlist = resu[2]
+        order = 1
+        if str(event.raw_message).startswith("0") and order <= len(crtlist):
+            crt = crtlist[order - 1].find("a")["href"]
+            url = "https://bgm.tv" + crt
+            bot.logger.info("正在获取" + crt + "详情")
+            path = f"data/pictures/cache/search-{keywords}-0{order}.png"
+            title = crtlist[order - 1].find("a").string
+        elif 1 <= order <= len(subjectlist):
+            subject = subjectlist[order - 1].find("a")["href"]
+            url = "https://bgm.tv" + subject
+            bot.logger.info("正在获取" + subject + "详情")
+            path = f"data/pictures/cache/search-{keywords}-{order}.png"
+            title = subjectlist[order - 1].find("a").string
+        else:
+            await bot.send(event, "查询失败！不规范的操作")
+            searchtask.pop(event.sender.user_id)
+            return
+        try:
+            bot.logger.info("正在获取" + title + "详情")
+            await screenshot_to_pdf_and_png(url, path, 1080, 1750)
+            await bot.send(event, [Text(f'查询结果：{title}'), Image(file=path)])
+        except Exception as e:
+            bot.logger.error(e)
+            await bot.send(event, "查询失败，重新试试？")
+
+    except Exception as e:
+        bot.logger.error(e)
+        await bot.send(event, "查询失败，重新试试？")
 
 
 def main(bot,config):
-    global searchtask
-    searchtask={}
+    global searchtask  # 变量提前，否则可能未定义
+    searchtask = {}
     global switch
     switch=0
     global recall_id
@@ -102,6 +136,8 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
+        if not event.raw_message.startswith(config.settings["acg_information"]["bangumi_query_prefix"]):
+            return
         if "bangumi查询" in str(event.raw_message) or "番剧查询" in str(event.raw_message):
                 #url="https://api.bgm.tv/search/subject/"+str(event.message_chain).split(" ")[1]
                 cat="all"
@@ -124,26 +160,25 @@ def main(bot,config):
         else:
             return
         bot.logger.info("正在查询：" + keywords)
-
         url = f"https://bgm.tv/subject_search/{keywords}?cat={cat}"
 
-        path = "data/pictures/cache/"+keywords+".png"
-        global searchtask #变量提前，否则可能未定义
+        path = "data/pictures/cache/" + keywords + ".png"
+        global searchtask  # 变量提前，否则可能未定义
         try:
-            r=await bangumisearch(url)
+            r = await bangumisearch(url)
             str0 = f"{r[0]}\n请发送编号进入详情页，或发送退出退出查询"
-            await screenshot_to_pdf_and_png(url,path,1080,1750)
+            await screenshot_to_pdf_and_png(url, path, 1080, 1750)
             global recall_id
-            recall_id=await bot.send(event,[Text(f'{str0}'),Image(file=path)],True)
-            #print(recall_id)
+            recall_id = await bot.send(event, [Text(f'{str0}'), Image(file=path)], True)
+            # print(recall_id)
             global switch
 
-            searchtask[event.sender.user_id]=keywords,cat
-            switch=1
+            searchtask[event.sender.user_id] = keywords, cat
+            switch = 1
         except Exception as e:
             bot.logger.error(e)
             searchtask.pop(event.sender.user_id)
-            await bot.send(event,"查询失败，请稍后再试")
+            await bot.send(event, "查询失败，请稍后再试")
 
 
     @bot.on(GroupMessageEvent)
@@ -188,7 +223,11 @@ def main(bot,config):
                 except Exception as e:
                     bot.logger.error(e)
                     await bot.send(event, "查询失败，请稍后再试")
-                searchtask.pop(event.sender.user_id)
+                try:
+                    searchtask.pop(event.sender.user_id)
+                except Exception as e:
+                    bot.logger.error(e)
+                    pass
             except Exception as e:
                 bot.logger.error(e)
                 searchtask.pop(event.sender.user_id)
