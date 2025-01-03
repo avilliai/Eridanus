@@ -8,6 +8,7 @@ from run.groupManager.self_Manager import call_operate_user_blacklist,call_opera
 from run.resource_search import search_book_info,call_asmr
 from run.user_data import call_delete_user_history,call_clear_all_history
 from plugins.core.tts import get_acgn_ai_speaker_list
+from run.acg_infromation.bangumi import call_bangumi_search
 async def call_quit_chat(bot,event,config):
     return False
 

@@ -8,6 +8,8 @@ api_implements: #花里胡哨
      counter_probability: 100 #反击概率
      replylist:       #如果开启aiReplyCore，将不使用此处配置回复
        - "戳我干嘛呀！"
+acg_information:
+  bangumi_query_prefix: "/" #番剧查询类命令前缀
 basic_plugin:
   setu:
     r18mode: true
