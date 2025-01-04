@@ -21,7 +21,7 @@ def createLogger():
 
     # 设置控制台日志格式和颜色
     console_handler = logging.StreamHandler()
-    console_format = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    console_format = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - [bot] %(message)s'
     console_colors = {
         'DEBUG':    'white',
         'INFO':     'cyan',
