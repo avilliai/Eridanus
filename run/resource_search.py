@@ -234,9 +234,9 @@ def main(bot,config):
                     for group_id in operating[comic_id]:
                         event.group_id = group_id  # 修改数据实现切换群聊，懒狗实现
                         await bot.send(event, File(file=f"{config.settings['JMComic']['savePath']}/{comic_id}.pdf"))
+                        await bot.send(event, "下载完成了( >ρ< ”)", True)
                     event.group_id=temp_id
                     logger.info("移除预览缓存")
-                    await bot.send(event, "下载完成了( >ρ< ”)", True)
                     operating.pop(comic_id)
                     if config.settings['JMComic']["autoClearPDF"]:
                         await wait_and_delete_file(f"{config.settings['JMComic']['savePath']}/{comic_id}.pdf")
