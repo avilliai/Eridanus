@@ -7,7 +7,7 @@ from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import File, Image
 from plugins.core.userDB import get_user
 from plugins.resource_search_plugin.asmr.asmr import get_audio
-from plugins.streamingMedia_Subscribe_plugin.youtube.youtube_tools import get_img, audio_download, video_download
+from plugins.streaming_media_service.youtube.youtube_tools import get_img, audio_download, video_download
 
 
 async def download_youtube(bot,event,config,url,type="audio"):
