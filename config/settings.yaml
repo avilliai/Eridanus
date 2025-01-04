@@ -21,3 +21,7 @@ JMComic:            #禁漫相关功能设置
   previewPages: 6  #验车预览页数
   autoClearPDF: True #下载后自动清除pdf
   savePath: "data/pictures/benzi"  #下载为pdf的默认保存路径
+bili_dynamic:
+  enable: true #是否开启动态推送功能
+  dynamic_interval: 300 #动态推送间隔时间，单位为秒
+  screen_shot_mode: "pc" #mobile为移动端截图，pc为PC端截图

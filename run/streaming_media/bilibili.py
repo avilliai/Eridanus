@@ -24,7 +24,7 @@ async def bili_subscribe(bot,event,config,target_uid: int,operation):
             config.save_yaml(str("bili_dynamic"))
             await bot.send(event, "订阅成功")
         try:
-            p=await fetch_latest_dynamic(target_uid)
+            p=await fetch_latest_dynamic(target_uid,config)
             await bot.send(event,Image(file=p))
         except:
             bot.logger.error(f"获取动态失败 群号：{event.group_id} 关注id: {target_uid}")
@@ -53,7 +53,7 @@ async def check_bili_dynamic(bot,config):
                 index=1
             bot.logger.info_func(f"发现新的动态 群号：{config.bili_dynamic[target_uid]['push_groups']} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
             groups=config.bili_dynamic[target_uid]["push_groups"]
-            dynamic = await fetch_dynamic(latest_dynamic_id)
+            dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
 
             for group_id in groups:
                 bot.logger.info_func(f"推送动态 群号：{groups} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
@@ -79,9 +79,9 @@ def main(bot,config):
             bot.logger.info(f"Fetching dynamic id of {target_id}")
             dynamic_id1,dynamic_id2=await fetch_latest_dynamic_id(target_id)
             bot.logger.info(f"Dynamic id of {target_id} is {dynamic_id1} {dynamic_id2}")
-            p=await fetch_dynamic(dynamic_id1)
+            p=await fetch_dynamic(dynamic_id1,config.settings["bili_dynamic"]["screen_shot_mode"])
             await bot.send(event,Image(file=p))
-            p=await fetch_dynamic(dynamic_id2)
+            p=await fetch_dynamic(dynamic_id2,config.settings["bili_dynamic"]["screen_shot_mode"])
             await bot.send(event,Image(file=p))
     @bot.on(GroupMessageEvent)
     async def _(event):

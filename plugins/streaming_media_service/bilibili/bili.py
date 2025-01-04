@@ -27,7 +27,7 @@ async def fetch_latest_dynamic_id(uid):
         return data['data']['items'][0]['id_str'],data['data']['items'][1]['id_str']   #返回最新动态id
 
 
-async def fetch_dynamic(dynamic_id):
+async def fetch_dynamic(dynamic_id,mode="mobile"):
     """
     使用 Playwright 异步模式截图指定 URL 中指定 class name 元素的截图, 使用分块截图和拼接方法，并添加上下边距。
 
@@ -43,29 +43,43 @@ async def fetch_dynamic(dynamic_id):
     async with async_playwright() as p:
         # 启动浏览器
         browser = await p.chromium.launch(headless=True)  # 无头模式
-        iphone = p.devices['iPhone 14']  # 模拟 iPhone 设备
-        context = await browser.new_context(
-            **iphone,
-            proxy=None  # 禁用代理
-        )
+        if mode == "mobile":
+            iphone = p.devices['iPhone 14']  # 模拟 iPhone 设备
+            context = await browser.new_context(
+                **iphone,
+                proxy=None  # 禁用代理
+            )
+        else:
+            context = await browser.new_context()
         page = await context.new_page()
 
         # 打开目标网页
         await page.goto(url)
 
 
-
-        # 注入 CSS 隐藏右上角的“打开APP”按钮
-        await page.add_style_tag(content="""
-            .openapp-content {
-                display: none !important;
-            }
-        """)
-        await page.add_style_tag(content="""
-                    .m-fixed-openapp {
-                        display: none !important;
-                    }
-                """)
+        if mode == "mobile":
+            # 注入 CSS 隐藏右上角的“打开APP”按钮
+            await page.add_style_tag(content="""
+                .openapp-content {
+                    display: none !important;
+                }
+            """)
+            await page.add_style_tag(content="""
+                        .m-fixed-openapp {
+                            display: none !important;
+                        }
+                    """)
+        else:
+            await page.add_style_tag(content="""
+                        .login-panel-popover {
+                            display: none !important;
+                        }
+                    """)
+            await page.add_style_tag(content="""
+                                .login-tip {
+                                    display: none !important;
+                                }
+                            """)
 
 
         # 判断目标类名是否存在
@@ -73,6 +87,8 @@ async def fetch_dynamic(dynamic_id):
             target_selector = '.dyn-card'
         elif await page.locator('.opus-modules').is_visible():
             target_selector = '.opus-modules'
+        elif await page.locator('.bili-dyn-item').is_visible():
+            target_selector = '.bili-dyn-item'
         else:
             await asyncio.sleep(5)
             await page.screenshot(path=output_filename, full_page=True)  # 截取整个页面，我草，我真的服了
@@ -88,9 +104,9 @@ async def fetch_dynamic(dynamic_id):
 
         await browser.close()
         return output_filename
-async def fetch_latest_dynamic(uid):
+async def fetch_latest_dynamic(uid,config):
     r1,r2=await fetch_latest_dynamic_id(uid)
     if r1:
-        return await fetch_dynamic(r1)
+        return await fetch_dynamic(r1,config.settings["bili_dynamic"]["screen_shot_mode"])
     else:
         return None
