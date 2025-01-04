@@ -20,7 +20,7 @@ class ExtendBot(WebSocketBot):
         try:
             async for response in self.websocket:
                 data = json.loads(response)
-                self.logger.info(f"收到服务端响应: {data}")
+                self.logger.info_msg(f"收到服务端响应: {data}")
 
                 # 如果是响应消息
                 if "status" in data and "echo" in data:

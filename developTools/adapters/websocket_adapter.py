@@ -63,7 +63,7 @@ class WebSocketBot:
         try:
             async for response in self.websocket:
                 data = json.loads(response)
-                self.logger.info(f"收到服务端响应: {data}")
+                self.logger.info_msg(f"收到服务端响应: {data}")
 
                 # 如果是响应消息
                 if "status" in data and "echo" in data:
@@ -78,7 +78,7 @@ class WebSocketBot:
 
                             if event_obj.meta_event_type=="lifecycle":
                                 self.id = int(event_obj.self_id)
-                                self.logger.info(f"Bot ID: {self.id}")
+                                self.logger.info_msg(f"Bot ID: {self.id}")
                     except:
                         pass
                     if event_obj:
@@ -115,7 +115,7 @@ class WebSocketBot:
     async def _connect(self):
         try:
             self.websocket = await websockets.connect(self.uri)
-            self.logger.info("WebSocket 连接已建立")
+            self.logger.info_msg("WebSocket 连接已建立")
 
         except Exception as e:
             self.logger.error(f"WebSocket 连接出现错误: {e}")
@@ -137,7 +137,6 @@ class WebSocketBot:
         # 创建一个 Future，用于等待响应
         future = asyncio.Future()
         self.response_callbacks[echo] = future
-
         await self.websocket.send(json.dumps(message))
         try:
             return await asyncio.wait_for(future, timeout=timeout)
@@ -192,7 +191,7 @@ class WebSocketBot:
                     if isinstance(message[0], Node):
                         r = await self.send_private_forward_msg(event.user_id, message)
                         return r
-                print(f"发送的消息: {message.to_dict()}")
+                self.logger.info_func(f"发送的消息: {message.to_dict()}")
                 return await self._call_api(action, params)
             else:
                 self.logger.warning("WebSocket 未连接，无法发送消息")
@@ -293,7 +292,7 @@ class WebSocketBot:
             "group_id": group_id,
             "messages": message.to_dict(),
         }
-        self.logger.info(f"发送消息: {data}")
+        self.logger.info_msg(f"发送消息: {data}")
         return await self._call_api("send_group_forward_msg", data)
     async def send_private_forward_msg(self,user_id: int, components: Union[str, list[Union[MessageComponent, str]]]):
         """
@@ -318,7 +317,7 @@ class WebSocketBot:
             "user_id": user_id,
             "messages": message.to_dict(),
         }
-        self.logger.info(f"发送消息: {data}")
+        self.logger.info_msg(f"发送消息: {data}")
         return await self._call_api("send_private_forward_msg", data)
 
 

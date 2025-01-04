@@ -17,3 +17,7 @@ basic_plugin:
   tarot:
     lock: false #是否开启卡片锁定功能
     mode: "blueArchive" #牌面。可填 blueArchive,bilibili,AbstractImages
+JMComic:            #禁漫相关功能设置
+  previewPages: 6  #验车预览页数
+  autoClearPDF: True #下载后自动清除pdf
+  savePath: "data/pictures/benzi"  #下载为pdf的默认保存路径

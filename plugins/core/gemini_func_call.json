@@ -1,6 +1,25 @@
 {
         "function_declarations": [
             {
+                "name": "download_youtube",
+                "description": "下载youtube视频或音频。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string", "enum": ["video","audio"],"description": "下载类型"
+                        },
+                        "url": {
+                            "type": "string",
+                            "description": "视频的链接地址"
+                        }
+                    },
+                    "required": [
+                        "url"
+                    ]
+                }
+            },
+            {
                 "name": "call_bangumi_search",
                 "description": "搜索acg相关番剧、动画、小说、游戏、音乐、三次元人物等",
                 "parameters": {
@@ -20,86 +39,22 @@
                 }
             },
             {
-                "name": "call_operate_user_blacklist",
-                "description": "操作用户黑名单。",
+                "name": "call_operate_blandwhite",
+                "description": "添加或删除用户/群的白名单/黑名单。",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "target_user_id": {
+                        "target_id": {
                             "type": "integer",
-                            "description": "要操作的目标QQ"
+                            "description": "要操作的目标id"
                         },
-                        "status": {
-                            "type": "boolean",
-                            "description": "true为加入黑名单，false为移出黑名单"
+                         "type": {
+                            "type": "string", "enum": ["添加群黑名单","取消群黑名单","添加用户黑名单","取消用户黑名单","添加用户白名单","取消用户白名单","添加群白名单","取消群白名单"],"description": "操作类型"
                         }
                     },
                     "required": [
-                        "target_user_id",
-                        "status"
-                    ]
-                }
-            },
-            {
-                "name": "call_operate_user_whitelist",
-                "description": "操作用户白名单。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "target_user_id": {
-                            "type": "integer",
-                            "description": "要操作的目标QQ"
-                        },
-                        "status": {
-                            "type": "boolean",
-                            "description": "true为加入白名单，false为移出白名单"
-                        }
-                    },
-                    "required": [
-                        "target_user_id",
-                        "status"
-                    ]
-                }
-            },
-            {
-                "name": "call_operate_group_blacklist",
-                "description": "操作群黑名单。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "target_group_id": {
-                            "type": "integer",
-                            "description": "要操作的目标群号"
-                        },
-                        "status": {
-                            "type": "boolean",
-                            "description": "true为加入黑名单，false为移出黑名单"
-                        }
-                    },
-                    "required": [
-                        "target_group_id",
-                        "status"
-                    ]
-                }
-            },
-            {
-                "name": "call_operate_group_whitelist",
-                "description": "操作用户白名单。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "target_group_id": {
-                            "type": "integer",
-                            "description": "要操作的目标群号"
-                        },
-                        "status": {
-                            "type": "boolean",
-                            "description": "true为加入白名单，false为移出白名单"
-                        }
-                    },
-                    "required": [
-                        "target_group_id",
-                        "status"
+                        "target_id",
+                        "type"
                     ]
                 }
             },
