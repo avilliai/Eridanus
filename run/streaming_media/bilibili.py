@@ -76,9 +76,11 @@ def main(bot,config):
         if event.raw_message.startswith("看看动态"):
             target_id = event.raw_message.split("看看动态")[1]
             bot.logger.info(f"Fetching dynamic id of {target_id}")
-            dynamic_id=await fetch_latest_dynamic_id(target_id)
-            bot.logger.info(f"Dynamic id of {target_id} is {dynamic_id}")
-            p=await fetch_dynamic(dynamic_id)
+            dynamic_id1,dynamic_id2=await fetch_latest_dynamic_id(target_id)
+            bot.logger.info(f"Dynamic id of {target_id} is {dynamic_id1} {dynamic_id2}")
+            p=await fetch_dynamic(dynamic_id1)
+            await bot.send(event,Image(file=p))
+            p=await fetch_dynamic(dynamic_id2)
             await bot.send(event,Image(file=p))
     @bot.on(GroupMessageEvent)
     async def _(event):
