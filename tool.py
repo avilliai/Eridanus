@@ -80,7 +80,7 @@ async def main():
         updaat()
     elif user_input=="3":
         logger.info("playwright工具安装(b站动态爬取需要)")
-        os.system("playwright install chromium")
+        os.system(f"\"{python_path}\" -m playwright install chromium")
     elif user_input=="4":
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
