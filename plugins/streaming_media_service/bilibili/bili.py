@@ -4,11 +4,7 @@ import time
 import asyncio
 import httpx
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
-from PIL import Image
-from io import BytesIO
-import time
 
-from playwright.sync_api import sync_playwright
 
 from plugins.utils.random_str import random_str
 
