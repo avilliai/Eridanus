@@ -20,7 +20,7 @@ async def download_youtube(bot,event,config,url,type="audio"):
         bot.logger.info(f"Video ID from url1: {match1.group(1)}")
         if type == "audio":
 
-            if user_info[6] < config.settings["流媒体"]["youtube"]["download_audio_level"]:
+            if user_info[6] < config.controller["流媒体"]["youtube"]["download_audio_level"]:
                 await bot.send(event,"您的权限不足，无法下载音频")
                 return
             await bot.send(event,"正在下载音频，请稍后...")
@@ -30,7 +30,7 @@ async def download_youtube(bot,event,config,url,type="audio"):
                 path = await loop.run_in_executor(executor,audio_download , video_id)
             await bot.send(event,[Image(file=imgurl)],True)
         elif type == "video":
-            if user_info[6] < config.settings["流媒体"]["youtube"]["download_video_level"]:
+            if user_info[6] < config.controller["流媒体"]["youtube"]["download_video_level"]:
                 await bot.send(event,"您的权限不足，无法下载音频")
                 return
             await bot.send(event,"正在下载视频，请稍后...")
