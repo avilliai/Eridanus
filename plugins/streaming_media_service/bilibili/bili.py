@@ -89,8 +89,8 @@ async def fetch_dynamic(dynamic_id):
         await browser.close()
         return output_filename
 async def fetch_latest_dynamic(uid):
-    r=await fetch_latest_dynamic_id(uid)
-    if r:
-        return await fetch_dynamic(r)
+    r1,r2=await fetch_latest_dynamic_id(uid)
+    if r1:
+        return await fetch_dynamic(r1)
     else:
         return None
