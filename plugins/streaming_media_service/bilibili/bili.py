@@ -24,7 +24,7 @@ async def fetch_latest_dynamic_id(uid):
     async with httpx.AsyncClient() as client:
         response=await client.get(url, params=params, headers=headers)
         data=response.json()
-        return data['data']['items'][0]['id_str']   #返回最新动态id
+        return data['data']['items'][0]['id_str'],data['data']['items'][1]['id_str']   #返回最新动态id
 
 
 async def fetch_dynamic(dynamic_id):
