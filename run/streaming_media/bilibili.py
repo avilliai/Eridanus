@@ -19,7 +19,8 @@ async def bili_subscribe(bot,event,config,target_uid: int,operation):
                 config.save_yaml(str("bili_dynamic"))
                 await bot.send(event, "订阅成功")
         else:
-            config.bili_dynamic[target_uid] = {"push_groups": [event.group_id], "latest_dynamic_id": 0}
+            latest_dynamic_id1, latest_dynamic_id2 = await fetch_latest_dynamic_id(int(target_uid))
+            config.bili_dynamic[target_uid] = {"push_groups": [event.group_id], "latest_dynamic_id": [latest_dynamic_id1, latest_dynamic_id2]}
             config.save_yaml(str("bili_dynamic"))
             await bot.send(event, "订阅成功")
         try:
