@@ -2,19 +2,31 @@ import asyncio
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
-from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic
+from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
+
+
 async def bili_subscribe(bot,event,config,target_uid: int,operation):
 
     if operation=="add":
         bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_uid}")
         if target_uid in config.bili_dynamic:
             groups=config.bili_dynamic[target_uid]["push_groups"]
+
             if event.group_id in groups:
                 await bot.send(event,"你已经订阅过了")
             else:
                 config.bili_dynamic[target_uid]["push_groups"].append(event.group_id)
                 config.save_yaml(str("bili_dynamic"))
                 await bot.send(event, "订阅成功")
+        else:
+            config.bili_dynamic[target_uid] = {"push_groups": [event.group_id], "latest_dynamic_id": 0}
+            config.save_yaml(str("bili_dynamic"))
+            await bot.send(event, "订阅成功")
+        try:
+            p=await fetch_latest_dynamic(target_uid)
+            await bot.send(event,Image(file=p))
+        except:
+            bot.logger.error(f"获取动态失败 群号：{event.group_id} 关注id: {target_uid}")
     elif operation=="remove":
         bot.logger.info_func(f"取消动态关注 群号：{event.group_id} 关注id: {target_uid}")
         if target_uid in config.bili_dynamic:
@@ -25,6 +37,8 @@ async def bili_subscribe(bot,event,config,target_uid: int,operation):
                 await bot.send(event, "取消订阅成功")
             else:
                 await bot.send(event, "你没有订阅过")
+        else:
+            await bot.send(event, "不存在订阅任务")
 async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
     for target_uid in config.bili_dynamic:
@@ -39,7 +53,7 @@ async def check_bili_dynamic(bot,config):
                 try:
                     await bot.send_group_message(group_id,Image(file=dynamic))
                 except:
-                    bot.logger.error_func(f"推送动态失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
+                    bot.logger.error(f"推送动态失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
             config.bili_dynamic[target_uid]["latest_dynamic_id"]=latest_dynamic_id
             config.save_yaml("bili_dynamic")
     bot.logger.info_func("完成 B 站动态更新检查")
@@ -70,6 +84,7 @@ def main(bot,config):
                 await bot.send(event, "无效的uid")
                 return
             bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_id}")
+            await bili_subscribe(bot,event,config,int(target_id),"add")
         elif event.raw_message.startswith("/bili remove "):
             target_id = event.raw_message.split("/bili remove ")[1] #注意是str
             try:
@@ -78,4 +93,5 @@ def main(bot,config):
                 await bot.send(event, "无效的uid")
                 return
             bot.logger.info_func(f"取消动态关注 群号：{event.group_id} 关注id: {target_id}")
+            await bili_subscribe(bot,event,config,int(target_id),"remove")
 
