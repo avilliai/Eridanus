@@ -42,7 +42,8 @@ async def main():
     logger.info("""请输入要执行的指令：
         1 youtube登录
         2 更新bot代码
-        3 开发者工具""")
+        3 playwright工具安装
+        4 开发者工具""")
     sleep(1)
     user_input=input("请输入指令序号：")
     if user_input=="1":
@@ -78,6 +79,9 @@ async def main():
     elif user_input=="2":
         updaat()
     elif user_input=="3":
+        logger.info("playwright工具安装(b站动态爬取需要)")
+        os.system("playwright install chromium")
+    elif user_input=="4":
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
         2 没想好呢""")
