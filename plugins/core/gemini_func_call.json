@@ -1,6 +1,26 @@
 {
         "function_declarations": [
             {
+                "name": "bili_subscribe",
+                "description": "订阅bilibili动态。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "operation": {
+                            "type": "string", "enum": ["add","remove"],"description": "添加订阅或取消订阅。"
+                        },
+                        "target_uid": {
+                            "type": "integer",
+                            "description": "关注目标的b站uid。"
+                        }
+                    },
+                    "required": [
+                        "operation",
+                        "target_uid"
+                    ]
+                }
+            },
+            {
                 "name": "download_youtube",
                 "description": "下载youtube视频或音频。",
                 "parameters": {
