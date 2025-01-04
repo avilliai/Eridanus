@@ -1,4 +1,3 @@
-import asyncio
 
 from plugins.core.yamlLoader import YAMLManager
 
@@ -36,7 +35,7 @@ bangumi.main(bot, config) #加载bangumi插件
 wifeyouwant.main(bot, config) #加载wifeyouwant插件
 
 youtube.main(bot, config) #加载youtube插件
-asyncio.run(bilibili.main(bot, config)) #加载bilibili插件
+bilibili.main(bot, config) #加载bilibili插件
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 

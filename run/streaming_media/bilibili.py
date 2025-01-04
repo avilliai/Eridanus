@@ -1,8 +1,6 @@
 import asyncio
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 
-from developTools.event.events import GroupMessageEvent
+from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic
 async def bili_subscribe(bot,event,config,target_uid: int,operation):
@@ -46,17 +44,13 @@ async def check_bili_dynamic(bot,config):
             config.save_yaml("bili_dynamic")
     bot.logger.info_func("完成 B 站动态更新检查")
 
-async def main(bot,config):
-    loop = asyncio.get_event_loop()
-    scheduler = AsyncIOScheduler(event_loop=loop)  # 显式传递事件循环
-    scheduler.add_job(
-        lambda: check_bili_dynamic(bot, config),
-        trigger=IntervalTrigger(minutes=5),
-        id="bili_dynamic_check",
-        replace_existing=True,
-    )
-    scheduler.start()
+def main(bot,config):
 
+    @bot.on(LifecycleMetaEvent)
+    async def _(event):
+        while True:
+            await check_bili_dynamic(bot,config)
+            await asyncio.sleep(300)  # 每 5 分钟检查一次
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.raw_message.startswith("看看动态"):
