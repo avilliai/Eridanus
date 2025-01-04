@@ -208,7 +208,6 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
         proxies=None
     url = f"{base_url}/v1beta/models/{model}:generateContent?key={apikey}"
     # print(requests.get(url,verify=False))
-
     pay_load={
         "contents": ask_prompt,
         "systemInstruction": {
@@ -226,6 +225,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
     }
     if tools is not None:
         pay_load["tools"] = tools  #h函数调用开个头得了。之后再做。
+
 
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
