@@ -38,37 +38,32 @@ async def fetch_dynamic(dynamic_id):
         保存截图的文件名 或 None (如果截图失败)。
     """
     url = f"https://t.bilibili.com/{dynamic_id}"
-
     output_filename = f"data/pictures/cache/{random_str()}.png"
+
     async with async_playwright() as p:
         # 启动浏览器
-        browser = await p.chromium.launch(headless=False)  # 设置为 False 以便调试
-        context = await browser.new_context()
+        browser = await p.chromium.launch(headless=True)  # 无头模式测试通过
+        iphone = p.devices['iPhone 12']  # 模拟 iPhone 设备
+        context = await browser.new_context(**iphone)
         page = await context.new_page()
 
         # 打开目标网页
         await page.goto(url)
-
-        # 等待悬浮窗出现并关闭
-
+        await page.add_style_tag(content="""
+                    .m-fixed-openapp {
+                        display: none !important;
+                    }
+                """)
 
         # 等待类名为 'bili-dyn-item' 的元素加载
-        await page.wait_for_selector('.bili-dyn-item')
-        await page.mouse.wheel(0, 500)
-        await page.mouse.wheel(0, -500)
-        await asyncio.sleep(1)
-        try:
-            await page.wait_for_selector("body > div:nth-child(16) > div > div > div.close > svg > path", timeout=5000)
-            await page.click("body > div:nth-child(16) > div > div > div.close > svg > path")
-            print("悬浮窗已关闭")
-        except Exception as e:
-            print(f"未能关闭悬浮窗: {e}")
-        element = page.locator('.bili-dyn-item')
+        await page.wait_for_selector('.dyn-card')
+
+        element = page.locator('.dyn-card')
 
         # 截图保存
         await element.screenshot(path=output_filename)
-
         await browser.close()
+
         return output_filename
 async def fetch_latest_dynamic(uid):
     r=await fetch_latest_dynamic_id(uid)
