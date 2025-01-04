@@ -41,7 +41,7 @@ os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors
 async def main():
     logger.info("""请输入要执行的指令：
         1 youtube登录
-        2 更新bot代码
+        2 更新bot代码(常用)
         3 playwright工具安装
         4 开发者工具""")
     sleep(1)
