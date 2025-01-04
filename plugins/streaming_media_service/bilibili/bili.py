@@ -43,7 +43,10 @@ async def fetch_dynamic(dynamic_id):
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)  # 无头模式测试通过
         iphone = p.devices['iPhone 12'] #也是用上果子了
-        context = await browser.new_context(**iphone)
+        context = await browser.new_context(
+            **iphone,
+            proxy=None  # 禁用代理
+        )
         page = await context.new_page()
 
         await page.goto(url)
