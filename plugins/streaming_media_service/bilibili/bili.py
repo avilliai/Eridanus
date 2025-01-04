@@ -41,26 +41,22 @@ async def fetch_dynamic(dynamic_id):
     output_filename = f"data/pictures/cache/{random_str()}.png"
 
     async with async_playwright() as p:
-        # 启动浏览器
         browser = await p.chromium.launch(headless=True)  # 无头模式测试通过
-        iphone = p.devices['iPhone 12']  # 模拟 iPhone 设备
+        iphone = p.devices['iPhone 12'] #也是用上果子了
         context = await browser.new_context(**iphone)
         page = await context.new_page()
 
-        # 打开目标网页
         await page.goto(url)
         await page.add_style_tag(content="""
                     .m-fixed-openapp {
                         display: none !important;
                     }
-                """)
+                """)  #注入css样式，隐藏右上角的“打开APP”按钮
 
-        # 等待类名为 'bili-dyn-item' 的元素加载
         await page.wait_for_selector('.dyn-card')
 
         element = page.locator('.dyn-card')
 
-        # 截图保存
         await element.screenshot(path=output_filename)
         await browser.close()
 
