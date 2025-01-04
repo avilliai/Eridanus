@@ -9,7 +9,7 @@ from plugins.resource_search_plugin.asmr.asmr import get_audio
 from plugins.streamingMedia_Subscribe_plugin.youtube.youtube_tools import get_img, audio_download, video_download
 
 
-async def download_youtube_audio(bot,event,config,url,type="audio"):
+async def download_youtube(bot,event,config,url,type="audio"):
     loop = asyncio.get_running_loop()
     regex = r"(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})"
 
@@ -38,7 +38,7 @@ def main(bot,config):
     async def dl_youtube_audio(event):
         if event.raw_message.startswith("/yt音频"):
             url = event.raw_message.split("/yt音频")[1]
-            await download_youtube_audio(bot,event,config,url)
+            await download_youtube(bot,event,config,url)
         elif event.raw_message.startswith("/yt视频"):
             url = event.raw_message.split("/yt视频")[1]
-            await download_youtube_audio(bot,event,config,url,type="video")
+            await download_youtube(bot,event,config,url,type="video")

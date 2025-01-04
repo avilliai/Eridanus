@@ -1,6 +1,23 @@
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from plugins.core.userDB import get_user
 
+async def call_operate_blandwhite(bot,event,config,target_id,type):
+    if type=="添加群黑名单":
+        await call_operate_group_blacklist(bot,event,config,target_id,True)
+    elif type=="删除群黑名单":
+        await call_operate_group_blacklist(bot,event,config,target_id,False)
+    elif type=="添加群白名单":
+        await call_operate_group_whitelist(bot,event,config,target_id,True)
+    elif type=="取消群白名单":
+        await call_operate_group_whitelist(bot,event,config,target_id,False)
+    elif type=="添加用户黑名单":
+        await call_operate_user_blacklist(bot,event,config,target_id,True)
+    elif type=="取消用户黑名单":
+        await call_operate_user_blacklist(bot,event,config,target_id,False)
+    elif type=="添加用户白名单":
+        await call_operate_user_whitelist(bot,event,config,target_id,True)
+    elif type=="取消用户白名单":
+        await call_operate_user_whitelist(bot,event,config,target_id,False)
 
 async def call_operate_user_blacklist(bot,event,config,target_user_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
