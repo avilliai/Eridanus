@@ -236,26 +236,6 @@
                 }
             },
             {
-                "name": "set_light_color",
-                "description": "Set the light color. Lights must be enabled for this to work.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "rgb_hex": {
-                            "type": "string",
-                            "description": "The light color as a 6-digit hex string, e.g. ff0000 for red."
-                        }
-                    },
-                    "required": [
-                        "rgb_hex"
-                    ]
-                }
-            },
-            {
-                "name": "stop_lights",
-                "description": "Turn off the lighting system."
-            },
-            {
                 "name": "call_weather_query",
                 "description": "Get the current weather.default 北京",
                 "parameters": {
@@ -304,6 +284,27 @@
                     },
                     "required": [
                         "tags"
+                    ]
+                }
+            },
+            {
+                "name": "call_download_book",
+                "description": "从zlibrary下载书籍。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "book_id": {
+                            "type": "string",
+                            "description": "书籍的id。"
+                        },
+                        "hash": {
+                            "type": "string",
+                            "description": "书籍的hash。"
+                        }
+                    },
+                    "required": [
+                        "book_id",
+                        "hash"
                     ]
                 }
             },
