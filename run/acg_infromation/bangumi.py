@@ -11,7 +11,10 @@ from developTools.event.events import GroupMessageEvent, FriendRequestEvent, Pri
     ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text, Image,At
 from asyncio import sleep
-from plugins.game_plugin.bangumisearch import banguimiList,bangumisearch,screenshot_to_pdf_and_png
+from plugins.game_plugin.bangumisearch import banguimiList,bangumisearch,screenshot_to_pdf_and_png,run_async_task,daily_task
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+
 
 async def call_bangumi_search(bot,event,config,keywords,cat):
     try:
@@ -57,6 +60,9 @@ def main(bot,config):
     switch=0
     global recall_id
     recall_id = None
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=1))
+    scheduler.start()
     bot.logger.info("Bangumi功能已启动")
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
@@ -245,3 +251,13 @@ def main(bot,config):
                 if event.sender.user_id in searchtask:  # 检验查询是否结束
                     searchtask.pop(event.sender.user_id)
                     await bot.send(event, "查询超时，已自动退出")
+
+    @bot.on(GroupMessageEvent)
+    async def Bilibili_today_hot(event: GroupMessageEvent):
+        file_path = 'data/pictures/wife_you_want_img/'
+        output_path = f'{file_path}bili_today_hot_back_out.png'
+        if '今日热门' in event.raw_message:
+            if not os.path.isfile(output_path):
+                await daily_task()
+            bot.logger.info('今日热门开启！！！')
+            await bot.send(event, Image(file=output_path))

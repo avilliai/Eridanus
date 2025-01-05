@@ -1,6 +1,13 @@
 from bs4 import BeautifulSoup
 import httpx
 import random
+
+from bilibili_api import hot, sync
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import os
+import requests
+import asyncio
+
 def get_headers():
     user_agent_list = [
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",
@@ -108,3 +115,88 @@ async def delete_msg_async(msg_id):
     }
     async with httpx.AsyncClient(timeout=None, headers=headers) as client:
         response = await client.post(url, json=payload)
+
+
+
+
+
+async def add_rounded_rectangle(draw, xy, radius, fill):
+    """绘制圆角矩形"""
+    x0, y0, x1, y1 = xy
+    draw.rectangle([x0 + radius, y0, x1 - radius, y1], fill=fill)
+    draw.rectangle([x0, y0 + radius, x1, y1 - radius], fill=fill)
+    draw.pieslice([x0, y0, x0 + 2 * radius, y0 + 2 * radius], 180, 270, fill=fill)
+    draw.pieslice([x1 - 2 * radius, y0, x1, y0 + 2 * radius], 270, 360, fill=fill)
+    draw.pieslice([x0, y1 - 2 * radius, x0 + 2 * radius, y1], 90, 180, fill=fill)
+    draw.pieslice([x1 - 2 * radius, y1 - 2 * radius, x1, y1], 0, 90, fill=fill)
+
+async def draw_PIL_today_hot():
+    # 打开模板图片
+
+    file_path = 'data/pictures/wife_you_want_img/'
+    template_path=f'{file_path}bili_today_hot_back.png'
+    output_path=f'{file_path}bili_today_hot_back_out.png'
+    template = Image.open(template_path).convert("RGBA")
+    draw = ImageDraw.Draw(template)
+
+    resize_x=370
+    resize_y=260
+    resize_x_touxiang=90
+    resize_y_touxiang=90
+
+    hot_get_bili = sync(hot.get_hot_videos())
+    number=0
+    for context_check in hot_get_bili['list']:
+
+        #print(number)
+        if number == 8:break
+        text=context_check[f'title']
+        thumbnail_path_url = context_check[f'pic']
+        touxiang_path_url = context_check['owner']['face']
+        thumbnail_path=f'{file_path}fengmian.png'
+        touxiang_path=f'{file_path}touxiang.png'
+        response = requests.get(thumbnail_path_url)
+        with open(thumbnail_path, 'wb') as file:
+            file.write(response.content)
+        response = requests.get(touxiang_path_url)
+        with open(touxiang_path, 'wb') as file:
+            file.write(response.content)
+
+        x_check=number%2
+        y_check=number//2
+        #print(x_check,y_check)
+        paste_x=146+x_check*430
+        paste_y=343+y_check*394
+        paste_x_touxiang=paste_x
+        paste_y_touxiang=paste_y+283
+
+        thumbnail = Image.open(thumbnail_path).resize((resize_x, resize_y), Image.Resampling.LANCZOS)
+        mask = Image.new("L", (resize_x, resize_y), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        await add_rounded_rectangle(mask_draw, (0, 0, resize_x, resize_y), radius=20, fill=255)
+        template.paste(thumbnail, (paste_x, paste_y), mask)
+
+        thumbnail = Image.open(touxiang_path).resize((resize_x_touxiang, resize_y_touxiang), Image.Resampling.LANCZOS)
+        mask = Image.new("L", (resize_x_touxiang, resize_y_touxiang), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        await add_rounded_rectangle(mask_draw, (0, 0, resize_x_touxiang, resize_y_touxiang), radius=45, fill=255)
+        template.paste(thumbnail, (paste_x_touxiang, paste_y_touxiang), mask)
+
+        text = [text[i:i + 9] for i in range(0, len(text), 9)]
+        text = text[:2]
+        text = '\n'.join(text)
+        # 添加文案
+        font = ImageFont.truetype(f"{file_path}LXGWWenKai-Bold.ttf", 30)  # 替换为实际字体路径
+        text_position = (paste_x_touxiang+100, paste_y_touxiang+6)  # 文案位置
+        draw.text(text_position, text, font=font, fill="black")
+        number += 1
+    # 保存输出图片
+    template.save(output_path)
+    #template.show()
+
+async def daily_task():
+    await draw_PIL_today_hot()
+
+# 包装一个同步任务来调用异步任务
+def run_async_task():
+    asyncio.run(daily_task())
