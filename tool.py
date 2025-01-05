@@ -139,7 +139,7 @@ def updaat(f=False,source=None,yamls={}):
             #shutil.rmtree("./temp")
         logger.info("处理冲突文件完成")
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
-        logger.warning("开始检查依赖....")
+        logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
         logger.warning("依赖检查完成")
         logger.info("更新成功，请关闭此窗口，重新启动bot")
