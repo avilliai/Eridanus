@@ -14,7 +14,6 @@ def search_book(Z,book,num):
     for book_result in results['books'][:num]:
         try:
             p=create_book_image(book_result)
-            print(book_result)
             result.append([f"book_id: {book_result['id']}\nhash: {book_result['hash']}",p])
         except:
             continue
