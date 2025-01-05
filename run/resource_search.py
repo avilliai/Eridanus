@@ -70,6 +70,7 @@ def main(bot,config):
         global Z
         try:
             Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"],proxies=proxies)
+            bot.logger.info("z_library login success")
         except Exception as e:
             bot.logger.error(f"z_library login error:{e}")
             return

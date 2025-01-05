@@ -24,7 +24,7 @@ class Zlibrary:
         self.__kindle_email: str
         self.__remix_userid: [int, str]
         self.__remix_userkey: str
-        self.__domain = "1lib.sk"
+        self.__domain = "z-lib.gs"
         self.__proxies = proxies
 
         self.__loggedin = False
