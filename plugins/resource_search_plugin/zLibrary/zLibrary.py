@@ -17,6 +17,7 @@ class Zlibrary:
         password: str = None,
         remix_userid: [int, str] = None,
         remix_userkey: str = None,
+        proxies: dict = None,
     ):
         self.__email: str
         self.__name: str
@@ -24,6 +25,7 @@ class Zlibrary:
         self.__remix_userid: [int, str]
         self.__remix_userkey: str
         self.__domain = "1lib.sk"
+        self.__proxies = proxies
 
         self.__loggedin = False
         self.__headers = {
@@ -98,6 +100,7 @@ class Zlibrary:
             data=data,
             cookies=self.__cookies,
             headers=self.__headers,
+            proxies=self.__proxies,
         ).json()
 
     def __makeGetRequest(
@@ -112,6 +115,7 @@ class Zlibrary:
             params=params,
             cookies=self.__cookies if cookies is None else cookies,
             headers=self.__headers,
+            proxies=self.__proxies,
         ).json()
 
     def getProfile(self) -> dict[str, str]:
@@ -287,7 +291,7 @@ class Zlibrary:
         )
 
     def __getImageData(self, url: str) -> requests.Response.content:
-        res = requests.get(url, headers=self.__headers)
+        res = requests.get(url, headers=self.__headers,proxies=self.__proxies)
         if res.status_code == 200:
             return res.content
 
@@ -309,7 +313,7 @@ class Zlibrary:
         headers = self.__headers.copy()
         headers["authority"] = ddl.split("/")[2]
 
-        res = requests.get(ddl, headers=headers)
+        res = requests.get(ddl, headers=headers,proxies=self.__proxies)
         if res.status_code == 200:
             return filename, res.content
 

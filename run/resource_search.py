@@ -61,10 +61,15 @@ async def call_asmr(bot,event,config,try_again=False):
 
 def main(bot,config):
     #实例化对象，进行进一步操作
+    proxy = config.api["proxy"]["http_proxy"]
+    if proxy!= "":
+        proxies={"http://": proxy,"https://": proxy}
+    else:
+        proxies=None
     if config.api["z_library"]["email"]!="" and config.api["z_library"]["password"]!="":
         global Z
         try:
-            Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"])
+            Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"],proxies=proxies)
         except Exception as e:
             bot.logger.error(f"z_library login error:{e}")
             return
@@ -80,10 +85,10 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def book_resource_download(event):
-        if str(event.raw_message).startswith("下载"):
+        if str(event.raw_message).startswith("下载书"):
             user_info = await get_user(event.user_id, event.sender.nickname)
             if user_info[6]>=config.controller["resource_search"]["z_library"]["download_operate_level"]:
-                book_id = str(event.raw_message).split("下载")[1]
+                book_id = str(event.raw_message).split("下载书")[1]
                 await bot.send(event, "正在下载中，请稍后...")
                 path=download_book(Z,book_id)
                 print(path)
