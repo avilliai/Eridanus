@@ -32,7 +32,7 @@ async def search_book_info(bot,event,config,info):
 async def call_download_book(bot,event,config,book_id: str,hash:str):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["resource_search"]["z_library"]["download_operate_level"]:
-        await bot.send(event, "正在下载中，请稍后...")
+        await bot.send(event, "正在下载中，请稍候...")
         loop = asyncio.get_running_loop()
         try:
             with ThreadPoolExecutor() as executor:
