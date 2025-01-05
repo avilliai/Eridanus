@@ -47,10 +47,9 @@ async def check_bili_dynamic(bot,config):
         if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0] or latest_dynamic_id2!=config.bili_dynamic[target_uid]["latest_dynamic_id"][1]:
             if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0]:
                 latest_dynamic_id=latest_dynamic_id1
-                index=0
             else:
                 latest_dynamic_id=latest_dynamic_id2
-                index=1
+
             bot.logger.info_func(f"发现新的动态 群号：{config.bili_dynamic[target_uid]['push_groups']} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
             groups=config.bili_dynamic[target_uid]["push_groups"]
             dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
@@ -61,7 +60,7 @@ async def check_bili_dynamic(bot,config):
                     await bot.send_group_message(group_id,Image(file=dynamic))
                 except:
                     bot.logger.error(f"推送动态失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
-            config.bili_dynamic[target_uid]["latest_dynamic_id"][index]=latest_dynamic_id
+            config.bili_dynamic[target_uid]["latest_dynamic_id"]=[latest_dynamic_id1,latest_dynamic_id2]
             config.save_yaml("bili_dynamic")
     bot.logger.info_func("完成 B 站动态更新检查")
 
