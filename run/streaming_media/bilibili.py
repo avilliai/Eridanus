@@ -7,7 +7,7 @@ from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_i
 
 async def bili_subscribe(bot,event,config,target_uid: int,operation):
     if not isinstance(event,GroupMessageEvent):
-        await bot.send(event,"订阅功能仅支持群聊")
+        await bot.send(event,"订阅功能仅支持群聊")   #私聊主动群发消息容易被腾子shutdown
         return
     if operation=="add":
         bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_uid}")
