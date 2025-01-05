@@ -12,7 +12,7 @@ from plugins.streaming_media_service.youtube.youtube_tools import get_img, audio
 
 async def download_youtube(bot,event,config,url,type="audio"):
     loop = asyncio.get_running_loop()
-    regex = r"(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})"
+    regex = r"(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})"
 
     match1 = re.search(regex, url)
     user_info = await get_user(event.user_id, event.sender.nickname)
