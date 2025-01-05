@@ -61,17 +61,21 @@ async def call_asmr(bot,event,config,try_again=False):
 
 def main(bot,config):
     #实例化对象，进行进一步操作
+    print("resource_search plugin loaded")
     proxy = config.api["proxy"]["http_proxy"]
     if proxy!= "":
-        proxies={"http://": proxy,"https://": proxy}
+        proxies = {
+            "http": proxy,
+            "https": proxy
+        }
     else:
         proxies=None
     if config.api["z_library"]["email"]!="" and config.api["z_library"]["password"]!="":
         global Z
-        try:
+        if 1:
             Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"],proxies=proxies)
             bot.logger.info("z_library login success")
-        except Exception as e:
+        else:
             bot.logger.error(f"z_library login error:{e}")
             return
     logger = bot.logger
