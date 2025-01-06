@@ -35,7 +35,7 @@ BILIBILI_HEADER = {
         'Safari/537.36',
     'referer': 'https://www.bilibili.com',
 }
-BILI_SESSDATA: Optional[str] = '840651db%2C1751260321%2Cf2edb%2A12CjBtIGHm_s_MHfiuzBO8GtD5G-450SuJuo7cs_9l98digPRQwMcnpHcVoElO5g-tfOcSVm1KWFlxRnFlNU9GdTRqRjVmQ3NHSExOOUV1dFBicWJ4UzhWX2FncE4xdERzS0JRcnc3UkdNU1RKdXNjbTlsNFJzV05mRmk0aEVaS3ViWVNqa3lKbnBBIIEC'
+BILI_SESSDATA: Optional[str] = ''
 
 # 构建哔哩哔哩的Credential
 credential = Credential(sessdata=BILI_SESSDATA)
