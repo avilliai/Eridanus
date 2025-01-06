@@ -5,10 +5,5 @@ master:
   id: 1840094972
 adapter:
   access_token: "any_access_token" #onebot实现部分为空则不用改
-  http_sever:           #bot的运行端口，onebot事件上报到这里
-    host: "0.0.0.0"
-    port: 8080
-  http_client:
-    url: "http://127.0.0.1:3000"    #bot的http请求地址
   ws_client:
     ws_link: "ws://127.0.0.1:3001"  #bot的websocket请求地址
