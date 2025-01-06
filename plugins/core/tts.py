@@ -45,7 +45,7 @@ async def gptVitsSpeakers():
 
 
 try:
-    if local_config["tts"]["tts_engine"] == "acgn_ai":
+    if local_config["tts"]["tts_engine"] == "acgn_ai" and local_config["tts"]["acgn_ai"]["token"]!= "":
         print("GPTSOVITS_SPEAKERS获取中")
         GPTSOVITS_SPEAKERS = asyncio.run(gptVitsSpeakers())
         #print(GPTSOVITS_SPEAKERS)

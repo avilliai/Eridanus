@@ -29,6 +29,22 @@ async def search_book_info(bot,event,config,info):
         # print(r)
     else:
         await bot.send(event, "你没有权限使用该功能")
+async def call_download_book(bot,event,config,book_id: str,hash:str):
+    user_info = await get_user(event.user_id, event.sender.nickname)
+    if user_info[6] >= config.controller["resource_search"]["z_library"]["download_operate_level"]:
+        await bot.send(event, "正在下载中，请稍候...")
+        loop = asyncio.get_running_loop()
+        try:
+            with ThreadPoolExecutor() as executor:
+                path = await loop.run_in_executor(executor,download_book,Z,book_id.strip(),hash.strip())
+            await bot.send(event, File(file=path))
+            await bot.send(event, "下载成功，请查看文件",True)
+        except Exception as e:
+            bot.logger.error(f"download_book error:{e}")
+            await bot.send(event, "下载失败，请稍后再试",True)
+    else:
+        await bot.send(event, "你没有权限使用该功能")
+
 async def call_asmr(bot,event,config,try_again=False):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["resource_search"]["asmr"]["asmr_level"]:
@@ -61,10 +77,20 @@ async def call_asmr(bot,event,config,try_again=False):
 
 def main(bot,config):
     #实例化对象，进行进一步操作
+    bot.logger.info("resource_search plugin loaded,contains z_library, jmcomic, asmr")
+    proxy = config.api["proxy"]["http_proxy"]
+    if proxy!= "":
+        proxies = {
+            "http": proxy,
+            "https": proxy
+        }
+    else:
+        proxies=None
     if config.api["z_library"]["email"]!="" and config.api["z_library"]["password"]!="":
         global Z
         try:
-            Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"])
+            Z = Zlibrary(email=config.api["z_library"]["email"], password=config.api["z_library"]["password"],proxies=proxies)
+            bot.logger.info("z_library login success")
         except Exception as e:
             bot.logger.error(f"z_library login error:{e}")
             return
@@ -80,15 +106,14 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def book_resource_download(event):
-        if str(event.raw_message).startswith("下载"):
-            user_info = await get_user(event.user_id, event.sender.nickname)
-            if user_info[6]>=config.controller["resource_search"]["z_library"]["download_operate_level"]:
-                book_id = str(event.raw_message).split("下载")[1]
-                await bot.send(event, "正在下载中，请稍后...")
-                path=download_book(Z,book_id)
-                print(path)
-            else:
-                await bot.send(event, "你没有权限使用该功能")
+        if str(event.raw_message).startswith("下载书"):
+            try:
+                book_id = str(event.raw_message).split("下载书")[1].split(" ")[0]
+                hash = str(event.raw_message).split("下载书")[1].split(" ")[1]
+                await call_download_book(bot,event,config,book_id,hash)
+            except Exception as e:
+                bot.logger.error(f"book_resource_download error:{e}")
+                await bot.send(event, "指令格式错误，请使用“下载书{book_id} {hash}”")
         elif event.raw_message=="随机奥术" or event.raw_message=="随机asmr" or event.raw_message=="随机奥数":
 
             await call_asmr(bot,event,config)

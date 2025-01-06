@@ -116,7 +116,6 @@ class WebSocketBot:
         try:
             self.websocket = await websockets.connect(self.uri)
             self.logger.info_msg("WebSocket 连接已建立")
-
         except Exception as e:
             self.logger.error(f"WebSocket 连接出现错误: {e}")
             self.logger.warning("WebSocket 连接失败，5秒后尝试重连")
@@ -226,12 +225,18 @@ class WebSocketBot:
             self.logger.error(f"发送消息时出现错误: {e}", exc_info=True)
     async def send_friend_message(self, user_id: int, components: list[Union[MessageComponent, str]]):
 
-        processed_components = [
-            Text(component) if isinstance(component, str) else component
-            for component in components
-        ]
+        if isinstance(components, str):
+            components = [Text(components)]
+        if not isinstance(components, list):
+            components = [components]
+        else:
+            # 将列表中的字符串转换为 Text 对象
+            components = [
+                Text(component) if isinstance(component, str) else component
+                for component in components
+            ]
 
-        message = MessageChain(processed_components)
+        message = MessageChain(components)
         data = {
             "action": "send_private_msg",
             "params": {
@@ -242,12 +247,18 @@ class WebSocketBot:
 
         return await self._call_api(data["action"], data["params"])
     async def send_group_message(self, group_id: int, components: list[Union[MessageComponent, str]]):
-        processed_components = [
-            Text(component) if isinstance(component, str) else component
-            for component in components
-        ]
+        if isinstance(components, str):
+            components = [Text(components)]
+        if not isinstance(components, list):
+            components = [components]
+        else:
+            # 将列表中的字符串转换为 Text 对象
+            components = [
+                Text(component) if isinstance(component, str) else component
+                for component in components
+            ]
 
-        message = MessageChain(processed_components)
+        message = MessageChain(components)
         data = {
             "action": "send_group_msg",
             "params": {

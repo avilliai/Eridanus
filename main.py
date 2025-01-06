@@ -6,14 +6,15 @@ from plugins.utils.websocket_fix import ExtendBot
 from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
 from run.acg_infromation import galgame,bangumi
 from run.groupManager import group_manager, self_Manager, wifeyouwant
-from run.streaming_media import youtube
+from run.streaming_media import youtube,bilibili
 
 config = YAMLManager(["config/settings.yaml",
                       "config/basic_config.yaml",
                       "config/api.yaml",
                       "config/controller.yaml",
                       "data/censor/censor_group.yaml",
-                      "data/censor/censor_user.yaml"]) #这玩意用来动态加载和修改配置文件
+                      "data/censor/censor_user.yaml",
+                      "data/media_service/bilibili/bili_dynamic.yaml"]) #这玩意用来动态加载和修改配置文件
 #from developTools.adapters.http_adapter import HTTPBot
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
@@ -32,7 +33,9 @@ galgame.main(bot, config)#加载galgame回复插件
 bangumi.main(bot, config) #加载bangumi插件
 
 wifeyouwant.main(bot, config) #加载wifeyouwant插件
+
 youtube.main(bot, config) #加载youtube插件
+bilibili.main(bot, config) #加载bilibili插件
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 

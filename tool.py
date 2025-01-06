@@ -41,8 +41,9 @@ os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors
 async def main():
     logger.info("""请输入要执行的指令：
         1 youtube登录
-        2 更新bot代码
-        3 开发者工具""")
+        2 更新bot代码(常用)
+        3 playwright工具安装
+        4 开发者工具""")
     sleep(1)
     user_input=input("请输入指令序号：")
     if user_input=="1":
@@ -78,6 +79,9 @@ async def main():
     elif user_input=="2":
         updaat()
     elif user_input=="3":
+        logger.info("playwright工具安装(b站动态爬取需要)")
+        os.system(f"\"{python_path}\" -m playwright install chromium")
+    elif user_input=="4":
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
         2 没想好呢""")
@@ -135,7 +139,7 @@ def updaat(f=False,source=None,yamls={}):
             #shutil.rmtree("./temp")
         logger.info("处理冲突文件完成")
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
-        logger.warning("开始检查依赖....")
+        logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
         logger.warning("依赖检查完成")
         logger.info("更新成功，请关闭此窗口，重新启动bot")
@@ -236,8 +240,7 @@ def merge_dicts(old, new):
             new[k] = v
         # 如果键不在新的yaml中，直接添加
         else:
-            logger.info(f"添加新键 key: {k}, value: {v}")
-            new[k] = v
+            logger.info(f"移除键 key: {k}, value: {v}")
 
 def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yaml'):
     # 加载旧的YAML文件

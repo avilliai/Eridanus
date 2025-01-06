@@ -12,9 +12,11 @@ xpinyin
 PicImageSearch
 pytubefix
 Beautifulsoup4
-httpx<0.28.0
 aiofiles
 apscheduler
 pyyaml
 jmcomic
 img2pdf
+playwright
+bilibili-api-python
+httpx<0.28.0
