@@ -4,6 +4,6 @@ master:
   name: "主人"
   id: 1840094972
 adapter:
-  access_token: "any_access_token" #onebot实现部分为空则不用改
+  access_token: "any_access_token" #onebot实现部分为空/默认，一般不用改
   ws_client:
     ws_link: "ws://127.0.0.1:3001"  #bot的websocket请求地址
