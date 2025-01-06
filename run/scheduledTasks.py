@@ -8,7 +8,7 @@ import yaml
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-
+from developTools.event.events import LifecycleMetaEvent
 
 
 def main(bot,config):
@@ -18,10 +18,6 @@ def main(bot,config):
     global scheduler
     scheduler = AsyncIOScheduler()
 
-    def start_scheduler():
-        create_dynamic_jobs()
-        scheduler.start()  # 启动定时器
-    start_scheduler()
 
     global groupdata
     with open('data/scheduledTasks.yaml', 'r', encoding='utf-8') as file:
@@ -32,7 +28,10 @@ def main(bot,config):
         controller = yaml.load(f.read(), Loader=yaml.FullLoader)
         scheduledTasks = controller.get("scheduledTasks")
 
-
+    @bot.on(LifecycleMetaEvent)
+    def start_scheduler(_):
+        create_dynamic_jobs()
+        scheduler.start()  # 启动定时器
 
 
 
@@ -203,29 +202,7 @@ def main(bot,config):
                     logger.error("不存在的群" + str(i))
         elif task_name=="nightASMR":
             logger.info("获取晚安ASMR")
-            from plugins.youtube0 import ASMR_today,get_audio,get_img
-            athor,title,video_id,length = await ASMR_today()
-            imgurl = await get_img(video_id)
-            audiourl = await get_audio(video_id)
-            logger.info("推送晚安ASMR")
-            st1 = "今日ASMR:"+title+"\n"
-            st1 += "频道："+athor+"\n"
-            st1 += f"时长：{length//60}分{length%60}秒\n"
-            st2 = "======================\n"
-            st2 += task_info.get("text")
-            msg =  MusicShare(kind="QQMusic",
-                              title=title,
-                              summary=athor,
-                              jump_url=f"https://www.amoyshare.com/player/?v={video_id}",
-                              picture_url=imgurl,
-                              music_url=audiourl,
-                              brief='ASMR')
-            for i in groupdata.get("nightASMR").get("groups"):
-                try:
-                    await bot.send_group_message(int(i), [st1,Image(url=imgurl),st2])
-                    await bot.send_group_message(int(i),msg)
-                except:
-                    logger.error("不存在的群"+str(i))
+
         
     def create_dynamic_jobs():
         for task_name, task_info in scheduledTasks.items():
