@@ -6,7 +6,7 @@ from plugins.utils.websocket_fix import ExtendBot
 from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
 from run.acg_infromation import galgame,bangumi
 from run.groupManager import group_manager, self_Manager, wifeyouwant
-from run.streaming_media import youtube,bilibili
+from run.streaming_media import youtube,bilibili,Link_parsing
 
 config = YAMLManager(["config/settings.yaml",
                       "config/basic_config.yaml",
@@ -36,6 +36,7 @@ wifeyouwant.main(bot, config) #加载wifeyouwant插件
 
 youtube.main(bot, config) #加载youtube插件
 bilibili.main(bot, config) #加载bilibili插件
+Link_parsing.main(bot, config)
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
