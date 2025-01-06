@@ -8,33 +8,29 @@ import yaml
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-
+from developTools.event.events import LifecycleMetaEvent
+from developTools.message.message_components import Text, Image
+from plugins.basic_plugin.life_service2 import steamEpic
+from plugins.game_plugin.bangumisearch import screenshot_to_pdf_and_png
+from plugins.basic_plugin.life_service import news, danxianglii, moyu, xingzuo,bingEveryDay
+from plugins.utils.utils import download_img
 
 
 def main(bot,config):
     logger=bot.logger
     nasa_api=config.api["nasa_api"]["api_key"]
-
+    aiReplyCore=config.api["llm"]["aiReplyCore"]
     global scheduler
     scheduler = AsyncIOScheduler()
-
-    def start_scheduler():
+    proxy=config.api["proxy"]["http_proxy"]
+    if proxy is not None and proxy!= '':
+        proxies = {"http://": proxy, "https://": proxy}
+    else:
+        proxies = None
+    @bot.on(LifecycleMetaEvent)
+    def start_scheduler(_):
         create_dynamic_jobs()
         scheduler.start()  # 启动定时器
-    start_scheduler()
-
-    global groupdata
-    with open('data/scheduledTasks.yaml', 'r', encoding='utf-8') as file:
-        groupdata = yaml.load(file, Loader=yaml.FullLoader)
-    keys = groupdata.keys()
-
-    with open('config/controller.yaml', 'r', encoding='utf-8') as f:
-        controller = yaml.load(f.read(), Loader=yaml.FullLoader)
-        scheduledTasks = controller.get("scheduledTasks")
-
-
-
-
 
     async def task_executor(task_name, task_info):
         logger.info(f"执行任务：{task_name}")
@@ -88,9 +84,8 @@ def main(bot,config):
                     city = userdict.get(i).get("city")
                     logger.info(f"查询 {city} 天气")
                     if aiReplyCore:
-                        wSult=await weatherQuery.fullQuery(city)
-                        r = await modelReply(userdict.get(str(i)).get("userName"), int(i),
-                                             f"请你为我进行天气播报，下面是天气查询的结果：{wSult}")
+
+
                         await bot.send_friend_message(int(i), r)
                     else:
                         wSult = await weatherQuery.querys(city, api_KEY)
@@ -103,7 +98,7 @@ def main(bot,config):
             logger.info("获取新闻")
             path = await news()
             logger.info("推送今日新闻")
-            for i in groupdata.get(task_name).get("groups"):
+            for i in config.scheduledTasks_push_groups.get(task_name).get("groups"):
                 try:
                     await bot.send_group_message(int(i), [task_info.get("text"), Image(path=path)])
                 except:
@@ -117,7 +112,7 @@ def main(bot,config):
             elif "错误" in path:
                 logger.error(f"喜加一出错,{path}")
                 return
-            for i in groupdata.get("steamadd1").get("groups"):
+            for i in config.scheduledTasks_push_groups.get("steamadd1").get("groups"):
                 try:
                     await bot.send_group_message(int(i), [task_info.get("text"), path])
                 except:
@@ -134,7 +129,7 @@ def main(bot,config):
                     response = await client.get(url=url)
                 logger.info("获取到结果" + str(response.json()))
                 # logger.info("下载缩略图")
-                filename = await picDwn(response.json().get("url"),
+                filename = await download_img(response.json().get("url"),
                                         "data/pictures/nasa/" + response.json().get("date") + ".png")
                 txta = response.json().get(
                     "explanation")  # await translate(response.json().get("explanation"), "EN2ZH_CN")
@@ -142,7 +137,7 @@ def main(bot,config):
                 if aiReplyCore:
                     r = await modelReply("用户", 000000, f"将下面这段内容翻译为中文:{txt}")
                     txt = r
-                for i in groupdata.get("astronomy").get("groups"):
+                for i in config.scheduledTasks_push_groups.get("astronomy").get("groups"):
                     try:
                         await bot.send_group_message(int(i),
                                                      [task_info.get("text"), Image(path=filename), txt])
@@ -154,7 +149,7 @@ def main(bot,config):
             logger.info("获取摸鱼人日历")
             path = await moyu()
             logger.info("推送摸鱼人日历")
-            for i in groupdata.get("moyu").get("groups"):
+            for i in config.scheduledTasks_push_groups.get("moyu").get("groups"):
                 try:
                     await bot.send_group_message(int(i), [task_info.get("text"), Image(path=path)])
                 except:
@@ -163,7 +158,7 @@ def main(bot,config):
             logger.info("获取bing图像")
             text,p=await bingEveryDay()
             logger.info("推送")
-            for i in groupdata.get("bingEveryDay").get("groups"):
+            for i in config.scheduledTasks_push_groups.get("bingEveryDay").get("groups"):
                 try:
                     await bot.send_group_message(int(i), [task_info.get("text")+text, Image(path=p)])
                 except:
@@ -172,7 +167,7 @@ def main(bot,config):
             logger.info("获取星座运势")
             path = await xingzuo()
             logger.info("推送星座运势")
-            for i in groupdata.get("constellation").get("groups"):
+            for i in config.scheduledTasks_push_groups.get("constellation").get("groups"):
                 try:
                     await bot.send_group_message(int(i), [task_info.get("text"), Image(path=path)])
                 except:
@@ -181,7 +176,7 @@ def main(bot,config):
             logger.info("获取单向历")
             path = await danxianglii()
             logger.info("推送单向历")
-            for i in groupdata.get("danxiangli").get("groups"):
+            for i in config.scheduledTasks_push_groups.get("danxiangli").get("groups"):
                 try:
                     if path is None:
                         return
@@ -194,48 +189,26 @@ def main(bot,config):
             today = datetime.datetime.now().strftime("%Y-%m-%d")
             path = path + today + ".png"
             await screenshot_to_pdf_and_png(url, path, 1080, 3000)
-            for i in groupdata.get("bangumi").get("groups"):
+            for i in config.scheduledTasks_push_groups.get("bangumi").get("groups"):
                 try:
                     if path is None:
                         return
-                    await bot.send_group_message(int(i), [task_info.get("text"), Image(path=path)])
+                    await bot.send_group_message(int(i), [Text(task_info.get("text")), Image(file=path)])
                 except:
                     logger.error("不存在的群" + str(i))
         elif task_name=="nightASMR":
             logger.info("获取晚安ASMR")
-            from plugins.youtube0 import ASMR_today,get_audio,get_img
-            athor,title,video_id,length = await ASMR_today()
-            imgurl = await get_img(video_id)
-            audiourl = await get_audio(video_id)
-            logger.info("推送晚安ASMR")
-            st1 = "今日ASMR:"+title+"\n"
-            st1 += "频道："+athor+"\n"
-            st1 += f"时长：{length//60}分{length%60}秒\n"
-            st2 = "======================\n"
-            st2 += task_info.get("text")
-            msg =  MusicShare(kind="QQMusic",
-                              title=title,
-                              summary=athor,
-                              jump_url=f"https://www.amoyshare.com/player/?v={video_id}",
-                              picture_url=imgurl,
-                              music_url=audiourl,
-                              brief='ASMR')
-            for i in groupdata.get("nightASMR").get("groups"):
-                try:
-                    await bot.send_group_message(int(i), [st1,Image(url=imgurl),st2])
-                    await bot.send_group_message(int(i),msg)
-                except:
-                    logger.error("不存在的群"+str(i))
+
         
     def create_dynamic_jobs():
-        for task_name, task_info in scheduledTasks.items():
+        for task_name, task_info in config.scheduledTasks["scheduledTasks"].items():
             if task_info.get('enable'):
                 time_parts = task_info.get('time').split('/')
                 hour = int(time_parts[0])
                 minute = int(time_parts[1])
                 scheduler.add_job(task_executor, CronTrigger(hour=hour, minute=minute), args=[task_name, task_info])
 
-    @bot.on(GroupMessage)
+    '''@bot.on(GroupMessage)
     async def addSubds(event: GroupMessage):
         global groupdata
         try:
@@ -317,4 +290,4 @@ def main(bot,config):
                 yaml.dump(groupdata, file, allow_unicode=True)
             await bot.send(event, "取消订阅成功")
         else:
-            await bot.send(event, "取消失败，没有添加过对应的任务。")
+            await bot.send(event, "取消失败，没有添加过对应的任务。")'''
