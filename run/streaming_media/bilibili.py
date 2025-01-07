@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import sleep
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
@@ -72,7 +73,7 @@ def main(bot,config):
     async def _(event):
         while True:
             await check_bili_dynamic(bot,config)
-            await asyncio.sleep(300)  # 每 5 分钟检查一次
+            await sleep(300)  # 每 5 分钟检查一次
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.raw_message.startswith("看看动态"):

@@ -17,6 +17,6 @@ apscheduler
 pyyaml
 jmcomic
 img2pdf
-playwright
 bilibili-api-python
+playwright
 httpx<0.28.0
