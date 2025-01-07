@@ -6,7 +6,6 @@ import asyncio
 import httpx
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
-
 from plugins.utils.random_str import random_str
 
 # 添加请求头
@@ -16,8 +15,8 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
     'Cookie': 'buvid3=...; b_nut=...; _uuid=...; buvid4=...;'
 }
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
 async def fetch_latest_dynamic_id(uid):
     url = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
     params = {
@@ -25,12 +24,12 @@ async def fetch_latest_dynamic_id(uid):
         "host_mid": uid
     }
     async with httpx.AsyncClient() as client:
-        response=await client.get(url, params=params, headers=headers)
-        data=response.json()
-        return data['data']['items'][0]['id_str'],data['data']['items'][1]['id_str']   #返回最新动态id
+        response = await client.get(url, params=params, headers=headers)
+        data = response.json()
+        return data['data']['items'][0]['id_str'], data['data']['items'][1]['id_str']  # 返回最新动态id
 
 
-async def fetch_dynamic(dynamic_id,mode="mobile"):
+async def fetch_dynamic(dynamic_id, mode="mobile"):
     """
     使用 Playwright 异步模式截图指定 URL 中指定 class name 元素的截图, 使用分块截图和拼接方法，并添加上下边距。
 
@@ -59,7 +58,6 @@ async def fetch_dynamic(dynamic_id,mode="mobile"):
         # 打开目标网页
         await page.goto(url)
 
-
         if mode == "mobile":
             # 注入 CSS 隐藏右上角的“打开APP”按钮
             await page.add_style_tag(content="""
@@ -84,7 +82,6 @@ async def fetch_dynamic(dynamic_id,mode="mobile"):
                                 }
                             """)
 
-
         # 判断目标类名是否存在
         if await page.locator('.dyn-card').is_visible():
             target_selector = '.dyn-card'
@@ -107,9 +104,28 @@ async def fetch_dynamic(dynamic_id,mode="mobile"):
 
         await browser.close()
         return output_filename
-async def fetch_latest_dynamic(uid,config):
-    r1,r2=await fetch_latest_dynamic_id(uid)
+
+
+async def fetch_latest_dynamic(uid, config):
+    r1, r2 = await fetch_latest_dynamic_id(uid)
     if r1:
-        return await fetch_dynamic(r1,config.settings["bili_dynamic"]["screen_shot_mode"])
+        return await fetch_dynamic(r1, config.settings["bili_dynamic"]["screen_shot_mode"])
     else:
         return None
+
+
+if __name__ == '__main__':
+    from plugins.core.yamlLoader import YAMLManager
+
+    config = YAMLManager(["config/settings.yaml",
+                          "config/basic_config.yaml",
+                          "config/api.yaml",
+                          "config/controller.yaml",
+                          "data/censor/censor_group.yaml",
+                          "data/censor/censor_user.yaml",
+                          "data/media_service/bilibili/bili_dynamic.yaml",
+                          "data/tasks/scheduledTasks.yaml",
+                          "data/tasks/scheduledTasks_push_groups.yaml"])  # 这玩意用来动态加载和修改配置文件
+
+    r = asyncio.run(fetch_latest_dynamic(123456, config))
+    print(r)
