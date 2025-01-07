@@ -114,7 +114,8 @@ def draw_video_thumbnail():
         number += 1
     # 保存输出图片
     template.save(output_path)
-    template.show()
+    return output_path
+    #template.show()
 
 async def download_b_file(url, full_file_name, progress_callback):
     """
@@ -134,6 +135,7 @@ async def download_b_file(url, full_file_name, progress_callback):
                     current_len += len(chunk)
                     await f.write(chunk)
                     progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
+        return full_file_name
 
 
 
@@ -155,6 +157,7 @@ def download_and_process_image(image_url, save_path):
         image = Image.open(image_data)
         square_image = crop_center_square(image)
         square_image.save(save_path)
+    return save_path
 
 
 async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output_file_name: str, log_output: bool = False):
