@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 import threading
 import uuid
 
@@ -147,7 +148,8 @@ class WebSocketBot:
 
 
     def run(self):
-
+        if sys.platform == 'win32':
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
         asyncio.run(self._connect_and_run())
 
     def on(self, event: Type[EventBase]):

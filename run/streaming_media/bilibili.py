@@ -4,7 +4,7 @@ from asyncio import sleep
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
-
+asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 async def bili_subscribe(bot,event,config,target_uid: int,operation):
     if not isinstance(event,GroupMessageEvent):
@@ -55,6 +55,7 @@ async def check_bili_dynamic(bot,config):
 
             bot.logger.info_func(f"发现新的动态 群号：{config.bili_dynamic[target_uid]['push_groups']} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
             groups=config.bili_dynamic[target_uid]["push_groups"]
+
             dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
 
             for group_id in groups:
@@ -72,7 +73,9 @@ def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
         while True:
+
             await check_bili_dynamic(bot,config)
+
             await sleep(300)  # 每 5 分钟检查一次
     @bot.on(GroupMessageEvent)
     async def _(event):
