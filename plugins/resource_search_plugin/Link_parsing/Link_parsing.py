@@ -460,16 +460,9 @@ async def bilibili(url,filepath=None,is_twice=None) :
                         else:
                             return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc
                     orig_url= 'https://t.bilibili.com/' + orig_context['id_str']
-                    print(orig_url)
 
 
                     orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(url,f'{filepath}orig_',is_twice=True)
-                    print(orig_contents)
-                    print(orig_avatar_path)
-                    print(orig_name)
-                    print(orig_Time)
-                    print(orig_type)
-                    print(orig_introduce)
                     draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path,
                                                       name=owner_name, Time=f'{pub_time}', type=type_set,
                                                       introduce=orig_desc,filepath=filepath,
