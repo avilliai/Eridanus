@@ -148,7 +148,7 @@ class WebSocketBot:
 
 
     def run(self):
-        if sys.platform == 'win32':
+        if sys.platform == 'win32':  #asyncio 默认事件循环策略与 Playwright 的兼容性问题
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
         asyncio.run(self._connect_and_run())
 
