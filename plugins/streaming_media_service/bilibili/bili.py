@@ -1,4 +1,5 @@
 import json
+import sys
 import time
 
 import asyncio
@@ -15,6 +16,8 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
     'Cookie': 'buvid3=...; b_nut=...; _uuid=...; buvid4=...;'
 }
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 async def fetch_latest_dynamic_id(uid):
     url = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
     params = {
