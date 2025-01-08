@@ -23,24 +23,38 @@ from urllib.parse import parse_qs
 from PIL import Image, ImageDraw, ImageFont, ImageOps,ImageFilter
 import textwrap
 from datetime import datetime, timedelta
-
+import yaml
+import json
 #from draw import draw_adaptive_graphic_and_textual
 from plugins.resource_search_plugin.Link_parsing.draw import draw_adaptive_graphic_and_textual
+import inspect
 
 from io import BytesIO
 
-BILIBILI_HEADER = {
-    'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 '
-        'Safari/537.36',
-    'referer': 'https://www.bilibili.com',
-}
-BILI_SESSDATA: Optional[str] = ''
-
-# 构建哔哩哔哩的Credential
-credential = Credential(sessdata=BILI_SESSDATA)
-GLOBAL_NICKNAME='枫与岚'
-VIDEO_DURATION_MAXIMUM=10
+def bili_init():
+    BILIBILI_HEADER = {
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 '
+            'Safari/537.36',
+        'referer': 'https://www.bilibili.com',
+    }
+    class IgnoreUnknownTagsLoader(yaml.SafeLoader):
+        pass
+    def ignore_unknown_tags(loader, tag_suffix, node):
+        return loader.construct_mapping(node)
+    IgnoreUnknownTagsLoader.add_multi_constructor("tag:yaml.org,2002:python/object:", ignore_unknown_tags)
+    file_path = inspect.getfile(bili_init)
+    folder_path = os.path.dirname(os.path.abspath(file_path))
+    #print(folder_path)
+    if os.path.isfile(f"{folder_path}/credential.yaml"):
+        with open(f"{folder_path}/credential.yaml", "r", encoding="utf-8") as file:
+            data = yaml.load(file, Loader=IgnoreUnknownTagsLoader)
+        BILI_SESSDATA: Optional[str] = f'{data["sessdata"]}'
+    else:
+        BILI_SESSDATA: Optional[str] = f' '
+    # 构建哔哩哔哩的Credential
+    credential = Credential(sessdata=BILI_SESSDATA)
+    return BILIBILI_HEADER,credential,BILI_SESSDATA
 
 def add_rounded_rectangle(draw, xy, radius, fill):
     """绘制圆角矩形"""
@@ -114,8 +128,7 @@ def draw_video_thumbnail():
         number += 1
     # 保存输出图片
     template.save(output_path)
-    return output_path
-    #template.show()
+    template.show()
 
 async def download_b_file(url, full_file_name, progress_callback):
     """
@@ -125,6 +138,12 @@ async def download_b_file(url, full_file_name, progress_callback):
     :param progress_callback:
     :return:
     """
+    BILIBILI_HEADER = {
+        'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 '
+            'Safari/537.36',
+        'referer': 'https://www.bilibili.com',
+    }
     async with httpx.AsyncClient(transport=httpx.AsyncHTTPTransport(local_address="0.0.0.0")) as client:
         async with client.stream("GET", url, headers=BILIBILI_HEADER) as resp:
             current_len = 0
@@ -135,9 +154,6 @@ async def download_b_file(url, full_file_name, progress_callback):
                     current_len += len(chunk)
                     await f.write(chunk)
                     progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
-        return full_file_name
-
-
 
 def download_and_process_image(image_url, save_path):
     """
@@ -157,8 +173,6 @@ def download_and_process_image(image_url, save_path):
         image = Image.open(image_data)
         square_image = crop_center_square(image)
         square_image.save(save_path)
-    return save_path
-
 
 async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output_file_name: str, log_output: bool = False):
     """
@@ -247,6 +261,7 @@ def av_to_bv(av_link):
         return av_to_bv_core(av_number)
     else:
         raise ValueError("输入链接中不包含有效的 AV 号")
+
 async def bilibili(url,filepath=None,is_twice=None) :
     """
         哔哩哔哩解析
@@ -257,7 +272,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
     # 消息
     #url: str = str(event.message).strip()
 
-
+    BILIBILI_HEADER, credential,BILI_SESSDATA=bili_init()#获取构建credential
 
 
     if not ( 'bili' in url or 'b23' in url ):return
@@ -300,8 +315,8 @@ async def bilibili(url,filepath=None,is_twice=None) :
         is_opus = dy.is_opus()#判断动态是否为图文
 
         if is_opus is False:#若判断为图文则换另一种方法读取
-
             dynamic_info = await Opus(dynamic_id, credential).get_info()
+            tags = ''
             if dynamic_info is not None:
                 title = dynamic_info['item']['basic']['title']
                 paragraphs = []
@@ -309,20 +324,22 @@ async def bilibili(url,filepath=None,is_twice=None) :
                     if 'module_content' in module:
                         paragraphs = module['module_content']['paragraphs']
                         break
-                desc = paragraphs[0]['text']['nodes'][0]['word']['words']
+                print(paragraphs)
+                for desc_check in paragraphs[0]['text']['nodes']:
+                    if 'word' in desc_check:
+                        desc = desc_check['word']['words']
+                        contents.append(f"{desc}")
                 #获取头像以及名字
                 for module in dynamic_info['item']['modules']:
                     if 'module_author' in module:
                         modules = module['module_author']
                         owner_cover,owner_name,pub_time = modules['face'],modules['name'],modules['pub_time']
-
                         response = requests.get(owner_cover)
                         with open(avatar_path, 'wb') as file:
                             file.write(response.content)
                         break
-                contents.append(f"{desc}")
 
-                tags=''
+
                 for tags_check in paragraphs[0]['text']['nodes']:
                     if tags_check['type'] =='TEXT_NODE_TYPE_RICH':
                         tags+=tags_check['rich']['text'] + ' '
@@ -344,7 +361,8 @@ async def bilibili(url,filepath=None,is_twice=None) :
                             file.write(response.content)
                     contents.append(f'{filepath}cover{check_number}.png')
                     check_number+=1
-                draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
+                if is_twice is not True:
+                    draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                   Time=f'{pub_time}',filepath=filepath)
                 return contents,avatar_path,owner_name,pub_time,type,introduce
             #print(f"{GLOBAL_NICKNAME}识别：B站动态，{title}\n{desc}\n{pics}")
@@ -388,7 +406,8 @@ async def bilibili(url,filepath=None,is_twice=None) :
                             file.write(response.content)
                         contents.append(f'{filepath}cover.png')
                         contents.append(title)
-                    draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
+                    if is_twice is not True:
+                        draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                           Time=f'{pub_time}', type=type_set, introduce=desc,
                                                       filepath=filepath)
                     return contents, avatar_path, owner_name, pub_time, type, desc
@@ -403,7 +422,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
                                 opus_orig_paragraphs=orig_context['modules']['module_dynamic']['major']['opus']
                                 orig_title=opus_orig_paragraphs['summary']['text']
                                 contents_dy.append(orig_title)
-                                print(opus_orig_paragraphs)
+                                #print(opus_orig_paragraphs)
                                 check_number = 0
                                 pics_context = opus_orig_paragraphs['pics']
                                 for pics in pics_context:
@@ -459,10 +478,17 @@ async def bilibili(url,filepath=None,is_twice=None) :
                             return contents_dy, avatar_path, orig_owner_name, pub_time, type, orig_desc
                         else:
                             return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc
-                    orig_url= 'https://t.bilibili.com/' + orig_context['id_str']
+                    orig_url= 'orig_url:'+'https://t.bilibili.com/' + orig_context['id_str']
+                    print(orig_url)
 
 
-                    orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(url,f'{filepath}orig_',is_twice=True)
+                    orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(orig_url,f'{filepath}orig_',is_twice=True)
+                    print(orig_contents)
+                    #print(orig_avatar_path)
+                    print(orig_name)
+                    print(orig_Time)
+                    #print(orig_type)
+                    print(orig_introduce)
                     draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path,
                                                       name=owner_name, Time=f'{pub_time}', type=type_set,
                                                       introduce=orig_desc,filepath=filepath,
@@ -510,8 +536,8 @@ async def bilibili(url,filepath=None,is_twice=None) :
 
 
         print(room_info['online'])
-
-        draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
+        if is_twice is not True:
+            draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                           Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath)
         return contents, avatar_path, owner_name, video_time, type, introduce
     # 专栏识别
@@ -534,7 +560,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
     owner_name = video_info['owner']['name']
     #print(owner_cover)
     if video_info is None:
-        print(f"{GLOBAL_NICKNAME}识别：B站，出错，无法获取数据！")
+        print(f"识别：B站，出错，无法获取数据！")
         return
     video_title, video_cover, video_desc, video_duration = video_info['title'], video_info['pic'], video_info['desc'], \
         video_info['duration']
@@ -580,12 +606,14 @@ async def bilibili(url,filepath=None,is_twice=None) :
     contents.append(f"{video_title}")
     introduce=f'{video_desc}'
     type=11
-    draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,Time=f'{video_time}',type=type,introduce=introduce,filepath=filepath)
+    if is_twice is not True:
+        draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,Time=f'{video_time}',type=type,introduce=introduce,filepath=filepath)
     return contents, avatar_path, owner_name, video_time, type, introduce
 
 
 #draw_video_thumbnail()
 if __name__ == "__main__":
     url='https://t.bilibili.com/1018996014819835911'
-
+    url='https://t.bilibili.com/992469489337499703'
+    #url='https://www.bilibili.com/opus/971803927783669766?spm_id_from=333.1368.0.0'
     asyncio.run(bilibili(url))
