@@ -51,7 +51,8 @@ async def call_bangumi_search(bot,event,config,keywords,cat):
     except Exception as e:
         bot.logger.error(e)
         await bot.send(event, "查询失败，重新试试？")
-
+async def call_remen(bot,event,config):
+    pass
 
 def main(bot,config):
     global searchtask  # 变量提前，否则可能未定义
@@ -256,7 +257,7 @@ def main(bot,config):
     async def Bilibili_today_hot(event: GroupMessageEvent):
         file_path = 'data/pictures/wife_you_want_img/'
         output_path = f'{file_path}bili_today_hot_back_out.png'
-        if '今日热门' in event.raw_message:
+        if '今日热门'==event.raw_message:
             if not os.path.isfile(output_path):
                 await daily_task()
             bot.logger.info('今日热门开启！！！')

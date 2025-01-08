@@ -240,8 +240,7 @@ def merge_dicts(old, new):
             new[k] = v
         # 如果键不在新的yaml中，直接添加
         else:
-            logger.info(f"添加新键 key: {k}, value: {v}")
-            new[k] = v
+            logger.info(f"移除键 key: {k}, value: {v}")
 
 def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yaml'):
     # 加载旧的YAML文件

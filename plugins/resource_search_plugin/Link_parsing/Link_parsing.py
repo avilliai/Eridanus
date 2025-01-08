@@ -35,7 +35,7 @@ BILIBILI_HEADER = {
         'Safari/537.36',
     'referer': 'https://www.bilibili.com',
 }
-BILI_SESSDATA: Optional[str] = '840651db%2C1751260321%2Cf2edb%2A12CjBtIGHm_s_MHfiuzBO8GtD5G-450SuJuo7cs_9l98digPRQwMcnpHcVoElO5g-tfOcSVm1KWFlxRnFlNU9GdTRqRjVmQ3NHSExOOUV1dFBicWJ4UzhWX2FncE4xdERzS0JRcnc3UkdNU1RKdXNjbTlsNFJzV05mRmk0aEVaS3ViWVNqa3lKbnBBIIEC'
+BILI_SESSDATA: Optional[str] = ''
 
 # 构建哔哩哔哩的Credential
 credential = Credential(sessdata=BILI_SESSDATA)
@@ -114,7 +114,8 @@ def draw_video_thumbnail():
         number += 1
     # 保存输出图片
     template.save(output_path)
-    template.show()
+    return output_path
+    #template.show()
 
 async def download_b_file(url, full_file_name, progress_callback):
     """
@@ -134,6 +135,7 @@ async def download_b_file(url, full_file_name, progress_callback):
                     current_len += len(chunk)
                     await f.write(chunk)
                     progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
+        return full_file_name
 
 
 
@@ -155,6 +157,7 @@ def download_and_process_image(image_url, save_path):
         image = Image.open(image_data)
         square_image = crop_center_square(image)
         square_image.save(save_path)
+    return save_path
 
 
 async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output_file_name: str, log_output: bool = False):
@@ -457,16 +460,9 @@ async def bilibili(url,filepath=None,is_twice=None) :
                         else:
                             return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc
                     orig_url= 'https://t.bilibili.com/' + orig_context['id_str']
-                    print(orig_url)
 
 
                     orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(url,f'{filepath}orig_',is_twice=True)
-                    print(orig_contents)
-                    print(orig_avatar_path)
-                    print(orig_name)
-                    print(orig_Time)
-                    print(orig_type)
-                    print(orig_introduce)
                     draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path,
                                                       name=owner_name, Time=f'{pub_time}', type=type_set,
                                                       introduce=orig_desc,filepath=filepath,

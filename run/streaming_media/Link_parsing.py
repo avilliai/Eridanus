@@ -9,7 +9,7 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bilibili_link(event: GroupMessageEvent):
-
-        if event.sender.user_id == 2684831639:return
-        print(event.raw_message)
-        await bilibili(event.raw_message,filepath='plugins/resource_search_plugin/Link_parsing/data/')
+        try:  #没做判断，解析失败就不显示了，省的用户再问😋。
+            await bilibili(event.raw_message,filepath='plugins/resource_search_plugin/Link_parsing/data/')
+        except Exception as e:
+            pass
