@@ -139,20 +139,42 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)  # 开卢
     async def today_LU(event: GroupMessageEvent):
-        if '🦌' == str(event.raw_message):
-            bot.logger.info('yes! 🦌!!!!')
+        lu_recall = ['不！给！你！🦌！！！','我靠你怎么这么坏！','再🦌都🦌出火星子了！！','让我来帮你吧~','好恶心啊~~','有变态！！','你这种人渣我才不会喜欢你呢！',
+                        '令人害怕的坏叔叔','枫与岚是好孩子，才不会帮你呢','才不给你计数呢！（哼']
+        if str(event.raw_message).startswith('🦌'):
             target_id = int(event.sender.user_id)
+            match = re.search(r"qq=(\d+)", event.raw_message)
+            if match:
+                target_id = match.group(1)
+            flag = random.randint(0, 50)
+            if flag <= 8:
+                await bot.send(event, lu_recall[random.randint(0, len(lu_recall) - 1)])
+                return
+            bot.logger.info(f'yes! 🦌!!!!, 目标：{target_id}')
+
+            if await manage_group_status('lu_limit', f'lu_others', target_id) == 1 and int(target_id) !=int(event.sender.user_id):#贞操锁
+                await bot.send(event, [At(qq=target_id), f' 是个好孩子，才不会给你呢~'])
+                return
+
             current_date = datetime.now()
             current_year = current_date.year
             current_month = current_date.month
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
             await manage_group_status(current_day, current_year_month, target_id,1)
+
             times=await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id,times+1)
+
             if await PIL_lu_maker(current_date,target_id):
                 bot.logger.info('制作成功，开始发送~~')
-                await bot.send(event,[At(qq=target_id), f' 今天🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                if times == 0 :
+                    times_record = int(await manage_group_status('lu_record', f'lu_others', target_id)) + 1
+                    await manage_group_status('lu_record', f'lu_others', target_id, times_record)
+                    await bot.send(event,[At(qq=target_id), f' 今天🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                else:
+                    await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+1}次！',
+                                           Image(file='data/pictures/wife_you_want_img/lulululu.png')])
 
         if '戒🦌' == str(event.raw_message):
             bot.logger.info('No! 戒🦌!!!!')
@@ -165,10 +187,60 @@ def main(bot,config):
             await manage_group_status(current_day, current_year_month, target_id,2)
             times = await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id, times + 1)
+
             if await PIL_lu_maker(current_date,target_id):
                 bot.logger.info('制作成功，开始发送~~')
                 await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
 
+
+        if '补🦌' == str(event.raw_message):
+            bot.logger.info('yes! 补🦌!!!!')
+            target_id = int(event.sender.user_id)
+            current_date = datetime.now()
+            current_year = current_date.year
+            current_month = current_date.month
+            current_year_month = f'{current_year}_{current_month}'
+            current_day = current_date.day
+            times_record = int(await manage_group_status('lu_record', f'lu_others', target_id))
+            times_record_check=times_record//3
+            if times_record_check == 0:
+                await bot.send(event, [At(qq=target_id), f' 您的补🦌次数好像不够呢喵~~（已连续{times_record}天）'])
+            else:
+                for i in range(current_day):
+                    day=current_day-i
+                    if int(await manage_group_status(day, current_year_month, target_id)) not in {1,2}:
+                        await manage_group_status(day, current_year_month, target_id, 1)
+                        await manage_group_status('lu_record', f'lu_others', target_id,times_record-3)
+                        await PIL_lu_maker(current_date, target_id)
+                        await bot.send(event, [At(qq=target_id), f' 您已成功补🦌！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                        break
+
+        if str(event.raw_message).startswith('lu_record_times_set '):
+            if event.sender.user_id != 1270858640: return
+            match = re.search(r'lu_record_times_set (\d+)', event.raw_message)
+            if match:
+                times_record = match.group(1)  # 提取匹配到的数字
+            match = re.search(r"qq=(\d+)", event.raw_message)
+            if match:
+                target_id = match.group(1)
+            #print(times_record,target_id)
+            bot.logger.info(f'设定目标：{target_id}🦌{times_record}天！')
+            try:
+                times_record = int(times_record)
+                await manage_group_status('lu_record', f'lu_others', target_id, int(times_record))
+                await bot.send(event, [ f'成功设定喵~~'])
+            except ValueError as e:
+                await bot.send(event, f"{e}")
+                return
+
+        if '开启贞操锁' == str(event.raw_message):
+            target_id = int(event.sender.user_id)
+            await manage_group_status('lu_limit', f'lu_others', target_id,1)
+            await bot.send(event,'您已开启贞操锁~')
+        elif '关闭贞操锁' == str(event.raw_message):
+            target_id = int(event.sender.user_id)
+            await manage_group_status('lu_limit', f'lu_others', target_id,0)
+            await bot.send(event,'您已关闭贞操锁~')
 
     @bot.on(GroupMessageEvent)  # 今日腿子
     async def today_husband(event: GroupMessageEvent):
