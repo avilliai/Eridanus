@@ -6,7 +6,7 @@ from plugins.resource_search_plugin.Link_parsing.Link_parsing import bilibili
 
 
 def main(bot,config):
-
+    botname=config.basic_config["bot"]["name"]
     @bot.on(GroupMessageEvent)
     async def bilibili_link(event: GroupMessageEvent):
         url=event.raw_message
@@ -14,5 +14,5 @@ def main(bot,config):
         if not ('bili' in url or 'b23' in url): return
         print(url)
         await bilibili(url,filepath='plugins/resource_search_plugin/Link_parsing/data/')
-        await bot.send(event, [f' 枫与岚识别结果：\n',
+        await bot.send(event, [f'{botname}识别结果：\n',
                                Image(file='plugins/resource_search_plugin/Link_parsing/data/result.png')])
