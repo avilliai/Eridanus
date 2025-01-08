@@ -5,6 +5,7 @@ from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+from plugins.resource_search_plugin.Link_parsing.Link_parsing import bilibili
 
 async def bili_subscribe(bot,event,config,target_uid: int,operation):
     if not isinstance(event,GroupMessageEvent):
@@ -45,6 +46,7 @@ async def bili_subscribe(bot,event,config,target_uid: int,operation):
             await bot.send(event, "不存在订阅任务")
 async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
+    bilibili_type_draw = config.settings["bili_dynamic"]["draw_type"]
     for target_uid in config.bili_dynamic:
         latest_dynamic_id1,latest_dynamic_id2=await fetch_latest_dynamic_id(int(target_uid))
         if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0] or latest_dynamic_id2!=config.bili_dynamic[target_uid]["latest_dynamic_id"][1]:
@@ -55,8 +57,15 @@ async def check_bili_dynamic(bot,config):
 
             bot.logger.info_func(f"发现新的动态 群号：{config.bili_dynamic[target_uid]['push_groups']} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
             groups=config.bili_dynamic[target_uid]["push_groups"]
-
-            dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
+            try:
+                if bilibili_type_draw == 1:
+                    dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
+                elif bilibili_type_draw == 2:
+                    await bilibili(f'https://t.bilibili.com/{latest_dynamic_id}',
+                                   filepath='plugins/resource_search_plugin/Link_parsing/data/')
+                    dynamic = f'plugins/resource_search_plugin/Link_parsing/data/result.png'
+            except Exception as e:
+                bot.logger.error(f"动态获取失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
 
             for group_id in groups:
                 bot.logger.info_func(f"推送动态 群号：{groups} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
@@ -73,10 +82,8 @@ def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
         while True:
-
             await check_bili_dynamic(bot,config)
-
-            await sleep(300)  # 每 5 分钟检查一次
+            await asyncio.sleep(300)  # 每 5 分钟检查一次
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.raw_message.startswith("看看动态"):
