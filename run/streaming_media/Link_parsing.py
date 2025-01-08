@@ -9,7 +9,10 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bilibili_link(event: GroupMessageEvent):
-        try:  #没做判断，解析失败就不显示了，省的用户再问😋。
-            await bilibili(event.raw_message,filepath='plugins/resource_search_plugin/Link_parsing/data/')
-        except Exception as e:
-            pass
+        url=event.raw_message
+        if event.sender.user_id == 2684831639:return
+        if not ('bili' in url or 'b23' in url): return
+        print(url)
+        await bilibili(url,filepath='plugins/resource_search_plugin/Link_parsing/data/')
+        await bot.send(event, [f' 枫与岚识别结果：\n',
+                               Image(file='plugins/resource_search_plugin/Link_parsing/data/result.png')])

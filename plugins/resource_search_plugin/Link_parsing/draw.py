@@ -250,7 +250,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
         draw = ImageDraw.Draw(canvas)
         avatar_size = 100
         padding_x_tx=int(padding_x_text+20)
-        print(avatar_path)
+        #print(avatar_path)
         avatar = Image.open(avatar_path).convert("RGBA")
         avatar.thumbnail((avatar_size, avatar_size))
         creat_white_corners(canvas, avatar_size, avatar_size, padding_x_tx, current_y, radius=min(avatar.size) // 2)
@@ -374,8 +374,8 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
             if type_check is True and introduce is not None and img_check == True and introduce_height is not None:
                 current_y -= padding * 0.2
                 #current_y += padding * 0.6
-                print(f'introduce_height: {introduce_height}')
-                print(f'introduce_content: {introduce_content}')
+                #print(f'introduce_height: {introduce_height}')
+                #print(f'introduce_content: {introduce_content}')
                 for line in introduce_content:
                     draw.text((padding_x_check, current_y), f'{line[0]}', fill=(148,148,148), font=font_tx_introduce)
                     line_height = font_tx.getbbox("A")[3]
@@ -469,8 +469,8 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     # 保存图片
     canvas.save(output_path)
     #canvas.show()
-    return output_path
     #print(f"图片已保存到 {output_path}")
+    return output_path
 
 
 
