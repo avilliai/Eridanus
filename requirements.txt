@@ -13,7 +13,6 @@ pytubefix
 Beautifulsoup4
 aiofiles
 apscheduler
-pyyaml
 jmcomic
 img2pdf
 playwright
