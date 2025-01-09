@@ -71,7 +71,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
-                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             if "tool_calls" in response_message:
                 for part in response_message['tool_calls']:
                 #目前不太确定多个函数调用的情况，先只处理第一个。
@@ -127,7 +127,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
-                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             for part in response_message["parts"]:
                 if "functionCall" in part:               #目前不太确定多个函数调用的情况，先只处理第一个。
