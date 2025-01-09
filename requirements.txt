@@ -16,7 +16,6 @@ apscheduler
 jmcomic
 img2pdf
 playwright
-bilibili-api-python
-pyyaml~=5.4.1
+pyyaml
 PicImageSearch>=3.11.3
 httpx<0.28.0
