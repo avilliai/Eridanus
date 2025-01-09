@@ -184,7 +184,7 @@ async def delete_group(category_name, group_name):
 
 
 
-async def manage_group_status(user_id, group_id,type,status=None):
+async def manage_group_status(user_id, group_id,type,status=None):#顺序为：个人，组别和状态
     if status is None:
         context = await query_user_data(f'{type}', f'{group_id}', f"{user_id}")
         if context is None :
@@ -222,9 +222,12 @@ async def manage_group_check(target_group,type):
     return times_from,times_target
 
 async def PIL_lu_maker(today , target_id):
-    year, month = today.year, today.month
+    year, month,day= today.year, today.month ,today.day
     current_year_month = f'{year}_{month}'
     lu_list=await query_group_users(target_id, current_year_month)
+
+
+
     #print(lu_list)
     month_days = calendar.monthrange(year, month)[1]
     lu_list_lu=['1000']
@@ -305,6 +308,7 @@ async def PIL_lu_maker(today , target_id):
                     canvas.paste(cuo_check, (x_re, y_re), cuo_check.convert("RGBA"))
                 elif f'{day}' == f'{day_check_lu}':
                     canvas.paste(dui_check, (x_re, y_re), dui_check.convert("RGBA"))
+
         # 绘制日期文字
         day_text = str(day)
         text_bbox = draw.textbbox((0, 0), day_text, font=day_font)  # 获取文字边界框
@@ -313,6 +317,14 @@ async def PIL_lu_maker(today , target_id):
         text_x = x + (cell_width - text_width) // 1.5
         text_y = y + (cell_height - text_height) // 5
         draw.text((text_x, text_y), day_text, fill="black", font=day_font)
+
+        times = await manage_group_status('lu', f'{year}_{month}_{day}', target_id)
+        if times >= 10:
+            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)  # 日字体
+        else:
+            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)  # 日字体
+        if times not in {0,1}:
+            draw.text((int(x + (cell_width - text_width) // 1.5), int(y + (cell_height - text_height) // 1.2)), f'×{times}', fill="red", font=lu_font)
 
     # 保存并展示日历
     #canvas.show()  # 显示图片
@@ -339,3 +351,7 @@ async def daily_task():
 def run_async_task():
     asyncio.run(daily_task())
 
+if __name__ == '__main__':
+    target_id=1270858640
+    current_date=datetime.today()
+    asyncio.run(PIL_lu_maker(current_date, target_id))
