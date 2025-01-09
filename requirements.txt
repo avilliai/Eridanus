@@ -9,7 +9,6 @@ requests
 aiosqlite
 pillow
 xpinyin
-PicImageSearch
 pytubefix
 Beautifulsoup4
 aiofiles
@@ -19,4 +18,5 @@ img2pdf
 playwright
 bilibili-api-python
 pyyaml==6.0.2
+PicImageSearch
 httpx<0.28.0
