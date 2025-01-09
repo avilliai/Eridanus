@@ -7,7 +7,6 @@ fastapi
 ruamel.yaml
 requests
 aiosqlite
-bilibili-api-python
 pillow
 xpinyin
 PicImageSearch
@@ -15,7 +14,9 @@ pytubefix
 Beautifulsoup4
 aiofiles
 apscheduler
+bilibili-api-python
 jmcomic
 img2pdf
+pyyaml==6.0.2
 playwright
 httpx<0.28.0
