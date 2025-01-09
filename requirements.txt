@@ -18,5 +18,5 @@ img2pdf
 playwright
 bilibili-api-python
 pyyaml==6.0.2
-PicImageSearch
+PicImageSearch>=3.11.3
 httpx<0.28.0
