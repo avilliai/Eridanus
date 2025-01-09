@@ -4,7 +4,11 @@ import re
 import shutil
 import subprocess
 from time import sleep
+import os
+import sys
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
