@@ -14,9 +14,8 @@ pytubefix
 Beautifulsoup4
 aiofiles
 apscheduler
-bilibili-api-python
 jmcomic
 img2pdf
-pyyaml==6.0.2
 playwright
+bilibili-api-python
 httpx<0.28.0
