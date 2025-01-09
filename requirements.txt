@@ -13,8 +13,10 @@ pytubefix
 Beautifulsoup4
 aiofiles
 apscheduler
+pyyaml
 jmcomic
 img2pdf
 playwright
+bilibili-api-python
 PicImageSearch>=3.11.3
 httpx<0.28.0
