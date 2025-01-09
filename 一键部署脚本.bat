@@ -8,5 +8,4 @@ where python
 pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 cd ../..
 pip install -r requirements.txt
-pip install bilibili-api-python
 pause
