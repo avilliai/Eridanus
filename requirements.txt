@@ -16,6 +16,5 @@ apscheduler
 jmcomic
 img2pdf
 playwright
-pyyaml
 PicImageSearch>=3.11.3
 httpx<0.28.0
