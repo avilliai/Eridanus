@@ -124,7 +124,7 @@
             },
             {
                 "name": "call_image_search",
-                "description": "only trigger when user ask for search image source through url.",
+                "description": "只有当用户要求时才可触发。当用户要求搜索给定图片的来源时，调用此函数。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -233,19 +233,6 @@
                         "target_qq",
                         "level"
                     ]
-                }
-            },
-            {
-                "name": "call_weather_query",
-                "description": "Get the current weather.default 北京",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "The city and state, e.g. 上海"
-                        }
-                    }
                 }
             },
             {
