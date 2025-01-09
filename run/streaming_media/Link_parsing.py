@@ -14,5 +14,4 @@ def main(bot,config):
         if not ('bili' in url or 'b23' in url): return
         print(url)
         await bilibili(url,filepath='plugins/resource_search_plugin/Link_parsing/data/')
-        await bot.send(event, [f' 枫与岚识别结果：\n',
-                               Image(file='plugins/resource_search_plugin/Link_parsing/data/result.png')])
+        await bot.send(event, [Image(file='plugins/resource_search_plugin/Link_parsing/data/result.png')])
