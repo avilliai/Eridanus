@@ -18,5 +18,5 @@ jmcomic
 img2pdf
 playwright
 bilibili-api-python
-PicImageSearch>=3.11.3
+PicImageSearch
 httpx<0.28.0
