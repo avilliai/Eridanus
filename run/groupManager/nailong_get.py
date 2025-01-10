@@ -9,13 +9,58 @@ import asyncio
 import re
 from concurrent.futures import ThreadPoolExecutor
 
+from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from developTools.message.message_components import Image, Node, Text, At
 from developTools.event.events import GroupMessageEvent
-from plugins.nailong11.nailong import main as nailong_main
-from plugins.doro.doro import main as doro_main
 
+async def operate_group_censor(bot,event,config,target_id,operation):
+    if operation == "开启奶龙审核":
+        await call_operate_nailong_censor(bot, event, config,target_id,True)
+    elif operation == "关闭奶龙审核":
+        await call_operate_nailong_censor(bot, event, config,target_id,False)
+    elif operation == "开启doro审核":
+        await call_operate_doro_censor(bot, event, config,target_id,True)
+    elif operation == "关闭doro审核":
+        await call_operate_doro_censor(bot, event, config,target_id,False)
+
+async def call_operate_nailong_censor(bot, event, config,target_id,status):
+    user_info = await get_user(event.user_id, event.sender.nickname)
+    if user_info[6] >= config.settings["bot_config"]["user_handle_logic_operate_level"]:
+        if status:
+            if target_id not in config.nailong["whitelist"]:
+                config.nailong["whitelist"].append(target_id)
+                config.save_yaml(str("nailong"))
+            await bot.send(event, f"已将{target_id}加入奶龙审核目标")
+        else:
+            try:
+                config.nailong["whitelist"].remove(target_id)
+                config.save_yaml(str("nailong"))
+                await bot.send(event, f"已将{target_id}移出奶龙审核目标")
+            except ValueError:
+                await bot.send(event, f"{target_id} 不在奶龙审核目标中")
+    else:
+        await bot.send(event, f"你没有足够权限执行此操作")
+async def call_operate_doro_censor(bot, event, config,target_id,status):
+    user_info = await get_user(event.user_id, event.sender.nickname)
+    if user_info[6] >= config.settings["bot_config"]["user_handle_logic_operate_level"]:
+        if status:
+            if target_id not in config.doro["whitelist"]:
+                config.doro["whitelist"].append(target_id)
+                config.save_yaml(str("doro"))
+            await bot.send(event, f"已将{target_id}加入doro审核目标")
+        else:
+            try:
+                config.doro["whitelist"].remove(target_id)
+                config.save_yaml(str("doro"))
+                await bot.send(event, f"已将{target_id}移出doro审核目标")
+            except ValueError:
+                await bot.send(event, f"{target_id} 不在doro审核目标中")
+    else:
+        await bot.send(event, f"你没有足够权限执行此操作")
 def main(bot, config):
+    from plugins.nailong11.nailong import main as nailong_main
+    from plugins.doro.doro import main as doro_main
     sets = config.settings["抽象检测"]
     chehui1 = sets["奶龙撤回"]
     mute1=sets["奶龙禁言"]
@@ -27,6 +72,20 @@ def main(bot, config):
     if_doro = sets["doro检测"]
     nailong_groups = config.nailong['whitelist']
     doro_groups = config.doro['whitelist']
+    @bot.on(GroupMessageEvent)
+    async def _(event):
+        if event.raw_message.startswith("/开启奶龙审核 "):
+            target_id = event.raw_message.split(" ")[1]
+            await operate_group_censor(bot,event,config,target_id,"开启奶龙审核")
+        elif event.raw_message.startswith("/关闭奶龙审核 "):
+            target_id = event.raw_message.split(" ")[1]
+            await operate_group_censor(bot,event,config,target_id,"关闭奶龙审核")
+        elif event.raw_message.startswith("/开启doro审核 "):
+            target_id = event.raw_message.split(" ")[1]
+            await operate_group_censor(bot,event,config,target_id,"开启doro审核")
+        elif event.raw_message.startswith("/关闭doro审核 "):
+            target_id = event.raw_message.split(" ")[1]
+            await operate_group_censor(bot,event,config,target_id,"关闭doro审核")
     async def get_group_member_info(group_id: int, user_id: int):
         url = "http://localhost:3000/get_group_member_info"
         payload = {
