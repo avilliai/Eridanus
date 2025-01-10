@@ -20,7 +20,9 @@ config = YAMLManager(["config/settings.yaml",
                       "data/censor/censor_user.yaml",
                       "data/media_service/bilibili/bili_dynamic.yaml",
                       "data/tasks/scheduledTasks.yaml",
-                      "data/tasks/scheduledTasks_push_groups.yaml"]) #这玩意用来动态加载和修改配置文件
+                      "data/tasks/scheduledTasks_push_groups.yaml",
+                      "data/recognize/doro.yaml",
+                      "data/recognize/nailong.yaml",]) #这玩意用来动态加载和修改配置文件
 #from developTools.adapters.http_adapter import HTTPBot
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
@@ -43,6 +45,13 @@ wifeyouwant.main(bot, config) #加载wifeyouwant插件
 youtube.main(bot, config) #加载youtube插件
 bilibili.main(bot, config) #加载bilibili插件
 Link_parsing.main(bot, config)
+try:
+    if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
+        from run import nailong_get
+        nailong_get.main(bot, config)
+except Exception as e:
+    print(e)
+    print("奶龙检测相关依赖未安装，如有需要，请使用安装ai检测必要素材")
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
