@@ -84,7 +84,7 @@ def draw_video_thumbnail():
     number=0
     for context_check in hot_get_bili['list']:
 
-        print(number)
+        #print(number)
         if number == 8:break
         text=context_check[f'title']
         thumbnail_path_url = context_check[f'pic']
@@ -148,7 +148,7 @@ async def download_b_file(url, full_file_name, progress_callback):
         async with client.stream("GET", url, headers=BILIBILI_HEADER) as resp:
             current_len = 0
             total_len = int(resp.headers.get('content-length', 0))
-            print(total_len)
+            #print(total_len)
             async with aiofiles.open(full_file_name, "wb") as f:
                 async for chunk in resp.aiter_bytes():
                     current_len += len(chunk)
@@ -183,7 +183,7 @@ async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output
     :param log_output: 是否显示 ffmpeg 输出日志，默认忽略
     :return:
     """
-    print(f'正在合并：{output_file_name}')
+    #print(f'正在合并：{output_file_name}')
 
     # 构建 ffmpeg 命令
     command = f'ffmpeg -y -i "{v_full_file_name}" -i "{a_full_file_name}" -c copy "{output_file_name}"'
@@ -295,10 +295,10 @@ async def bilibili(url,filepath=None,is_twice=None) :
     # 处理短号、小程序问题
     if "b23.tv" in url or "bili2233.cn" in url or "QQ小程序" in url :
         b_short_url = re.search(b_short_rex, url.replace("\\", ""))[0]
-        print(f'b_short_url:{b_short_url}')
+        #print(f'b_short_url:{b_short_url}')
         resp = httpx.get(b_short_url, headers=BILIBILI_HEADER, follow_redirects=True)
         url: str = str(resp.url)
-        print(f'url:{url}')
+        #print(f'url:{url}')
     # AV/BV处理
     if"av" in url:url= 'https://www.bilibili.com/video/' + av_to_bv(url)
     if re.match(r'^BV[1-9a-zA-Z]{10}$', url):
@@ -324,7 +324,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
                     if 'module_content' in module:
                         paragraphs = module['module_content']['paragraphs']
                         break
-                print(paragraphs)
+                #print(paragraphs)
                 for desc_check in paragraphs[0]['text']['nodes']:
                     if 'word' in desc_check:
                         desc = desc_check['word']['words']
@@ -369,7 +369,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
 
         if is_opus is True:
             dynamic_info = await dy.get_info()
-            print(dynamic_info)
+            #print(dynamic_info)
             orig_check=1#判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -479,16 +479,16 @@ async def bilibili(url,filepath=None,is_twice=None) :
                         else:
                             return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc
                     orig_url= 'orig_url:'+'https://t.bilibili.com/' + orig_context['id_str']
-                    print(orig_url)
+                    #print(orig_url)
 
 
                     orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(orig_url,f'{filepath}orig_',is_twice=True)
-                    print(orig_contents)
+                    #print(orig_contents)
                     #print(orig_avatar_path)
-                    print(orig_name)
-                    print(orig_Time)
+                    #print(orig_name)
+                    #print(orig_Time)
                     #print(orig_type)
-                    print(orig_introduce)
+                    #print(orig_introduce)
                     draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path,
                                                       name=owner_name, Time=f'{pub_time}', type=type_set,
                                                       introduce=orig_desc,filepath=filepath,
@@ -535,7 +535,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
         else:video_time='暂未开启直播'
 
 
-        print(room_info['online'])
+        #print(room_info['online'])
         if is_twice is not True:
             draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                           Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath)
@@ -548,7 +548,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
         return
     # 获取视频信息
     video_id = re.search(r"video\/[^\?\/ ]+", url)[0].split('/')[1]
-    print(video_id)
+    #print(video_id)
     v = video.Video(video_id, credential=credential)
     try:
         video_info = await v.get_info()

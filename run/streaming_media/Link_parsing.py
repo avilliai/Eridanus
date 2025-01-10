@@ -12,6 +12,6 @@ def main(bot,config):
         url=event.raw_message
         if event.sender.user_id == 2684831639:return
         if not ('bili' in url or 'b23' in url): return
-        print(url)
+        #print(url)
         await bilibili(url,filepath='plugins/resource_search_plugin/Link_parsing/data/')
         await bot.send(event, [Image(file='plugins/resource_search_plugin/Link_parsing/data/result.png')])
