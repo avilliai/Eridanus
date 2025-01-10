@@ -44,6 +44,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         user_info=await get_user(user_id)
         system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
     try:
+        last_trigger_time[user_id] = time.time()
         if config.api["llm"]["model"]=="openai":
             prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id)
             response_message = await openaiRequest(
@@ -56,7 +57,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 tools=tools,
             )
             reply_message=response_message["content"]
-            last_trigger_time[user_id] = time.time()
             """
             openai标准函数调用还没做。待处理
             """
@@ -71,7 +71,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
-                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             if "tool_calls" in response_message:
                 for part in response_message['tool_calls']:
                 #目前不太确定多个函数调用的情况，先只处理第一个。
@@ -114,7 +114,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
                 reply_message=None
-            last_trigger_time[user_id] = time.time()
+
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             for part in response_message["parts"]:
@@ -127,7 +127,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
-                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             for part in response_message["parts"]:
                 if "functionCall" in part:               #目前不太确定多个函数调用的情况，先只处理第一个。

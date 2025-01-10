@@ -8,20 +8,18 @@ llm:
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
   Quote: False #回复时是否引用
-  focus_time: 60  #单次触发对话后持续有效时间
+  focus_time: 30  #单次触发对话后持续有效时间
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
   openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
-    api_keys:
+    api_keys:   #继续像这样添加apikey
     - YOUR_API_KEY_1
-    - YOUR_API_KEY_2
     model: gpt-4o-mini
     quest_url: https://api.openai.com/v1/chat/completions   #完整调用地址。只填base_url不行
   gemini:         #https://ai.google.dev/
-    api_keys:
+    api_keys:  #继续像这样添加apikey
       - YOUR_API_KEY_1
-      - YOUR_API_KEY_2
     model: gemini-2.0-flash-exp
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
 tts:

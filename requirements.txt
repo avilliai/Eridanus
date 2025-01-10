@@ -9,14 +9,13 @@ requests
 aiosqlite
 pillow
 xpinyin
-PicImageSearch
 pytubefix
 Beautifulsoup4
 aiofiles
 apscheduler
-pyyaml
 jmcomic
 img2pdf
-bilibili-api-python
 playwright
+bilibili-api-python
+PicImageSearch
 httpx<0.28.0

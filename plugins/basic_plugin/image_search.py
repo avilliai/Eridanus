@@ -2,11 +2,7 @@ import asyncio
 from typing import Optional, Tuple, List, Dict, Any
 
 
-from PicImageSearch import Ascii2D, Network, BaiDu, Copyseeker, Google, Iqdb, SauceNAO, Yandex
-from PicImageSearch.model import Ascii2DResponse, BaiDuResponse, CopyseekerResponse, GoogleResponse, IqdbResponse, \
-    SauceNAOResponse, YandexResponse
-from PicImageSearch.sync import Ascii2D as Ascii2DSync
-from PicImageSearch.sync import BaiDu as BaiDuSync
+from PicImageSearch import Network
 
 from developTools.utils.logger import get_logger
 
@@ -19,6 +15,7 @@ verify_ssl = False  # Whether to verify SSL certificates or not
 async def ascii2d_async(proxies,url):
     base_url = "https://ascii2d.net"
     async with Network(proxies=proxies, verify_ssl=verify_ssl) as client:
+        from PicImageSearch import Ascii2D
         ascii2d = Ascii2D(base_url=base_url, client=client, bovw=bovw)
         resp = await ascii2d.search(url=url)
         print(resp.raw[0])
@@ -27,6 +24,7 @@ async def ascii2d_async(proxies,url):
 
 async def baidu_async(proxies,url):
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import BaiDu
         baidu = BaiDu(client=client)
         resp = await baidu.search(url=url)
         #resp = await baidu.search(file=file)
@@ -34,6 +32,7 @@ async def baidu_async(proxies,url):
 
 async def Copyseeker_async(proxies,url):
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import Copyseeker
         copyseeker = Copyseeker(client=client)
         resp = await copyseeker.search(url=url)
         #resp = await copyseeker.search(file=file)
@@ -43,6 +42,7 @@ async def Copyseeker_async(proxies,url):
 async def google_async(proxies,url):
     base_url = "https://www.google.co.jp"
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import Google
         google = Google(client=client, base_url=base_url)
         resp = await google.search(url=url)
         #resp = await google.search(file=file)
@@ -52,6 +52,7 @@ async def google_async(proxies,url):
 
 async def iqdb_async(proxies,url):
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import Iqdb
         iqdb = Iqdb(client=client)
         resp = await iqdb.search(url=url)
         #resp = await iqdb.search(file=file)
@@ -59,6 +60,7 @@ async def iqdb_async(proxies,url):
 
 async def iqdb3D_async(proxies,url):
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import Iqdb
         iqdb = Iqdb(client=client, is_3d=True)
         resp = await iqdb.search(url=url)
         #resp = await iqdb.search(file=file)
@@ -67,12 +69,14 @@ async def iqdb3D_async(proxies,url):
 
 async def saucenao_async(proxies,url,api_key):
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import SauceNAO
         saucenao = SauceNAO(client=client, api_key=api_key, hide=3)
         resp = await saucenao.search(url=url)
         #resp = await saucenao.search(file=file)
         return [resp.raw[0].thumbnail,f"相似度{resp.raw[0].similarity}\n标题：{resp.raw[0].title}\n作者：{resp.raw[0].author}\n{resp.raw[0].author_url}\n图片来源：{resp.raw[0].url}\n{resp.raw[0].source}"]
 async def yandex_async(proxies,url):
     async with Network(proxies=proxies) as client:
+        from PicImageSearch import Yandex
         yandex = Yandex(client=client)
         resp = await yandex.search(url=url)
         #resp = await yandex.search(file=file)

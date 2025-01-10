@@ -4,7 +4,11 @@ import re
 import shutil
 import subprocess
 from time import sleep
+import os
+import sys
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
@@ -44,7 +48,7 @@ async def main():
         2 更新bot代码(常用)
         3 playwright工具安装
         4 开发者工具""")
-    sleep(1)
+    sleep(0.3)
     user_input=input("请输入指令序号：")
     if user_input=="1":
         logger.info("youtube登录")
@@ -85,7 +89,7 @@ async def main():
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
         2 没想好呢""")
-        sleep(1)
+        sleep(0.3)
         user_input2=input("请输入开发者工具序号：")
         if user_input2=="1":
             logger.info("同步gemini函数调用到openai函数调用")
