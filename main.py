@@ -50,8 +50,7 @@ try:
         from run import nailong_get
         nailong_get.main(bot, config)
 except Exception as e:
-    print(e)
-    print("奶龙检测相关依赖未安装，如有需要，请使用安装ai检测必要素材")
+    bot.logger.warning("【可选功能】奶龙检测相关依赖未安装，如有需要，请使用安装ai检测必要素材")
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
