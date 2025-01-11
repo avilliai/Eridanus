@@ -1,7 +1,7 @@
 import random
 
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
-    ProfileLikeEvent, PokeNotifyEvent
+    ProfileLikeEvent, PokeNotifyEvent, GroupRequestEvent
 from developTools.message.message_components import Record, Node, Text
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
@@ -20,9 +20,6 @@ def main(bot,config):
             remark = event.raw_message.split("改备注")[1].strip()
             await bot.set_friend_remark(event.user_id, remark)
 
-    @bot.on(FriendRequestEvent)
-    async def FriendRequestHandler(event: FriendRequestEvent):
-        print(event)
 
     @bot.on(GroupMessageEvent)
     async def changeAvatar(event: GroupMessageEvent):

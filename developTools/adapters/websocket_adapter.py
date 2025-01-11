@@ -171,8 +171,7 @@ class WebSocketBot:
         """
         try:
             if self.websocket:
-
-                if event.message_type=="group":
+                if hasattr(event, "group_id"):
                     action = "send_group_msg"
                     params = {
                             "group_id": event.group_id,
@@ -182,7 +181,7 @@ class WebSocketBot:
                     if isinstance(message[0], Node):
                         r = await self.send_group_forward_msg(event.group_id, message)
                         return r
-                elif event.message_type=="private":
+                elif hasattr(event, "user_id"):
                     action = "send_private_msg"
                     params = {
                             "user_id": event.user_id,
