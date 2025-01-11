@@ -262,7 +262,7 @@ def av_to_bv(av_link):
     else:
         raise ValueError("输入链接中不包含有效的 AV 号")
 
-async def bilibili(url,filepath=None,is_twice=None) :
+async def bilibili(url,filepath=None,is_twice=None,dynamicid=None) :
     """
         哔哩哔哩解析
     :param bot:
@@ -363,7 +363,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
                     check_number+=1
                 if is_twice is not True:
                     draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
-                                                  Time=f'{pub_time}',filepath=filepath)
+                                                  Time=f'{pub_time}',filepath=filepath,dynamic_id=dynamic_id)
                 return contents,avatar_path,owner_name,pub_time,type,introduce
             #print(f"{GLOBAL_NICKNAME}识别：B站动态，{title}\n{desc}\n{pics}")
 
@@ -409,7 +409,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
                     if is_twice is not True:
                         draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                           Time=f'{pub_time}', type=type_set, introduce=desc,
-                                                      filepath=filepath)
+                                                      filepath=filepath,dynamic_id=dynamic_id)
                     return contents, avatar_path, owner_name, pub_time, type, desc
                 elif orig_check ==2:
                     words=paragraphs['desc']['text']
@@ -493,7 +493,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
                                                       name=owner_name, Time=f'{pub_time}', type=type_set,
                                                       introduce=orig_desc,filepath=filepath,
                                                       contents_dy=orig_contents, orig_avatar_path=orig_avatar_path,
-                                                      orig_name=orig_name,orig_Time=orig_Time)
+                                                      orig_name=orig_name,orig_Time=orig_Time,dynamic_id=dynamic_id)
 
 
 
@@ -538,7 +538,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
         #print(room_info['online'])
         if is_twice is not True:
             draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
-                                          Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath)
+                                          Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath,dynamic_id=dynamicid)
         return contents, avatar_path, owner_name, video_time, type, introduce
     # 专栏识别
     if 'read' in url:
@@ -607,7 +607,7 @@ async def bilibili(url,filepath=None,is_twice=None) :
     introduce=f'{video_desc}'
     type=11
     if is_twice is not True:
-        draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,Time=f'{video_time}',type=type,introduce=introduce,filepath=filepath)
+        draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,Time=f'{video_time}',type=type,introduce=introduce,filepath=filepath,dynamic_id=dynamicid)
     return contents, avatar_path, owner_name, video_time, type, introduce
 
 
