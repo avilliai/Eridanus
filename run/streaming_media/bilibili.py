@@ -1,5 +1,6 @@
 import asyncio
 from asyncio import sleep
+from concurrent.futures import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
@@ -62,8 +63,10 @@ async def check_bili_dynamic(bot,config):
                     if bilibili_type_draw == 1:
                         dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
                     elif bilibili_type_draw == 2:
-                        await bilibili(f'https://t.bilibili.com/{latest_dynamic_id}',
-                                       filepath='data/pictures/cache/',dynamicid=latest_dynamic_id)
+                        loop = asyncio.get_running_loop()
+                        with ThreadPoolExecutor() as executor:
+                            await loop.run_in_executor(executor, asyncio.run, bilibili(f'https://t.bilibili.com/{latest_dynamic_id}',
+                                       filepath='data/pictures/cache/',dynamicid=latest_dynamic_id))
                         dynamic = f'data/pictures/cache/{latest_dynamic_id}.png'
                 except Exception as e:
                     bot.logger.error(f"动态获取失败 ：{e} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
