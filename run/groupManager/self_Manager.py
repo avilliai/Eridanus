@@ -123,7 +123,7 @@ def main(bot,config):
         if config.api["llm"]["aiReplyCore"]:
             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
             name=data["data"]["nickname"]
-            r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊。"}], event.user_id, config, func_result=True)
+            r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config, func_result=True)
             await bot.send(event, str(r))
         else:
             await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")
