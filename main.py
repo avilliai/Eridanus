@@ -9,7 +9,7 @@ from plugins.core.yamlLoader import YAMLManager
 from plugins.utils.websocket_fix import ExtendBot
 from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
 from run.acg_infromation import galgame,bangumi
-from run.groupManager import group_manager, self_Manager, wifeyouwant
+from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
 from run.streaming_media import youtube,bilibili,Link_parsing
 
 config = YAMLManager(["config/settings.yaml",
@@ -47,11 +47,9 @@ bilibili.main(bot, config) #加载bilibili插件
 Link_parsing.main(bot, config)
 try:
     if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
-        from run import nailong_get
         nailong_get.main(bot, config)
 except Exception as e:
-    print(e)
-    print("奶龙检测相关依赖未安装，如有需要，请使用安装ai检测必要素材")
+    bot.logger.warning("【可选功能】奶龙检测相关依赖未安装，如有需要，请使用安装ai检测必要素材")
 
 bot.run() #本地8080端口运行，onebot实现的http上报就填这个
 
