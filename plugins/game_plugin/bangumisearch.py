@@ -186,7 +186,7 @@ async def draw_PIL_today_hot():
         text = text[:2]
         text = '\n'.join(text)
         # 添加文案
-        font = ImageFont.truetype(f"{file_path}LXGWWenKai-Bold.ttf", 30)  # 替换为实际字体路径
+        font = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", 30)  # 替换为实际字体路径
         text_position = (paste_x_touxiang+100, paste_y_touxiang+6)  # 文案位置
         draw.text(text_position, text, font=font, fill="black")
         number += 1
