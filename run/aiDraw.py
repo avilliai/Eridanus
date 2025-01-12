@@ -50,7 +50,7 @@ async def call_text2img(bot,event,config,prompt):
 async def call_text2img2(bot,event,config,tag):
     prompt=tag
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"]:
+    if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"] and config.controller["basic_plugin"]["内置ai绘画开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
         proxy = config.api["proxy"]["http_proxy"]
         functions = [
