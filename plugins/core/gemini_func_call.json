@@ -1,6 +1,22 @@
 {
         "function_declarations": [
             {
+                "name": "call_text2img1",
+                "description": "调用text to image模型，根据文本生成图片。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "tag": {
+                            "type": "string",
+                            "description": "生成图片的提示词"
+                        }
+                    },
+                    "required": [
+                        "tag"
+                    ]
+                }
+            },
+            {
                 "name": "operate_group_censor",
                 "description": "开启或关闭奶龙审核或doro图片审核",
                 "parameters": {
