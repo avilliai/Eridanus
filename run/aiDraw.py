@@ -20,6 +20,8 @@ tag_user = {}
 sd_user_args = {}
 sd_re_args = {}
 UserGet1 = {}
+n4re = {}
+n3re = {}
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
 with open('config/controller.yaml', 'r', encoding='utf-8') as f:
@@ -390,3 +392,105 @@ def main(bot,config):
         if str(event.raw_message) == 'getwd':
             r = await get_available_wildcards()
             await bot.send(event, r, True)
+
+    @bot.on(GroupMessageEvent)
+    async def n4reDrawRun(event):
+        global n4re
+        global turn
+
+        if event.get('image') == None and (
+                str(event.raw_message) == ("n4re") or str(event.raw_message).startswith("n4re ")):
+            prompt = str(event.raw_message).replace("n4re", "").strip()
+            n4re[event.sender.user_id] = [prompt]
+            await bot.send(event, "请发送要重绘的图片")
+
+        # 处理图片和重绘命令
+        if (str(event.raw_message).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
+            if (str(event.raw_message).startswith("n4re")) and event.raw_message.count(Image):
+                prompt = str(event.raw_message).replace("n4re", "").strip()
+                n4re[event.sender.user_id] = [prompt]
+
+            # 日志记录
+            prompts = ', '.join(n4re[event.sender.user_id])
+            prompts,log = await replace_wildcards(prompts)
+            if log:
+                await bot.send(event, log, True)
+            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n4re指令 prompt: {prompts}")
+
+            # 获取图片路径
+            path = f"data/pictures/cache/{random_str()}.png"
+            img_url = event.get("image")[0]["url"]
+            bot.logger.info(f"发起n4re请求，path:{path}|prompt:{prompts}")
+            prompts_str = ' '.join(n4re[event.sender.user_id]) + ' '
+            n4re.pop(event.sender.user_id)
+
+            async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+                try:
+                    b64_in = await url_to_base64(img_url)
+                    # 将 n4re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
+                    p = await n4re0(prompts_str, path, event.group_id, config, b64_in)
+                    if p == False:
+                        bot.logger.info("色图已屏蔽")
+                        await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    else:
+                        await bot.send(event, [Image(file=p)], True)
+                except Exception as e:
+                    bot.logger.error(e)
+                    if retries_left > 0:
+                        bot.logger.error(f"尝试重新请求nai4re，剩余尝试次数：{retries_left - 1}")
+                        await attempt_draw(retries_left - 1)
+                    else:
+                        await bot.send(event, "nai只因了，联系master喵~")
+
+            await attempt_draw()
+
+    @bot.on(GroupMessageEvent)
+    async def n3reDrawRun(event):
+        global n3re
+        global turn
+
+        if event.get('image') == None and (
+                str(event.raw_message) == ("n3re") or str(event.raw_message).startswith("n3re ")):
+            prompt = str(event.raw_message).replace("n3re", "").strip()
+            n3re[event.sender.user_id] = [prompt]
+            await bot.send(event, "请发送要重绘的图片")
+
+        # 处理图片和重绘命令
+        if (str(event.raw_message).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
+            if (str(event.raw_message).startswith("n3re")) and event.raw_message.count(Image):
+                prompt = str(event.raw_message).replace("n3re", "").strip()
+                n3re[event.sender.user_id] = [prompt]
+
+            # 日志记录
+            prompts = ', '.join(n3re[event.sender.user_id])
+            prompts,log = await replace_wildcards(prompts)
+            if log:
+                await bot.send(event, log, True)
+            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n3re指令 prompt: {prompts}")
+
+            # 获取图片路径
+            path = f"data/pictures/cache/{random_str()}.png"
+            img_url = event.get("image")[0]["url"]
+            bot.logger.info(f"发起n3re请求，path:{path}|prompt:{prompts}")
+            prompts_str = ' '.join(n3re[event.sender.user_id]) + ' '
+            n3re.pop(event.sender.user_id)
+
+            async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+                try:
+                    b64_in = await url_to_base64(img_url)
+                    # 将 n3re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
+                    p = await n3re0(prompts_str, path, event.group_id, config, b64_in)
+                    if p == False:
+                        bot.logger.info("色图已屏蔽")
+                        await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    else:
+                        await bot.send(event, [Image(file=p)], True)
+                except Exception as e:
+                    bot.logger.error(e)
+                    if retries_left > 0:
+                        bot.logger.error(f"尝试重新请求nai3re，剩余尝试次数：{retries_left - 1}")
+                        await attempt_draw(retries_left - 1)
+                    else:
+                        await bot.send(event, "nai只因了，联系master喵~")
+
+            await attempt_draw()
