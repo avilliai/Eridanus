@@ -10,7 +10,7 @@ from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.utils.random_str import random_str
-from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2
+from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
