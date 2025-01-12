@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
+from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
+from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
@@ -29,6 +31,49 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
+async def call_text2img(bot,event,config,prompt):
+    tag = prompt
+    #同时调用自带接口和部署的sd
+    functions = [
+        call_text2img1(bot,event,config,tag),
+        call_text2img2(bot,event,config,tag),
+    ]
+
+    for future in asyncio.as_completed(functions):
+        try:
+            await future
+        except Exception as e:
+            bot.logger.error(f"Task failed: {e}")
+
+async def call_text2img2(bot,event,config,tag):
+    prompt=tag
+    user_info = await get_user(event.user_id, event.sender.nickname)
+    if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"]:
+        bot.logger.info(f"Received text2img prompt: {prompt}")
+        proxy = config.api["proxy"]["http_proxy"]
+        functions = [
+            # ideo_gram(prompt, proxy),
+            bing_dalle3(prompt, proxy),
+            # flux_speed(prompt, proxy), #也不要这个
+            # recraft_v3(prompt, proxy), #不要这个
+            flux_ultra(prompt, proxy),
+        ]
+
+        for future in asyncio.as_completed(functions):
+            try:
+                result = await future
+                if result is not []:
+                    sendMes = []
+                    for r in result:
+                        sendMes.append(Node(content=[Image(file=r)]))
+                    await bot.send(event, sendMes)
+            except Exception as e:
+                bot.logger.error(f"Task failed: {e}")
+
+
+    else:
+        pass
+        #await bot.send(event, "你没有权限使用该功能")
 async def call_text2img1(bot,event,config,tag):
     global turn
     global sd_user_args
@@ -36,12 +81,16 @@ async def call_text2img1(bot,event,config,tag):
     if log:
         await bot.send(event, log)
     path = f"data/pictures/cache/{random_str()}.png"
-    bot.logger.info(f"调用sd api: path:{path}|prompt:{tag}")
+    bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
     try:
-        await bot.send(event, f'sd前面排队{turn}人，请耐心等待喵~', True)
+        await bot.send(event, f'sd前面排队{turn}人，请耐心等待~', True)
         turn += 1
         args = sd_user_args.get(event.sender.user_id, {})
-        p = await SdDraw0(tag, path, config, event.group_id, args)
+        if hasattr(event, "group_id"):
+            id_=event.group_id
+        else:
+            id_=event.user_id
+        p = await SdDraw0(tag, path, config, id_, args)
         if p == False:
             turn -= 1
             bot.logger.info("色图已屏蔽")
@@ -53,8 +102,14 @@ async def call_text2img1(bot,event,config,tag):
     except Exception as e:
         bot.logger.error(e)
         turn -= 1
-        await bot.send(event, "sd只因了，联系master喵~")
+        bot.logger.error(f"sd api调用失败。{e}")
+        await bot.send(event, f"sd api调用失败。{e}")
 def main(bot,config):
+    @bot.on(GroupMessageEvent)
+    async def bing_dalle3_draw(event):  #无需配置的ai绘图接口
+        if str(event.raw_message).startswith("画 "):
+            prompt = str(event.raw_message).split("画 ")[1]
+            await call_text2img(bot, event, config, prompt)
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
         if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
