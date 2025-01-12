@@ -9,6 +9,7 @@ import httpx
 
 from developTools.message.message_components import Record
 from developTools.utils.logger import get_logger
+from plugins.core.freeModels import free_model_result
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.core.tts import tts
 from plugins.core.userDB import get_user
@@ -27,7 +28,15 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
                                                                                         config.basic_config["bot"][
                                                                                             "name"])
     try:
-        if config.api["llm"]["model"] == "openai":
+        if config.api["llm"]["model"]=="default":
+            prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
+                                                                              user_id)
+            response_message = await defaultModelRequest(
+                prompt,
+                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+            )
+            reply_message = response_message['content']
+        elif config.api["llm"]["model"] == "openai":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
                                                                               user_id)
             response_message = await openaiRequest(
@@ -82,6 +91,12 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
         await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")
         raise  # 继续抛出异常以便调用方处理
+async def defaultModelRequest(ask_prompt,proxy=None):
+    if proxy is not None and proxy !="":
+        proxies={"http://": proxy, "https://": proxy}
+    else:
+        proxies=None
+    return await free_model_result(ask_prompt,proxies=proxies)
 async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
