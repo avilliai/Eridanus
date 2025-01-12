@@ -56,6 +56,8 @@ async def free_model_result(prompt, proxies=None):
     for future in asyncio.as_completed(functions):
         try:
             result = await future
-            return result
+            if result:
+                if result["content"]!= "":
+                    return result
         except Exception as e:
             print(f"Task failed: {e}")
