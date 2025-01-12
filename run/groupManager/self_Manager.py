@@ -1,4 +1,6 @@
-from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
+from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
+    GroupIncreaseNoticeEvent
+from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 
 async def call_operate_blandwhite(bot,event,config,target_id,type):
@@ -83,7 +85,48 @@ async def call_operate_group_whitelist(bot,event,config,target_group_id,status):
                 await bot.send(event, f"群{target_group_id} 不在白名单中")
     else:
         await bot.send(event, f"你没有足够权限执行此操作")
+
 def main(bot,config):
+    @bot.on(FriendRequestEvent)
+    async def FriendRequestHandler(event: FriendRequestEvent):
+        if event.user_id in config.censor_user["blacklist"]:
+            bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 用户被加入黑名单，拒绝添加")
+            await bot.handle_friend_request(event.flag,False,"拒绝添加好友")
+        else:
+            user_info = await get_user(event.user_id)
+            if user_info[6] >= config.settings["bot_config"]["申请bot好友所需权限"]:
+                bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 同意")
+                await bot.handle_friend_request(event.flag,True,"")
+            else:
+                bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 拒绝")
+                await bot.handle_friend_request(event.flag,False,"你没有足够权限添加好友")
+
+    @bot.on(GroupRequestEvent)
+    async def GroupRequestHandler(event: GroupRequestEvent):
+        if event.sub_type == "invite":
+            if event.group_id in config.censor_group["blacklist"]:
+                bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
+                await bot.send(event, f"该群已被加入黑名单，无法加入")
+            else:
+                user_info = await get_user(event.user_id)
+                if user_info[6] >= config.settings["bot_config"]["邀请bot加群所需权限"]:
+                    bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 同意")
+                    await bot.set_group_add_request(event.flag,True,"allow")
+        elif event.sub_type == "add":
+            if event.group_id in config.censor_group["blacklist"]:
+                pass
+            else:
+                bot.logger.info_func(f"收到加群申请，{event.group_id} {event.comment}同意")
+                await bot.send_group_message(event.group_id,f"有新的加群请求，请尽快处理\n申请人：{event.user_id}\n{event.comment}")
+    @bot.on(GroupIncreaseNoticeEvent)
+    async def GroupIncreaseNoticeHandler(event: GroupIncreaseNoticeEvent):
+        if config.api["llm"]["aiReplyCore"]:
+            data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+            name=data["data"]["nickname"]
+            r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config, func_result=True)
+            await bot.send(event, str(r))
+        else:
+            await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")
     @bot.on(GroupMessageEvent)
     async def black_and_white_handler(event):
         await _handler(event)
