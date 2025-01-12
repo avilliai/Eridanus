@@ -108,14 +108,12 @@ async def call_text2img1(bot,event,config,tag):
         await bot.send(event, f"sd api调用失败。{e}")
 async def call_aiArtModerate(bot,event,config,img_url):
     try:
-        user_info = await get_user(event.user_id, event.sender.nickname)
-        if user_info[6] >= config.controller["ai绘图"]["ai_pic_recognize_level"]:
-            r=await aiArtModerate(img_url,config.api["sightengine"]["api_user"],config.api["sightengine"]["api_secret"])
-            if config.api["llm"]["aiReplyCore"]:
-                r = await aiReplyCore_shadow([{"text": f"ai创作可能性为{r}%"}], event.user_id, config, func_result=True)
-                await bot.send(event, r, True)
-            else:
-                await bot.send(event, f"图片为ai创作的可能性为{r}%", True)
+        r=await aiArtModerate(img_url,config.api["sightengine"]["api_user"],config.api["sightengine"]["api_secret"])
+        if config.api["llm"]["aiReplyCore"]:
+            r = await aiReplyCore_shadow([{"text": f"ai创作可能性为{r}%"}], event.user_id, config, func_result=True)
+            await bot.send(event, r, True)
+        else:
+            await bot.send(event, f"图片为ai创作的可能性为{r}%", True)
     except Exception as e:
         bot.logger.error(e)
         await bot.send(event, f"aiArtModerate调用失败。{e}")
