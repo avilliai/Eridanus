@@ -160,7 +160,7 @@
             },
             {
                 "name": "call_image_search",
-                "description": "只有当用户要求时才可触发。当用户要求搜索给定图片的来源时，调用此函数。",
+                "description": "只有当用户要求搜索图片来源时才可触发，搜索图片的来源。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -289,7 +289,7 @@
             },
             {
                 "name": "call_setu",
-                "description": "根据关键词搜索图片并返回图片。",
+                "description": "根据关键词搜索相关图片并返回图片。",
                 "parameters": {
                     "type": "object",
                     "properties": {
