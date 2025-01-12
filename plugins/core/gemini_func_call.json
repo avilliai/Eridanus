@@ -1,7 +1,7 @@
 {
         "function_declarations": [
             {
-                "name": "call_text2img1",
+                "name": "call_text2img",
                 "description": "调用text to image模型，根据文本生成图片。",
                 "parameters": {
                     "type": "object",
@@ -141,22 +141,6 @@
             {
                 "name": "call_asmr",
                 "description": "向用户发送asmr助眠音频。"
-            },
-            {
-                "name": "call_text2img",
-                "description": "调用text to image模型，根据文本生成图片。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "prompt": {
-                            "type": "string",
-                            "description": "生成图片的提示词"
-                        }
-                    },
-                    "required": [
-                        "prompt"
-                    ]
-                }
             },
             {
                 "name": "call_image_search",
