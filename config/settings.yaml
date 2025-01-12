@@ -29,3 +29,16 @@ bili_dynamic:     #下面的设置暂不可用，请暂时不要修改
   dynamic_interval: 300 #动态推送间隔时间，单位为秒
   screen_shot_mode: "mobile" #mobile为移动端截图，pc为PC端截图
   draw_type: 2    #1代表用playwright（需要安装其余组件）；2代表本地Pillow绘图（有可能出错）
+抽象检测:
+  奶龙检测: false
+  奶龙撤回: true
+  奶龙禁言: true
+  骂奶龙:
+  - 奶龙是你叠？这么喜欢发奶龙？
+  doro检测: false
+  doro撤回: true
+  doro禁言: true
+  骂doro:
+  - doro是你🐴？这么喜欢发你🐴的遗照？ #自己添加
+  - 粉色奶龙
+  - 唐
