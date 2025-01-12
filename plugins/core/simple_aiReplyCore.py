@@ -6,6 +6,7 @@ import httpx
 
 from developTools.utils.logger import get_logger
 from plugins.core.aiReply_utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
+from plugins.core.freeModels import free_model_result
 from plugins.core.llmDB import delete_user_history
 
 logger=get_logger()
@@ -13,7 +14,15 @@ async def simple_aiReplyCore(processed_message,config,model=None): #后面几个
     logger.info(f"simple_aiReplyCore called with message: {processed_message}")
     reply_message = ""
     try:
-        if config.api["llm"]["model"] == "openai":
+        if config.api["llm"]["model"]=="default":
+            prompt, original_history = await construct_openai_standard_prompt(processed_message, "你是一个ai助手",
+                                                                              00000)
+            response_message = await defaultModelRequest(
+                prompt,
+                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+            )
+            reply_message = response_message['content']
+        elif config.api["llm"]["model"] == "openai":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, "你是一个ai助手",00000)
             response_message = await openaiRequest(
                 prompt,
@@ -51,7 +60,12 @@ async def simple_aiReplyCore(processed_message,config,model=None): #后面几个
         raise  # 继续抛出异常以便调用方处理
 
 
-
+async def defaultModelRequest(ask_prompt,proxy=None):
+    if proxy is not None and proxy !="":
+        proxies={"http://": proxy, "https://": proxy}
+    else:
+        proxies=None
+    return await free_model_result(ask_prompt,proxies=proxies)
 async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}

@@ -27,6 +27,31 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
+async def call_text2img1(bot,event,config,tag):
+    global turn
+    global sd_user_args
+    tag, log = await replace_wildcards(tag)
+    if log:
+        await bot.send(event, log)
+    path = f"data/pictures/cache/{random_str()}.png"
+    bot.logger.info(f"调用sd api: path:{path}|prompt:{tag}")
+    try:
+        await bot.send(event, f'sd前面排队{turn}人，请耐心等待喵~', True)
+        turn += 1
+        args = sd_user_args.get(event.sender.user_id, {})
+        p = await SdDraw0(tag, path, config, event.group_id, args)
+        if p == False:
+            turn -= 1
+            bot.logger.info("色图已屏蔽")
+            await bot.send(event, "杂鱼，色图不给你喵~", True)
+        else:
+            turn -= 1
+            await bot.send(event, [Image(file=p)], True)
+
+    except Exception as e:
+        bot.logger.error(e)
+        turn -= 1
+        await bot.send(event, "sd只因了，联系master喵~")
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
@@ -324,36 +349,11 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def AiSdDraw(event):
-        global turn  # 画 中空格的意义在于防止误触发，但fluxDrawer无所谓了，其他倒是可以做一做限制。
+        global turn
         global sd_user_args
-        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] != "":
+        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
             tag = str(event.raw_message).replace("画 ", "")
-            tag,log = await replace_wildcards(tag)
-            if log:
-                await bot.send(event, log, True)
-            path = f"data/pictures/cache/{random_str()}.png"
-            bot.logger.info(f"发起SDai绘画请求，path:{path}|prompt:{tag}")
-            try:
-                await bot.send(event, f'sd前面排队{turn}人，请耐心等待喵~', True)
-                turn += 1
-                # 没啥好审的，controller直接自个写了。
-                args = sd_user_args.get(event.sender.user_id, {})
-                p = await SdDraw0(tag, path, config, event.group_id, args)
-                # logger.error(str(p))
-                if p == False:
-                    turn -= 1
-                    bot.logger.info("色图已屏蔽")
-                    await bot.send(event, "杂鱼，色图不给你喵~", True)
-                else:
-                    turn -= 1
-                    await bot.send(event, [Image(file=p)], True)
-                    # logger.info("success")
-                    # await bot.send(event, "防出色图加上rating_safe，如果色图请自行撤回喵~")
-            except Exception as e:
-                bot.logger.error(e)
-                turn -= 1
-                await bot.send(event, "sd只因了，联系master喵~")
-
+            await call_text2img1(bot,event,config,tag)
         if str(event.raw_message) == "lora" and config.controller["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询loras中...')
             try:

@@ -1,5 +1,5 @@
 llm:
-  model: gemini #选择使用的模型大类。
+  model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix:
@@ -28,8 +28,8 @@ tts:
     token: ""             #https://getkey.acgnai.top/注册后，登录获取令牌
     speaker: "玲可【星穹铁道】"
 proxy:
-  http_proxy: "http://127.0.0.1:10809"
-  socks_proxy: "socks5://127.0.0.1:10809"
+  http_proxy: ""
+  socks_proxy: ""
 心知天气:
   api_key: ""     #https://www.seniverse.com/ 申请后，填私钥
 image_search:
