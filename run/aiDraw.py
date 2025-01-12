@@ -85,7 +85,8 @@ async def call_text2img1(bot,event,config,tag):
     path = f"data/pictures/cache/{random_str()}.png"
     bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
     try:
-        await bot.send(event, f'sd前面排队{turn}人，请耐心等待~', True)
+        if turn!=0:
+            await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
         turn += 1
         args = sd_user_args.get(event.sender.user_id, {})
         if hasattr(event, "group_id"):
