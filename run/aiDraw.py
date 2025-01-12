@@ -86,7 +86,11 @@ async def call_text2img1(bot,event,config,tag):
         await bot.send(event, f'sd前面排队{turn}人，请耐心等待~', True)
         turn += 1
         args = sd_user_args.get(event.sender.user_id, {})
-        p = await SdDraw0(tag, path, config, event.group_id, args)
+        if hasattr(event, "group_id"):
+            id_=event.group_id
+        else:
+            id_=event.user_id
+        p = await SdDraw0(tag, path, config, id_, args)
         if p == False:
             turn -= 1
             bot.logger.info("色图已屏蔽")
