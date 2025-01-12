@@ -2,6 +2,9 @@ import random
 import os
 import datetime
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent
 from developTools.message.message_components import Record, Node, Text, Image
@@ -13,6 +16,12 @@ from plugins.game_plugin.galgame import Get_Access_Token,Get_Access_Token_json,f
 def main(bot,config):
     bot.logger.info(f"Galgame功能成功加载！")
     @bot.on(GroupMessageEvent)
+    async def galgame_group_reply(event: GroupMessageEvent):
+        loop = asyncio.get_running_loop()
+        with ThreadPoolExecutor() as executor:
+            await loop.run_in_executor(executor, asyncio.run,
+                                       galgame_group_check(event))
+
     async def galgame_group_check(event: GroupMessageEvent):
         #暂定标记状态flag：
         # flag：1，精确游戏查询
