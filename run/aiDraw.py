@@ -378,7 +378,7 @@ def main(bot,config):
             tag = str(event.raw_message).replace("ckpt2 ", "")
             bot.logger.info('切换ckpt中')
             try:
-                await ckpt2(tag)
+                await ckpt2(tag,config)
                 await bot.send(event, "切换成功喵~第一次会慢一点~", True)
                 # logger.info("success")
             except Exception as e:

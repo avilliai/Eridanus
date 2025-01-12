@@ -317,9 +317,11 @@ async def getloras(config):
         return result
 
 
-async def ckpt2(model):
+async def ckpt2(model, config):
     global ckpt
     ckpt = model
+    config.controller["ai绘画"]["sd默认启动模型"]=model
+    config.save_yaml("controller")
 
 
 async def getcheckpoints(config):
