@@ -134,7 +134,7 @@ def main(bot,config):
     async def bing_dalle3_draw(event):  #无需配置的ai绘图接口
         if str(event.raw_message).startswith("画 "):
             prompt = str(event.raw_message).split("画 ")[1]
-            await call_text2img(bot, event, config, prompt)
+            await call_text2img2(bot, event, config, prompt)
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
         if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
