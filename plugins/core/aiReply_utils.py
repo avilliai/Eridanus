@@ -24,7 +24,7 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 url = i["mface"]["url"]
             else:
                 url = i["image"]["url"]
-            prompt_elements.append({"type":"text","text": f"system:图片的url是{url}"})
+            prompt_elements.append({"type":"text","text": f"system提示: 当前图片的url为{url}"})
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.get(url)
@@ -67,7 +67,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 url=i["mface"]["url"]
             else:
                 url=i["image"]["url"]
-            prompt_elements.append({"text": f"system:图片的url是{url}"})
+            prompt_elements.append({"text": f"system提示: 当前图片的url为{url}"})
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.get(url)

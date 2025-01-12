@@ -8,8 +8,10 @@ from bs4 import BeautifulSoup
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
+from plugins.aiDraw.aiArtModerate import aiArtModerate
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
+from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0
@@ -104,7 +106,32 @@ async def call_text2img1(bot,event,config,tag):
         turn -= 1
         bot.logger.error(f"sd api调用失败。{e}")
         await bot.send(event, f"sd api调用失败。{e}")
+async def call_aiArtModerate(bot,event,config,img_url):
+    try:
+        user_info = await get_user(event.user_id, event.sender.nickname)
+        if user_info[6] >= config.controller["ai绘图"]["ai_pic_recognize_level"]:
+            r=await aiArtModerate(img_url,config.api["sightengine"]["api_user"],config.api["sightengine"]["api_secret"])
+            if config.api["llm"]["aiReplyCore"]:
+                r = await aiReplyCore_shadow([{"text": f"ai创作可能性为{r}%"}], event.user_id, config, func_result=True)
+                await bot.send(event, r, True)
+            else:
+                await bot.send(event, f"图片为ai创作的可能性为{r}%", True)
+    except Exception as e:
+        bot.logger.error(e)
+        await bot.send(event, f"aiArtModerate调用失败。{e}")
 def main(bot,config):
+    ai_img_recognize = {}
+    @bot.on(GroupMessageEvent)
+    async def search_image(event):
+        if str(event.raw_message) == "ai图检测" or (
+                event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0] == "ai图检测"):
+            await bot.send(event, "请发送要检测的图片")
+            ai_img_recognize[event.sender.user_id] = []
+        if ("ai图检测" in str(event.raw_message) or event.sender.user_id in ai_img_recognize) and event.get('image'):
+            img_url = event.get("image")[0]["url"]
+            await call_aiArtModerate(bot, event, config, img_url)
+            ai_img_recognize.pop(event.sender.user_id)
+
     @bot.on(GroupMessageEvent)
     async def bing_dalle3_draw(event):  #无需配置的ai绘图接口
         if str(event.raw_message).startswith("画 "):
