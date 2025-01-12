@@ -6,13 +6,13 @@
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "tag": {
+                        "prompt": {
                             "type": "string",
                             "description": "生成图片的提示词"
                         }
                     },
                     "required": [
-                        "tag"
+                        "prompt"
                     ]
                 }
             },

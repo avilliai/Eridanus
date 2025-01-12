@@ -31,7 +31,8 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
-async def call_text2img(bot,event,config,tag):
+async def call_text2img(bot,event,config,prompt):
+    tag = prompt
     #同时调用自带接口和部署的sd
     functions = [
         call_text2img1(bot,event,config,tag),
