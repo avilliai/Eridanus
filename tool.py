@@ -83,7 +83,6 @@ async def main():
         #ys.download(output_path="data/voice/cache/", filename="PZnXXFrjSjg")
     elif user_input=="2":
         updaat()
-        os.system(f"\"{python_path}\" -m pip install httpx<0.28.0")
     elif user_input=="3":
         logger.info("playwright工具安装(b站动态爬取需要)")
         os.system(f"\"{python_path}\" -m playwright install chromium")
@@ -151,6 +150,7 @@ def updaat(f=False,source=None,yamls={}):
         logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
         logger.warning("依赖检查完成")
+        os.system(f"\"{python_path}\" -m pip install httpx<0.28.0")
         logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()
     # 逐行检查错误信息
