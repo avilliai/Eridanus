@@ -559,7 +559,6 @@ def main(bot,config):
 
             # 日志记录
             prompts = ', '.join(n3re[event.sender.user_id])
-            prompts,log = await replace_wildcards(prompts)
             if prompts:
                 prompts,log = await replace_wildcards(prompts)
                 if log:
