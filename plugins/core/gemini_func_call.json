@@ -1,6 +1,10 @@
 {
         "function_declarations": [
             {
+                "name": "garbage_collection",
+                "description": "清理运行所产生的垃圾文件。"
+            },
+            {
                 "name": "call_aiArtModerate",
                 "description": "检测图片是否为ai生成，只有当用户要求检测时才可触发。",
                 "parameters": {

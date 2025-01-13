@@ -1,7 +1,11 @@
+import asyncio
+
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
-    GroupIncreaseNoticeEvent
+    GroupIncreaseNoticeEvent, LifecycleMetaEvent
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
+from plugins.utils.GCTool import delete_old_files_async
+
 
 async def call_operate_blandwhite(bot,event,config,target_id,type):
     if type=="添加群黑名单":
@@ -85,8 +89,39 @@ async def call_operate_group_whitelist(bot,event,config,target_group_id,status):
                 await bot.send(event, f"群{target_group_id} 不在白名单中")
     else:
         await bot.send(event, f"你没有足够权限执行此操作")
+async def garbage_collection(bot,event,config):
+    bot.logger.info_func("开始清理缓存")
+    folders=["data/pictures/cache",
+              "data/pictures/galgame",
+              "data/video/cache",
+              "data/voice/cache",
+              "plugins/resource_search_plugin/Link_parsing/data"
+              ]
+    async def safe_delete(folder):
+        try:
+            return await delete_old_files_async(folder)
+        except Exception as e:
+            bot.logger.error(f"处理文件夹 {folder} 时发生错误: {e}")
+            return 0
+    folder_sizes = await asyncio.gather(*[safe_delete(folder) for folder in folders], return_exceptions=True)
+
+    total_size = sum(size for size in folder_sizes if isinstance(size, (int, float)))
+    bot.logger.info_func(f"本次清理了 {total_size:.2f} MB 的缓存")
+    return f"本次清理了 {total_size:.2f} MB 的缓存"
 
 def main(bot,config):
+    @bot.on(LifecycleMetaEvent)
+    async def _(event):
+        while True:
+            await garbage_collection(bot,event,config)
+            await asyncio.sleep(5400)  # 每1.5h清理一次缓存
+    @bot.on(GroupMessageEvent)
+    async def _(event):
+        if event.raw_message=="/gc":
+            user_info = await get_user(event.user_id, event.sender.nickname)
+            if user_info[6] >= 3:
+                r=await garbage_collection(bot,event,config)
+                await bot.send(event,r)
     @bot.on(FriendRequestEvent)
     async def FriendRequestHandler(event: FriendRequestEvent):
         if event.user_id in config.censor_user["blacklist"]:
