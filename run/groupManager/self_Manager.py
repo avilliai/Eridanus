@@ -113,7 +113,6 @@ def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
         while True:
-            bot.logger.info_func("开始清理缓存")
             await garbage_collection(bot,event,config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
     @bot.on(GroupMessageEvent)
