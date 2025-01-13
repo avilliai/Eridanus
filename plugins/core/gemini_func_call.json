@@ -302,7 +302,7 @@
                         },
                         "num": {
                             "type": "integer",
-                            "description": "返回的图片数量。"
+                            "description": "返回的图片数量。默认为1"
                         }
                     },
                     "required": [
