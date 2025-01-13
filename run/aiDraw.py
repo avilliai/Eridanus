@@ -90,6 +90,8 @@ async def call_text2img1(bot,event,config,tag):
     try:
         if turn!=0:
             await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
+        else:
+            await bot.send(event, f"正在绘制，请耐心等待~", True)
         turn += 1
         args = sd_user_args.get(event.sender.user_id, {})
         if hasattr(event, "group_id"):
@@ -450,7 +452,6 @@ def main(bot,config):
         global sd_user_args
         if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
             tag = str(event.raw_message).replace("画 ", "")
-            await bot.send(event, f"任务已加入队列，前方排队{turn}人，请耐心等待~", True)
             await call_text2img1(bot,event,config,tag)
         if str(event.raw_message) == "lora" and config.controller["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询loras中...')
