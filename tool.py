@@ -83,6 +83,7 @@ async def main():
         #ys.download(output_path="data/voice/cache/", filename="PZnXXFrjSjg")
     elif user_input=="2":
         updaat()
+        os.system(f"\"{python_path}\" -m pip install httpx<0.28.0")
     elif user_input=="3":
         logger.info("playwright工具安装(b站动态爬取需要)")
         os.system(f"\"{python_path}\" -m playwright install chromium")
