@@ -45,6 +45,7 @@ def parse_arguments(arg_string, original_dict):
                 continue
             original_dict[key] = value
         else:
+            pass
     return original_dict
 
 async def download_img(url,path,gray_layer=False,proxy=None):
