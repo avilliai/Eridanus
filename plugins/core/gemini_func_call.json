@@ -24,7 +24,7 @@
                     "properties": {
                         "prompt": {
                             "type": "string",
-                            "description": "生成图片的提示词"
+                            "description": "生成图片的提示词。如果原始提示词中有中文，则需要你把它们替换为对应英文。"
                         }
                     },
                     "required": [
