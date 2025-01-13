@@ -14,7 +14,8 @@ from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
-from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0
+from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
+    SdmaskDraw
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
@@ -26,6 +27,8 @@ sd_re_args = {}
 UserGet1 = {}
 n4re = {}
 n3re = {}
+mask = {}
+UserGetm = {}
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
 with open('config/controller.yaml', 'r', encoding='utf-8') as f:
@@ -366,8 +369,13 @@ def main(bot,config):
     async def sdsettings(event):
         if str(event.raw_message).startswith("setsd "):
             global sd_user_args
+            sd_user_args.setdefault(event.sender.user_id, {})
             command = str(event.raw_message).replace("setsd ", "")
-            cmd_dict = parse_arguments(command)  # 不需要 await
+            if command == "0":
+                sd_user_args[event.sender.user_id] = {}
+                await bot.send(event, f"当前绘画参数已重置", True)
+                return
+            cmd_dict = parse_arguments(command, sd_user_args[event.sender.user_id])  # 不需要 await
             sd_user_args[event.sender.user_id] = cmd_dict
             await bot.send(event, f"当前绘画参数设置: {sd_user_args[event.sender.user_id]}", True)
 
@@ -375,8 +383,13 @@ def main(bot,config):
     async def sdresettings(event):
         if str(event.raw_message).startswith("setre "):
             global sd_re_args
+            sd_re_args.setdefault(event.sender.user_id, {})
             command = str(event.raw_message).replace("setre ", "")
-            cmd_dict = parse_arguments(command)  # 不需要 await
+            if command == "0":
+                sd_re_args[event.sender.user_id] = {}
+                await bot.send(event, f"当前重绘参数已重置", True)
+                return
+            cmd_dict = parse_arguments(command, sd_re_args[event.sender.user_id])  # 不需要 await
             sd_re_args[event.sender.user_id] = cmd_dict
             await bot.send(event, f"当前重绘参数设置: {sd_re_args[event.sender.user_id]}", True)
 
@@ -399,9 +412,10 @@ def main(bot,config):
 
             # 日志记录
             prompts = ', '.join(UserGet[event.sender.user_id])
-            prompts,log = await replace_wildcards(prompts)
-            if log:
-                await bot.send(event, log, True)
+            if prompts:
+                prompts,log = await replace_wildcards(prompts)
+                if log:
+                    await bot.send(event, log, True)
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
 
             # 获取图片路径
@@ -494,9 +508,10 @@ def main(bot,config):
 
             # 日志记录
             prompts = ', '.join(n4re[event.sender.user_id])
-            prompts,log = await replace_wildcards(prompts)
-            if log:
-                await bot.send(event, log, True)
+            if prompts:
+                prompts,log = await replace_wildcards(prompts)
+                if log:
+                    await bot.send(event, log, True)
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n4re指令 prompt: {prompts}")
 
             # 获取图片路径
@@ -545,9 +560,10 @@ def main(bot,config):
 
             # 日志记录
             prompts = ', '.join(n3re[event.sender.user_id])
-            prompts,log = await replace_wildcards(prompts)
-            if log:
-                await bot.send(event, log, True)
+            if prompts:
+                prompts,log = await replace_wildcards(prompts)
+                if log:
+                    await bot.send(event, log, True)
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n3re指令 prompt: {prompts}")
 
             # 获取图片路径
@@ -576,3 +592,117 @@ def main(bot,config):
                         await bot.send(event, "nai只因了，联系master喵~")
 
             await attempt_draw()
+
+    @bot.on(GroupMessageEvent)
+    async def sdmaskDrawRun(event):
+        global UserGetm
+        global turn
+        global mask
+
+        if event.get('image') == None and (
+                str(event.raw_message) == ("局部重绘") or str(event.raw_message).startswith("局部重绘 ")):
+            prompt = str(event.raw_message).replace("局部重绘 ", "").strip()
+            UserGetm[event.sender.user_id] = prompt  # 直接将值设置为字符串
+            await bot.send(event, "请发送要局部重绘的图片")
+
+        # 处理图片和重绘命令
+        
+        if event.sender.user_id in UserGetm and event.get('image') and event.sender.user_id in mask:
+            path = f"data/pictures/cache/{random_str()}.png"
+            prompts = UserGetm[event.sender.user_id]  # 直接使用字符串
+            mask_url = event.get("image")[0]["url"]
+            img_url = mask[event.sender.user_id]  # 直接使用字符串
+            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的局部重绘指令 prompt: {prompts}")
+            UserGetm.pop(event.sender.user_id)
+            mask.pop(event.sender.user_id)
+
+            try:
+                args = sd_re_args.get(event.sender.user_id, {})
+                b64_in = await url_to_base64(img_url)
+                mask_b64 = await url_to_base64(mask_url)
+
+                await bot.send(event, f"开始局部重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
+                turn += 1
+                p = await SdmaskDraw(prompts, path, config, event.group_id, b64_in, args, mask_b64)
+                if p == False:
+                    turn -= 1
+                    bot.logger.info("色图已屏蔽")
+                    await bot.send(event, "杂鱼，色图不给你喵~", True)
+                else:
+                    turn -= 1
+                    await bot.send(event, [Image(file=p)], True)
+            except Exception as e:
+                bot.logger.error(f"局部重绘失败: {e}")
+                await bot.send(event, "局部重绘失败了喵~", True)
+            return
+
+        if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
+            if (str(event.raw_message).startswith("局部重绘 ")) and event.raw_message.count(Image):
+                prompts = str(event.raw_message).replace("局部重绘 ", "").strip()
+                UserGetm[event.sender.user_id] = prompts
+
+            prompts = UserGetm[event.sender.user_id]
+            # 日志记录
+            if prompts:
+                prompts, log = await replace_wildcards(prompts)
+                if log:
+                    await bot.send(event, log, True)
+                UserGetm[event.sender.user_id] = prompts  # 直接将值设置为字符串
+
+            img_url = event.get("image")[0]["url"]
+            await bot.send(event, "请发送蒙版")
+            mask[event.sender.user_id] = img_url  # 直接将值设置为字符串
+            return
+
+
+        if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
+            if (str(event.raw_message).startswith("局部重绘")) and event.raw_message.count(Image):
+                prompt = str(event.raw_message).replace("局部重绘", "").strip()
+
+            # 日志记录
+            prompts = ', '.join(UserGetm[event.sender.user_id])
+            prompts,log = await replace_wildcards(prompts)
+            if log:
+                await bot.send(event, log, True)
+            UserGetm[event.sender.user_id] = [prompt]
+
+            img_url = event.get("image")[0]["url"]
+            await bot.send(event, "请发送蒙版")
+            mask[event.sender.user_id] = [img_url]
+            return
+                
+    @bot.on(GroupMessageEvent)
+    async def end_re(event):
+        if str(event.raw_message) == ("/clearre"):
+            global UserGet
+            global tag_user
+            global UserGet1
+            global n4re
+            global n3re
+            global mask
+            global UserGetm
+            
+            dictionaries = {
+                'UserGet': UserGet,
+                'tag_user': tag_user,
+                'UserGet1': UserGet1,
+                'n4re': n4re,
+                'n3re': n3re,
+                'mask': mask,
+                'UserGetm': UserGetm
+            }
+
+            user_id = event.sender.user_id
+
+            for dict_name, dictionary in dictionaries.items():
+                # 确保dictionary是一个字典
+                if isinstance(dictionary, dict):
+                    try:
+                        dictionary.pop(user_id)
+                        bot.logger.info(f"User ID {user_id} cleared in {dict_name}.")
+                    except KeyError:
+                        bot.logger.info(f"User ID {user_id} not found in {dict_name}.")
+                else:
+                    bot.logger.info(f"Expected a dictionary for {dict_name}, but got {type(dictionary)}.")
+            
+            await bot.send(event, "已清除所有输入图片和文本缓存", True)
