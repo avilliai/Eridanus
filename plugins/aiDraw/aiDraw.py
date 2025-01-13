@@ -197,10 +197,16 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     args = args
     width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
     height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
-
+    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    
+    if width > 1600:
+        width = 1600
+    if height > 1600:
+        height = 1600
+    
     payload = {
         "init_images": [b64_in],
-        "denoising_strength": 0.7,
+        "denoising_strength": denoising_strength,
         "enable_hr": 'true',
         "hr_scale": 1.5,
         "hr_second_pass_steps": 15,
@@ -253,9 +259,15 @@ async def SdDraw0(prompt, path, config, groupid, args):
     args = args
     width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
     height = (args.get('h', 1600) if args.get('h', 1600) > 0 else 1600) if isinstance(args, dict) else 1600
-
+    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    
+    if width > 1600:
+        width = 1600
+    if height > 1600:
+        height = 1600
+    
     payload = {
-        "denoising_strength": 0.5,
+        "denoising_strength": denoising_strength,
         "enable_hr": 'false',
         "hr_scale": 1.5,
         "hr_second_pass_steps": 15,
@@ -516,4 +528,69 @@ async def n3re0(prompt, path, groupid, config, b64_in):
                     return False
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
+    return path
+
+async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
+    url = config.api["ai绘画"]["sdUrl"]
+    args = args
+    width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+    height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    
+    if width > 1600:
+        width = 1600
+    if height > 1600:
+        height = 1600
+
+    payload = {
+        "init_images": [b64_in],
+        "mask": mask_base64,
+        "mask_blur": 4,  # 边缘模糊
+        "inpaint_full_res": False,  # 更高分辨率修复 耗费算力，一般显卡建议关闭
+        "inpaint_full_res_padding": 4,  # 小到中等大小的修复区域 建议 4 - 10 大型修复区域建议 10 - 20
+        "inpainting_mask_invert": 1,  # 0 则反转蒙版
+        "denoising_strength": denoising_strength,
+        "enable_hr": 'true',
+        "hr_scale": 1.5,
+        "hr_second_pass_steps": 15,
+        "hr_upscaler": 'SwinIR_4x',
+        "prompt": f'score_9,score_8_up,score_7_up,{prompt},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,',
+        "negative_prompt": '((nsfw)),score_6,score_5,score_4,((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly, poorly drawn,(censor),blurry,watermark,simple background,transparent background',
+        "seed": -1,
+        "batch_size": 1,
+        "n_iter": 1,
+        "steps": 35,
+        "cfg_scale": 6.5,
+        "width": width,
+        "height": height,
+        "restore_faces": False,
+        "tiling": False,
+        "sampler_name": 'Euler a',
+        "scheduler": 'Align Your Steps',
+        "clip_skip_steps": 2,
+        "override_settings": {
+            "CLIP_stop_at_last_layers": 2,
+            "sd_model_checkpoint": ckpt,  # 指定大模型
+        },
+        "override_settings_restore_afterwards": False,
+    }  # manba out
+    headers = {
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+    }
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
+    r = response.json()
+    if 'images' not in r or len(r['images']) == 0:
+        return None
+    # 我的建议是，直接返回base64，让它去审查
+    b64 = r['images'][0]
+    if groupid in no_nsfw_groups:  # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
+        check = await pic_audit_standalone(b64, return_none=True, url=config.api["ai绘画"][
+            "sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
+        if check:  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
+            return False  # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
+    image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
+    # image = Image.open(io.BytesIO(base64.b64decode(p)))
+    image.save(f'{path}')
+    # image.save(f'{path}')
     return path
