@@ -110,10 +110,15 @@ async def garbage_collection(bot,event,config):
     return f"本次清理了 {total_size:.2f} MB 的缓存"
 async def report_to_master(bot,event,config,mes_type):
     if mes_type=="bad_content":
-        r = await aiReplyCore_shadow([{"text": f"敏感事件上报：向master报告id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。请master决定是否屏蔽该用户。"}], event.group_id, config,
+        r = await aiReplyCore_shadow([{"text": f"敏感事件上报：向master报告id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。请master决定是否屏蔽该用户。"}], 00000, config,
                                      func_result=True)
         await bot.send_friend_message(config.basic_config["master"]['id'],r)
-
+    elif mes_type=="向开发者反馈问题":
+        r = await aiReplyCore_shadow([{
+                                          "text": f"来自用户的开发者反馈: 向master报告id为{event.user_id}，昵称为{event.sender.nickname}的用户反馈了 {event.raw_message}。"}],
+                                     00000, config,
+                                     func_result=True)
+        await bot.send_friend_message(config.basic_config["master"]['id'], r)
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
