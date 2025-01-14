@@ -99,15 +99,15 @@ binggong asylum
 piromizu
 machi
 fkey
-hiten \(hitenkei\)
+hiten (hitenkei)
 onineko
 liduke
 yuyumu
 eboda-x
-rei \(sanbonzakura\)
-lam \(ramdayo\)
+rei (sanbonzakura)
+lam (ramdayo)
 puuzaki puuna
-maccha \(mochancc\)
+maccha (mochancc)
 nekoda (maoda)
 hokori sakuni
 konya karasue
@@ -146,7 +146,7 @@ alphonse (white datura)
 miv4t
 murata yuusuke
 QYS3
-mango \(mgo\)
+mango (mgo)
 nekomugiharu
 z shitei ero
 weri
@@ -158,4 +158,4 @@ ame usari
 tsubasa tsubasa
 kani biimu
 momozu komamochi
-chihiro \(khorosho\)
+chihiro (khorosho)
