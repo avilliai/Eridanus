@@ -486,13 +486,14 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
-        if str(event.raw_message) == 'getwd':
+        message = str(event.raw_message)
+        if message == 'getwd':
             r = await get_available_wildcards()
             await bot.send(event, r, True)
-        else if str(event.raw_message).startswith('getwd '):
-            prompts = str(event.raw_message).replace("getwd ", "")
+        elif message.startswith('getwd '):
+            prompts = message.replace("getwd ", "")
             if prompts:
-                prompts,log = await replace_wildcards(prompts)
+                prompts, log = await replace_wildcards(prompts)
                 if log:
                     await bot.send(event, prompts)
                 
