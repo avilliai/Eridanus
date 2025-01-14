@@ -150,6 +150,7 @@ def updaat(f=False,source=None,yamls={}):
         logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
         logger.warning("依赖检查完成")
+        os.system(f"\"{python_path}\" -m pip install httpx==0.27.2")
         logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()
     # 逐行检查错误信息

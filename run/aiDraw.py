@@ -486,9 +486,17 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
-        if str(event.raw_message) == 'getwd':
+        message = str(event.raw_message)
+        if message == 'getwd':
             r = await get_available_wildcards()
             await bot.send(event, r, True)
+        elif message.startswith('getwd '):
+            prompts = message.replace("getwd ", "")
+            if prompts:
+                prompts, log = await replace_wildcards(prompts)
+                if log:
+                    await bot.send(event, prompts)
+                
 
     @bot.on(GroupMessageEvent)
     async def n4reDrawRun(event):
@@ -524,9 +532,10 @@ def main(bot,config):
 
             async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
                 try:
+                    args = sd_re_args.get(event.sender.user_id, {})
                     b64_in = await url_to_base64(img_url)
                     # 将 n4re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
-                    p = await n4re0(prompts_str, path, event.group_id, config, b64_in)
+                    p = await n4re0(prompts_str, path, event.group_id, config, b64_in, args)
                     if p == False:
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
@@ -576,9 +585,10 @@ def main(bot,config):
 
             async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
                 try:
+                    args = sd_re_args.get(event.sender.user_id, {})
                     b64_in = await url_to_base64(img_url)
                     # 将 n3re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
-                    p = await n3re0(prompts_str, path, event.group_id, config, b64_in)
+                    p = await n3re0(prompts_str, path, event.group_id, config, b64_in, args)
                     if p == False:
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
