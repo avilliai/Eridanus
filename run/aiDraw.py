@@ -489,6 +489,13 @@ def main(bot,config):
         if str(event.raw_message) == 'getwd':
             r = await get_available_wildcards()
             await bot.send(event, r, True)
+        else if str(event.raw_message).startswith('getwd '):
+            prompts = str(event.raw_message).replace("getwd ", "")
+            if prompts:
+                prompts,log = await replace_wildcards(prompts)
+                if log:
+                    await bot.send(event, prompts)
+                
 
     @bot.on(GroupMessageEvent)
     async def n4reDrawRun(event):
