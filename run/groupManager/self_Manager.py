@@ -111,7 +111,7 @@ async def garbage_collection(bot,event,config):
 async def report_to_master(bot,event,config):
     mes_type="bad_content"
     if mes_type=="bad_content":
-        r = await aiReplyCore_shadow([{"text": f"id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。上报消息中必须保留发送者id即{event.user_id}，请管理员决定是否屏蔽该用户。请注意在处理该任务时，保持你的角色设定，并保持语言简洁，你接下来的回复将直接被发送给管理员。"}], config.basic_config["master"]['id'], config,
+        r = await aiReplyCore_shadow([{"text": f"id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。向管理员报告这一事件，你必须保留发送者id即{event.user_id}以及违规内容的大概内容，同时保持你的角色设定，并保持语言简洁，你接下来的回复将直接被发送给管理员。"}], config.basic_config["master"]['id'], config,
                                      func_result=True)
         await bot.send_friend_message(config.basic_config["master"]['id'],r)
     elif mes_type=="ideas":
