@@ -110,12 +110,12 @@ async def garbage_collection(bot,event,config):
     return f"本次清理了 {total_size:.2f} MB 的缓存"
 async def report_to_master(bot,event,config,mes_type):
     if mes_type=="bad_content":
-        r = await aiReplyCore_shadow([{"text": f"敏感事件上报：告诉管理员，id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。上报消息中必须保留发送者id即{event.user_id}请管理员决定是否屏蔽该用户。请注意在处理该任务时，保持你的角色设定"}], config.basic_config["master"]['id'], config,
+        r = await aiReplyCore_shadow([{"text": f"告诉管理员，id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。上报消息中必须保留发送者id即{event.user_id}请管理员决定是否屏蔽该用户。请注意在处理该任务时，保持你的角色设定"}], config.basic_config["master"]['id'], config,
                                      func_result=True)
         await bot.send_friend_message(config.basic_config["master"]['id'],r)
     elif mes_type=="ideas":
         r = await aiReplyCore_shadow([{
-                                          "text": f"来自用户的反馈: 告诉管理员，id为{event.user_id}，昵称为{event.sender.nickname}的用户反馈了 {event.raw_message}。上报消息中必须保留发送者id即{event.user_id}。请注意在处理该任务时，保持你的角色设定"}],
+                                          "text": f"告诉管理员，id为{event.user_id}，昵称为{event.sender.nickname}的用户反馈了 {event.raw_message}。上报消息中必须保留发送者id即{event.user_id}。请注意在处理该任务时，保持你的角色设定"}],
                                      config.basic_config["master"]['id'], config,
                                      func_result=True)
         await bot.send_friend_message(config.basic_config["master"]['id'], r)
