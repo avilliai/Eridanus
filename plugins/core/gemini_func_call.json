@@ -7,7 +7,7 @@
                     "type": "object",
                     "properties": {
                         "mes_type": {
-                            "type": "string", "enum": ["bad_content","向开发者反馈问题"],"description": "bad_content指攻击性言论/侮辱性言论/违规行为等。"
+                            "type": "string", "enum": ["bad_content","ideas"],"description": "bad_content指攻击性言论/侮辱性言论/违规行为等;ideas指用户希望告诉开发者的意见建议等。"
                         }
                     },
                     "required": [
