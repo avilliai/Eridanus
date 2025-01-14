@@ -1,6 +1,21 @@
 {
         "function_declarations": [
             {
+                "name": "report_to_master",
+                "description": "向管理员(master)上报特殊事件",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mes_type": {
+                            "type": "string", "enum": ["bad_content"],"description": "攻击性言论/垃圾信息/违规行为等。"
+                        }
+                    },
+                    "required": [
+                        "mes_type"
+                    ]
+                }
+            },
+            {
                 "name": "garbage_collection",
                 "description": "清理运行所产生的垃圾文件。"
             },
