@@ -2,18 +2,7 @@
         "function_declarations": [
             {
                 "name": "report_to_master",
-                "description": "向管理员(master)上报特殊事件。当bot接受到任何攻击性言论、侮辱性言论、骚扰言论时触发。也可以作为用户向开发者的反馈渠道。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "mes_type": {
-                            "type": "string", "enum": ["bad_content","ideas"],"description": "bad_content指攻击性言论/侮辱性言论/违规行为等;ideas指用户希望告诉开发者的意见建议等。"
-                        }
-                    },
-                    "required": [
-                        "mes_type"
-                    ]
-                }
+                "description": "向管理员(master)上报用户的恶性行为。当bot接受到任何攻击性言论、侮辱性言论、骚扰言论时触发。"
             },
             {
                 "name": "garbage_collection",
