@@ -352,8 +352,10 @@ async def getcheckpoints(config):
         result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines) + '\n'
         return result
 
-async def n4re0(prompt, path, groupid, config, b64_in):
+async def n4re0(prompt, path, groupid, config, b64_in, args):
+    args = args
     url = "https://image.novelai.net"
+    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -379,7 +381,7 @@ async def n4re0(prompt, path, groupid, config, b64_in):
             "sampler": "k_dpmpp_2m",
             "steps": 23,
             "n_samples": 1,
-            "strength": 0.7,
+            "strength": denoising_strength,
             "noise": 0.2,
             "ucPreset": 0,
             "qualityToggle": True,
@@ -448,8 +450,10 @@ async def n4re0(prompt, path, groupid, config, b64_in):
                 img_file.write(image_data)
     return path
 
-async def n3re0(prompt, path, groupid, config, b64_in):
+async def n3re0(prompt, path, groupid, config, b64_in, args):
+    args = args
     url = "https://image.novelai.net"
+    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -475,7 +479,7 @@ async def n3re0(prompt, path, groupid, config, b64_in):
             "sampler": "k_dpmpp_2m",
             "steps": 23,
             "n_samples": 1,
-            "strength":0.7,
+            "strength":denoising_strength,
             "noise":0.2,
             "ucPreset": 0,
             "qualityToggle": True,

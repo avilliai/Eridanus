@@ -47,7 +47,8 @@ async def pic_audit_standalone(
     message += (f"最终结果为:{reverse_dict[value[0]].rjust(5)}")
     
     keys = list(tags.keys())
-    tags_str = ", ".join(keys)
+    tags_str = ",".join(keys)
+    tags_str = tags_str.replace("general,sensitive,questionable,explicit,", "")
 
     if return_none:
         value = list(possibilities.values())
