@@ -49,7 +49,7 @@ async def construct_openai_standard_prompt(processed_message,system_instruction,
         {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
     ]
     full_prompt.extend(history)
-    await update_user_history(user_id, history)  # 更新数据库中的历史记录
+    await update_user_history(user_id, full_prompt)  # 更新数据库中的历史记录
     return full_prompt, original_history
 
 """

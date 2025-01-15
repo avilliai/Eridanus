@@ -173,15 +173,6 @@ def main(bot,config):
             else:
                 bot.logger.info_func(f"收到加群申请，{event.group_id} {event.comment}同意")
                 await bot.send_group_message(event.group_id,f"有新的加群请求，请尽快处理\n申请人：{event.user_id}\n{event.comment}")
-    @bot.on(GroupIncreaseNoticeEvent)
-    async def GroupIncreaseNoticeHandler(event: GroupIncreaseNoticeEvent):
-        if config.api["llm"]["aiReplyCore"]:
-            data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
-            name=data["data"]["nickname"]
-            r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config, func_result=True)
-            await bot.send(event, str(r))
-        else:
-            await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")
     @bot.on(GroupMessageEvent)
     async def black_and_white_handler(event):
         await _handler(event)
