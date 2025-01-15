@@ -57,7 +57,7 @@ async def free_model_result(prompt, proxies=None):
         try:
             result = await future
             if result:
-                if result["content"]!= "":
+                if result["content"]!= "" and result["content"]!= "You've reached your free usage limit today":
                     return result
         except Exception as e:
             print(f"Task failed: {e}")
