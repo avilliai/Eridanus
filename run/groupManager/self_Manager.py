@@ -108,7 +108,18 @@ async def garbage_collection(bot,event,config):
     total_size = sum(size for size in folder_sizes if isinstance(size, (int, float)))
     bot.logger.info_func(f"本次清理了 {total_size:.2f} MB 的缓存")
     return f"本次清理了 {total_size:.2f} MB 的缓存"
-
+async def report_to_master(bot,event,config):
+    mes_type="bad_content"
+    if mes_type=="bad_content":
+        r = await aiReplyCore_shadow([{"text": f"id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了不合适的内容：{event.raw_message}。向管理员报告这一事件，你必须保留发送者id即{event.user_id}以及违规内容的大概内容，同时保持你的角色设定，并保持语言简洁，你接下来的回复将直接被发送给管理员。"}], config.basic_config["master"]['id'], config,
+                                     func_result=True)
+        await bot.send_friend_message(config.basic_config["master"]['id'],r)
+    elif mes_type=="ideas":
+        r = await aiReplyCore_shadow([{
+                                          "text": f"id为{event.user_id}，昵称为{event.sender.nickname}的用户反馈了 {event.raw_message}。上报消息中必须保留发送者id即{event.user_id}。请注意在处理该任务时，保持你的角色设定，并保持语言简洁，你接下来的回复将直接被发送给管理员。"}],
+                                     config.basic_config["master"]['id'], config,
+                                     func_result=True)
+        await bot.send_friend_message(config.basic_config["master"]['id'], r)
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
@@ -127,14 +138,17 @@ def main(bot,config):
         if event.user_id in config.censor_user["blacklist"]:
             bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 用户被加入黑名单，拒绝添加")
             await bot.handle_friend_request(event.flag,False,"拒绝添加好友")
+            await bot.send_friend_message(config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 用户被加入黑名单，拒绝添加")
         else:
             user_info = await get_user(event.user_id)
             if user_info[6] >= config.settings["bot_config"]["申请bot好友所需权限"]:
                 bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 同意")
                 await bot.handle_friend_request(event.flag,True,"")
+                await bot.send_friend_message(config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 同意")
             else:
                 bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 拒绝")
                 await bot.handle_friend_request(event.flag,False,"你没有足够权限添加好友")
+                await bot.send_friend_message(config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 拒绝（用户权限不足）")
 
     @bot.on(GroupRequestEvent)
     async def GroupRequestHandler(event: GroupRequestEvent):
@@ -142,11 +156,17 @@ def main(bot,config):
             if event.group_id in config.censor_group["blacklist"]:
                 bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
                 await bot.send(event, f"该群已被加入黑名单，无法加入")
+                await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id})的群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
             else:
                 user_info = await get_user(event.user_id)
                 if user_info[6] >= config.settings["bot_config"]["邀请bot加群所需权限"]:
                     bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 同意")
                     await bot.set_group_add_request(event.flag,True,"allow")
+                    await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 同意")
+                else:
+                    bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 拒绝")
+                    await bot.send(event, f"你没有足够权限邀请bot加入该群")
+                    await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 拒绝（用户权限不足）")
         elif event.sub_type == "add":
             if event.group_id in config.censor_group["blacklist"]:
                 pass
