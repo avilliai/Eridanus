@@ -273,8 +273,8 @@ async def SdDraw0(prompt, path, config, groupid, args):
     url = config.api["ai绘画"]["sdUrl"]
 
     args = args
-    width = (args.get('w', 768) if args.get('w', 768) > 0 else 768) if isinstance(args, dict) else 768
-    height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+    width = (args.get('w', 832) if args.get('w', 832) > 0 else 832) if isinstance(args, dict) else 832
+    height = (args.get('h', 1216) if args.get('h', 1216) > 0 else 1216) if isinstance(args, dict) else 1216
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
     
     if width > 1024:
