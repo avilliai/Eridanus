@@ -152,7 +152,7 @@ async def nai4(bot,event,config,tag):
                     await asyncio.sleep(0.1)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
-                    await bot.send(event, "nai只因了，联系master喵~")
+                    bot.logger.info("nai调用失败")
 
         await attempt_draw()
     
