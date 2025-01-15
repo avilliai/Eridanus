@@ -42,6 +42,8 @@ async def call_text2img(bot,event,config,prompt):
     functions = [
         call_text2img1(bot,event,config,tag),
         call_text2img2(bot,event,config,tag),
+        nai4(bot,event,config,tag),# 两个nai功能建议二选一
+        #nai3(bot,event,config,tag),
     ]
 
     for future in asyncio.as_completed(functions):
@@ -112,6 +114,7 @@ async def call_text2img1(bot,event,config,tag):
         turn -= 1
         bot.logger.error(f"sd api调用失败。{e}")
         await bot.send(event, f"sd api调用失败。{e}")
+
 async def call_aiArtModerate(bot,event,config,img_url):
     try:
         r=await aiArtModerate(img_url,config.api["sightengine"]["api_user"],config.api["sightengine"]["api_secret"])
@@ -123,6 +126,64 @@ async def call_aiArtModerate(bot,event,config,img_url):
     except Exception as e:
         bot.logger.error(e)
         await bot.send(event, f"aiArtModerate调用失败。{e}")
+
+async def nai4(bot,event,config,tag):
+    if config.controller["ai绘画"]["novel_ai画图"]:
+        tag,log = await replace_wildcards(tag)
+        if log:
+            await bot.send(event, log, True)
+        path = f"data/pictures/cache/{random_str()}.png"
+        bot.logger.info(f"发起nai4绘画请求，path:{path}|prompt:{tag}")
+        await bot.send(event, '正在进行nai4画图', True)
+
+        async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+            try:
+                p = await n4(tag, path, event.group_id, config)
+                if p == False:
+                    bot.logger.info("色图已屏蔽")
+                    await bot.send(event, "杂鱼，色图不给你喵~", True)
+                else:
+                    print(p)
+                    await bot.send(event, [Image(file=p)], True)
+            except Exception as e:
+                bot.logger.error(e)
+                if retries_left > 0:
+                    bot.logger.error(f"尝试重新请求nai4，剩余尝试次数：{retries_left - 1}")
+                    await asyncio.sleep(0.1)  # 等待0.5秒
+                    await attempt_draw(retries_left - 1)
+                else:
+                    await bot.send(event, "nai只因了，联系master喵~")
+
+        await attempt_draw()
+    
+async def nai3(bot,event,config,tag):
+    if config.controller["ai绘画"]["novel_ai画图"]:
+        tag,log = await replace_wildcards(tag)
+        if log:
+            await bot.send(event, log, True)
+        path = f"data/pictures/cache/{random_str()}.png"
+        bot.logger.info(f"发起nai3绘画请求，path:{path}|prompt:{tag}")
+        await bot.send(event, '正在进行nai3画图', True)
+
+        async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+            try:
+                p = await n3(tag, path, event.group_id, config)
+                if p == False:
+                    bot.logger.info("色图已屏蔽")
+                    await bot.send(event, "杂鱼，色图不给你喵~", True)
+                else:
+                    await bot.send(event, [Image(file=p)], True)
+            except Exception as e:
+                bot.logger.error(e)
+                if retries_left > 0:
+                    bot.logger.error(f"尝试重新请求nai3，剩余尝试次数：{retries_left - 1}")
+                    await asyncio.sleep(0.5)  # 等待0.5秒
+                    await attempt_draw(retries_left - 1)
+                else:
+                    await bot.send(event, "nai只因了，联系master喵~")
+
+        await attempt_draw()
+
 def main(bot,config):
     ai_img_recognize = {}
     @bot.on(GroupMessageEvent)
@@ -141,66 +202,18 @@ def main(bot,config):
         if str(event.raw_message).startswith("画 "):
             prompt = str(event.raw_message).split("画 ")[1]
             await call_text2img2(bot, event, config, prompt)
+    
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
         if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n4 ", "")
-            tag,log = await replace_wildcards(tag)
-            if log:
-                await bot.send(event, log, True)
-            path = f"data/pictures/cache/{random_str()}.png"
-            bot.logger.info(f"发起nai4绘画请求，path:{path}|prompt:{tag}")
-            await bot.send(event, '正在进行nai4画图', True)
-
-            async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
-                try:
-                    p = await n4(tag, path, event.group_id, config)
-                    if p == False:
-                        bot.logger.info("色图已屏蔽")
-                        await bot.send(event, "杂鱼，色图不给你喵~", True)
-                    else:
-                        print(p)
-                        await bot.send(event, [Image(file=p)], True)
-                except Exception as e:
-                    bot.logger.error(e)
-                    if retries_left > 0:
-                        bot.logger.error(f"尝试重新请求nai4，剩余尝试次数：{retries_left - 1}")
-                        await asyncio.sleep(0.1)  # 等待0.5秒
-                        await attempt_draw(retries_left - 1)
-                    else:
-                        await bot.send(event, "nai只因了，联系master喵~")
-
-            await attempt_draw()
+            await nai4(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
     async def naiDraw3(event):
         if str(event.raw_message).startswith("n3 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n3 ", "")
-            tag,log = await replace_wildcards(tag)
-            if log:
-                await bot.send(event, log, True)
-            path = f"data/pictures/cache/{random_str()}.png"
-            bot.logger.info(f"发起nai3绘画请求，path:{path}|prompt:{tag}")
-            await bot.send(event, '正在进行nai3画图', True)
-
-            async def attempt_draw(retries_left=10):  # 这里是递归请求的次数
-                try:
-                    p = await n3(tag, path, event.group_id, config)
-                    if p == False:
-                        bot.logger.info("色图已屏蔽")
-                        await bot.send(event, "杂鱼，色图不给你喵~", True)
-                    else:
-                        await bot.send(event, [Image(file=p)], True)
-                except Exception as e:
-                    bot.logger.error(e)
-                    if retries_left > 0:
-                        bot.logger.error(f"尝试重新请求nai3，剩余尝试次数：{retries_left - 1}")
-                        await asyncio.sleep(0.5)  # 等待0.5秒
-                        await attempt_draw(retries_left - 1)
-                    else:
-                        await bot.send(event, "nai只因了，联系master喵~")
-
-            await attempt_draw()
+            await nai3(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
     async def db(event):
