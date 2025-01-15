@@ -528,6 +528,7 @@ def main(bot,config):
             img_url = event.get("image")[0]["url"]
             bot.logger.info(f"发起n4re请求，path:{path}|prompt:{prompts}")
             prompts_str = ' '.join(n4re[event.sender.user_id]) + ' '
+            await bot.send(event, "正在nai4重绘",True)
             n4re.pop(event.sender.user_id)
 
             async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
@@ -581,6 +582,7 @@ def main(bot,config):
             img_url = event.get("image")[0]["url"]
             bot.logger.info(f"发起n3re请求，path:{path}|prompt:{prompts}")
             prompts_str = ' '.join(n3re[event.sender.user_id]) + ' '
+            await bot.send(event, "正在nai3重绘",True)
             n3re.pop(event.sender.user_id)
 
             async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
