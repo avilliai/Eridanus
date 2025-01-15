@@ -18,6 +18,7 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
+censored_words = ["nsfw", "nipples", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
 
 
 from plugins.utils.random_str import random_str
@@ -35,6 +36,11 @@ async def n4(prompt, path, groupid, config):
     else:
         width = 832
         height = 1216
+
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
 
     payload = {
         "input": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
@@ -129,6 +135,11 @@ async def n3(prompt, path, groupid, config):
         width = 832
         height = 1216
 
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
+
     payload = {
         "input": f"{prompt}, best quality, amazing quality, very aesthetic, absurdres",
         "model": "nai-diffusion-3",
@@ -203,6 +214,11 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         width = 1600
     if height > 1600:
         height = 1600
+
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
     
     payload = {
         "init_images": [b64_in],
@@ -265,6 +281,11 @@ async def SdDraw0(prompt, path, config, groupid, args):
         width = 1600
     if height > 1600:
         height = 1600
+
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
     
     payload = {
         "denoising_strength": denoising_strength,
@@ -369,6 +390,11 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
+
     payload = {
         "input": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
         "model": "nai-diffusion-4-curated-preview",
@@ -467,6 +493,11 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
+
     payload = {
         "input": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
         "model": "nai-diffusion-3",
@@ -545,6 +576,11 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         width = 1600
     if height > 1600:
         height = 1600
+
+    if groupid in no_nsfw_groups:
+        for word in censored_words:
+            if word in prompt:
+                return False
 
     payload = {
         "init_images": [b64_in],
