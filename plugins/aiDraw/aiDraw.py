@@ -210,10 +210,10 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
     
-    if width > 1024:
-        width = 1024
-    if height > 1024:
-        height = 1024
+    if width > 1600:
+        width = 1600
+    if height > 1600:
+        height = 1600
 
     if groupid in no_nsfw_groups:
         for word in censored_words:
@@ -273,14 +273,14 @@ async def SdDraw0(prompt, path, config, groupid, args):
     url = config.api["ai绘画"]["sdUrl"]
 
     args = args
-    width = (args.get('w', 832) if args.get('w', 832) > 0 else 832) if isinstance(args, dict) else 832
-    height = (args.get('h', 1216) if args.get('h', 1216) > 0 else 1216) if isinstance(args, dict) else 1216
+    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    height = (args.get('h', 1600) if args.get('h', 1600) > 0 else 1600) if isinstance(args, dict) else 1600
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
     
-    if width > 1024:
-        width = 1024
-    if height > 1024:
-        height = 1024
+    if width > 1600:
+        width = 1600
+    if height > 1600:
+        height = 1600
 
     if groupid in no_nsfw_groups:
         for word in censored_words:
@@ -572,10 +572,10 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
     
-    if width > 1024:
-        width = 1024
-    if height > 1024:
-        height = 1024
+    if width > 1600:
+        width = 1600
+    if height > 1600:
+        height = 1600
 
     if groupid in no_nsfw_groups:
         for word in censored_words:
