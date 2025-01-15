@@ -134,7 +134,7 @@ async def nai4(bot,event,config,tag):
             await bot.send(event, log, True)
         path = f"data/pictures/cache/{random_str()}.png"
         bot.logger.info(f"发起nai4绘画请求，path:{path}|prompt:{tag}")
-        await bot.send(event, '正在进行nai4画图', True)
+        #await bot.send(event, '正在进行nai4画图', True)
 
         async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
             try:
@@ -143,16 +143,15 @@ async def nai4(bot,event,config,tag):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
-                    print(p)
                     await bot.send(event, [Image(file=p)], True)
+                return
             except Exception as e:
-                bot.logger.error(e)
                 if retries_left > 0:
-                    bot.logger.error(f"尝试重新请求nai4，剩余尝试次数：{retries_left - 1}")
+                    #bot.logger.error(f"尝试重新请求nai4，剩余尝试次数：{retries_left - 1}")
                     await asyncio.sleep(0.1)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
-                    await bot.send(event, "nai只因了，联系master喵~")
+                    bot.logger.info("nai调用失败")
 
         await attempt_draw()
     
