@@ -4,7 +4,7 @@ Eridanus is a bot for onebot v11. It is designed to provide a variety of feature
 
 [文档](https://eridanus-doc.netlify.app/)
 # 部署
-见文档。
+见[文档](https://eridanus-doc.netlify.app/)
 # 交流
 QQ群：913122269
 # 派生项目

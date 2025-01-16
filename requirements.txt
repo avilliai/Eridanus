@@ -18,5 +18,4 @@ img2pdf
 playwright
 bilibili-api-python
 PicImageSearch
-PyExecJS
 httpx<0.28.0
