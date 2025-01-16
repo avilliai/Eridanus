@@ -4,7 +4,11 @@ import re
 import shutil
 import subprocess
 from time import sleep
+import os
+import sys
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
@@ -43,8 +47,9 @@ async def main():
         1 youtube登录
         2 更新bot代码(常用)
         3 playwright工具安装
-        4 开发者工具""")
-    sleep(1)
+        4 开发者工具
+        5 若只的检测相关ai库(如奶龙检测)""")
+    sleep(0.3)
     user_input=input("请输入指令序号：")
     if user_input=="1":
         logger.info("youtube登录")
@@ -85,13 +90,16 @@ async def main():
         logger.info("""请输入开发者工具序号：
         1 同步gemini函数调用到openai函数调用
         2 没想好呢""")
-        sleep(1)
+        sleep(0.3)
         user_input2=input("请输入开发者工具序号：")
         if user_input2=="1":
             logger.info("同步gemini函数调用到openai函数调用")
             r = gemini_func_map()
             convert_gemini_to_openai(r)
             logger.info("同步完成")
+    elif user_input=="5":
+        logger.info("安装奶龙相关ai库依赖中")
+        ai_req()
 
 def updaat(f=False,source=None,yamls={}):
 
@@ -142,6 +150,7 @@ def updaat(f=False,source=None,yamls={}):
         logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
         logger.warning("依赖检查完成")
+        os.system(f"\"{python_path}\" -m pip install httpx==0.27.2")
         logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()
     # 逐行检查错误信息
@@ -343,5 +352,51 @@ def check_requirements(requirements_file, pip_path):
 
     if not missing and not mismatched:
         print("所有依赖都已正确安装！")
+        
+def extract_cuda_version(nvcc_output):
+    """
+    从nvcc --version命令的输出中提取CUDA版本，并转换为用于构建PyTorch URL的形式。
+    :param nvcc_output: str, nvcc --version命令的输出字符串。
+    :return: str, 转换后的CUDA版本号，如'cu121'。
+    """
+    match = re.search(r'release (\d+\.\d+)', nvcc_output)
+    if match:
+        cuda_version = match.group(1)  # 获取主版本和次版本号
+        major, minor = cuda_version.split('.')
+        return f'cu{major}{minor}'
+    else:
+        return None
+
+def ai_req():
+    try:
+        nvcc_output = subprocess.check_output(["nvcc", "--version"], stderr=subprocess.STDOUT).decode()
+        cuda_torch_suffix = extract_cuda_version(nvcc_output)
+        if cuda_torch_suffix:
+            logger.info(f"检测到CUDA版本：{cuda_torch_suffix[2:]}，正在安装支持CUDA的PyTorch...")
+        else:
+            logger.warning("未能检测到CUDA版本，假设系统中未安装CUDA。")
+    except Exception as e:
+        logger.warning("未能检测到CUDA版本或nvcc未安装，假设系统中未安装CUDA。")
+        cuda_torch_suffix = None
+    
+    try:
+        if cuda_torch_suffix:
+            os.system(f"\"{python_path}\" -m pip install opencv-python-headless")
+            # 如果检测到了支持的CUDA版本，则安装带有CUDA支持的PyTorch包
+            os.system(f"\"{python_path}\" -m pip install torch torchvision torchaudio --index-url=https://download.pytorch.org/whl/{cuda_torch_suffix}")
+        else:
+            os.system(f"\"{python_path}\" -m pip install opencv-python-headless")
+            # 如果没有检测到CUDA或不支持的CUDA版本，则安装CPU-only版本的PyTorch包
+            logger.info("未检测到CUDA或CUDA版本不受支持，正在安装仅CPU版本的PyTorch...")
+            os.system(f"\"{python_path}\" -m pip install opencv-python-headless torch torchvision torchaudio")
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"安装PyTorch时出错：{e}")
+        sys.exit(1)
+        return
+
+    logger.info("ai相关库安装成功完成")
+    return
+    
 
 asyncio.run(main())

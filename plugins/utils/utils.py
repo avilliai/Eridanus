@@ -23,30 +23,30 @@ async def url_to_base64(url):
         else:
             raise Exception(f"Failed to retrieve image: {response.status_code}")
 
-def parse_arguments(arg_string):
+def parse_arguments(arg_string, original_dict):
     args = arg_string.split()
-    print(f"Split arguments: {args}")  # 调试信息
-    result = {}
     for arg in args:
         if arg.startswith('-') and len(arg) > 1:
-            # 找到第一个数字的位置
+            key_end_index = None
             for i, char in enumerate(arg[1:], start=1):
-                if char.isdigit():
+                if char.isdigit() or char == '.':
+                    key_end_index = i
                     break
-            else:
+            if key_end_index is None:
                 continue
-            
-            key = arg[1:i]
-            value = arg[i:]
+            key = arg[1:key_end_index]
+            value_str = arg[key_end_index:]
             try:
-                value = int(value)
+                if '.' in value_str:
+                    value = float(value_str)
+                else:
+                    value = int(value_str)
             except ValueError:
-                print(f"Warning: Invalid value for key '{key}'")  # 调试信息
                 continue
-            result[key] = value
+            original_dict[key] = value
         else:
-            print(f"Warning: Invalid argument format '{arg}'")  # 调试信息
-    return result
+            pass
+    return original_dict
 
 async def download_img(url,path,gray_layer=False,proxy=None):
     if url.startswith("data:image"):

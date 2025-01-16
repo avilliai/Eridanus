@@ -140,7 +140,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 开卢
     async def today_LU(event: GroupMessageEvent):
         lu_recall = ['不！给！你！🦌！！！','我靠你怎么这么坏！','再🦌都🦌出火星子了！！','让我来帮你吧~','好恶心啊~~','有变态！！','你这种人渣我才不会喜欢你呢！',
-                        '令人害怕的坏叔叔','枫与岚是好孩子，才不会帮你呢','才不给你计数呢！（哼']
+                        '令人害怕的坏叔叔','才不给你计数呢！（哼']
         if str(event.raw_message).startswith('🦌'):
             target_id = int(event.sender.user_id)
             match = re.search(r"qq=(\d+)", event.raw_message)

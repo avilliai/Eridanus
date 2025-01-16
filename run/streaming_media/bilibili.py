@@ -1,5 +1,6 @@
 import asyncio
 from asyncio import sleep
+from concurrent.futures import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
@@ -48,33 +49,40 @@ async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
     bilibili_type_draw = config.settings["bili_dynamic"]["draw_type"]
     for target_uid in config.bili_dynamic:
-        latest_dynamic_id1,latest_dynamic_id2=await fetch_latest_dynamic_id(int(target_uid))
-        if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0] or latest_dynamic_id2!=config.bili_dynamic[target_uid]["latest_dynamic_id"][1]:
-            if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0]:
-                latest_dynamic_id=latest_dynamic_id1
-            else:
-                latest_dynamic_id=latest_dynamic_id2
-
-            bot.logger.info_func(f"发现新的动态 群号：{config.bili_dynamic[target_uid]['push_groups']} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
-            groups=config.bili_dynamic[target_uid]["push_groups"]
-            try:
-                if bilibili_type_draw == 1:
-                    dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
-                elif bilibili_type_draw == 2:
-                    await bilibili(f'https://t.bilibili.com/{latest_dynamic_id}',
-                                   filepath='plugins/resource_search_plugin/Link_parsing/data/')
-                    dynamic = f'plugins/resource_search_plugin/Link_parsing/data/result.png'
-            except Exception as e:
-                bot.logger.error(f"动态获取失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
-
-            for group_id in groups:
-                bot.logger.info_func(f"推送动态 群号：{groups} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
+        try:
+            latest_dynamic_id1,latest_dynamic_id2=await fetch_latest_dynamic_id(int(target_uid))
+            if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0] or latest_dynamic_id2!=config.bili_dynamic[target_uid]["latest_dynamic_id"][1]:
+                if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0]:
+                    latest_dynamic_id=latest_dynamic_id1
+                else:
+                    latest_dynamic_id=latest_dynamic_id2
+    
+                bot.logger.info_func(f"发现新的动态 群号：{config.bili_dynamic[target_uid]['push_groups']} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
+                groups=config.bili_dynamic[target_uid]["push_groups"]
                 try:
-                    await bot.send_group_message(group_id,Image(file=dynamic))
-                except:
-                    bot.logger.error(f"推送动态失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
-            config.bili_dynamic[target_uid]["latest_dynamic_id"]=[latest_dynamic_id1,latest_dynamic_id2]
-            config.save_yaml("bili_dynamic")
+                    if bilibili_type_draw == 1:
+                        dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
+                    elif bilibili_type_draw == 2:
+                        loop = asyncio.get_running_loop()
+                        with ThreadPoolExecutor() as executor:
+                            await loop.run_in_executor(executor, asyncio.run, bilibili(f'https://t.bilibili.com/{latest_dynamic_id}',
+                                       filepath='data/pictures/cache/',dynamicid=latest_dynamic_id))
+                        dynamic = f'data/pictures/cache/{latest_dynamic_id}.png'
+                except Exception as e:
+                    bot.logger.error(f"动态获取失败 ：{e} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
+                    continue
+    
+                for group_id in groups:
+                    bot.logger.info_func(f"推送动态 群号：{groups} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
+                    try:
+                        await bot.send_group_message(group_id,Image(file=dynamic))
+                    except:
+                        bot.logger.error(f"推送动态失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
+                config.bili_dynamic[target_uid]["latest_dynamic_id"]=[latest_dynamic_id1,latest_dynamic_id2]
+                config.save_yaml("bili_dynamic")
+        except Exception as e:
+            bot.logger.error(f"动态抓取失败{e} uid: {target_uid}")
+            continue
     bot.logger.info_func("完成 B 站动态更新检查")
 
 def main(bot,config):

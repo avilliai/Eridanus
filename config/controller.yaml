@@ -17,6 +17,7 @@ resource_search:   #资源搜索功能
 basic_plugin:
   setu_operate_level: 0    #色图功能所需等级
   search_image_resource_operate_level: 0  #图片搜索功能所需等级
+  内置ai绘画开关: true  #内置ai绘画功能开关
   bing_dalle3_operate_level: 0  #bing_dalle3绘图功能所需等级
 流媒体:
   youtube:

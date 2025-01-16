@@ -145,34 +145,7 @@ async def call_tts(bot,event,config,text,speaker=None):
         await bot.send(event, Record(file=p))
     except Exception as e:
         bot.logger.error(f"Error in tts: {e}")
-async def call_text2img(bot,event,config,prompt):
-    user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"]:
-        bot.logger.info(f"Received text2img prompt: {prompt}")
-        await bot.send(event, "正在绘制，请稍候...")
-        proxy=config.api["proxy"]["http_proxy"]
-        functions = [
-            #ideo_gram(prompt, proxy),
-            bing_dalle3(prompt, proxy),
-            #flux_speed(prompt, proxy), #也不要这个
-            #recraft_v3(prompt, proxy), #不要这个
-            flux_ultra(prompt, proxy),
-        ]
 
-        for future in asyncio.as_completed(functions):
-            try:
-                result = await future
-                if result is not []:
-                    sendMes = []
-                    for r in result:
-                        sendMes.append(Node(content=[Image(file=r)]))
-                    await bot.send(event, sendMes)
-            except Exception as e:
-                bot.logger.error(f"Task failed: {e}")
-
-
-    else:
-        await bot.send(event, "你没有权限使用该功能")
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
@@ -226,11 +199,6 @@ def main(bot,config):
 
             await bot.send(event, Node(content=[Text(f"可用角色：{ffff}")]))
 
-    @bot.on(GroupMessageEvent)
-    async def bing_dalle3_draw(event):
-        if str(event.raw_message).startswith("画 "):
-            prompt = str(event.raw_message).split("画 ")[1]
-            await call_text2img(bot, event, config, prompt)
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
         if event.raw_message=="今日塔罗":

@@ -30,7 +30,7 @@ class MyDownloader(jmcomic.JmDownloader):
             return [album[self.album_index - 1]]
         if (detail.is_photo()):
             photo: jmcomic.JmPhotoDetail = detail
-            print(len(photo))
+            #print(len(photo))
             if (end > len(photo)):
                 end = len(photo)
             if (start > len(photo)):
@@ -52,7 +52,7 @@ def queryJM(name, num=3):
         results.append([f"车牌号：{i[0]} \n name：{i[1]['name']}\nauthor：{i[1]['author']} \n部分预览图：", file[0]])
         if len(results) > num:
             return results
-        print(results)
+        #print(results)
 
 
 def JM_search(name):

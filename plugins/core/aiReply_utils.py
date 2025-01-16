@@ -24,7 +24,7 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 url = i["mface"]["url"]
             else:
                 url = i["image"]["url"]
-            prompt_elements.append({"type":"text","text": f"system:图片的url是{url}"})
+            prompt_elements.append({"type":"text","text": f"system提示: 当前图片的url为{url}"})
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.get(url)
@@ -49,7 +49,7 @@ async def construct_openai_standard_prompt(processed_message,system_instruction,
         {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
     ]
     full_prompt.extend(history)
-    await update_user_history(user_id, history)  # 更新数据库中的历史记录
+    await update_user_history(user_id, full_prompt)  # 更新数据库中的历史记录
     return full_prompt, original_history
 
 """
@@ -67,7 +67,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 url=i["mface"]["url"]
             else:
                 url=i["image"]["url"]
-            prompt_elements.append({"text": f"system:图片的url是{url}"})
+            prompt_elements.append({"text": f"system提示: 当前图片的url为{url}"})
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.get(url)

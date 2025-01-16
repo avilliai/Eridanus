@@ -386,7 +386,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
 def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, font_size=30,
                          avatar_path=None, name=None,Time=None,type=None,introduce=None,title=None,
                          contents_dy=None,orig_avatar_path=None, orig_name=None,orig_Time=None,
-                         filepath=None):
+                         filepath=None,dynamic_id=None):
     """
     图像绘制
     type类型说明：
@@ -399,18 +399,18 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     """
     # 准备字体
     if filepath is None:
-        filepath=f'data/'
+        filepath=f'data/pictures/cache/'
     #print(filepath)
-    output_path=f'{filepath}result.png'
+    output_path=f'{filepath}{dynamic_id}.png'
     if avatar_path is None:
-        avatar_path = f"{filepath}touxiang.png"
+        avatar_path = f"{filepath}{dynamic_id}touxiang.png"
     if orig_avatar_path is None:
-        orig_avatar_path = f"{filepath}orig_touxiang.png"
+        orig_avatar_path = f"{filepath}{dynamic_id}orig_touxiang.png"
     try:
-        font = ImageFont.truetype(f"{filepath}LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
-        font_tx = ImageFont.truetype(f"{filepath}LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
-        font_tx_introduce = ImageFont.truetype(f"{filepath}LXGWWenKai-Bold.ttf", font_size-5)  # 替换为本地字体路径
-        font_tx_pil = ImageFont.truetype(f"{filepath}LXGWWenKai-Bold.ttf", font_size+10)  # 替换为本地字体路径
+        font = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
+        font_tx = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
+        font_tx_introduce = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size-5)  # 替换为本地字体路径
+        font_tx_pil = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size+10)  # 替换为本地字体路径
     except IOError:
         print("字体 LXGWWenKai-Bold.ttf 未找到，改用默认字体")
         font = ImageFont.load_default()
