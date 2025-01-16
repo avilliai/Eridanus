@@ -82,38 +82,39 @@ async def call_text2img2(bot,event,config,tag):
         pass
         #await bot.send(event, "你没有权限使用该功能")
 async def call_text2img1(bot,event,config,tag):
-    global turn
-    global sd_user_args
-    tag, log = await replace_wildcards(tag)
-    if log:
-        await bot.send(event, log)
-    path = f"data/pictures/cache/{random_str()}.png"
-    bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
-    try:
-        if turn!=0:
-            await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
-        else:
-            await bot.send(event, f"正在绘制，请耐心等待~", True)
-        turn += 1
-        args = sd_user_args.get(event.sender.user_id, {})
-        if hasattr(event, "group_id"):
-            id_=event.group_id
-        else:
-            id_=event.user_id
-        p = await SdDraw0(tag, path, config, id_, args)
-        if p == False:
+    if config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
+        global turn
+        global sd_user_args
+        tag, log = await replace_wildcards(tag)
+        if log:
+            await bot.send(event, log)
+        path = f"data/pictures/cache/{random_str()}.png"
+        bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
+        try:
+            if turn!=0:
+                await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
+            else:
+                await bot.send(event, f"正在绘制，请耐心等待~", True)
+            turn += 1
+            args = sd_user_args.get(event.sender.user_id, {})
+            if hasattr(event, "group_id"):
+                id_=event.group_id
+            else:
+                id_=event.user_id
+            p = await SdDraw0(tag, path, config, id_, args)
+            if p == False:
+                turn -= 1
+                bot.logger.info("色图已屏蔽")
+                await bot.send(event, "杂鱼，色图不给你喵~", True)
+            else:
+                turn -= 1
+                await bot.send(event, [Text("sd结果"),Image(file=p)], True)
+    
+        except Exception as e:
+            bot.logger.error(e)
             turn -= 1
-            bot.logger.info("色图已屏蔽")
-            await bot.send(event, "杂鱼，色图不给你喵~", True)
-        else:
-            turn -= 1
-            await bot.send(event, [Image(file=p)], True)
-
-    except Exception as e:
-        bot.logger.error(e)
-        turn -= 1
-        bot.logger.error(f"sd api调用失败。{e}")
-        await bot.send(event, f"sd api调用失败。{e}")
+            bot.logger.error(f"sd api调用失败。{e}")
+            await bot.send(event, f"sd api调用失败。{e}")
 
 async def call_aiArtModerate(bot,event,config,img_url):
     try:
@@ -143,7 +144,7 @@ async def nai4(bot,event,config,tag):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
-                    await bot.send(event, [Image(file=p)], True)
+                    await bot.send(event, [Text("nai4画图结果"),Image(file=p)], True)
                 return
             except Exception as e:
                 if retries_left > 0:
@@ -151,7 +152,7 @@ async def nai4(bot,event,config,tag):
                     await asyncio.sleep(0.1)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
-                    bot.logger.info("nai调用失败")
+                    bot.logger.info("nai调用失败。{e}")
 
         await attempt_draw()
     
@@ -162,7 +163,7 @@ async def nai3(bot,event,config,tag):
             await bot.send(event, log, True)
         path = f"data/pictures/cache/{random_str()}.png"
         bot.logger.info(f"发起nai3绘画请求，path:{path}|prompt:{tag}")
-        await bot.send(event, '正在进行nai3画图', True)
+        #await bot.send(event, '正在进行nai3画图', True)
 
         async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
             try:
@@ -171,15 +172,15 @@ async def nai3(bot,event,config,tag):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
-                    await bot.send(event, [Image(file=p)], True)
+                    await bot.send(event, [Text("nai3画图结果"),Image(file=p)], True)
             except Exception as e:
                 bot.logger.error(e)
                 if retries_left > 0:
-                    bot.logger.error(f"尝试重新请求nai3，剩余尝试次数：{retries_left - 1}")
+                    #bot.logger.error(f"尝试重新请求nai3，剩余尝试次数：{retries_left - 1}")
                     await asyncio.sleep(0.5)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
-                    await bot.send(event, "nai只因了，联系master喵~")
+                    await bot.send(event, "nai调用失败。{e}")
 
         await attempt_draw()
 
@@ -206,12 +207,14 @@ def main(bot,config):
     async def naiDraw4(event):
         if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n4 ", "")
+            await bot.send(event, '正在进行nai4画图', True)
             await nai4(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
     async def naiDraw3(event):
         if str(event.raw_message).startswith("n3 ") and config.controller["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n3 ", "")
+            await bot.send(event, '正在进行nai3画图', True)
             await nai3(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
@@ -453,10 +456,10 @@ def main(bot,config):
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
                     turn -= 1
-                    await bot.send(event, [Image(file=p)], True)
+                    await bot.send(event, [Text("sd重绘结果"),Image(file=p)], True)
             except Exception as e:
                 bot.logger.error(f"重绘失败: {e}")
-                await bot.send(event, "重绘失败了喵~", True)
+                await bot.send(event, "sd api重绘失败。{e}", True)
 
     @bot.on(GroupMessageEvent)
     async def AiSdDraw(event):
@@ -553,14 +556,14 @@ def main(bot,config):
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
                     else:
-                        await bot.send(event, [Image(file=p)], True)
+                        await bot.send(event, [Text("nai4重绘结果"),Image(file=p)], True)
                 except Exception as e:
                     bot.logger.error(e)
                     if retries_left > 0:
                         bot.logger.error(f"尝试重新请求nai4re，剩余尝试次数：{retries_left - 1}")
                         await attempt_draw(retries_left - 1)
                     else:
-                        await bot.send(event, "nai只因了，联系master喵~")
+                        await bot.send(event, "nai4重绘失败。{e}", True)
 
             await attempt_draw()
 
@@ -607,14 +610,14 @@ def main(bot,config):
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
                     else:
-                        await bot.send(event, [Image(file=p)], True)
+                        await bot.send(event, [Text("nai3重绘结果"),Image(file=p)], True)
                 except Exception as e:
                     bot.logger.error(e)
                     if retries_left > 0:
                         bot.logger.error(f"尝试重新请求nai3re，剩余尝试次数：{retries_left - 1}")
                         await attempt_draw(retries_left - 1)
                     else:
-                        await bot.send(event, "nai只因了，联系master喵~")
+                        await bot.send(event, "nai3重绘失败。{e}", True)
 
             await attempt_draw()
 
@@ -655,10 +658,10 @@ def main(bot,config):
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
                     turn -= 1
-                    await bot.send(event, [Image(file=p)], True)
+                    await bot.send(event, [Text("sd局部重绘结果"),Image(file=p)], True)
             except Exception as e:
                 bot.logger.error(f"局部重绘失败: {e}")
-                await bot.send(event, "局部重绘失败了喵~", True)
+                await bot.send(event, "sd api局部重绘失败。{e}", True)
             return
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
