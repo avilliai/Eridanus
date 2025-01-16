@@ -149,7 +149,6 @@ async def nai4(bot,event,config,tag):
             except Exception as e:
                 if retries_left > 0:
                     #bot.logger.error(f"尝试重新请求nai4，剩余尝试次数：{retries_left - 1}")
-                    await asyncio.sleep(0.1)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
                     await bot.send(event, f"nai4调用失败。{e}")
@@ -177,7 +176,6 @@ async def nai3(bot,event,config,tag):
                 bot.logger.error(e)
                 if retries_left > 0:
                     #bot.logger.error(f"尝试重新请求nai3，剩余尝试次数：{retries_left - 1}")
-                    await asyncio.sleep(0.5)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
                     await bot.send(event, f"nai3调用失败。{e}")
