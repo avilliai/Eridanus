@@ -8,6 +8,8 @@ from plugins.core.userDB import update_user, add_user, get_user
 
 
 def main(bot,config):
+    master=config.basic_config["master"]["id"]
+
     global avatar
     avatar=False
     @bot.on(GroupMessageEvent)
@@ -24,12 +26,12 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def changeAvatar(event: GroupMessageEvent):
         global avatar
-        bot.logger.info(event.processed_message)
+        #bot.logger.info(event.processed_message)
         #bot.logger.error(event.get("image"))
-        if event.raw_message=="换头像" and event.sender.user_id==1840094972:
+        if event.raw_message=="换头像" and event.sender.user_id==master:
             await bot.send(event,"发来！")
             avatar=True
-        if event.get("image") and avatar and event.sender.user_id==1840094972:
+        if event.get("image") and avatar and event.sender.user_id==master:
             bot.logger.error(event.get("image")[0]["url"])
             r=await bot.set_qq_avatar(event.get("image")[0]["url"])
             bot.logger.error(r)
@@ -38,13 +40,13 @@ def main(bot,config):
         if event.get("mface"):
             pass
             #await bot.send(event,f"你的彩色小人gif在这里{event.get('mface')[0]['url']}")
-        if event.raw_message=="给我管理" and event.sender.user_id==1840094972:
+        if event.raw_message=="给我管理" and event.sender.user_id==master:
             await bot.set_group_admin(event.group_id,event.sender.user_id,True)
             await bot.send(event, "给你了！")
-        if event.raw_message=="取消管理" and event.sender.user_id==1840094972:
+        if event.raw_message=="取消管理" and event.sender.user_id==master:
             await bot.set_group_admin(event.group_id,event.sender.user_id,False)
             await bot.send(event, "取消了！")
-        if event.raw_message.startswith("改群名") and event.sender.user_id==1840094972:
+        if event.raw_message.startswith("改群名") and event.sender.user_id==master:
             name=event.raw_message.split("改群名")[1].strip()
             await bot.set_group_name(event.group_id,name)
         if event.raw_message.startswith("我要头衔"):

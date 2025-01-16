@@ -13,6 +13,8 @@ from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
 from plugins.utils.convert_func_calling import gemini_func_map, convert_gemini_to_openai
+from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
+
 """
 获取环境
 """
@@ -48,7 +50,8 @@ async def main():
         2 更新bot代码(常用)
         3 playwright工具安装
         4 开发者工具
-        5 若只的检测相关ai库(如奶龙检测)""")
+        5 若只的检测相关ai库(如奶龙检测)
+        6 B站 or 抖音登录""")
     sleep(0.3)
     user_input=input("请输入指令序号：")
     if user_input=="1":
@@ -100,6 +103,10 @@ async def main():
     elif user_input=="5":
         logger.info("安装奶龙相关ai库依赖中")
         ai_req()
+    elif user_input=="6":
+        #logger.info("开始执行相关程序ing")
+        await login_core_select()
+
 
 def updaat(f=False,source=None,yamls={}):
 

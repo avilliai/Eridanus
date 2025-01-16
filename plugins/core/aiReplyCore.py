@@ -54,6 +54,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
             )
             reply_message = response_message['content']
+            await prompt_database_updata(user_id,response_message,config)
 
         elif config.api["llm"]["model"]=="openai":
             prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id)
@@ -79,9 +80,12 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     generate_voice=True
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+
+            #在函数调用之前触发更新上下文。
+            await prompt_database_updata(user_id,response_message,config)
+            #函数调用
             if "tool_calls" in response_message:
                 for part in response_message['tool_calls']:
-                #目前不太确定多个函数调用的情况，先只处理第一个。
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
                     try:
@@ -136,8 +140,11 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
+            #在函数调用之前触发更新上下文。
+            await prompt_database_updata(user_id,response_message,config)
+            #函数调用
             for part in response_message["parts"]:
-                if "functionCall" in part:               #目前不太确定多个函数调用的情况，先只处理第一个。
+                if "functionCall" in part:
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
                     try:
@@ -162,19 +169,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
-        #更新数据库中的历史记录
-        history = await get_user_history(user_id)
-        if len(history) > config.api["llm"]["max_history_length"]:
-            del history[0]
-            del history[0]
-        history.append(response_message)
-        await update_user_history(user_id, history)
-        #处理工具调用，但没做完，一用gemini函数调用就给我RESOURCE_EXHAUSTED，受不了一点byd
 
-            #print(f"funccall result:{r}")
-            #return r
-            #ask = await prompt_elements_construct(r)
-            #response_message = await aiReplyCore(ask,user_id,config,tools=tools)
         logger.info(f"aiReplyCore returned: {reply_message}")
         if reply_message is not None:
             return reply_message.strip()
@@ -184,6 +179,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")
         raise  # 继续抛出异常以便调用方处理
+async def prompt_database_updata(user_id,response_message,config):
+    history = await get_user_history(user_id)
+    if len(history) > config.api["llm"]["max_history_length"]:
+        del history[0]
+        del history[0]
+    history.append(response_message)
+    await update_user_history(user_id, history)
 
 async def defaultModelRequest(ask_prompt,proxy=None):
     if proxy is not None and proxy !="":

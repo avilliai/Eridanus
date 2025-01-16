@@ -10,7 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
 
-DATABASE = "data/database/wifeyouwant.db"  # 修改路径为小写
+DATABASE = "data/dataBase/wifeyouwant.db"  # 修改路径为小写
 
 # 初始化数据库表结构
 async def initialize_db():
@@ -319,10 +319,14 @@ async def PIL_lu_maker(today , target_id):
         draw.text((text_x, text_y), day_text, fill="black", font=day_font)
 
         times = await manage_group_status('lu', f'{year}_{month}_{day}', target_id)
-        if times >= 10:
-            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)  # 日字体
+        if times >= 1000:
+            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 15)
+        elif times >= 100:
+            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 20)
+        elif times >= 10:
+            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)
         else:
-            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)  # 日字体
+            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)
         if times not in {0,1}:
             draw.text((int(x + (cell_width - text_width) // 1.5), int(y + (cell_height - text_height) // 1.2)), f'×{times}', fill="red", font=lu_font)
 

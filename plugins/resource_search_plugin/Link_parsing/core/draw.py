@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps,ImageFilter
 import os
 import textwrap
 import re
-
+import inspect
 
 
 
@@ -36,10 +36,11 @@ def add_rounded_corners(image, radius):
     rounded_image.paste(image, (0, 0), mask=mask)
     return rounded_image
 
-def creat_white_corners(canvas, content_width, content_height,padding_x,current_y,radius=None,type=None):
+def creat_white_corners(canvas, content_width, content_height,padding_x,current_y,radius=None,type=None,color=None):
     shadow_width = 10  # Shadow width
     shadow_color = (255, 255, 255, 80)
     if type is not None: shadow_color = (255, 255, 255, 80)
+    if color is not None: shadow_color = color
     shadow_image = Image.new('RGBA', (content_width + shadow_width,content_height+ shadow_width), shadow_color)
     shadow_blurred = shadow_image.filter(ImageFilter.GaussianBlur(shadow_width / 2))
     shadow_x = int(padding_x - shadow_width / 2)
@@ -65,6 +66,7 @@ def fit_font_size(text, font_path, max_width, starting_font_size=30):
     return font
 
 def wrap_text(text, font, max_width,type=None):
+    #print(f'max_width:{max_width}')
     number_check = 0
     lines = []  # 用于存储最终的每一行
     check_lines=[]
@@ -75,14 +77,14 @@ def wrap_text(text, font, max_width,type=None):
         type_check = False
 
     for line in words:  # 遍历每一行（处理换行符的部分）
+        if line in ['',' ']:continue
         line_check = ""  # 用于拼接当前正在处理的行
-
         for char in line:  # 遍历每一行的字符，包括空格
             # 获取当前行加上新字符后的宽度
             bbox = font.getbbox(line_check + char)
             text_width = bbox[2] - bbox[0]  # 计算宽度
 
-            if text_width  > max_width:  # 判断加上字符后是否超过最大宽度
+            if text_width + 20 > max_width:  # 判断加上字符后是否超过最大宽度
                 check_lines.append(line_check)
                 lines.append(check_lines)  # 将当前行加入结果
                 check_lines=[]
@@ -145,7 +147,12 @@ def add_shaow_image_new(canvas,padding,canvas_width,total_height,x,y):
     return canvas
 
 
-def handle_context(contents,font,content_width,total_height,padding,type_check,introduce,font_tx,header_height):
+def handle_context(contents,font,content_width,total_height,padding,type_check,introduce,font_tx,header_height,
+                   type_software=None,height_software=None):
+
+    if type_software is not None:
+        total_height +=height_software
+
     total_height+=header_height + padding +50
     # 处理内容
     processed_contents = []
@@ -154,7 +161,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
     introduce_height=None
 
     for content in contents:
-        if isinstance(content, str) and os.path.splitext(content)[1].lower() in [".jpg", ".png", ".jpeg"]:
+        if isinstance(content, str) and os.path.splitext(content)[1].lower() in [".jpg", ".png", ".jpeg",'.webp']:
             # 处理图片
             img = Image.open(content)
             image_row.append(img)
@@ -164,14 +171,17 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
                 processed_contents.append(image_row)
                 image_row = []
             lines = wrap_text(content, font, content_width)
-            processed_contents.append(lines)
+            if lines != []:
+                processed_contents.append(lines)
     if image_row:
         processed_contents.append(image_row)
     # 计算总高度
     check_img=0
     check_text=0
     check_text_height=0
+    #print(f'processed_contents:{processed_contents}\ncontent: {content}')
     for content in processed_contents:
+        #print(f'content:{content}')
         if isinstance(content, list) and isinstance(content[0], Image.Image):
             check_img=1
             check_text = 0
@@ -209,7 +219,8 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
                 check_text_height+= len(content) * line_height + padding + padding*(len(content)-1)*0.8
 
 
-    if check_img == 0 and check_text==1 :#如果是图片结尾则不加长，若是文字结尾则加长一小段
+    if check_img == 0 and check_text==1 and type_check:#如果是图片结尾则不加长，若是文字结尾则加长一小段
+        #print('文字加长了')
         total_height+=30
 
     # 计算简介的高度,如果视频有简介的话
@@ -226,14 +237,27 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
 
 def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,name,Time,header_height,
                processed_contents,content_width,introduce,type_check,font_tx,font_tx_pil,introduce_height,
-               introduce_contentm,introduce_content,font_tx_introduce,current_y_set=None,total_height=None):
+               introduce_contentm,introduce_content,font_tx_introduce,current_y_set=None,total_height=None,type_software=None,
+               color_software=None,layer=None,height_software=None):
+
     draw = ImageDraw.Draw(canvas)
     # 显示头像和名字
     if current_y_set is None:
         current_y_set=0
+    if type_software is not None:
+        current_y_set+=height_software
     current_y = padding + 30 + current_y_set
 
-    if current_y_set is not None and total_height is not None:
+    if layer is None or layer ==1:
+        white_dy_img = total_height - current_y_set-padding*2
+        #canvas=creat_white_corners(canvas, content_width+padding*2,int(white_dy_img),padding, current_y-padding)
+        gradient_layer = create_gradient_background((int(content_width+2*padding_x-2*padding), int(white_dy_img)),
+                                                    color1=(235, 239, 253), color2=(236, 255, 252))
+        gradient_layer = add_rounded_corners(gradient_layer, radius=20)
+        canvas = add_shaow_image_new(canvas, padding, content_width+2*padding_x-2*padding, total_height,padding,current_y-padding)
+        creat_white_corners(canvas, int(content_width+2*padding_x-2*padding), int(white_dy_img), padding, current_y-padding)
+        canvas.paste(gradient_layer, (int(padding), int(current_y-padding)), gradient_layer)
+    elif layer ==2 :
         #print(total_height,current_y_set)
         white_dy_img = total_height - current_y_set-padding*3
         canvas=creat_white_corners(canvas, content_width+padding_x,int(white_dy_img),padding_x, current_y-padding)
@@ -245,6 +269,20 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
         creat_white_corners(canvas, int(content_width+padding_x), int(white_dy_img), padding_x, current_y-padding)
         canvas.paste(gradient_layer, (int(padding_x), int(current_y-padding)), gradient_layer)
 
+
+    if type_software is not None:
+        draw = ImageDraw.Draw(canvas)
+        bbox = font_tx.getbbox(type_software)
+        text_width = bbox[2] - bbox[0]
+        x_add=10
+        if layer is None or layer == 1:
+            creat_white_corners(canvas, text_width+2 * padding+4, int(height_software), padding+x_add, current_y-70-4, radius=10)
+            creat_white_corners(canvas, text_width+2 * padding, int(height_software-4),padding+2+x_add,current_y-70-2,radius=10,color=color_software)
+            draw.text((padding*2+2+x_add, current_y-70-2), f'{type_software}', fill=(255, 255, 255), font=font_tx)
+        elif layer == 2:
+            creat_white_corners(canvas, text_width+2 * padding+4, int(height_software), padding_x+x_add, current_y-70-4, radius=10)
+            creat_white_corners(canvas, text_width+2 * padding, int(height_software-4),padding_x+2+x_add,current_y-70-2,radius=10,color=color_software)
+            draw.text((padding_x+padding+2+x_add, current_y-70-2), f'{type_software}', fill=(255, 255, 255), font=font_tx)
 
     if avatar_path:
         draw = ImageDraw.Draw(canvas)
@@ -315,6 +353,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 x_offset = padding_x_text
                 check=0
                 check_flag=1
+                check_fix_y=0
                 for img in content:
                     check_y = current_y
                     img = img.resize((new_width, int(new_width * img.height / img.width)))
@@ -327,12 +366,14 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                         canvas.paste(img, (int(x_offset), int(current_y)))
                     x_offset += new_width + padding
                     check+=1
+                    if img.height >= check_fix_y:
+                        check_fix_y=img.height
                     if check==3:
                         check=0
                         check_flag+=1
-                        current_y += img.height + padding
+                        current_y += check_fix_y + padding
                         x_offset = padding_x_text
-                current_y =check_y+img.height + padding
+                current_y =check_y+check_fix_y + padding
         elif isinstance(content, list):  # 文字
 
             if type_check  is True and introduce is not None:
@@ -386,7 +427,8 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
 def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, font_size=30,
                          avatar_path=None, name=None,Time=None,type=None,introduce=None,title=None,
                          contents_dy=None,orig_avatar_path=None, orig_name=None,orig_Time=None,
-                         filepath=None,dynamic_id=None):
+                         filepath=None,output_path=None,output_path_name=None,type_software=None,
+                         color_software=None,orig_type_software=None):
     """
     图像绘制
     type类型说明：
@@ -399,18 +441,24 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     """
     # 准备字体
     if filepath is None:
-        filepath=f'data/pictures/cache/'
+        filepath=f'data/cache/'
     #print(filepath)
-    output_path=f'{filepath}{dynamic_id}.png'
+    if output_path is None:
+        output_path=f'{filepath}result.png'
+    if output_path_name is not None:
+        output_path=f'{filepath}{output_path_name}.png'
     if avatar_path is None:
-        avatar_path = f"{filepath}{dynamic_id}touxiang.png"
+        avatar_path = f"{filepath}touxiang.png"
     if orig_avatar_path is None:
-        orig_avatar_path = f"{filepath}{dynamic_id}orig_touxiang.png"
+        orig_avatar_path = f"{filepath}orig_touxiang.png"
+
+
     try:
-        font = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
-        font_tx = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
-        font_tx_introduce = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size-5)  # 替换为本地字体路径
-        font_tx_pil = ImageFont.truetype(f"plugins/resource_search_plugin/Link_parsing/data/LXGWWenKai-Bold.ttf", font_size+10)  # 替换为本地字体路径
+        filepath_fort=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(draw_adaptive_graphic_and_textual))))}/data/fort/'
+        font = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
+        font_tx = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
+        font_tx_introduce = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size-5)  # 替换为本地字体路径
+        font_tx_pil = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size+10)  # 替换为本地字体路径
     except IOError:
         print("字体 LXGWWenKai-Bold.ttf 未找到，改用默认字体")
         font = ImageFont.load_default()
@@ -424,19 +472,23 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     content_width = canvas_width - 2 * padding_x  # 内容区域宽度
     total_height = 0  # 累加总高度
     type_check = None
+    height_software=40
     if type in {11,12,13}:type_check=True
 
-    # 文本自动换行
 
+
+    # 文本自动换行
     (processed_contents,introduce_content,introduce_height,total_height) = handle_context(contents,font, content_width,
-                                total_height, padding, type_check, introduce, font_tx,header_height)
+                                total_height, padding, type_check, introduce, font_tx_introduce,header_height,
+                                type_software,height_software)
     #print(processed_contents,introduce_content,introduce_height,total_height)
     if type == 14:
         type_check = True
         (orig_processed_contents, orig_introduce_content,
          orig_introduce_height, total_height) = handle_context(contents_dy,font, content_width- padding_x,
                                                 total_height, padding,
-                                                type_check, introduce,font_tx,header_height)
+                                                type_check, introduce,font_tx_introduce,header_height,
+                                                orig_type_software,height_software)
 
         #print(orig_processed_contents, orig_introduce_content,orig_introduce_height, total_height)
 
@@ -445,17 +497,12 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     canvas = create_gradient_background((canvas_width, total_height), color1=(191, 202, 255), color2=(185, 246, 236))
     draw = ImageDraw.Draw(canvas)
 
-    gradient_layer = create_gradient_background((canvas_width - 2 * padding, total_height - 2 * padding),
-                                                color1=(235, 239, 253), color2=(236, 255, 252))
-    gradient_layer = add_rounded_corners(gradient_layer, radius=20)
-    canvas = add_shaow_image(canvas, padding, canvas_width, total_height)
-    creat_white_corners(canvas, canvas_width - 2 * padding, total_height - 2 * padding, padding, padding)
-    canvas.paste(gradient_layer, (padding, padding), gradient_layer)
-    draw = ImageDraw.Draw(canvas)
+
 
     canvas,current_y=handle_img(canvas, padding, padding_x,padding_x, avatar_path, font_size, name, Time, header_height,
                    processed_contents, content_width, introduce, type_check, font_tx, font_tx_pil, introduce_height,
-                   introduce_content, introduce_content, font_tx_introduce)
+                   introduce_content, introduce_content, font_tx_introduce,total_height=total_height,type_software=type_software,
+                   color_software=color_software,height_software=height_software)
 
     if type == 14:
         current_y_set=current_y
@@ -463,7 +510,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
         canvas ,current_y= handle_img(canvas, padding, padding_x, padding_x +20 ,orig_avatar_path, font_size, orig_name, orig_Time, header_height,
                             orig_processed_contents, content_width - padding_x, introduce, type_check, font_tx, font_tx_pil,
                             orig_introduce_height,orig_introduce_content, orig_introduce_content, font_tx_introduce,current_y,
-                            total_height)
+                            total_height,layer=2,type_software=orig_type_software,color_software=color_software,height_software=height_software)
 
 
     # 保存图片
@@ -562,4 +609,5 @@ if __name__ == "__main__":
     contents_dy = ['data/orig_cover.png','【逆转裁判】烦死了身边一帮low货']
 
     draw_adaptive_graphic_and_textual(contents, name="Phigros",Time='"2025年01月03日 17:00"',type=14,introduce='ooc致歉',
-                                      contents_dy=contents_dy,orig_avatar_path=None, orig_name="漫朔",orig_Time='"2025年01月03日 17:00"')
+                                      contents_dy=contents_dy,orig_avatar_path=None, orig_name="漫朔",orig_Time='"2025年01月03日 17:00"',type_software='BiliBili',
+                                      color_software=(251,114,153,80),output_path_name='bilibili_dy')
