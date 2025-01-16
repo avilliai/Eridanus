@@ -10,7 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
 
-DATABASE = "data/database/wifeyouwant.db"  # 修改路径为小写
+DATABASE = "data/dataBase/wifeyouwant.db"  # 修改路径为小写
 
 # 初始化数据库表结构
 async def initialize_db():
