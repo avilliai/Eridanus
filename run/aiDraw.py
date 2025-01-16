@@ -115,7 +115,7 @@ async def call_text2img1(bot,event,config,tag):
                 await bot.send(event, "杂鱼，色图不给你喵~", True)
             else:
                 turn -= 1
-                await bot.send(event, [Text("sd结果"),Image(file=p)], True)
+                await bot.send(event, [Image(file=p)], True)
     
         except Exception as e:
             bot.logger.error(e)
@@ -155,9 +155,9 @@ async def nai4(bot, event, config, tag):
                 return
             except Exception as e:
                 retries_left -= 1
-                bot.logger.error(f"nai4报错{e}，剩余尝试次数：{retries_left}")
+                #bot.logger.error(f"nai4报错{e}，剩余尝试次数：{retries_left}")  #别让用户看到免得问。
                 if retries_left == 0:
-                    await bot.send(event, f"nai4调用失败。{e}")
+                    bot.logger.info(f"nai4调用失败。{e}")
     
 async def nai3(bot, event, config, tag):
     if config.controller["ai绘画"]["novel_ai画图"]:
@@ -180,9 +180,9 @@ async def nai3(bot, event, config, tag):
                     break  # 成功获取结果后结束循环
             except Exception as e:
                 retries_left -= 1
-                bot.logger.error(f"nai3报错{e}，剩余尝试次数：{retries_left}")
+                #bot.logger.error(f"nai3报错{e}，剩余尝试次数：{retries_left}")
                 if retries_left == 0:
-                    await bot.send(event, f"nai3调用失败。{e}", True)
+                    bot.logger.error(f"nai3调用失败。{e}")  # 别让用户看到免得问。
 
 def main(bot,config):
     ai_img_recognize = {}
