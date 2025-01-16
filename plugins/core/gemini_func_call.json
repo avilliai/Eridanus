@@ -2,7 +2,7 @@
         "function_declarations": [
             {
                 "name": "report_to_master",
-                "description": "向管理员(master)上报用户的恶性行为。当bot接受到任何攻击性言论、侮辱性言论、骚扰言论时触发。"
+                "description": "向管理员(master)上报用户的恶性行为。当bot接受到任何攻击性言论、侮辱性言论、骚扰言论时触发。或是用户需要向管理员反馈时触发。"
             },
             {
                 "name": "garbage_collection",
