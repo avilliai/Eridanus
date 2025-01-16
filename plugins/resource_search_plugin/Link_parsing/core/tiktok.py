@@ -1,5 +1,5 @@
 import random
-import execjs
+
 import urllib.parse
 import os
 import shutil
@@ -59,6 +59,7 @@ def generate_x_bogus_url(url, headers):
     abogus_file_path = f'{os.path.dirname(os.path.abspath(__file__))}/a-bogus.js'
     with open(abogus_file_path, 'r', encoding='utf-8') as abogus_file:
         abogus_file_path_transcoding = abogus_file.read()
+    import execjs
     abogus = execjs.compile(abogus_file_path_transcoding).call('generate_a_bogus', query, headers['User-Agent'])
     #print('生成的A-Bogus签名为: {}'.format(abogus))
     return url + "&a_bogus=" + abogus
@@ -109,7 +110,7 @@ if __name__ == '__main__':
     node_path = shutil.which("node")  # 自动查找 Node.js 可执行文件路径
     if not node_path:
         raise EnvironmentError("Node.js 未安装或未正确添加到系统 PATH 中!")
-
+    import execjs
     # 强制使用 Node.js
     execjs._runtime = execjs.ExternalRuntime("Node.js", node_path)
 
