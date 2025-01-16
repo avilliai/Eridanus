@@ -152,7 +152,7 @@ async def nai4(bot,event,config,tag):
                     await asyncio.sleep(0.1)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
-                    bot.logger.info("nai调用失败。{e}")
+                    await bot.send(event, f"nai4调用失败。{e}")
 
         await attempt_draw()
     
@@ -180,7 +180,7 @@ async def nai3(bot,event,config,tag):
                     await asyncio.sleep(0.5)  # 等待0.5秒
                     await attempt_draw(retries_left - 1)
                 else:
-                    await bot.send(event, "nai调用失败。{e}")
+                    await bot.send(event, f"nai3调用失败。{e}")
 
         await attempt_draw()
 
@@ -380,7 +380,7 @@ def main(bot,config):
                 await bot.send(event, Text(tags_str), True)
             except Exception as e:
                 bot.logger.error(f"反推失败: {e}")
-                await bot.send(event, "反推失败了喵~", True)
+                await bot.send(event, f"反推失败: {e}", True)
 
     @bot.on(GroupMessageEvent)
     async def sdsettings(event):
@@ -459,7 +459,7 @@ def main(bot,config):
                     await bot.send(event, [Text("sd重绘结果"),Image(file=p)], True)
             except Exception as e:
                 bot.logger.error(f"重绘失败: {e}")
-                await bot.send(event, "sd api重绘失败。{e}", True)
+                await bot.send(event, f"sd api重绘失败。{e}", True)
 
     @bot.on(GroupMessageEvent)
     async def AiSdDraw(event):
@@ -563,7 +563,7 @@ def main(bot,config):
                         bot.logger.error(f"尝试重新请求nai4re，剩余尝试次数：{retries_left - 1}")
                         await attempt_draw(retries_left - 1)
                     else:
-                        await bot.send(event, "nai4重绘失败。{e}", True)
+                        await bot.send(event, f"nai4重绘失败。{e}", True)
 
             await attempt_draw()
 
@@ -617,7 +617,7 @@ def main(bot,config):
                         bot.logger.error(f"尝试重新请求nai3re，剩余尝试次数：{retries_left - 1}")
                         await attempt_draw(retries_left - 1)
                     else:
-                        await bot.send(event, "nai3重绘失败。{e}", True)
+                        await bot.send(event, f"nai3重绘失败。{e}", True)
 
             await attempt_draw()
 
@@ -661,7 +661,7 @@ def main(bot,config):
                     await bot.send(event, [Text("sd局部重绘结果"),Image(file=p)], True)
             except Exception as e:
                 bot.logger.error(f"局部重绘失败: {e}")
-                await bot.send(event, "sd api局部重绘失败。{e}", True)
+                await bot.send(event, f"sd api局部重绘失败。{e}", True)
             return
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
