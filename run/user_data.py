@@ -74,7 +74,11 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def handle_group_message(event):
         await sleep(1) #让auto_register指令优先执行
-        user_info=await get_user(event.user_id,event.sender.nickname)
+        try:
+            user_info=await get_user(event.user_id,event.sender.nickname)
+        except Exception as e:
+            bot.logger.error(f"Error in creating users!: {e}")
+            return
         #print(user_info)
         if event.raw_message == "注册":
             await call_user_data_register(bot,event,config)

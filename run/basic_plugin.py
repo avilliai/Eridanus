@@ -126,7 +126,11 @@ async def call_tts(bot,event,config,text,speaker=None):
     if speaker is None:
         mode = config.api["tts"]["tts_engine"]
         speaker=config.api["tts"][mode]["speaker"]
-    speakers=await get_acgn_ai_speaker_list()
+    try:
+        speakers=await get_acgn_ai_speaker_list()
+    except Exception as e:
+        bot.logger.error(f"Error in tts: {e}")
+        return
     if speaker in speakers:
         pass
     elif f"{speaker}【鸣潮】" in speakers:
@@ -155,7 +159,7 @@ async def call_tarot(bot,event,config):
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
-        print(r)
+        #print(r)
         await bot.send(event, Music(type="163", id=r[0][1]))
     except Exception as e:
         bot.logger.error(f"Error in pick_music: {e}")
@@ -181,6 +185,7 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def search_image(event):
+        if "搜图" not in event.raw_message: return
         if str(event.raw_message) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
             await bot.send(event, "请发送要搜索的图片")
             image_search[event.sender.user_id] = []
@@ -203,6 +208,15 @@ def main(bot,config):
     async def cyber_divination(event: GroupMessageEvent):
         if event.raw_message=="今日塔罗":
             txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
+            await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
+        elif event.raw_message=="抽象塔罗":
+            txt, img = tarotChoice('AbstractImages')
+            await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
+        elif event.raw_message=="ba塔罗":
+            txt, img = tarotChoice('blueArchive')
+            await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
+        elif event.raw_message=="bili塔罗" or event.raw_message=="2233塔罗":
+            txt, img = tarotChoice('bilibili')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
