@@ -23,6 +23,8 @@ censored_words = ["nsfw", "nipples", "pussy", "areola", "dick", "cameltoe", "ass
 
 from plugins.utils.random_str import random_str
 async def n4(prompt, path, groupid, config):
+    width = 832
+    height = 1216
     url = "https://spawner.goutou.art"
 
     if "方" in prompt:
@@ -122,6 +124,8 @@ async def n4(prompt, path, groupid, config):
 
 
 async def n3(prompt, path, groupid, config):
+    width = 832
+    height = 1216
     url = "https://image.novelai.net"
 
     if "方" in prompt:
@@ -286,7 +290,6 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
 
 async def SdDraw0(prompt, path, config, groupid, args):
     url = config.api["ai绘画"]["sdUrl"]
-
     args = args
     width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
     height = (args.get('h', 1600) if args.get('h', 1600) > 0 else 1600) if isinstance(args, dict) else 1600
@@ -402,6 +405,8 @@ async def getcheckpoints(config):
         return result
 
 async def n4re0(prompt, path, groupid, config, b64_in, args):
+    width = 1024
+    height = 1024
     args = args
     url = "https://image.novelai.net"
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
@@ -506,6 +511,8 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     return path
 
 async def n3re0(prompt, path, groupid, config, b64_in, args):
+    width = 1024
+    height = 1024
     args = args
     url = "https://image.novelai.net"
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
