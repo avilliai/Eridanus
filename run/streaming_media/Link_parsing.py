@@ -37,6 +37,10 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Link_Prising_search(event: GroupMessageEvent):
         url=event.raw_message
-        dy_file_path,url_check=await link_prising(url,filepath='data/pictures/cache/')
-        if dy_file_path is not None:
-            await bot.send(event, [f'{botname}识别结果：\n',Image(file=dy_file_path)])
+        try:
+            dy_file_path,url_check=await link_prising(url,filepath='data/pictures/cache/')  #并非所有消息都可以解析，写判断纯浪费时间，不如catch
+            if dy_file_path is not None:
+                await bot.send(event, [f'{botname}识别结果：\n',Image(file=dy_file_path)])
+        except:
+            pass
+
