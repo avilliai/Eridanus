@@ -28,11 +28,11 @@ def parse_arguments(arg_string, original_dict):
     i = 0
     while i < len(args):
         arg = args[i]
-        if arg.startswith('-') and len(arg) > 1:
-            key = arg[1:]
+        if arg.startswith('--') and len(arg) > 2:
+            key = arg[2:]
             value_parts = []
             j = i + 1
-            while j < len(args) and not args[j].startswith('-'):
+            while j < len(args) and not args[j].startswith('--'):
                 value_parts.append(args[j])
                 j += 1
             if value_parts:
