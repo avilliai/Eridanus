@@ -106,8 +106,10 @@ async def main():
     elif user_input=="6":
         from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
         #logger.info("开始执行相关程序ing")
-        await login_core_select()
         os.system(f"\"{python_path}\" -m pip install PyExecJS")
+        logger.warning("如为初次运行，请关闭程序并重新进入这一步")
+        input()
+        await login_core_select()
 
 
 def updaat(f=False,source=None,yamls={}):
