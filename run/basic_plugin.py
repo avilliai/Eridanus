@@ -122,7 +122,7 @@ async def call_image_search(bot,event,config,image_url=None):
         await bot.send(event, forMeslist)
     else:
         await bot.send(event, "权限不够呢.....")
-async def call_tts(bot,event,config,text,speaker=None):
+async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     if speaker is None:
         mode = config.api["tts"]["tts_engine"]
         speaker=config.api["tts"][mode]["speaker"]
@@ -145,7 +145,7 @@ async def call_tts(bot,event,config,text,speaker=None):
         bot.logger.error(f"Invalid speaker: {speaker}")
         return
     try:
-        p=await tts(text,speaker,config)
+        p=await tts(text,speaker,config,mood)
         await bot.send(event, Record(file=p))
     except Exception as e:
         bot.logger.error(f"Error in tts: {e}")
