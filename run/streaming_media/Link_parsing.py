@@ -28,7 +28,7 @@ def main(bot,config):
 
     node_path = shutil.which("node")  # 自动查找 Node.js 可执行文件路径
     if not node_path:
-        raise EnvironmentError("Node.js 未安装或未正确添加到系统 PATH 中!")
+        bot.logger.warning("Node.js 未安装或未正确添加到系统 PATH 中!")
     if "Node.js" in execjs.get().name:
         bot.logger.info('系统已正确读取到node.js')
     else:
