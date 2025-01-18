@@ -19,8 +19,10 @@ aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
-positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
-negatives = 'nsfw,lowres,{bad},error,fewer,extra,missing,worst quality,jpeg artifacts,bad quality,watermark,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,[abstract],blurry,film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
+positives = '{},rating:general, best quality, very aesthetic, absurdres'
+negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts'
+#positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
+#negatives = 'nsfw,lowres,{bad},error,fewer,extra,missing,worst quality,jpeg artifacts,bad quality,watermark,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,[abstract],blurry,film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
 #negatives = '((nsfw)),((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly,poorly drawn,(censor),blurry,watermark,simple background,transparent background,{bad},error,fewer,extra,missing,jpeg artifacts,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract],film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
 
 from plugins.utils.random_str import random_str
@@ -305,8 +307,8 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
 async def SdDraw0(prompt, path, config, groupid, args):
     url = config.api["ai绘画"]["sdUrl"]
     args = args
-    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
-    height = (args.get('h', 1600) if args.get('h', 1600) > 0 else 1600) if isinstance(args, dict) else 1600
+    width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+    height = (args.get('h', 1536) if args.get('h', 1536) > 0 else 1536) if isinstance(args, dict) else 1536
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
@@ -315,12 +317,12 @@ async def SdDraw0(prompt, path, config, groupid, args):
         height = 1064
     if "横" in prompt:
         prompt = prompt.replace("横", "")
-        width = 1600
-        height = 1064
+        width = 1536
+        height = 1024
     if "竖" in prompt:
         prompt = prompt.replace("竖", "")
-        width = 1064
-        height = 1600
+        width = 1024
+        height = 1536
     
     if width > 1600:
         width = 1600
