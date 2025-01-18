@@ -13,7 +13,7 @@ from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
 from plugins.utils.convert_func_calling import gemini_func_map, convert_gemini_to_openai
-from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
+
 
 """
 获取环境
@@ -104,6 +104,7 @@ async def main():
         logger.info("安装奶龙相关ai库依赖中")
         ai_req()
     elif user_input=="6":
+        from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
         #logger.info("开始执行相关程序ing")
         await login_core_select()
         os.system(f"\"{python_path}\" -m pip install PyExecJS")
