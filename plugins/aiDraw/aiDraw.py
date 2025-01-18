@@ -592,9 +592,21 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
 async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     url = config.api["ai绘画"]["sdUrl"]
     args = args
-    width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
-    height = (args.get('h', 1024) if args.get('h', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
+    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    height = (args.get('h', 1064) if args.get('h', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+
+    if "方" in prompt:
+        prompt = prompt.replace("方", "")
+        width = 1064
+        height = 1064
+    elif "横" in prompt:
+        prompt = prompt.replace("横", "")
+        width = 1600
+        height = 1064
+    elif "竖" in prompt:
+        width = 1064
+        height = 1600
     
     if width > 1600:
         width = 1600
