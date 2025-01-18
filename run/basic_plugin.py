@@ -142,7 +142,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     elif f"{speaker}【星穹铁道】" in speakers:
         speaker=f"{speaker}【星穹铁道】"
     else:
-        bot.logger.error(f"Invalid speaker: {speaker}")
+        #bot.logger.error(f"Invalid speaker: {speaker}")
         return
     try:
         p=await tts(text,speaker,config,mood)
