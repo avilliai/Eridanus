@@ -29,11 +29,12 @@ async def n4(prompt, path, groupid, config):
         prompt = prompt.replace("方", "")
         width = 1024
         height = 1024
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1216
         height = 832
-    else:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 832
         height = 1216
 
@@ -127,11 +128,12 @@ async def n3(prompt, path, groupid, config):
         prompt = prompt.replace("方", "")
         width = 1024
         height = 1024
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1216
         height = 832
-    else:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 832
         height = 1216
 
@@ -214,11 +216,12 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         prompt = prompt.replace("方", "")
         width = 1064
         height = 1064
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1600
         height = 1064
-    elif "竖" in prompt:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 1064
         height = 1600
     
@@ -293,11 +296,12 @@ async def SdDraw0(prompt, path, config, groupid, args):
         prompt = prompt.replace("方", "")
         width = 1064
         height = 1064
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1600
         height = 1064
-    elif "竖" in prompt:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 1064
         height = 1600
     
@@ -406,11 +410,12 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         prompt = prompt.replace("方", "")
         width = 1024
         height = 1024
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1216
         height = 832
-    else:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 832
         height = 1216
 
@@ -509,11 +514,12 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         prompt = prompt.replace("方", "")
         width = 1024
         height = 1024
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1216
         height = 832
-    else:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 832
         height = 1216
 
@@ -600,11 +606,12 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         prompt = prompt.replace("方", "")
         width = 1064
         height = 1064
-    elif "横" in prompt:
+    if "横" in prompt:
         prompt = prompt.replace("横", "")
         width = 1600
         height = 1064
-    elif "竖" in prompt:
+    if "竖" in prompt:
+        prompt = prompt.replace("竖", "")
         width = 1064
         height = 1600
     
