@@ -29,6 +29,7 @@ n4re = {}
 n3re = {}
 mask = {}
 UserGetm = {}
+default_prompt = {}
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
 with open('config/controller.yaml', 'r', encoding='utf-8') as f:
@@ -36,51 +37,58 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
-async def call_text2img(bot,event,config,prompt):
-    tag = prompt
-    #同时调用自带接口和部署的sd
-    functions = [
-        call_text2img1(bot,event,config,tag),
-        call_text2img2(bot,event,config,tag),
-        nai4(bot,event,config,tag),# 两个nai功能建议二选一
-        #nai3(bot,event,config,tag),
-    ]
 
-    for future in asyncio.as_completed(functions):
+async def call_text2img(bot, event, config, prompt):
+    tag = prompt
+
+    tasks = [
+        asyncio.create_task(func)
+        for func in [
+            call_text2img1(bot, event, config, tag),
+            call_text2img2(bot, event, config, tag),
+            nai4(bot, event, config, tag),  # 两个nai功能建议二选一
+            # nai3(bot, event, config, tag), 
+        ]
+    ]
+    
+    for future in asyncio.as_completed(tasks):
         try:
             await future
         except Exception as e:
             bot.logger.error(f"Task failed: {e}")
 
-async def call_text2img2(bot,event,config,tag):
-    prompt=tag
+async def call_text2img2(bot, event, config, tag):
+    prompt = tag
     user_info = await get_user(event.user_id, event.sender.nickname)
+    
     if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"] and config.controller["basic_plugin"]["内置ai绘画开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
         proxy = config.api["proxy"]["http_proxy"]
+
         functions = [
-            # ideo_gram(prompt, proxy),
             bing_dalle3(prompt, proxy),
+            flux_ultra(prompt, proxy),
+            # ideo_gram(prompt, proxy),
             # flux_speed(prompt, proxy), #也不要这个
             # recraft_v3(prompt, proxy), #不要这个
-            flux_ultra(prompt, proxy),
         ]
-
-        for future in asyncio.as_completed(functions):
+        
+        tasks = [asyncio.create_task(func) for func in functions]
+        
+        for future in asyncio.as_completed(tasks):
             try:
                 result = await future
-                if result is not []:
+                if result:
                     sendMes = []
                     for r in result:
                         sendMes.append(Node(content=[Image(file=r)]))
                     await bot.send(event, sendMes)
             except Exception as e:
-                bot.logger.error(f"Task failed: {e}")
-
-
+                bot.logger.error(f"Task failed with prompt '{prompt}': {e}")
     else:
         pass
-        #await bot.send(event, "你没有权限使用该功能")
+        #await bot.send(event, "你没有权限使用该功能。")
+
 async def call_text2img1(bot,event,config,tag):
     if config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
         global turn
@@ -108,7 +116,7 @@ async def call_text2img1(bot,event,config,tag):
                 await bot.send(event, "杂鱼，色图不给你喵~", True)
             else:
                 turn -= 1
-                await bot.send(event, [Text("sd结果"),Image(file=p)], True)
+                await bot.send(event, [Image(file=p)], True)
     
         except Exception as e:
             bot.logger.error(e)
@@ -128,61 +136,54 @@ async def call_aiArtModerate(bot,event,config,img_url):
         bot.logger.error(e)
         await bot.send(event, f"aiArtModerate调用失败。{e}")
 
-async def nai4(bot,event,config,tag):
+async def nai4(bot, event, config, tag):
     if config.controller["ai绘画"]["novel_ai画图"]:
-        tag,log = await replace_wildcards(tag)
+        tag, log = await replace_wildcards(tag)
         if log:
             await bot.send(event, log, True)
         path = f"data/pictures/cache/{random_str()}.png"
         bot.logger.info(f"发起nai4绘画请求，path:{path}|prompt:{tag}")
-        #await bot.send(event, '正在进行nai4画图', True)
 
-        async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+        retries_left = 50
+        while retries_left > 0:
             try:
-                p = await n4(tag, path, event.group_id, config)
-                if p == False:
+                p = await n4(tag, path, event.group_id, config, sd_user_args.get(event.sender.user_id, {}))
+                if p is False:
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 else:
-                    await bot.send(event, [Text("nai4画图结果"),Image(file=p)], True)
+                    await bot.send(event, [Text("nai4画图结果"), Image(file=p)], True)
                 return
             except Exception as e:
-                if retries_left > 0:
-                    #bot.logger.error(f"尝试重新请求nai4，剩余尝试次数：{retries_left - 1}")
-                    await asyncio.sleep(0.1)  # 等待0.5秒
-                    await attempt_draw(retries_left - 1)
-                else:
-                    await bot.send(event, f"nai4调用失败。{e}")
-
-        await attempt_draw()
+                retries_left -= 1
+                #bot.logger.error(f"nai4报错{e}，剩余尝试次数：{retries_left}")  #别让用户看到免得问。
+                if retries_left == 0:
+                    bot.logger.info(f"nai4调用失败。{e}")
     
-async def nai3(bot,event,config,tag):
+async def nai3(bot, event, config, tag):
     if config.controller["ai绘画"]["novel_ai画图"]:
-        tag,log = await replace_wildcards(tag)
+        tag, log = await replace_wildcards(tag)
         if log:
             await bot.send(event, log, True)
         path = f"data/pictures/cache/{random_str()}.png"
         bot.logger.info(f"发起nai3绘画请求，path:{path}|prompt:{tag}")
-        #await bot.send(event, '正在进行nai3画图', True)
 
-        async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+        retries_left = 50
+        while retries_left > 0:
             try:
-                p = await n3(tag, path, event.group_id, config)
-                if p == False:
+                p = await n3(tag, path, event.group_id, config, sd_user_args.get(event.sender.user_id, {}))
+                if p is False:
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    break  # 结束循环，因为没有需要重试的情况
                 else:
-                    await bot.send(event, [Text("nai3画图结果"),Image(file=p)], True)
+                    await bot.send(event, [Text("nai3画图结果"), Image(file=p)], True)
+                    break  # 成功获取结果后结束循环
             except Exception as e:
-                bot.logger.error(e)
-                if retries_left > 0:
-                    #bot.logger.error(f"尝试重新请求nai3，剩余尝试次数：{retries_left - 1}")
-                    await asyncio.sleep(0.5)  # 等待0.5秒
-                    await attempt_draw(retries_left - 1)
-                else:
-                    await bot.send(event, f"nai3调用失败。{e}")
-
-        await attempt_draw()
+                retries_left -= 1
+                #bot.logger.error(f"nai3报错{e}，剩余尝试次数：{retries_left}")
+                if retries_left == 0:
+                    bot.logger.error(f"nai3调用失败。{e}")  # 别让用户看到免得问。
 
 def main(bot,config):
     ai_img_recognize = {}
@@ -423,7 +424,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
-            if (str(event.raw_message).startswith("重绘")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("重绘")) and event.get('image'):
                 prompt = str(event.raw_message).replace("重绘", "").strip()
                 UserGet[event.sender.user_id] = [prompt]
 
@@ -491,13 +492,16 @@ def main(bot,config):
         if str(event.raw_message).startswith("ckpt2 ") and config.controller["ai绘画"]["sd画图"]:
             tag = str(event.raw_message).replace("ckpt2 ", "")
             bot.logger.info('切换ckpt中')
-            try:
-                await ckpt2(tag,config)
-                await bot.send(event, "切换成功喵~第一次会慢一点~", True)
-                # logger.info("success")
-            except Exception as e:
-                bot.logger.error(e)
-                await bot.send(event, "ckpt切换失败", True)
+            if event.user_id == config.basic_config["master"]["id"]:
+                try:
+                    await ckpt2(tag,config)
+                    await bot.send(event, "切换成功喵~第一次会慢一点~", True)
+                    # logger.info("success")
+                except Exception as e:
+                    bot.logger.error(e)
+                    await bot.send(event, "ckpt切换失败", True)
+            else:
+                await bot.send(event, "仅master可执行此操作", True)
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
@@ -526,7 +530,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
-            if (str(event.raw_message).startswith("n4re")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("n4re")) and event.get('image'):
                 prompt = str(event.raw_message).replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
 
@@ -580,7 +584,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
-            if (str(event.raw_message).startswith("n3re")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("n3re")) and event.get('image'):
                 prompt = str(event.raw_message).replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
 
@@ -665,7 +669,7 @@ def main(bot,config):
             return
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘 ")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("局部重绘 ")) and event.get('image'):
                 prompts = str(event.raw_message).replace("局部重绘 ", "").strip()
                 UserGetm[event.sender.user_id] = prompts
 
@@ -684,7 +688,7 @@ def main(bot,config):
 
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("局部重绘")) and event.get('image'):
                 prompt = str(event.raw_message).replace("局部重绘", "").strip()
 
             # 日志记录
@@ -734,3 +738,4 @@ def main(bot,config):
                     bot.logger.info(f"Expected a dictionary for {dict_name}, but got {type(dictionary)}.")
             
             await bot.send(event, "已清除所有输入图片和文本缓存", True)
+            

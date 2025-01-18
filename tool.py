@@ -106,6 +106,7 @@ async def main():
     elif user_input=="6":
         #logger.info("开始执行相关程序ing")
         await login_core_select()
+        os.system(f"\"{python_path}\" -m pip install PyExecJS")
 
 
 def updaat(f=False,source=None,yamls={}):
