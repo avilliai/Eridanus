@@ -423,7 +423,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
-            if (str(event.raw_message).startswith("重绘")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("重绘")) and event.get("image"):
                 prompt = str(event.raw_message).replace("重绘", "").strip()
                 UserGet[event.sender.user_id] = [prompt]
 
@@ -529,7 +529,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
-            if (str(event.raw_message).startswith("n4re")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("n4re")) and event.get("image"):
                 prompt = str(event.raw_message).replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
 
@@ -583,7 +583,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
-            if (str(event.raw_message).startswith("n3re")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("n3re")) and event.get("image"):
                 prompt = str(event.raw_message).replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
 
@@ -668,7 +668,7 @@ def main(bot,config):
             return
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘 ")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("局部重绘 ")) and event.get("image"):
                 prompts = str(event.raw_message).replace("局部重绘 ", "").strip()
                 UserGetm[event.sender.user_id] = prompts
 
@@ -687,7 +687,7 @@ def main(bot,config):
 
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘")) and event.raw_message.count(Image):
+            if (str(event.raw_message).startswith("局部重绘")) and event.get("image"):
                 prompt = str(event.raw_message).replace("局部重绘", "").strip()
 
             # 日志记录
