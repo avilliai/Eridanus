@@ -18,11 +18,13 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
-censored_words = ["nsfw", "nipples", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
-
+censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
+positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
+negatives = '{},nsfw,lowres,{bad},error,fewer,extra,missing,worst quality,jpeg artifacts,bad quality,watermark,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract]'
+#negatives = '{},((nsfw)),((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly,poorly drawn,(censor),blurry,watermark,simple background,transparent background,{bad},error,fewer,extra,missing,jpeg artifacts,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract],film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
 
 from plugins.utils.random_str import random_str
-async def n4(prompt, path, groupid, config):
+async def n4(prompt, path, groupid, config, args):
     width = 832
     height = 1216
     url = "https://spawner.goutou.art"
@@ -40,13 +42,17 @@ async def n4(prompt, path, groupid, config):
         width = 832
         height = 1216
 
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
 
     payload = {
-        "input": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
+        "input": positive,
         "model": "nai-diffusion-4-curated-preview",
         "action": "generate",
         "parameters": {
@@ -72,7 +78,7 @@ async def n4(prompt, path, groupid, config):
             "characterPrompts": [],
             "v4_prompt": {
                 "caption": {
-                    "base_caption": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
+                    "base_caption": positive,
                     "char_captions": []
                 },
                 "use_coords": False,
@@ -80,11 +86,11 @@ async def n4(prompt, path, groupid, config):
             },
             "v4_negative_prompt": {
                 "caption": {
-                    "base_caption": "blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts",
+                    "base_caption": negative,
                     "char_captions": []
                 }
             },
-            "negative_prompt": "blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts",
+            "negative_prompt": negative,
             "reference_image_multiple": [],
             "reference_information_extracted_multiple": [],
             "reference_strength_multiple": [],
@@ -123,7 +129,7 @@ async def n4(prompt, path, groupid, config):
     return path
 
 
-async def n3(prompt, path, groupid, config):
+async def n3(prompt, path, groupid, config, args):
     width = 832
     height = 1216
     url = "https://image.novelai.net"
@@ -140,14 +146,18 @@ async def n3(prompt, path, groupid, config):
         prompt = prompt.replace("竖", "")
         width = 832
         height = 1216
+        
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
 
     payload = {
-        "input": f"{prompt}, best quality, amazing quality, very aesthetic, absurdres",
+        "input": positive,
         "model": "nai-diffusion-3",
         "action": "generate",
         "parameters": {
@@ -172,7 +182,7 @@ async def n3(prompt, path, groupid, config):
             "skip_cfg_above_sigma": None,
             "seed": random.randint(0, 2 ** 32 - 1),
             "characterPrompts": [],
-            "negative_prompt": "nsfw, lowres, {bad}, error, fewer, extra, missing, worst quality, jpeg artifacts, bad quality, watermark, unfinished, displeasing, chromatic aberration, signature, extra digits, artistic error, username, scan, [abstract]",
+            "negative_prompt": negative,
             "reference_image_multiple": [],
             "reference_information_extracted_multiple": [],
             "reference_strength_multiple": []
@@ -234,9 +244,13 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     if height > 1600:
         height = 1600
 
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
     
     payload = {
@@ -246,8 +260,8 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         "hr_scale": 1.5,
         "hr_second_pass_steps": 15,
         "hr_upscaler": 'SwinIR_4x',
-        "prompt": f'score_9,score_8_up,score_7_up,{prompt},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,',
-        "negative_prompt": '((nsfw)),score_6,score_5,score_4,((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly, poorly drawn,(censor),blurry,watermark,simple background,transparent background',
+        "prompt": positive,
+        "negative_prompt": negative,
         "seed": -1,
         "batch_size": 1,
         "n_iter": 1,
@@ -313,9 +327,13 @@ async def SdDraw0(prompt, path, config, groupid, args):
     if height > 1600:
         height = 1600
 
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
     
     payload = {
@@ -324,8 +342,8 @@ async def SdDraw0(prompt, path, config, groupid, args):
         "hr_scale": 1.5,
         "hr_second_pass_steps": 15,
         "hr_upscaler": 'SwinIR_4x',
-        "prompt": f'score_9,score_8_up,score_7_up,{prompt},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,',
-        "negative_prompt": '((nsfw)),score_6,score_5,score_4,((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly, poorly drawn,(censor),blurry,watermark,simple background,transparent background',
+        "prompt": positive,
+        "negative_prompt": negative,
         "seed": -1,
         "batch_size": 1,
         "n_iter": 1,
@@ -424,13 +442,17 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
 
     payload = {
-        "input": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
+        "input": positive,
         "model": "nai-diffusion-4-curated-preview",
         "action": "img2img",
         "parameters": {
@@ -460,7 +482,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             "extra_noise_seed": random.randint(0, 2 ** 32 - 1),
             "v4_prompt": {
                 "caption": {
-                    "base_caption": ", rating:general, best quality, very aesthetic, absurdres",
+                    "base_caption": positive,
                     "char_captions": []
                 },
                 "use_coords": False,
@@ -468,11 +490,11 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             },
             "v4_negative_prompt": {
                 "caption": {
-                    "base_caption": "blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts",
+                    "base_caption": negative,
                     "char_captions": []
                 }
             },
-            "negative_prompt": "blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts",
+            "negative_prompt": negative,
             "reference_image_multiple": [],
             "reference_information_extracted_multiple": [],
             "reference_strength_multiple": [],
@@ -530,13 +552,17 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
 
     payload = {
-        "input": f"{prompt}, rating:general, best quality, very aesthetic, absurdres",
+        "input": positive,
         "model": "nai-diffusion-3",
         "action": "img2img",
         "parameters": {
@@ -564,7 +590,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             "image": b64_in,
             "characterPrompts": [],
             "extra_noise_seed": random.randint(0, 2 ** 32 - 1),
-            "negative_prompt": "blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts",
+            "negative_prompt": negative,
             "reference_image_multiple": [],
             "reference_information_extracted_multiple": [],
             "reference_strength_multiple": [],
@@ -627,9 +653,13 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     if height > 1600:
         height = 1600
 
+    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
+    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
     if groupid in no_nsfw_groups:
         for word in censored_words:
-            if word in prompt:
+            if word in positive:
                 return False
 
     payload = {
@@ -644,8 +674,8 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         "hr_scale": 1.5,
         "hr_second_pass_steps": 15,
         "hr_upscaler": 'SwinIR_4x',
-        "prompt": f'score_9,score_8_up,score_7_up,{prompt},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,',
-        "negative_prompt": '((nsfw)),score_6,score_5,score_4,((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly, poorly drawn,(censor),blurry,watermark,simple background,transparent background',
+        "prompt": positive,
+        "negative_prompt": negative,
         "seed": -1,
         "batch_size": 1,
         "n_iter": 1,
