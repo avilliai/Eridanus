@@ -110,9 +110,9 @@ if __name__ == '__main__':
     node_path = shutil.which("node")  # 自动查找 Node.js 可执行文件路径
     if not node_path:
         raise EnvironmentError("Node.js 未安装或未正确添加到系统 PATH 中!")
+
     import execjs
     # 强制使用 Node.js
     execjs._runtime = execjs.ExternalRuntime("Node.js", node_path)
-
     # 验证是否成功切换到 Node.js
     print(execjs.get().name)  # 应该输出 "Node.js"

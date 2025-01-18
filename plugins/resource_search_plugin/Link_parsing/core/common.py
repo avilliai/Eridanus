@@ -94,20 +94,16 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
         right = left + min_edge
         bottom = top + min_edge
         return image.crop((left, top, right, bottom))
-    #print(url)
     file_name=re.sub(r'[:]', '_', url.split('/').pop().split('?')[0])
     path=f'{path}{file_name}'
-    #path = os.path.join(path,re.sub(r'[:]', '_', url.split('/').pop().split('?')[0]))
-    #path=re.sub(r'[<>:"/\\|?*]', '_', path)
     if 'gif' in path:
         path=path.replace("gif", "jpg")
-
-    if not ('jpg' in path or 'png' in path or 'webp' in path or 'jpeg' in path):
+    #if not ('jpg' in path or 'png' in path or 'webp' in path or 'jpeg' in path):
+    if not path.lower().endswith((".jpg", ".jpeg", ".png")):
         path = f'{path}.jpg'
     if 'jpeg' in path:
         path=path.replace("jpeg", "jpg")
-
-    #print(path)
+    # print(f'url:{url}\nfilename:{file_name}\npath:{path}')
     if len is None:
         len=1
     # 单个文件下载
