@@ -655,7 +655,7 @@ async def xiaohongshu(url,filepath=None):
 
 async def link_prising(url,filepath=None):
     dy_path=None
-    logger.info(url)
+    #logger.info(url)
     if 'bili' in url or 'b23' in url:
         dy_path,url=await bilibili(url,filepath=filepath)
     elif 'douyin' in url or 'douyin' in url:
