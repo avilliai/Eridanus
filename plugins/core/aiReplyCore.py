@@ -1,19 +1,19 @@
-import asyncio
+
 import json
-import os
 import random
 import time
 from collections import defaultdict
 
-import httpx
 
 from developTools.message.message_components import Record
 from developTools.utils.logger import get_logger
-from plugins.core.freeModels import free_model_result
+from plugins.core.aiReplyHandler.default import defaultModelRequest
+from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt
+from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
+from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.core.tts import tts
 from plugins.core.userDB import get_user
-from plugins.core.aiReply_utils import construct_openai_standard_prompt, construct_gemini_standard_prompt
 from plugins.func_map import call_func
 last_trigger_time = defaultdict(float)
 
@@ -168,6 +168,16 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     bot.logger.error(f"Error occurred when calling tts: {e}")
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+        elif config.api["llm"]["model"]=="腾讯元器":
+            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id)
+            response_message = await YuanQiTencent(
+                prompt,
+                config.api["llm"]["腾讯元器"]["智能体ID"],
+                config.api["llm"]["腾讯元器"]["token"],
+                user_id,
+            )
+            reply_message = response_message["content"]
+            await prompt_database_updata(user_id,response_message,config)
 
 
         logger.info(f"aiReplyCore returned: {reply_message}")
@@ -187,64 +197,10 @@ async def prompt_database_updata(user_id,response_message,config):
     history.append(response_message)
     await update_user_history(user_id, history)
 
-async def defaultModelRequest(ask_prompt,proxy=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
-    else:
-        proxies=None
-    return await free_model_result(ask_prompt,proxies=proxies)
 
 
-async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
-    else:
-        proxies=None
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {apikey}"
-    }
-    data={
-    "model": model,
-    "messages": ask_prompt,
-    "stream": stream
-  }
-    if tools is not None:
-        data["tools"] = tools
-        data["tool_choice"]="auto"
-    async with httpx.AsyncClient(proxies=proxies, headers=headers, timeout=200) as client:
-        r = await client.post(url, json=data)  # 使用 `json=data`
-        print(r.json())
-        return r.json()["choices"][0]["message"]
-async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
-    else:
-        proxies=None
-    url = f"{base_url}/v1beta/models/{model}:generateContent?key={apikey}"
-    # print(requests.get(url,verify=False))
-    pay_load={
-        "contents": ask_prompt,
-        "systemInstruction": {
-            "parts": [
-                {
-                    "text": system_instruction,
-                }
-            ]
-        },
-        "safetySettings": [
-            {'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT', "threshold": "BLOCK_None"},
-            {'category': 'HARM_CATEGORY_HATE_SPEECH', "threshold": "BLOCK_None"},
-            {'category': 'HARM_CATEGORY_HARASSMENT', "threshold": "BLOCK_None"},
-            {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', "threshold": "BLOCK_None"}],
-    }
-    if tools is not None:
-        pay_load["tools"] = tools  #h函数调用开个头得了。之后再做。
 
 
-    async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
-        r = await client.post(url, json=pay_load)
-        print(r.json())
-        return r.json()['candidates'][0]["content"]
+
 
 #asyncio.run(openaiRequest("1"))

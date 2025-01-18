@@ -1,10 +1,10 @@
 llm:
-  model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
+  model: 腾讯元器 #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix:
     - "测试机"
-  aiReplyCore: True   #ai回复核心，将优化其他功能回复表现，但将带来更高的api调用量。
+  aiReplyCore: True   #ai回复核心，将优化其他功能回复表现
   enable_proxy: False
   max_history_length: 100 #最大聊天记录条数
   Quote: False #回复时是否引用
@@ -22,6 +22,9 @@ llm:
       - YOUR_API_KEY_1
     model: gemini-2.0-flash-exp
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
+  腾讯元器:     #极其不建议用，腾子搞得玩意稀烂，而且不支持函数调用。
+    智能体ID: ""
+    token: ""
 tts:
   tts_engine: acgn_ai     #选择使用的语音合成引擎，这里是acgn_ai，配了哪个填哪个。
   acgn_ai:
