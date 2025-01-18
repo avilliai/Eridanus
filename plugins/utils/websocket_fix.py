@@ -10,8 +10,8 @@ from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 
 
 class ExtendBot(WebSocketBot):
-    def __init__(self, uri: str,config):
-        super().__init__(uri)
+    def __init__(self, uri: str,config, **kwargs):
+        super().__init__(uri, **kwargs)
         self.config = config
     async def _receive(self):
         """
