@@ -1,6 +1,8 @@
 import os
 import sys
 
+from run.anime_game_service import blue_archive
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from plugins.core.yamlLoader import YAMLManager
@@ -45,6 +47,10 @@ wifeyouwant.main(bot, config) #加载wifeyouwant插件
 youtube.main(bot, config) #加载youtube插件
 bilibili.main(bot, config) #加载bilibili插件
 Link_parsing.main(bot, config)
+
+#以下为游戏相关
+blue_archive.main(bot, config) #加载blue_archive插件
+#奶龙检测
 try:
     if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
         nailong_get.main(bot, config)
