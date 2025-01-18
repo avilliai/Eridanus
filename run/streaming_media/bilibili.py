@@ -1,7 +1,6 @@
 import asyncio
 from asyncio import sleep
 from concurrent.futures import ThreadPoolExecutor
-
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
@@ -88,8 +87,10 @@ def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
         while True:
+            await check_bili_dynamic(bot, config)
             try:
-                await check_bili_dynamic(bot,config)
+                pass
+                #await check_bili_dynamic(bot,config)
             except Exception as e:
                 bot.logger.error(e)
             await asyncio.sleep(300)  # 每 5 分钟检查一次

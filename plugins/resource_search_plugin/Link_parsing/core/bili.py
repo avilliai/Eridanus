@@ -1,4 +1,4 @@
-from bilibili_api import hot, sync,Credential
+from bilibili_api import hot, sync,Credential,dynamic
 import os
 import requests
 import platform
@@ -11,6 +11,7 @@ import asyncio
 import os.path
 from PIL import Image, ImageDraw, ImageFont
 import yaml
+import time
 import inspect
 from io import BytesIO
 from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
@@ -27,10 +28,10 @@ def bili_init():
     if ini_login_Link_Prising(type=1) is not None:
         data = ini_login_Link_Prising(type=1)
         BILI_SESSDATA: Optional[str] = f'{data["sessdata"]}'
+        credential = Credential(sessdata=BILI_SESSDATA, bili_jct=data['bili_jct'],ac_time_value=data['ac_time_value'])
     else:
         BILI_SESSDATA: Optional[str] = f' '
-    # 构建哔哩哔哩的Credential
-    credential = Credential(sessdata=BILI_SESSDATA)
+        credential = Credential(sessdata=BILI_SESSDATA)
     return BILIBILI_HEADER,credential,BILI_SESSDATA
 
 def add_rounded_rectangle(draw, xy, radius, fill):
@@ -239,3 +240,18 @@ def av_to_bv(av_link):
     else:
         raise ValueError("输入链接中不包含有效的 AV 号")
 
+async def fetch_latest_dynamic_id_api(uid):
+    BILIBILI_HEADER, credential, BILI_SESSDATA = bili_init()
+    time.sleep(1)
+    if sync(credential.check_refresh()):
+        sync(credential.refresh())
+    if BILI_SESSDATA == ' ':
+        raise ValueError(" credential失效，请先登录或重新配置")
+    try:
+        dynamic_list = await dynamic.get_dynamic_page_info(credential,host_mid=int(uid))
+    except Exception as e:
+        #print(e)
+        raise ValueError(" bilibili_api动态抓取失效")
+    dy_id_1=(await dynamic_list[0].get_info())['item']['id_str']
+    dy_id_2=(await dynamic_list[1].get_info())['item']['id_str']
+    return dy_id_1,dy_id_2

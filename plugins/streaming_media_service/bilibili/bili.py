@@ -1,12 +1,13 @@
 import json
 import sys
 import time
-
+import aiohttp
 import asyncio
 import httpx
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 from plugins.resource_search_plugin.Link_parsing.Link_parsing import link_prising
 from plugins.utils.random_str import random_str
+from plugins.resource_search_plugin.Link_parsing.core.bili import fetch_latest_dynamic_id_api
 
 # 添加请求头
 headers = {
@@ -18,15 +19,19 @@ headers = {
 
 
 async def fetch_latest_dynamic_id(uid):
-    url = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
-    params = {
-        "offset": "",
-        "host_mid": uid
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params, headers=headers)
-        data = response.json()
-        return data['data']['items'][0]['id_str'], data['data']['items'][1]['id_str']  # 返回最新动态id
+    try:
+        url = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
+        params = {
+            "offset": "",
+            "host_mid": uid
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, headers=headers)
+            data = response.json()
+            return data['data']['items'][0]['id_str'], data['data']['items'][1]['id_str']  # 返回最新动态id
+    except Exception as e:
+        dy_id_1,dy_id_2=await fetch_latest_dynamic_id_api(uid)
+        return dy_id_1,dy_id_2
 
 
 async def fetch_dynamic(dynamic_id, mode="mobile"):
