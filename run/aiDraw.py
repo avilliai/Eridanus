@@ -29,6 +29,7 @@ n4re = {}
 n3re = {}
 mask = {}
 UserGetm = {}
+default_prompt = {}
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
 with open('config/controller.yaml', 'r', encoding='utf-8') as f:
@@ -146,7 +147,7 @@ async def nai4(bot, event, config, tag):
         retries_left = 50
         while retries_left > 0:
             try:
-                p = await n4(tag, path, event.group_id, config)
+                p = await n4(tag, path, event.group_id, config, sd_user_args.get(event.sender.user_id, {}))
                 if p is False:
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
@@ -170,7 +171,7 @@ async def nai3(bot, event, config, tag):
         retries_left = 50
         while retries_left > 0:
             try:
-                p = await n3(tag, path, event.group_id, config)
+                p = await n3(tag, path, event.group_id, config, sd_user_args.get(event.sender.user_id, {}))
                 if p is False:
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
@@ -423,7 +424,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
-            if (str(event.raw_message).startswith("重绘")) and event.get("image"):
+            if (str(event.raw_message).startswith("重绘")) and event.get('image'):
                 prompt = str(event.raw_message).replace("重绘", "").strip()
                 UserGet[event.sender.user_id] = [prompt]
 
@@ -529,7 +530,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
-            if (str(event.raw_message).startswith("n4re")) and event.get("image"):
+            if (str(event.raw_message).startswith("n4re")) and event.get('image'):
                 prompt = str(event.raw_message).replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
 
@@ -583,7 +584,7 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
-            if (str(event.raw_message).startswith("n3re")) and event.get("image"):
+            if (str(event.raw_message).startswith("n3re")) and event.get('image'):
                 prompt = str(event.raw_message).replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
 
@@ -668,7 +669,7 @@ def main(bot,config):
             return
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘 ")) and event.get("image"):
+            if (str(event.raw_message).startswith("局部重绘 ")) and event.get('image'):
                 prompts = str(event.raw_message).replace("局部重绘 ", "").strip()
                 UserGetm[event.sender.user_id] = prompts
 
@@ -687,7 +688,7 @@ def main(bot,config):
 
 
         if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘")) and event.get("image"):
+            if (str(event.raw_message).startswith("局部重绘")) and event.get('image'):
                 prompt = str(event.raw_message).replace("局部重绘", "").strip()
 
             # 日志记录
@@ -737,3 +738,4 @@ def main(bot,config):
                     bot.logger.info(f"Expected a dictionary for {dict_name}, but got {type(dictionary)}.")
             
             await bot.send(event, "已清除所有输入图片和文本缓存", True)
+            

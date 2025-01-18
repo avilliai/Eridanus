@@ -25,27 +25,31 @@ async def url_to_base64(url):
 
 def parse_arguments(arg_string, original_dict):
     args = arg_string.split()
-    for arg in args:
-        if arg.startswith('-') and len(arg) > 1:
-            key_end_index = None
-            for i, char in enumerate(arg[1:], start=1):
-                if char.isdigit() or char == '.':
-                    key_end_index = i
-                    break
-            if key_end_index is None:
-                continue
-            key = arg[1:key_end_index]
-            value_str = arg[key_end_index:]
-            try:
-                if '.' in value_str:
-                    value = float(value_str)
-                else:
-                    value = int(value_str)
-            except ValueError:
-                continue
-            original_dict[key] = value
-        else:
-            pass
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg.startswith('--') and len(arg) > 2:
+            key = arg[2:]
+            value_parts = []
+            j = i + 1
+            while j < len(args) and not args[j].startswith('--'):
+                value_parts.append(args[j])
+                j += 1
+            if value_parts:
+                value = ' '.join(value_parts)
+                try:
+                    value = int(value)
+                except ValueError:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        pass
+                original_dict[key] = value
+                i = j - 1
+            else:
+                if key in original_dict:
+                    del original_dict[key]
+        i += 1
     return original_dict
 
 async def download_img(url,path,gray_layer=False,proxy=None):
