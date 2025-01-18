@@ -12,6 +12,8 @@ import os.path
 from urllib.parse import parse_qs
 from datetime import datetime, timedelta
 import json
+
+from developTools.utils.logger import get_logger
 from plugins.resource_search_plugin.Link_parsing.core.draw import draw_adaptive_graphic_and_textual
 from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_and_process_image
 from plugins.resource_search_plugin.Link_parsing.core.weibo import mid2id,WEIBO_SINGLE_INFO
@@ -29,7 +31,7 @@ filepath_init=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile
 GLOBAL_NICKNAME='Bot'
 if not os.path.exists(filepath_init):  # 初始化检测文件夹
         os.makedirs(filepath_init)
-
+logger=get_logger()
 async def bilibili(url,filepath=None,is_twice=None):
     """
         哔哩哔哩解析
@@ -41,13 +43,13 @@ async def bilibili(url,filepath=None,is_twice=None):
     #url: str = str(event.message).strip()
 
     BILIBILI_HEADER, credential,BILI_SESSDATA=bili_init()#获取构建credential
-    #print(f'credential: {credential}')
+    #logger.info(f'credential: {credential}')
 
     if not ( 'bili' in url or 'b23' in url ):return
     #构建绘图消息链
     if filepath is None:
         filepath = filepath_init
-        #print(filepath_init)
+        #logger.info(filepath_init)
     contents=[]
     contents_dy=[]
     #avatar_path=f'{filepath}touxiang.png'
@@ -65,10 +67,10 @@ async def bilibili(url,filepath=None,is_twice=None):
     # 处理短号、小程序问题
     if "b23.tv" in url or "bili2233.cn" in url or "QQ小程序" in url :
         b_short_url = re.search(b_short_rex, url.replace("\\", ""))[0]
-        #print(f'b_short_url:{b_short_url}')
+        #logger.info(f'b_short_url:{b_short_url}')
         resp = httpx.get(b_short_url, headers=BILIBILI_HEADER, follow_redirects=True)
         url: str = str(resp.url)
-        #print(f'url:{url}')
+        #logger.info(f'url:{url}')
     # AV/BV处理
     if"av" in url:url= 'https://www.bilibili.com/video/' + av_to_bv(url)
     if re.match(r'^BV[1-9a-zA-Z]{10}$', url):
@@ -79,12 +81,12 @@ async def bilibili(url,filepath=None,is_twice=None):
         if '?' in url:
             url = url[:url.index('?')]
         dynamic_id = int(re.search(r'[^/]+(?!.*/)', url)[0])
-        #print(dynamic_id)
+        #logger.info(dynamic_id)
         dy = dynamic.Dynamic(dynamic_id, credential)
         is_opus = dy.is_opus()#判断动态是否为图文
 
         if is_opus is False:#若判断为图文则换另一种方法读取
-            #print('not opus')
+            #logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
             tags = ''
             if dynamic_info is not None:
@@ -94,7 +96,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                     if 'module_content' in module:
                         paragraphs = module['module_content']['paragraphs']
                         break
-                #print(paragraphs)
+                #logger.info(paragraphs)
                 for desc_check in paragraphs[0]['text']['nodes']:
                     if 'word' in desc_check:
                         desc = desc_check['word']['words']
@@ -121,19 +123,19 @@ async def bilibili(url,filepath=None,is_twice=None):
                     pics_context=dynamic_info['item']['modules'][0]['module_top']['display']['album']['pics']
 
                 contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item['url'], f'{filepath}', len=len(pics_context))) for item in pics_context]))
-                #print(contents)
+                #logger.info(contents)
                 if is_twice is not True:
                     out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                   Time=f'{pub_time}',filepath=filepath,type_software='BiliBili 动态',
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
                     return out_path,f'https://t.bilibili.com/{dynamic_id}'
                 return contents,avatar_path,owner_name,pub_time,type,introduce
-            #print(f"{GLOBAL_NICKNAME}识别：B站动态，{title}\n{desc}\n{pics}")
+            #logger.info(f"{GLOBAL_NICKNAME}识别：B站动态，{title}\n{desc}\n{pics}")
 
         if is_opus is True:
             dynamic_info = await dy.get_info()
-            #print(dynamic_info)
-            #print('is opus')
+            #logger.info(dynamic_info)
+            #logger.info('is opus')
             orig_check=1#判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -193,7 +195,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                 opus_orig_paragraphs=orig_context['modules']['module_dynamic']['major']['opus']
                                 orig_title=opus_orig_paragraphs['summary']['text']
                                 contents_dy.append(orig_title)
-                                #print(opus_orig_paragraphs)
+                                #logger.info(opus_orig_paragraphs)
                                 contents_dy = await add_append_img(contents_dy, await asyncio.gather(*[
                                     asyncio.create_task(download_img(item['url'], f'{filepath}', len=len(opus_orig_paragraphs['pics'])))
                                     for item in opus_orig_paragraphs['pics']]))
@@ -220,7 +222,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                         else:
                             return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc
                     orig_url= 'orig_url:'+'https://t.bilibili.com/' + orig_context['id_str']
-                    #print(orig_url)
+                    #logger.info(orig_url)
 
 
                     orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(orig_url,f'{filepath}orig_',is_twice=True)
@@ -243,7 +245,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         room_id = re.search(r'\/(\d+)$', url).group(1)
         room = live.LiveRoom(room_display_id=int(room_id))
         data_get_url_context=await room.get_room_info()
-        #print(data_get_url_context['room_info'])
+        #logger.info(data_get_url_context['room_info'])
         room_info = data_get_url_context['room_info']
         title, cover, keyframe = room_info['title'], room_info['cover'], room_info['keyframe']
         owner_name,owner_cover = data_get_url_context['anchor_info']['base_info']['uname'], data_get_url_context['anchor_info']['base_info']['face']
@@ -259,7 +261,7 @@ async def bilibili(url,filepath=None,is_twice=None):
             live_status, live_start_time = room_info['live_status'], room_info['live_start_time']
             video_time = datetime.fromtimestamp(live_start_time).astimezone().strftime("%Y-%m-%d %H:%M:%S")
         else:video_time='暂未开启直播'
-        #print(room_info['online'])
+        #logger.info(room_info['online'])
         if is_twice is not True:
             out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                           Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath,type_software='BiliBili 直播',
@@ -274,26 +276,26 @@ async def bilibili(url,filepath=None,is_twice=None):
         return None
     # 获取视频信息
     video_id = re.search(r"video\/[^\?\/ ]+", url)[0].split('/')[1]
-    #print(video_id)
+    #logger.info(video_id)
     v = video.Video(video_id, credential=credential)
     try:
         video_info = await v.get_info()
     except Exception as e:
-        print('无法获取视频内容，该进程已退出')
+        logger.info('无法获取视频内容，该进程已退出')
 
-    #print(video_info)
+    #logger.info(video_info)
 
     owner_cover_url=video_info['owner']['face']
     owner_name = video_info['owner']['name']
-    #print(owner_cover)
+    #logger.info(owner_cover)
     if video_info is None:
-        print(f"识别：B站，出错，无法获取数据！")
+        logger.info(f"识别：B站，出错，无法获取数据！")
         return None
     video_title, video_cover, video_desc, video_duration = video_info['title'], video_info['pic'], video_info['desc'], \
         video_info['duration']
     video_time = datetime.utcfromtimestamp(video_info['pubdate']) + timedelta(hours=8)
     video_time=video_time.strftime('%Y-%m-%d %H:%M:%S')
-    #print(video_title, video_cover, video_desc, video_duration)
+    #logger.info(video_title, video_cover, video_desc, video_duration)
 
     # 校准 分p 的情况
     page_num = 0
@@ -314,12 +316,12 @@ async def bilibili(url,filepath=None,is_twice=None):
             # 如果索引超出范围，使用 video_info['duration'] 或者其他默认值
             video_duration = video_info.get('duration', 0)
     # 删除特殊字符
-    #print(video_title)
+    #logger.info(video_title)
     #video_title = delete_boring_characters(video_title)
     # 截断下载时间比较长的视频
     online = await v.get_online()
     online_str = f'🏄‍♂️ 总共 {online["total"]} 人在观看，{online["count"]} 人在网页端观看'
-    #print(f"\n{GLOBAL_NICKNAME}识别：B站，{video_title}\n{extra_bili_info(video_info)}\n📝 简介：{video_desc}\n{online_str}")
+    #logger.info(f"\n{GLOBAL_NICKNAME}识别：B站，{video_title}\n{extra_bili_info(video_info)}\n📝 简介：{video_desc}\n{online_str}")
 
     #video_cover_path = await asyncio.gather(*[asyncio.create_task(download_img(video_cover, f'{filepath}'))])
     contents.append((await asyncio.gather(*[asyncio.create_task(download_img(video_cover, f'{filepath}'))]))[0])
@@ -346,21 +348,21 @@ async def dy(url,filepath=None):
     contents=[]
     # 消息
     msg=url
-    #print(msg)
+    #logger.info(msg)
     # 正则匹配
     reg = r"(http:|https:)\/\/v.douyin.com\/[A-Za-z\d._?%&+\-=#]*"
     dou_url = re.search(reg, msg, re.I)[0]
     dou_url_2 = httpx.get(dou_url).headers.get('location')
-    print(f'dou_url:{dou_url}')
-    #print(f'dou_url_2:{dou_url_2}')
+    logger.info(f'dou_url:{dou_url}')
+    #logger.info(f'dou_url_2:{dou_url_2}')
 
     # 实况图集临时解决方案，eg.  https://v.douyin.com/iDsVgJKL/
     if "share/slides" in dou_url_2:
         cover, author, title, images = await dou_transfer_other(dou_url)
         # 如果第一个不为None 大概率是成功
         if author is not None:
-            print(f"{GLOBAL_NICKNAME}识别：【抖音】\n作者：{author}\n标题：{title}")
-            print(url for url in images)
+            logger.info(f"{GLOBAL_NICKNAME}识别：【抖音】\n作者：{author}\n标题：{title}")
+            logger.info(url for url in images)
         # 截断后续操作
         return
     # logger.error(dou_url_2)
@@ -370,9 +372,9 @@ async def dy(url,filepath=None):
     # logger.info(dou_id)
     # 如果没有设置dy的ck就结束，因为获取不到
     douyin_ck=ini_login_Link_Prising(type=2)
-    #print(f'douyin_ck: {douyin_ck}')
+    #logger.info(f'douyin_ck: {douyin_ck}')
     if douyin_ck is None:
-        print("无法获取到管理员设置的抖音ck！")
+        logger.info("无法获取到管理员设置的抖音ck！")
         #await douyin.send(Message(f"{GLOBAL_NICKNAME}识别：抖音，无法获取到管理员设置的抖音ck！"))
         return
     # API、一些后续要用到的参数
@@ -382,27 +384,27 @@ async def dy(url,filepath=None):
                   'cookie': douyin_ck
               } | COMMON_HEADER
     api_url = DOUYIN_VIDEO.replace("{}", dou_id)
-    #print(f'api_url: {api_url}')
+    #logger.info(f'api_url: {api_url}')
     api_url = generate_x_bogus_url(api_url, headers)  # 如果请求失败直接返回
     async with aiohttp.ClientSession() as session:
         async with session.get(api_url, headers=headers, timeout=10) as response:
             detail = await response.json()
             if detail is None:
-                print(f"{GLOBAL_NICKNAME}识别：抖音，解析失败！")
+                logger.info(f"{GLOBAL_NICKNAME}识别：抖音，解析失败！")
                 #await douyin.send(Message(f"{GLOBAL_NICKNAME}识别：抖音，解析失败！"))
                 return
             # 获取信息
             detail = detail['aweme_detail']
             formatted_json = json.dumps(detail, indent=4)
-            #print(formatted_json)
+            #logger.info(formatted_json)
             # 判断是图片还是视频
             url_type_code = detail['aweme_type']
             url_type = URL_TYPE_CODE_DICT.get(url_type_code, 'video')
-            #print(f"{GLOBAL_NICKNAME}识别：抖音，{detail.get('desc')}")
+            #logger.info(f"{GLOBAL_NICKNAME}识别：抖音，{detail.get('desc')}")
             # 根据类型进行发送
             avatar_url,cover_url=detail['author']['avatar_thumb']['url_list'][0],detail['author']['cover_url'][0]['url_list'][1]
             owner_name=detail['author']['nickname']
-            #print(f'avatar_url: {avatar_url}\ncover_url: {cover_url}')
+            #logger.info(f'avatar_url: {avatar_url}\ncover_url: {cover_url}')
             download_img_funcs = [asyncio.create_task(download_img(avatar_url, f'{filepath}'))]
             avatar_path = await asyncio.gather(*download_img_funcs)
             video_time = datetime.utcfromtimestamp(detail['create_time']) + timedelta(hours=8)
@@ -413,10 +415,10 @@ async def dy(url,filepath=None):
                 player_uri = detail.get("video").get("play_addr")['uri']
                 player_real_addr = DY_TOUTIAO_INFO.replace("{}", player_uri)
                 cover_url = detail.get("video").get("dynamic_cover")['url_list'][0]
-                #print(f'cover_url: {cover_url}\nplayer_real_addr: {player_real_addr}')
+                #logger.info(f'cover_url: {cover_url}\nplayer_real_addr: {player_real_addr}')
                 download_img_funcs = [asyncio.create_task(download_img(cover_url, f'{filepath}'))]
                 cover_path = await asyncio.gather(*download_img_funcs)
-                #print(cover_path)
+                #logger.info(cover_path)
                 contents = await add_append_img(contents, cover_path)
                 context = detail.get("desc").replace('#', '\n#', 1)
                 contents.append(f'{context}')
@@ -426,7 +428,7 @@ async def dy(url,filepath=None):
                 no_watermark_image_list = []
                 for i in detail['images']:
                     no_watermark_image_list.append(i['url_list'][0])
-                #print(no_watermark_image_list)
+                #logger.info(no_watermark_image_list)
                 download_img_funcs = [asyncio.create_task(download_img(item, f'{filepath}',len=len(no_watermark_image_list)))for item in no_watermark_image_list]
                 links_path = await asyncio.gather(*download_img_funcs)
                 contents = await add_append_img(contents, links_path)
@@ -450,10 +452,10 @@ async def wb(url,filepath=None):
     # 处理卡片问题
     if 'com.tencent.structmsg' or 'com.tencent.miniapp' in message:
         match = re.search(reg, message)
-        print(match)
+        logger.info(match)
         if match:
             get_url = match.group(2)
-            print(get_url)
+            logger.info(get_url)
             if get_url:
                 message = json.loads('"' + get_url + '"')
     else:
@@ -481,7 +483,7 @@ async def wb(url,filepath=None):
 
     # 无法获取到id则返回失败信息
     if not weibo_id:
-        print("解析失败：无法获取到wb的id")
+        logger.info("解析失败：无法获取到wb的id")
         #await weibo.finish(Message("解析失败：无法获取到wb的id"))
     # 最终获取到的 id
     weibo_id = weibo_id.split("/")[1] if "/" in weibo_id else weibo_id
@@ -493,7 +495,7 @@ async def wb(url,filepath=None):
                                                                         } | COMMON_HEADER).json()
     weibo_data = resp['data']
     formatted_json = json.dumps(weibo_data, indent=4)
-    #print(formatted_json)
+    #logger.info(formatted_json)
     text, status_title, source, region_name, pics, page_info = (weibo_data.get(key, None) for key in
                                                                 ['text', 'status_title', 'source', 'region_name',
                                                                  'pics', 'page_info'])
@@ -502,13 +504,13 @@ async def wb(url,filepath=None):
                           headers={"Referer": "http://blog.sina.com.cn/"} | COMMON_HEADER))]
     avatar_path = await asyncio.gather(*download_img_funcs)
     # 发送消息
-    #print(f"{GLOBAL_NICKNAME}识别：微博，{re.sub(r'<[^>]+>', '', text)}\n{status_title}\n{source}\t{region_name if region_name else ''}")
-    #print(f'source:{source}\nregion_name:{region_name}')
+    #logger.info(f"{GLOBAL_NICKNAME}识别：微博，{re.sub(r'<[^>]+>', '', text)}\n{status_title}\n{source}\t{region_name if region_name else ''}")
+    #logger.info(f'source:{source}\nregion_name:{region_name}')
     content.append(re.sub(r'<[^>]+>', '', text))
 
     if pics:
         formatted_json = json.dumps(pics, indent=4)
-        #print(formatted_json)
+        #logger.info(formatted_json)
         pics = map(lambda x: x['url'], pics)
         length=0
         img_check=[]
@@ -523,13 +525,13 @@ async def wb(url,filepath=None):
             pass
             #os.unlink(temp)
     if page_info:
-        print(page_info)
+        logger.info(page_info)
         formatted_json = json.dumps(page_info, indent=4)
-        print(formatted_json)
+        logger.info(formatted_json)
         if 'page_pic' in page_info:
             if page_info.get('type') != 'topic':
                 page_pic=page_info.get('page_pic').get('url')
-                #print(page_pic)
+                #logger.info(page_pic)
                 download_img_funcs = [asyncio.create_task(download_img(page_pic, f'{filepath}',headers={ "Referer": "http://blog.sina.com.cn/"} | COMMON_HEADER))]
                 page_pic_path = await asyncio.gather(*download_img_funcs)
                 content.append(page_pic_path[0])
@@ -561,7 +563,7 @@ async def xiaohongshu(url,filepath=None):
     xhs_ck=ini_login_Link_Prising(type=3)
     if xhs_ck == "":
         #logger.error(global_config)
-        print('小红书ck未能成功获取，已经推出')
+        logger.info('小红书ck未能成功获取，已经推出')
         #await xhs.send(Message(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n无法获取到管理员设置的小红书ck！"))
         return
     # 请求头
@@ -591,29 +593,29 @@ async def xiaohongshu(url,filepath=None):
     try:
         response_json = re.findall('window.__INITIAL_STATE__=(.*?)</script>', html)[0]
     except IndexError:
-        print(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n当前ck已失效，请联系管理员重新设置的小红书ck！")
+        logger.info(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n当前ck已失效，请联系管理员重新设置的小红书ck！")
         #await xhs.send(Message(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n当前ck已失效，请联系管理员重新设置的小红书ck！"))
         return
     response_json = response_json.replace("undefined", "null")
     response_json = json.loads(response_json)
     note_data = response_json['note']['noteDetailMap'][xhs_id]['note']
     formatted_json = json.dumps(note_data, indent=4)
-    #print(formatted_json)
+    #logger.info(formatted_json)
     note_title,note_desc,type = note_data['title'],note_data['desc'], note_data['type']
     avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(note_data['user']['avatar'], f'{filepath}'))]))[0]
     if 'time' in note_data:
         xhs_time=note_data['time']
     elif 'lastUpdateTime' in note_data:
         xhs_time = note_data['lastUpdateTime']
-    #print(xhs_time)
+    #logger.info(xhs_time)
     video_time = datetime.utcfromtimestamp(int(xhs_time)/1000) + timedelta(hours=8)
     video_time = video_time.strftime('%Y-%m-%d %H:%M:%S')
-    print(f"{GLOBAL_NICKNAME}识别：小红书，{note_title}\n{note_desc}")
+    logger.info(f"{GLOBAL_NICKNAME}识别：小红书，{note_title}\n{note_desc}")
     if type == 'normal':
-        #print('这是一条解析有文字链接的图文:')
+        #logger.info('这是一条解析有文字链接的图文:')
         image_list = note_data['imageList']
         for context in image_list:
-            print(context["urlDefault"])
+            logger.info(context["urlDefault"])
         # 批量下载
         contents.append(f'{note_title}\n{note_desc}')
         contents = await add_append_img(contents, await asyncio.gather(
@@ -622,7 +624,7 @@ async def xiaohongshu(url,filepath=None):
     elif type == 'video':
         # 这是一条解析有水印的视频
         introduce=note_desc
-        #print(note_data['video'])
+        #logger.info(note_data['video'])
         video_url = note_data['video']['media']['stream']['h264'][0]['masterUrl']
         image_list = note_data['imageList']
         contents = await add_append_img(contents, await asyncio.gather(
@@ -633,7 +635,7 @@ async def xiaohongshu(url,filepath=None):
         # video_url = f"http://sns-video-bd.xhscdn.com/{note_data['video']['consumer']['originVideoKey']}"
         #path = await download_video(video_url)
         # await xhs.send(Message(MessageSegment.video(path)))
-        #print(path)
+        #logger.info(path)
         #await auto_video_send(event, path)
 
     out_path = draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=note_data['user']['nickname'],
@@ -653,7 +655,7 @@ async def xiaohongshu(url,filepath=None):
 
 async def link_prising(url,filepath=None):
     dy_path=None
-    print(url)
+    logger.info(url)
     if 'bili' in url or 'b23' in url:
         dy_path,url=await bilibili(url,filepath=filepath)
     elif 'douyin' in url or 'douyin' in url:
