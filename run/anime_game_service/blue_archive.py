@@ -20,10 +20,10 @@ def main(bot, logger):
 
     @bot.on(GroupMessageEvent)
     async def selectMission(event: GroupMessageEvent):
-        if str(event.raw_message).startswith("/攻略 "):
-            url = event.raw_message.replace("/攻略 ", "")
+        if str(event.raw_message).startswith("/攻略"):
+            url = event.raw_message.strip()
         elif event.raw_message.startswith("/arona "):
-            url = event.raw_message.replace("/arona ", "")
+            url = event.raw_message.strip()
         else:
             return
         logger.info_func("查询攻略：" + url)
