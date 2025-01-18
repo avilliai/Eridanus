@@ -491,13 +491,16 @@ def main(bot,config):
         if str(event.raw_message).startswith("ckpt2 ") and config.controller["ai绘画"]["sd画图"]:
             tag = str(event.raw_message).replace("ckpt2 ", "")
             bot.logger.info('切换ckpt中')
-            try:
-                await ckpt2(tag,config)
-                await bot.send(event, "切换成功喵~第一次会慢一点~", True)
-                # logger.info("success")
-            except Exception as e:
-                bot.logger.error(e)
-                await bot.send(event, "ckpt切换失败", True)
+            if event.user_id == config.basic_config["master"]["id"]:
+                try:
+                    await ckpt2(tag,config)
+                    await bot.send(event, "切换成功喵~第一次会慢一点~", True)
+                    # logger.info("success")
+                except Exception as e:
+                    bot.logger.error(e)
+                    await bot.send(event, "ckpt切换失败", True)
+            else:
+                await bot.send(event, "仅master可执行此操作", True)
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
