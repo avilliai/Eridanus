@@ -3,6 +3,7 @@ from bilibili_api import dynamic
 from bilibili_api.opus import Opus
 import os
 import requests
+import base64
 import re
 import httpx
 from urllib.parse import urlparse
@@ -18,6 +19,9 @@ from plugins.resource_search_plugin.Link_parsing.core.common import download_vid
 from plugins.resource_search_plugin.Link_parsing.core.tiktok import generate_x_bogus_url, dou_transfer_other, \
     COMMON_HEADER,DOUYIN_VIDEO,URL_TYPE_CODE_DICT,DY_TOUTIAO_INFO
 from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
+from plugins.resource_search_plugin.Link_parsing.core.acfun import parse_url, download_m3u8_videos, parse_m3u8, merge_ac_file_to_mp4
+from plugins.resource_search_plugin.Link_parsing.core.xhs import XHS_REQ_LINK
+
 import inspect
 import aiohttp
 
@@ -425,8 +429,8 @@ async def dy(url,filepath=None):
                 #print(no_watermark_image_list)
                 download_img_funcs = [asyncio.create_task(download_img(item, f'{filepath}',len=len(no_watermark_image_list)))for item in no_watermark_image_list]
                 links_path = await asyncio.gather(*download_img_funcs)
-                #print(links_path)
                 contents = await add_append_img(contents, links_path)
+
                 #await send_forward_both(bot, event, make_node_segment(bot.self_id, no_watermark_image_list))
                 context = detail.get("desc").replace('#', '\n#', 1)
                 contents.append(f'{context}')
@@ -503,6 +507,8 @@ async def wb(url,filepath=None):
     content.append(re.sub(r'<[^>]+>', '', text))
 
     if pics:
+        formatted_json = json.dumps(pics, indent=4)
+        #print(formatted_json)
         pics = map(lambda x: x['url'], pics)
         length=0
         img_check=[]
@@ -517,13 +523,16 @@ async def wb(url,filepath=None):
             pass
             #os.unlink(temp)
     if page_info:
-        #print(page_info)
+        print(page_info)
+        formatted_json = json.dumps(page_info, indent=4)
+        print(formatted_json)
         if 'page_pic' in page_info:
-            page_pic=page_info.get('page_pic').get('url')
-            #print(page_pic)
-            download_img_funcs = [asyncio.create_task(download_img(page_pic, f'{filepath}',headers={ "Referer": "http://blog.sina.com.cn/"} | COMMON_HEADER))]
-            page_pic_path = await asyncio.gather(*download_img_funcs)
-            content.append(page_pic_path[0])
+            if page_info.get('type') != 'topic':
+                page_pic=page_info.get('page_pic').get('url')
+                #print(page_pic)
+                download_img_funcs = [asyncio.create_task(download_img(page_pic, f'{filepath}',headers={ "Referer": "http://blog.sina.com.cn/"} | COMMON_HEADER))]
+                page_pic_path = await asyncio.gather(*download_img_funcs)
+                content.append(page_pic_path[0])
 
     out_path = draw_adaptive_graphic_and_textual(content, avatar_path=avatar_path[0], name=owner_name,
                                                  Time=f'{video_time}', type=11,
@@ -533,35 +542,138 @@ async def wb(url,filepath=None):
     return out_path, None
 
 
+
+
+
+async def xiaohongshu(url,filepath=None):
+    """
+        小红书解析
+    :param event:
+    :return:
+    """
+    contents=[]
+    if filepath is None: filepath = filepath_init
+    introduce=None
+    msg_url = re.search(r"(http:|https:)\/\/(xhslink|(www\.)xiaohongshu).com\/[A-Za-z\d._?%&+\-=\/#@]*",
+                        str(url).replace("&amp;", "&").strip())[0]
+    # 如果没有设置xhs的ck就结束，因为获取不到
+    xhs_ck = 'abRequestId=e3d4ef61-f346-535a-a112-68b10d9efc6c; webBuild=4.55.0; xsecappid=xhs-pc-web; a1=194774a388746xcxbkvy1cpolet8tpl1aowgnabuj50000141451; webId=4dc656746c488593fd6934c8d3aa5a41; acw_tc=0a0bb1cf17371681462132387eb7c2147a7b205c932cf35dedf7fa19210da0; websectiga=2a3d3ea002e7d92b5c9743590ebd24010cf3710ff3af8029153751e41a6af4a3; sec_poison_id=8fe8d55d-f891-4ad9-abfb-6bdae6c8ed1b; gid=yj4WW402KS0qyj4WW40qYl0DYW4KCSCDThvyE7VSUl1d9k28Y9U1yI888y4y42y8ij2SdJSy; web_session=040069b082fe7512875e235dbe354b75641d5e; unread={%22ub%22:%22678675cd000000000900db78%22%2C%22ue%22:%22678529ec000000002002a75f%22%2C%22uc%22:29}'
+    xhs_ck=ini_login_Link_Prising(type=3)
+    if xhs_ck == "":
+        #logger.error(global_config)
+        print('小红书ck未能成功获取，已经推出')
+        #await xhs.send(Message(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n无法获取到管理员设置的小红书ck！"))
+        return
+    # 请求头
+    headers = {
+                  'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,'
+                            'application/signed-exchange;v=b3;q=0.9',
+                  'cookie': xhs_ck,
+              } | COMMON_HEADER
+    if "xhslink" in msg_url:
+        msg_url = httpx.get(msg_url, headers=headers, follow_redirects=True).url
+        msg_url = str(msg_url)
+    xhs_id = re.search(r'/explore/(\w+)', msg_url)
+    if not xhs_id:
+        xhs_id = re.search(r'/discovery/item/(\w+)', msg_url)
+    if not xhs_id:
+        xhs_id = re.search(r'source=note&noteId=(\w+)', msg_url)
+    xhs_id = xhs_id[1]
+    # 解析 URL 参数
+    parsed_url = urlparse(msg_url)
+    params = parse_qs(parsed_url.query)
+    # 提取 xsec_source 和 xsec_token
+    xsec_source = params.get('xsec_source', [None])[0] or "pc_feed"
+    xsec_token = params.get('xsec_token', [None])[0]
+
+    html = httpx.get(f'{XHS_REQ_LINK}{xhs_id}?xsec_source={xsec_source}&xsec_token={xsec_token}', headers=headers).text
+    # response_json = re.findall('window.__INITIAL_STATE__=(.*?)</script>', html)[0]
+    try:
+        response_json = re.findall('window.__INITIAL_STATE__=(.*?)</script>', html)[0]
+    except IndexError:
+        print(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n当前ck已失效，请联系管理员重新设置的小红书ck！")
+        #await xhs.send(Message(f"{GLOBAL_NICKNAME}识别内容来自：【小红书】\n当前ck已失效，请联系管理员重新设置的小红书ck！"))
+        return
+    response_json = response_json.replace("undefined", "null")
+    response_json = json.loads(response_json)
+    note_data = response_json['note']['noteDetailMap'][xhs_id]['note']
+    formatted_json = json.dumps(note_data, indent=4)
+    #print(formatted_json)
+    note_title,note_desc,type = note_data['title'],note_data['desc'], note_data['type']
+    avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(note_data['user']['avatar'], f'{filepath}'))]))[0]
+    if 'time' in note_data:
+        xhs_time=note_data['time']
+    elif 'lastUpdateTime' in note_data:
+        xhs_time = note_data['lastUpdateTime']
+    #print(xhs_time)
+    video_time = datetime.utcfromtimestamp(int(xhs_time)/1000) + timedelta(hours=8)
+    video_time = video_time.strftime('%Y-%m-%d %H:%M:%S')
+    print(f"{GLOBAL_NICKNAME}识别：小红书，{note_title}\n{note_desc}")
+    if type == 'normal':
+        #print('这是一条解析有文字链接的图文:')
+        image_list = note_data['imageList']
+        for context in image_list:
+            print(context["urlDefault"])
+        # 批量下载
+        contents.append(f'{note_title}\n{note_desc}')
+        contents = await add_append_img(contents, await asyncio.gather(
+            *[asyncio.create_task(download_img(item['urlDefault'], f'{filepath}', len=len(image_list))) for item in
+              image_list]))
+    elif type == 'video':
+        # 这是一条解析有水印的视频
+        introduce=note_desc
+        #print(note_data['video'])
+        video_url = note_data['video']['media']['stream']['h264'][0]['masterUrl']
+        image_list = note_data['imageList']
+        contents = await add_append_img(contents, await asyncio.gather(
+            *[asyncio.create_task(download_img(item['urlDefault'], f'{filepath}', len=len(image_list))) for item in
+              image_list]))
+        contents.append(f'{note_title}')
+        # ⚠️ 废弃，解析无水印视频video.consumer.originVideoKey
+        # video_url = f"http://sns-video-bd.xhscdn.com/{note_data['video']['consumer']['originVideoKey']}"
+        #path = await download_video(video_url)
+        # await xhs.send(Message(MessageSegment.video(path)))
+        #print(path)
+        #await auto_video_send(event, path)
+
+    out_path = draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=note_data['user']['nickname'],
+                                                 Time=f'{video_time}', type=11,introduce=introduce,
+                                                 filepath=filepath, type_software='小红书',
+                                                 color_software=(255, 38, 66, 80),
+                                                 output_path_name=f'{xhs_id}')
+
+
+    # 发送图片
+    # 清除图片
+    for temp in contents:
+        pass
+        #os.unlink(temp)
+    return out_path,None
+
+
 async def link_prising(url,filepath=None):
     dy_path=None
+    print(url)
     if 'bili' in url or 'b23' in url:
         dy_path,url=await bilibili(url,filepath=filepath)
     elif 'douyin' in url or 'douyin' in url:
         dy_path,url=await dy(url, filepath=filepath)
     elif 'weibo' in url:
         dy_path,url=await wb(url, filepath=filepath)
+    elif 'xhslink' in url or 'xiaohongshu' in url:
+        dy_path,url=await xiaohongshu(url, filepath=filepath)
     return dy_path,url
+
 
 #draw_video_thumbnail()
 if __name__ == "__main__":#测试用，不用管
-    url='https://t.bilibili.com/1020853339034746883?share_source=pc_native'
-    url='https://t.bilibili.com/1021014297223888949?share_source=pc_native'
-    url='7.48 复制打开抖音，看看【路过的路人的作品】小厨男天天被我玩# 兔娘 # cos # 超时空跑... https://v.douyin.com/iypyEDf1/ 08/27 p@q.Rk baa:/ '
-    #url='7.66 11/02 O@K.Wm Bte:/ 2命大黑塔梦幻排轴17动（创作服大黑塔电子榨菜第三期） 你不觉得17这个数字很梦幻吗？当然这都是为了给您展示2命的多动，纯属娱乐玩法，正常来说，攻击绳子，攻击鞋，全输出走起~怪根本扛不住！ # 崩坏星穹铁道 # 在第八日启程# 星穹铁道创作服前瞻 # 大黑塔 # 游戏内容风向标  https://v.douyin.com/iypveGXJ/ 复制此链接，打开Dou音搜索，直接观看视频！'
-    #url='0.02 ZZM:/ a@N.WM 10/20 大黑塔基础玩法技能遗器详细介绍！（创作服大黑塔第二期） 本期视频涵盖了很多，本身大黑塔的细节较多，所以不得已的给各位上了几个表，应该不至于太催眠，希望能帮助大家更好的理解这个角色，有问题和想法欢迎评论区指出，有赖各位观众支持小河马! # 崩坏星穹铁道 # 在第八日启程# 星穹铁道创作服前瞻 # 游戏内容风向标 # 大黑塔  https://v.douyin.com/iytXUdEG/ 复制此链接，打开Dou音搜索，直接观看视频！'
-    url='0.02 08/14 v@s.Eh cNW:/ 抖音图文怎么发。回复 @用户6901949649936的评论 抖音图片左滑动怎么制作，抖音图片左右滑动翻页视频怎么制作。抖音图文关闭音乐卡点，切换速度就会变慢。  https://v.douyin.com/if1L82W3/ 复制此链接，打开Dou音搜索，直接观看视频！'
-    url='6.17 复制打开抖音，看看【兔娘的面首的作品】不要彩礼 # 兔娘 # 兔娘直播回放 # 御姐 #... https://v.douyin.com/iy38a4Dk/ P@X.MW OXm:/ 09/09 '
     #asyncio.run(dy(url))
-    url='【TikTok，能活下来么？】https://www.bilibili.com/video/BV1JccNerEYx?vd_source=5e640b2c90e55f7151f23234cae319ec'
-    url='https://t.bilibili.com/1019576501083832328?share_source=pc_native'
-    url='https://t.bilibili.com/1022796124533030914?share_source=pc_native'
-    url='https://t.bilibili.com/1022795905498087445?share_source=pc_native'
-    url='https://t.bilibili.com/1022767709046177793?share_source=pc_native'
-    url='https://t.bilibili.com/1022904074263068729?share_source=pc_native'
-    asyncio.run(bilibili(url))
-    url='https://weibo.com/2219124641/5121698360208427'
-    url='https://weibo.com/2399108147/5123063479535033'
-    url='https://weibo.com/7480686919/5123066430754791'
+    #asyncio.run(bilibili(url))
     #asyncio.run(wb(url))
+    url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
+    url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
+
+    url='44 【来抄作业✨早秋彩色衬衫叠穿｜时髦知识分子风 - 杨意子_ | 小红书 - 你的生活指南】 😆 Inw56apL6vWYuoS 😆 https://www.xiaohongshu.com/discovery/item/64c0e9c0000000001201a7de?source=webshare&xhsshare=pc_web&xsec_token=AB8GfF7dOtdlB0n_mqoz61fDayAXpCqWbAz9xb45p6huE=&xsec_source=pc_share'
+    url='79 【感谢大数据！椰青茉莉也太太太好喝了吧 - 胖琪琪 | 小红书 - 你的生活指南】 😆 78VORl9ln3YDBKi 😆 https://www.xiaohongshu.com/discovery/item/63dcee03000000001d022015?source=webshare&xhsshare=pc_web&xsec_token=ABJoHbAtOG98_7RnFR3Mf2MuQ1JC8tRVlzHPAG5BGKdCc=&xsec_source=pc_share'
+    asyncio.run(xiaohongshu(url))
 

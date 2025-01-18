@@ -155,7 +155,7 @@ def find_chrome_executable():
             return path
     raise FileNotFoundError("找不到Chrome浏览器，请手动安装或检查路径。")
 
-async def get_douyin_cookies():
+async def get_xhs_cookies():
     chrome_path = find_chrome_executable()
 
     async with async_playwright() as p:
@@ -163,8 +163,9 @@ async def get_douyin_cookies():
         browser = await p.chromium.launch(headless=False, executable_path=chrome_path)
         page = await browser.new_page()
 
-        # 打开抖音登录页面
-        await page.goto('https://www.douyin.com')
+        # 打开小红书登录页面
+        await page.goto('https://www.xiaohongshu.com')
+
 
         # 提示用户手动登录
         print("请登录账号后回车确认...")
@@ -173,7 +174,38 @@ async def get_douyin_cookies():
         # 获取所有cookie
         cookies = await page.context.cookies()
         await browser.close()
+        #print(cookies)
+        # 将cookie格式化为目标格式
+        cookie_dict = {cookie['name']: cookie['value'] for cookie in cookies}
+        required_cookies = [
+            "abRequestId", "webBuild", "xsecappid", "a1", "webId",
+            "acw_tc", "websectiga", "sec_poison_id", "web_session", "unread",
+            "gid"
+        ]
+        ck_list = [f"{name}={cookie_dict.get(name, 'xxx')}" for name in required_cookies]
+        ck_string = ';'.join(ck_list) + ';'
+        return ck_string
 
+async def get_douyin_cookies():
+    chrome_path = find_chrome_executable()
+
+    async with async_playwright() as p:
+        # 启动浏览器
+        browser = await p.chromium.launch(headless=False, executable_path=chrome_path)
+        page = await browser.new_page()
+
+        # 打开抖音登录界面
+        await page.goto('https://www.douyin.com')
+        # 提示用户手动登录
+        print("请登录账号后回车确认...")
+        input("按回车键继续...")
+
+        # 获取所有cookie
+        cookies = await page.context.cookies()
+        await browser.close()
+        print(cookies)
+        for cookie in cookies:
+            print(cookie)
         # 将cookie格式化为目标格式
         cookie_dict = {cookie['name']: cookie['value'] for cookie in cookies}
         required_cookies = [
@@ -185,8 +217,6 @@ async def get_douyin_cookies():
         ck_string = ';'.join(ck_list) + ';'
         return ck_string
 
-
-
 async def douyin_login():
     init_data()
     data_file = SaveData("user_data")
@@ -197,10 +227,21 @@ async def douyin_login():
     data_file.data['login']['douyin_login']['ck_string'] = ck_string
     data_file.save()
 
+async def xhs_login():
+    init_data()
+    data_file = SaveData("user_data")
+    ck_string = await get_xhs_cookies()
+    print("您已成功获取：\n小红书CK:", ck_string)
+    if data_file.data["login"].get(f'xhs_login') is None:
+        data_file.data['login']['xhs_login'] = {}
+    data_file.data['login']['xhs_login']['ck_string'] = ck_string
+    data_file.save()
+
+
 def ini_login_Link_Prising(type=None):
     init_data()
     data_file = SaveData("user_data")
-    bili_login_check, douyin_login_check=None,None
+    bili_login_check, douyin_login_check,xhs_login_check=None,None,None
     if type == 1:
         if data_file.data["login"].get(f'bili_login') is not None:
             return data_file.data["login"].get(f'bili_login')
@@ -209,12 +250,18 @@ def ini_login_Link_Prising(type=None):
         if data_file.data["login"].get(f'douyin_login') is not None:
             return data_file.data["login"]['douyin_login'].get(f'ck_string')
         else:return None
+    elif type ==3:
+        if data_file.data["login"].get(f'xhs_login') is not None:
+            return data_file.data["login"]['xhs_login'].get(f'ck_string')
+        else:return None
     elif type == 0:
         if data_file.data["login"].get(f'bili_login') is not None:
             bili_login_check=True
         if data_file.data["login"].get(f'douyin_login') is not None:
             douyin_login_check=True
-        return bili_login_check,douyin_login_check
+        if data_file.data["login"].get(f'xhs_login') is not None:
+            xhs_login_check=True
+        return bili_login_check,douyin_login_check,xhs_login_check
     data_file.save()
 
 def main():
@@ -226,6 +273,7 @@ async def login_core_select():
     """请选择登录方式：
     1. B站自动登录获取session（暂时不必要）
     2、抖音ck获取（必要）
+    3、小红书ck获取（必要）
     """))
     settings.geetest_auto_open = True
 
@@ -234,6 +282,11 @@ async def login_core_select():
     elif mode ==2:
         try:
             await douyin_login()
+        except Exception as e:
+            print(e)
+    elif mode ==3:
+        try:
+            await xhs_login()
         except Exception as e:
             print(e)
     else:
