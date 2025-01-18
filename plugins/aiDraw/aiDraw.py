@@ -108,7 +108,7 @@ async def n4(prompt, path, groupid, config, args):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
         response = await client.post(url=f'{url}/ai/generate-image', json=payload, headers=headers)
         response.raise_for_status()
         zip_content = response.content
@@ -198,7 +198,7 @@ async def n3(prompt, path, groupid, config, args):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
         response = await client.post(url=f'{url}/ai/generate-image', json=payload, headers=headers)
         response.raise_for_status()
         zip_content = response.content
@@ -285,11 +285,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
@@ -371,11 +367,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
 
@@ -707,11 +699,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
