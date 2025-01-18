@@ -48,10 +48,10 @@ class EventBus:
 
 
 class WebSocketBot:
-    def __init__(self, uri: str):
+    def __init__(self, uri: str,blocked_loggers=None):
         self.uri = uri
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
-        self.logger = get_logger()
+        self.logger = get_logger(blocked_loggers)
         self.event_bus = EventBus()
         self.response_callbacks: Dict[str, asyncio.Future] = {}
         self.receive_task: Optional[asyncio.Task] = None

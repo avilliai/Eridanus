@@ -7,10 +7,6 @@ from plugins.core.yamlLoader import YAMLManager
 
 
 from plugins.utils.websocket_fix import ExtendBot
-from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
-from run.acg_infromation import galgame,bangumi
-from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
-from run.streaming_media import youtube,bilibili,Link_parsing
 
 config = YAMLManager(["config/settings.yaml",
                       "config/basic_config.yaml",
@@ -26,8 +22,12 @@ config = YAMLManager(["config/settings.yaml",
 #from developTools.adapters.http_adapter import HTTPBot
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
-bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config)
+bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 
+from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
+from run.acg_infromation import galgame,bangumi
+from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
+from run.streaming_media import youtube,bilibili,Link_parsing
 
 aiDraw.main(bot,config) #加载aiDraw插件
 basic_plugin.main(bot,config) #加载basic_plusine插件

@@ -6,15 +6,13 @@ import httpx
 
 from ruamel.yaml import YAML
 
-from plugins.core.simple_aiReplyCore import simple_aiReplyCore
-from plugins.core.yamlLoader import YAMLManager
 from plugins.utils.random_str import random_str
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
 
-async def tts(text, speaker=None, config=None):
+async def tts(text, speaker=None, config=None,mood=None):
     pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
 
     # 去除括号及其中的内容
@@ -28,7 +26,7 @@ async def tts(text, speaker=None, config=None):
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
-        return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker)
+        return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker,mood)
     else:
         pass
 
@@ -55,23 +53,16 @@ except:
 async def get_acgn_ai_speaker_list(a=None,b=None,c=None):
     spks=list(GPTSOVITS_SPEAKERS.keys())
     return spks
-async def acgn_ai_tts(token, config, text, speaker,inclination = "中立"):
+async def acgn_ai_tts(token, config, text, speaker,mood):
     if speaker not in GPTSOVITS_SPEAKERS:
         speaker = config.api["tts"]["acgn_ai"]["speaker"]
-    try:
-        if len(GPTSOVITS_SPEAKERS[speaker]) > 1:
-            prompt = [{"text": f"对下面的文本进行情感倾向分析，结果只能从下面的列表：{GPTSOVITS_SPEAKERS[speaker]} 中选取，直接输出结果，不要回复任何其他内容，下面是需要分析的文本:{text}"}]
-            r = await simple_aiReplyCore(
-                prompt,
-                config,
-                config.api["llm"]["model"]
-            )
-            for i in GPTSOVITS_SPEAKERS[speaker]:
-                if i in r:
-                    inclination = i
-                    break
-    except:
-        pass
+    inclination = "中立"
+    if len(GPTSOVITS_SPEAKERS[speaker]) > 1:
+        r=mood
+        for i in GPTSOVITS_SPEAKERS[speaker]:
+            if i==r:
+                inclination = i
+                break
 
     url = "https://infer.acgnai.top/infer/gen"
     async with httpx.AsyncClient(timeout=100) as client:

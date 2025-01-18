@@ -86,10 +86,11 @@ def main(bot,config):
 
     @bot.on(LifecycleMetaEvent)
     async def _(event):
+        loop = asyncio.get_running_loop()
         while True:
-            await check_bili_dynamic(bot, config)
             try:
-                pass
+                with ThreadPoolExecutor() as executor:
+                    await loop.run_in_executor(executor, asyncio.run,check_bili_dynamic(bot,config))
                 #await check_bili_dynamic(bot,config)
             except Exception as e:
                 bot.logger.error(e)

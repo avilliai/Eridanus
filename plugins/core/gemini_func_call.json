@@ -207,6 +207,11 @@
                         "speaker": {
                             "type": "string",
                             "description": "使用的语音合成角色。默认为玲可【星穹铁道】"
+                        },
+                        "mood": {
+                            "type": "string",
+                            "enum": ["开心", "中立", "难过", "生气"],
+                            "description": "语音的情绪。根据具体句子判断。"
                         }
                     },
                     "required": [
