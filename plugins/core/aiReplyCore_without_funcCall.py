@@ -79,6 +79,7 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
                 user_id,
             )
             reply_message = response_message["content"]
+            response_message["content"] = [{"type": "text", "text": response_message["content"]}]
             await prompt_database_updata(user_id,response_message,config)
 
 
