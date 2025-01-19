@@ -1,5 +1,5 @@
 llm:
-  model: 腾讯元器 #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
+  model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
   prefix:

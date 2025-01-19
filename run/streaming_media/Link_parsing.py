@@ -1,6 +1,5 @@
 import asyncio
 import shutil
-import execjs
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
@@ -29,11 +28,14 @@ def main(bot,config):
     node_path = shutil.which("node")  # 自动查找 Node.js 可执行文件路径
     if not node_path:
         bot.logger.warning("Node.js 未安装或未正确添加到系统 PATH 中!")
-    if "Node.js" in execjs.get().name:
-        bot.logger.info('系统已正确读取到node.js')
-    else:
-        bot.logger.error('系统未能正确读取到node.js')
-
+    try:
+        import execjs
+        if "Node.js" in execjs.get().name:
+            bot.logger.info('系统已正确读取到node.js')
+        else:
+            bot.logger.error('系统未能正确读取到node.js')
+    except:
+        pass
     @bot.on(GroupMessageEvent)
     async def Link_Prising_search(event: GroupMessageEvent):
         url=event.raw_message
