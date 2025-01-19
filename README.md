@@ -1,6 +1,8 @@
 
 # Eridanus
-Eridanus is a bot for onebot v11. It is designed to provide a variety of features for users on the OneBot protocol.
+onebot v11标准的多功能bot，大部分功能支持gemini/openai函数调用。
+
+`webui在做了`
 
 [文档](https://eridanus-doc.netlify.app/)
 # 部署
