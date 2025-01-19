@@ -98,7 +98,7 @@ def main(bot, logger):
             bss = result9.get(a).get("hash")
             for i in bss:
                 p = await stageStrategy(i)
-                await bot.send(event, ("获取到" + i + "数据", Image(file=p)))
+                await bot.send(event, ["获取到" + i + "数据", Image(file=p)])
             logger.info(str(event.group_id) + "新增订阅")
             await bot.send(event, "成功订阅")
 
@@ -109,9 +109,9 @@ def main(bot, logger):
             logger.info("查询攻略：" + url)
             try:
                 p = await stageStrategy(url)
-                await bot.send(event, (
+                await bot.send(event, [
                 "根据图中列出的项目，发送/arona 项目 即可查询，不需要艾特\n示例如下：\n/arona 国服人权\n/arona H11-2",
-                Image(file=p)))
+                Image(file=p)])
             except:
                 logger.error("无效的角色或网络连接错误")
                 await bot.send(event, "无效的角色 或网络连接出错")
