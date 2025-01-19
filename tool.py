@@ -311,6 +311,8 @@ def get_installed_packages(pip_path):
         text=True,
     )
     installed_packages = {}
+    logger.info_func(f"获取已安装包中...")
+    logger.info(f"{result.stdout}")
     if result.returncode == 0:
         for line in result.stdout.splitlines():
             if '==' in line:
