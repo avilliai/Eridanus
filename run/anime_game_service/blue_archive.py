@@ -20,29 +20,29 @@ def main(bot, logger):
 
     @bot.on(GroupMessageEvent)
     async def selectMission(event: GroupMessageEvent):
-        if str(event.raw_message).startswith("/攻略"):
-            url = event.raw_message.strip().split("攻略")[1]
+        if str(event.raw_message).startswith("/攻略 "):
+            url = event.raw_message.replace("/攻略 ", "")
         elif event.raw_message.startswith("/arona "):
-            url = event.raw_message.strip().split("攻略")[1]
+            url = event.raw_message.replace("/arona ", "")
         else:
             return
-        logger.info_func("查询攻略：" + url)
+        logger.info("查询攻略：" + url)
         try:
             p = await stageStrategy(url)
             await bot.send(event, Image(file=p))
-        except:
-            logger.error("无效的角色或网络连接错误")
+        except Exception as e:
+            logger.error(f"无效的角色或网络连接错误{e}")
             await bot.send(event, "无效的角色 或网络连接出错")
 
     @bot.on(LifecycleMetaEvent)
     async def pushAronaData(event: LifecycleMetaEvent):
         while True:
-            logger.info_func("检查arona订阅更新")
+            logger.info("检查arona订阅更新")
             with open("data/pictures/blueArchive/aronaSub.yaml", 'r', encoding='utf-8') as f:
                 result9 = yaml.load(f.read(), Loader=yaml.FullLoader)
                 for i in result9:
                     for ia in result9.get(i).get("hash"):
-                        logger.info_func("检查" + ia + "更新")
+                        logger.info("检查" + ia + "更新")
                         await sleep(25)
                         url1 = "https://arona.diyigemt.com/api/v2/image?name=" + ia
                         async with httpx.AsyncClient(timeout=100) as client:  # 100s超时
@@ -63,8 +63,7 @@ def main(bot, logger):
                                     await bot.send_group_message(int(iss), (ia + "数据更新", Image(file=p)))
                                     alreadySend.append(iss)
                                 except:
-                                    if str(iss)!="789999":
-                                        logger.error("向" + str(iss) + "推送更新失败")
+                                    logger.error("向" + str(iss) + "推送更新失败")
                                     alreadySend.append(iss)
                             result9[i]["hash"][ia] = str(newHash)
                             with open('data/pictures/blueArchive/aronaSub.yaml', 'w', encoding="utf-8") as file:
