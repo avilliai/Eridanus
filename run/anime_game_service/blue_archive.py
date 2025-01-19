@@ -31,7 +31,7 @@ def main(bot, logger):
             p = await stageStrategy(url)
             await bot.send(event, Image(file=p))
         except:
-            logger.error_func("无效的角色或网络连接错误")
+            logger.error("无效的角色或网络连接错误")
             await bot.send(event, "无效的角色 或网络连接出错")
 
     @bot.on(LifecycleMetaEvent)
@@ -64,7 +64,7 @@ def main(bot, logger):
                                     alreadySend.append(iss)
                                 except:
                                     if str(iss)!="789999":
-                                        logger.error_func("向" + str(iss) + "推送更新失败")
+                                        logger.error("向" + str(iss) + "推送更新失败")
                                     alreadySend.append(iss)
                             result9[i]["hash"][ia] = str(newHash)
                             with open('data/pictures/blueArchive/aronaSub.yaml', 'w', encoding="utf-8") as file:
