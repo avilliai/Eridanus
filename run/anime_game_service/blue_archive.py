@@ -87,10 +87,11 @@ def main(bot, logger):
         with open("data/pictures/blueArchive/aronaSub.yaml", 'r', encoding='utf-8') as f:
             result9 = yaml.load(f.read(), Loader=yaml.FullLoader)
             bsg = result9.get(a).get("groups")
-            if event.group.id in bsg:
+            
+            if event.group_id in bsg:
                 await bot.send(event, "本群已订阅过")
                 return
-            bsg.append(event.group.id)
+            bsg.append(event.group_id)
             result9[a]["groups"] = bsg
             with open('data/pictures/blueArchive/aronaSub.yaml', 'w', encoding="utf-8") as file:
                 yaml.dump(result9, file, allow_unicode=True)
@@ -98,7 +99,7 @@ def main(bot, logger):
             for i in bss:
                 p = await stageStrategy(i)
                 await bot.send(event, ("获取到" + i + "数据", Image(file=p)))
-            logger.info(str(event.group.id) + "新增订阅")
+            logger.info(str(event.group_id) + "新增订阅")
             await bot.send(event, "成功订阅")
 
     @bot.on(GroupMessageEvent)
