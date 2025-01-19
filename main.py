@@ -1,12 +1,8 @@
 import os
 import sys
-
-from run.anime_game_service import blue_archive
-
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from plugins.core.yamlLoader import YAMLManager
-
 
 from plugins.utils.websocket_fix import ExtendBot
 
@@ -25,7 +21,7 @@ config = YAMLManager(["config/settings.yaml",
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
 bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
-
+from run.anime_game_service import blue_archive
 from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
 from run.acg_infromation import galgame,bangumi
 from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
