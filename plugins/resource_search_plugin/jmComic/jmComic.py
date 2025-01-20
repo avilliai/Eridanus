@@ -5,11 +5,13 @@ import shutil
 
 import jmcomic
 import yaml
+import asyncio
 
 from jmcomic import *
 
 
 from plugins.utils.random_str import random_str
+from plugins.aiDraw.antiSFW import process_folder ,compress_gifs
 
 
 class MyDownloader(jmcomic.JmDownloader):
@@ -117,6 +119,8 @@ def downloadComic(comic_id, start=1, end=5):
     with open("config/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
     option = jmcomic.create_option_by_file('config/jmcomic.yml')
+    obfuscation = result.get("download", {}).get("Obfuscation", "gif")
+    gif_compress = result.get("download", {}).get("gifcompress", False)  # 读取gifcompress的值觉得是否压缩gif
     if not os.path.exists(f'data/pictures/benzi/temp{comic_id}'):
         os.mkdir(f'data/pictures/benzi/temp{comic_id}')
 
@@ -131,17 +135,29 @@ def downloadComic(comic_id, start=1, end=5):
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
     file_names = os.listdir(folder_path)
-    print(file_names)
+    #print(file_names)
     new_files = []
-    for i in file_names:
-        # print(file_names)
-        image_raw = Image.open(f"data/pictures/benzi/temp{comic_id}/" + i)
-        # convert image to black and white
-        image_black_white = image_raw.convert('1')
-        newPath = f"data/pictures/cache/{random_str()}.png"
-        new_files.append(newPath)
-        image_black_white.save(newPath)
-    # png_files = [os.path.join(folder_path, file) for file in file_names if file.lower().endswith('.png')]
+    if obfuscation == "gif":
+        asyncio.run(process_folder(input_folder=folder_path,output_folder=folder_path))
+        for filename in sorted(os.listdir(folder_path)):
+            if filename.lower().endswith('.gif'):
+                new_filename = f"data/pictures/cache/{random_str()}.gif"
+                shutil.move(os.path.join(folder_path, filename), new_filename)
+                new_files.append(new_filename)
+        if gif_compress:  # 根据gifcompress的值决定是否压缩
+            asyncio.run(compress_gifs(new_files))
+    elif obfuscation == "black_and_white":
+        for i in file_names:
+            # print(file_names)
+            image_raw = Image.open(f"data/pictures/benzi/temp{comic_id}/" + i)
+            
+            # convert image to black and white
+            image_black_white = image_raw.convert('1')
+            newPath = f"data/pictures/cache/{random_str()}.png"
+            new_files.append(newPath)
+            image_black_white.save(newPath)
+        # png_files = [os.path.join(folder_path, file) for file in file_names if file.lower().endswith('.png')]
+        print(new_files)
     return new_files
 
 
