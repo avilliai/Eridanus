@@ -415,11 +415,8 @@ async def getloras(config):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url)
         r = response.json()
         result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
@@ -440,11 +437,8 @@ async def getcheckpoints(config):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url)
         r = response.json()
         model_lines = [f'{model.get("model_name", "未知")}.safetensors' for model in r]
