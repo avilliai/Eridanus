@@ -207,7 +207,7 @@ def main(bot,config):
                 return
             cmList = []
             logger.info(png_files)
-            cmList.append(Node(content=[Text(f"车牌号：{comic_id} \n腾子吞图严重，bot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。可能显示不出来")]))
+            cmList.append(Node(content=[Text(f"车牌号：{comic_id} \n腾子吞图严重，bot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。预览是黑色是正常的，点进去查看")]))
             shutil.rmtree(f"data/pictures/benzi/temp{comic_id}")
             logger.info("移除预览缓存")
             for path in png_files:
