@@ -157,7 +157,7 @@ def downloadComic(comic_id, start=1, end=5):
             new_files.append(newPath)
             image_black_white.save(newPath)
         # png_files = [os.path.join(folder_path, file) for file in file_names if file.lower().endswith('.png')]
-        print(new_files)
+        #print(new_files)
     return new_files
 
 
