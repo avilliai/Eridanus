@@ -38,7 +38,7 @@ class ExtendBot(WebSocketBot):
                                 self.logger.info(f"Bot ID: {self.id}")
                     except:
                         pass
-                    if isinstance(event_obj, GroupMessageEvent):
+                    if hasattr(event_obj, "group_id"):
                         if self.config.settings["bot_config"]["group_handle_logic"]=="blacklist":
                             if event_obj.group_id not in self.config.censor_group["blacklist"]:
                                 if self.config.settings["bot_config"]["user_handle_logic"] == "blacklist":
@@ -67,7 +67,7 @@ class ExtendBot(WebSocketBot):
                                         self.logger.info(f"用户{event_obj.user_id}不在白名单中，跳过处理。")
                             else:
                                 self.logger.info(f"群{event_obj.group_id}不在白名单中，跳过处理。")
-                    elif isinstance(event_obj,PrivateMessageEvent):
+                    elif hasattr(event_obj, "user_id"):
                         if self.config.settings["bot_config"]["user_handle_logic"]=="blacklist":
                             if event_obj.user_id not in self.config.censor_user["blacklist"]:
                                 asyncio.create_task(self.event_bus.emit(event_obj))
@@ -79,11 +79,11 @@ class ExtendBot(WebSocketBot):
                             else:
                                 self.logger.info(f"用户{event_obj.user_id}不在白名单中，跳过处理。")
                     elif event_obj:
-                        asyncio.create_task(self.event_bus.emit(event_obj))  #不能await，否则会阻塞
+                        asyncio.create_task(self.event_bus.emit(event_obj))  #不能await，
                     else:
-                        self.logger.warning("无法匹配事件类型，跳过处理。")
+                        self.logger.warning(f"无法匹配的事件类型，请向开发群913122269反馈。源数据：{data}。")
                 else:
-                    self.logger.warning("收到未知消息格式，已忽略。")
+                    self.logger.warning(f"收到未知消息格式，请向开发群913122269反馈。源数据：{data}。")
         except websockets.exceptions.ConnectionClosedError as e:
             self.logger.warning(f"WebSocket 连接关闭: {e}")
             self.logger.warning("5秒后尝试重连")
