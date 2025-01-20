@@ -13,6 +13,10 @@ class EventFactory:
 
     # 映射事件类型到类
     event_mapping: Dict[str, Type[EventBase]] = {
+        "request": {
+            "friend": FriendRequestEvent,
+            "group": GroupRequestEvent,
+        },
         "message": {
             "private": PrivateMessageEvent,
             "group": GroupMessageEvent,
@@ -32,10 +36,6 @@ class EventFactory:
                 "profile_like": ProfileLikeEvent,
                 "honor": HonorNotifyEvent
                 }
-        },
-        "request": {
-            "friend": FriendRequestEvent,
-            "group": GroupRequestEvent,
         },
         "meta_event": {
             "lifecycle": LifecycleMetaEvent,
