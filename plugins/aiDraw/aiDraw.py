@@ -411,6 +411,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
 
 
 async def getloras(config):
+    global round_sd
     url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/loras'
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
