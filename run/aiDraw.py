@@ -261,7 +261,7 @@ def main(bot,config):
 
             for tag in raw_data_values:
                 tag1 = tag.replace('_', ' ')
-                b1 = Node(content=[Text(f"({tag1}:1)")])
+                b1 = Node(content=[Text(f"{tag1}")])
                 build_msg.append(b1)
                 formatted_tag = tag.replace(' ', '_').replace('(', '%28').replace(')', '%29')
 

@@ -25,8 +25,9 @@ basic_plugin:
     download_video_level: 30  #下载视频所需权限等级
 ai绘画:
   sd画图: true
-  sd默认启动模型: 'noobaiXLNAIXL_vPred10Version.safetensors'
-  novel_ai画图: true
+  sd默认启动模型: 'miaomiao_1_4.safetensors'
+  sd图片是否保存到生图端: false   #是否将生成的图片保存在webui的outputs里
+  novel_ai画图: false
   no_nsfw_groups:               #禁止色图的群号
   - 111
   - 222
