@@ -18,6 +18,10 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 if_save = aiDrawController.get("sd图片是否保存到生图端") if aiDrawController else False
+sd_w = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[0]) if aiDrawController else 1024
+sd_h = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[1]) if aiDrawController else 1536
+sdre_w = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[0]) if aiDrawController else 1064
+sdre_h = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[1]) if aiDrawController else 1064
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
 positives = '{},rating:general, best quality, very aesthetic, absurdres'
@@ -34,7 +38,7 @@ async def n4(prompt, path, groupid, config, args):
     global round_nai
     width = 832
     height = 1216
-    url = "https://spawner.goutou.art"
+    url = "https://image.novelai.net"
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -239,8 +243,8 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
-    height = (args.get('h', 1064) if args.get('h', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    width = (args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
+    height = (args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
@@ -328,8 +332,8 @@ async def SdDraw0(prompt, path, config, groupid, args):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
-    height = (args.get('h', 1536) if args.get('h', 1536) > 0 else 1536) if isinstance(args, dict) else 1536
+    width = (args.get('w', sd_w) if args.get('w', sd_w) > 0 else sd_w) if isinstance(args, dict) else sd_w
+    height = (args.get('h', sd_h) if args.get('h', sd_h) > 0 else sd_h) if isinstance(args, dict) else sd_h
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
@@ -666,8 +670,8 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
-    height = (args.get('h', 1064) if args.get('h', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    width = (args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
+    height = (args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
