@@ -71,7 +71,7 @@ async def latest_asmr_100(proxy=None):
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url)
         data = response.json()
-        print(data)
+        #print(data)
     return await get_info(data,proxies)
 async def choose_from_latest_asmr_100(proxy=None):
     if proxy is not None and proxy !="":
