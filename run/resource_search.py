@@ -6,13 +6,15 @@ import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Image, Node, Text, File, Music, Record
+from developTools.message.message_components import Image, Node, Text, File, Music, Record, Card
 from plugins.core.userDB import get_user
 from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
+from plugins.resource_search_plugin.asmr.asmr100 import random_asmr_100
 from plugins.resource_search_plugin.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
     downloadALLAndToPdf
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
 from plugins.resource_search_plugin.zLibrary.zLibrary import Zlibrary
+from plugins.utils.utils import download_file, merge_audio_files
 
 global Z
 async def search_book_info(bot,event,config,info):
@@ -48,8 +50,40 @@ async def call_download_book(bot,event,config,book_id: str,hash:str):
 async def call_asmr(bot,event,config,try_again=False):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["resource_search"]["asmr"]["asmr_level"]:
+        bot.logger.info("asmr start")
         try:
-            loop = asyncio.get_running_loop()
+            r=await random_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+            i = random.choice(r['media_urls'])
+            await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
+            forward_list = []
+            if config.settings["asmr"]["with_url"]:
+                forward_list.append(Node(content=[Text(f"随机奥术\n标题: {r['title']}\nnsfw: {r['nsfw']}\nsource_url: {r['source_url']}"), Image(file=r['mainCoverUrl'])]))
+            else:
+                await bot.send(event,[Text(f"随机奥术\n标题: {r['title']}\nnsfw: {r['nsfw']}\nsource_url: {r['source_url']}"), Image(file=r['mainCoverUrl'])])
+            file_paths=[]
+            main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
+            for i in r['media_urls']:
+                if config.settings["asmr"]["with_file"]:
+                    path=f"data/voice/cache/{i[1]}"
+                    file=await download_file(i[0],path,config.api["proxy"]["http_proxy"])
+                    file_paths.append(file)
+                text=f"音频名称: {i[1]}\n音频url: {i[0]}"
+                forward_list.append(Node(content=[Text(text)]))
+            if config.settings["asmr"]["with_url"]:
+                await bot.send(event, forward_list)
+            if config.settings["asmr"]["with_file"]:
+                loop = asyncio.get_running_loop()
+                try:
+                    bot.logger.info(f"asmr file merge and upload start: path:{main_path},merge_files:{file_paths}")
+                    with ThreadPoolExecutor() as executor:
+                        path = await loop.run_in_executor(executor, merge_audio_files, file_paths, main_path)
+                    await bot.send(event, File(file=path))
+                    await bot.send(event, "完整音频文件已上传", True)
+                except Exception as e:
+                    bot.logger.error(f"asmr file merge and upload error:{e}")
+
+            #youtube实现方式无法使用，改用asmr-100
+            '''loop = asyncio.get_running_loop()
             with ThreadPoolExecutor() as executor:
                 athor, title, video_id, length = await loop.run_in_executor(executor, ASMR_random)
 
@@ -63,7 +97,7 @@ async def call_asmr(bot,event,config,try_again=False):
             if config.api["youtube_asmr"]["send_type"]=="file":
                 await bot.send(event,File(file=audiopath))
             elif config.api["youtube_asmr"]["send_type"]=="record":
-                await bot.send(event,Record(file=audiopath))
+                await bot.send(event,Record(file=audiopath))'''
         except Exception as e:
             bot.logger.error(f"asmr error:{e}")
             if try_again==False:
@@ -97,6 +131,7 @@ def main(bot,config):
     logger = bot.logger
     global operating
     operating = {}
+
     @bot.on(GroupMessageEvent)
     async def book_resource_search(event):
 
