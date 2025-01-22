@@ -1,6 +1,26 @@
 {
         "function_declarations": [
             {
+                "name": "operate_group_push_tasks",
+                "description": "添加或取消推送任务",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "task_type": {
+                            "type": "string", "enum": ["asmr"],"description": "任务类型 "
+                        },
+                        "operateration": {
+                            "type": "boolean",
+                            "description": "true为添加，false为取消"
+                        }
+                    },
+                    "required": [
+                        "task_type",
+                        "operateration"
+                    ]
+                }
+            },
+            {
                 "name": "report_to_master",
                 "description": "向管理员(master)上报用户的恶性行为。当bot接受到任何攻击性言论、侮辱性言论、骚扰言论时触发。或是用户需要向管理员反馈时触发。"
             },
@@ -164,7 +184,15 @@
             },
             {
                 "name": "call_asmr",
-                "description": "向用户发送asmr助眠音频。"
+                "description": "向用户发送asmr助眠音频。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                         "mode": {
+                            "type": "string", "enum": ["hotest","random"],"description": "随机asmr声音或热门asmr声音。"
+                        }
+                    }
+                }
             },
             {
                 "name": "call_image_search",
