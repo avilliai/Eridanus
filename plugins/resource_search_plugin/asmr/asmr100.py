@@ -2,13 +2,21 @@ import asyncio
 import random
 
 import httpx
-async def get_info(data,proxies=None):
-    id = data["works"][0]['id']
-    source_id = data["works"][0]['source_id']
-    title = data["works"][0]['title']
-    nsfw = data["works"][0]['nsfw']
-    mainCoverUrl = data["works"][0]['mainCoverUrl']
-    new_url = f"https://api.asmr-200.com/api/tracks/{id}?v=1"
+async def get_info(data,proxies=None,mode="default"):
+    if mode=="random":
+        id=random.choice(data["works"])['id']
+        source_id=random.choice(data["works"])['source_id']
+        title=random.choice(data["works"])['title']
+        nsfw=random.choice(data["works"])['nsfw']
+        mainCoverUrl=random.choice(data["works"])['mainCoverUrl']
+        new_url=f"https://api.asmr-200.com/api/tracks/{id}?v=1"
+    else:
+        id = data["works"][0]['id']
+        source_id = data["works"][0]['source_id']
+        title = data["works"][0]['title']
+        nsfw = data["works"][0]['nsfw']
+        mainCoverUrl = data["works"][0]['mainCoverUrl']
+        new_url = f"https://api.asmr-200.com/api/tracks/{id}?v=1"
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(new_url)
         data = response.json()
@@ -63,4 +71,27 @@ async def latest_asmr_100(proxy=None):
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url)
         data = response.json()
+        print(data)
     return await get_info(data,proxies)
+async def choose_from_latest_asmr_100(proxy=None):
+    if proxy is not None and proxy !="":
+        proxies={"http://": proxy, "https://": proxy}
+    else:
+        proxies=None
+    url = 'https://api.asmr-200.com/api/works?order=create_date&sort=desc&page=1&subtitle=0'
+    async with httpx.AsyncClient(proxies=proxies) as client:
+        response = await client.get(url)
+        data = response.json()
+        #print(data)
+    return await get_info(data, proxies, "random")
+async def choose_from_hotest_asmr_100(proxy=None):
+    if proxy is not None and proxy !="":
+        proxies={"http://": proxy, "https://": proxy}
+    else:
+        proxies=None
+    url="https://api.asmr-200.com/api/recommender/popular"
+    payload={"keyword":" ","page":1,"subtitle":0,"localSubtitledWorks":[],"withPlaylistStatus":[]}
+    async with httpx.AsyncClient(proxies=proxies) as client:
+        response = await client.post(url,json=payload)
+        data = response.json()
+        return await get_info(data, proxies, "random")

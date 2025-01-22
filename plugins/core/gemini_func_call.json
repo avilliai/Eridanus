@@ -189,9 +189,13 @@
                     "type": "object",
                     "properties": {
                          "mode": {
-                            "type": "string", "enum": ["hotest","random"],"description": "随机asmr声音或热门asmr声音。"
+                            "type": "string", "enum": ["hotest","random","latest"],"description": "热门asmr，随机asmr，最新asmr"
                         }
-                    }
+                    },
+                    "required": [
+                        "mode"
+                    ]
+
                 }
             },
             {

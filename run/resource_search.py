@@ -9,7 +9,8 @@ from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Node, Text, File, Music, Record, Card
 from plugins.core.userDB import get_user
 from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
-from plugins.resource_search_plugin.asmr.asmr100 import random_asmr_100, latest_asmr_100
+from plugins.resource_search_plugin.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
+    choose_from_hotest_asmr_100
 from plugins.resource_search_plugin.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
     downloadALLAndToPdf
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
@@ -56,9 +57,9 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
             if mode=="random":
                 r=await random_asmr_100(proxy=config.api["proxy"]["http_proxy"])
             elif mode=="latest":
-                r=await latest_asmr_100(proxy=config.api["proxy"]["http_proxy"])
-            else:
-                r = await random_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+                r=await choose_from_latest_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+            elif mode=="hotest":
+                r = await choose_from_hotest_asmr_100(proxy=config.api["proxy"]["http_proxy"])
             i = random.choice(r['media_urls'])
 
             await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
@@ -171,7 +172,7 @@ async def check_latest_asmr(bot,event,config):
                     bot.logger.error(f"latest_asmr_push error:{e}")
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
             config.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
-            config.save("scheduledTasks_push_groups")
+            config.save_yaml("scheduledTasks_push_groups")
         else:
             bot.logger.info_func("asmr.one 无更新")
     except Exception as e:
@@ -223,7 +224,7 @@ def main(bot,config):
             await call_asmr(bot,event,config)
         elif event.raw_message=="最新asmr" or event.raw_message=="最新奥术" or event.raw_message=="最新奥数":
             await call_asmr(bot,event,config,mode="latest")
-        elif event.raw_message=="最热asmr" or event.raw_message=="最热奥术" or event.raw_message=="最热奥数":
+        elif event.raw_message=="最热asmr" or event.raw_message=="最热奥术" or event.raw_message=="热门asmr":
             await call_asmr(bot,event,config,mode="hotest")
 
     @bot.on(LifecycleMetaEvent)
