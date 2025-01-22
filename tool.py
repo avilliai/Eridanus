@@ -160,8 +160,8 @@ def updaat(f=False,source=None,yamls={}):
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
         logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
-        logger.warning("依赖检查完成")
-        os.system(f"\"{python_path}\" -m pip install httpx==0.27.2")
+        logger.warning("依赖检查完成，开始依赖约束检查")
+        fuck_requirements()
         logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()
     # 逐行检查错误信息
@@ -280,6 +280,25 @@ def conflict_file_dealter(file_old='old_aiReply.yaml', file_new='new_aiReply.yam
 """
 依赖检测
 """
+def fuck_requirements():
+    from ruamel.yaml import YAML
+
+    yaml = YAML(typ='safe')
+    with open('data/system/requirements.yaml', 'r', encoding='utf-8') as f:
+        local_config = yaml.load(f)
+    update_requirements=local_config.get("update")
+    for i in update_requirements:
+        try:
+            logger.info(f"开始更新依赖{i}...")
+            os.system(f"\"{python_path}\" -m pip install --upgrade {i}")
+        except Exception as e:
+            logger.error(f"更新依赖{i}失败：{e}")
+    for i in local_config.get("restrict"):
+        try:
+            logger.info(f"开始安装依赖{i}...")
+            os.system(f"\"{python_path}\" -m pip install {i}")
+        except Exception as e:
+            logger.error(f"安装依赖{i}失败：{e}")
 def parse_requirements(file_path):
     """
     解析 requirements.txt 文件，返回包名和版本需求信息。
