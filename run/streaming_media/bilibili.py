@@ -94,7 +94,7 @@ def main(bot,config):
                 #await check_bili_dynamic(bot,config)
             except Exception as e:
                 bot.logger.error(e)
-            await asyncio.sleep(300)  # 每 5 分钟检查一次
+            await asyncio.sleep(700)  # 每 11 分钟检查一次
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.raw_message.startswith("看看动态"):
