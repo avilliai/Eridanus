@@ -14,7 +14,7 @@ from plugins.resource_search_plugin.jmComic.jmComic import JM_search, JM_search_
     downloadALLAndToPdf
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
 from plugins.resource_search_plugin.zLibrary.zLibrary import Zlibrary
-from plugins.utils.utils import download_file, merge_audio_files
+from plugins.utils.utils import download_file, merge_audio_files, download_img
 
 global Z
 async def search_book_info(bot,event,config,info):
@@ -54,12 +54,16 @@ async def call_asmr(bot,event,config,try_again=False):
         try:
             r=await random_asmr_100(proxy=config.api["proxy"]["http_proxy"])
             i = random.choice(r['media_urls'])
+
             await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
             forward_list = []
+
+            img = await download_img(r['mainCoverUrl'], f"data/image/cache/{r['title']}.jpg", True,
+                                     proxy=config.api["proxy"]["http_proxy"])
             if config.settings["asmr"]["with_url"]:
-                forward_list.append(Node(content=[Text(f"随机奥术\n标题: {r['title']}\nnsfw: {r['nsfw']}\nsource_url: {r['source_url']}"), Image(file=r['mainCoverUrl'])]))
+                forward_list.append(Node(content=[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源链接: {r['source_url']}\n封面预览：(已经特殊处理)"), Image(file=img)]))
             else:
-                await bot.send(event,[Text(f"随机奥术\n标题: {r['title']}\nnsfw: {r['nsfw']}\nsource_url: {r['source_url']}"), Image(file=r['mainCoverUrl'])])
+                await bot.send(event,[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源链接: {r['source_url']}\n封面预览：(已经特殊处理)"), Image(file=img)])
             file_paths=[]
             main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
             for i in r['media_urls']:
