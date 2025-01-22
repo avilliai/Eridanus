@@ -223,13 +223,14 @@ def main(bot,config):
         if str(event.raw_message).startswith("dan "):
             tag = str(event.raw_message).replace("dan ", "")
             bot.logger.info(f"收到来自群{event.group_id}的请求，prompt:{tag}")
+            await bot.send(event, f'正在搜索词条{tag}')
             limit = 5
             if config.api["proxy"]["http_proxy"] is not None:
                 proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
             else:
                 proxies = None
 
-            db_base_url = "https://kagamihara.donmai.us"  # 这是反代，原来的是https://danbooru.donmai.us
+            db_base_url = "https://hijiribe.donmai.us"  # 这是反代，原来的是https://danbooru.donmai.us
             # 把danbooru换成sonohara、kagamihara、hijiribe这三个任意一个试试，后面的不用改
 
             build_msg = [Node(content=[Text(f"{tag}的搜索结果:")])]
@@ -245,6 +246,7 @@ def main(bot,config):
                     bot.logger.info(f"Autocomplete request successful for tag: {tag}")
             except Exception as e:
                 bot.logger.error(f"Failed to get autocomplete data for tag: {tag}. Error: {e}")
+                await bot.send(event,f"获取{tag}的搜索结果失败")
                 return
 
             soup = BeautifulSoup(resp.text, 'html.parser')
@@ -347,6 +349,7 @@ def main(bot,config):
                 await bot.send(event, build_msg)
                 bot.logger.info("Successfully sent the compiled message to the group.")
             except Exception as e:
+                await bot.send(event, f"发送失败{e}")
                 bot.logger.error(f"Failed to send the compiled message to the group. Error: {e}")
 
     @bot.on(GroupMessageEvent)
