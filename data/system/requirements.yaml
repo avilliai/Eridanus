@@ -1,4 +1,6 @@
 update:
   - jmcomic
+  - pytubefix
+  - PicImageSearch
 restrict:
   - httpx==0.27.2
