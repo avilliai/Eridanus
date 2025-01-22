@@ -93,7 +93,7 @@ tarot = [['愚者 (The Fool)',
 
 
 def tarotChoice(mode):
-    ints = random.randint(0, 1)
+    ints = random.choice([0,0,1])
     if ints == 0:
         tarots = random.choice(tarot)
         txt = tarots[0] + '\n' + '正位' + '\n' + tarots[1]
