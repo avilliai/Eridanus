@@ -50,9 +50,11 @@ async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
     bilibili_type_draw = config.settings["bili_dynamic"]["draw_type"]
     for target_uid in config.bili_dynamic:
+        await sleep(10)#设置好内间隔，以防被冻
         try:
             latest_dynamic_id1,latest_dynamic_id2=await fetch_latest_dynamic_id(int(target_uid))
-            if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0] or latest_dynamic_id2!=config.bili_dynamic[target_uid]["latest_dynamic_id"][1]:
+            dy_store = [config.bili_dynamic[target_uid]["latest_dynamic_id"][0],config.bili_dynamic[target_uid]["latest_dynamic_id"][1]]
+            if latest_dynamic_id1 not in dy_store or latest_dynamic_id2 not in dy_store:
                 if latest_dynamic_id1!=config.bili_dynamic[target_uid]["latest_dynamic_id"][0]:
                     latest_dynamic_id=latest_dynamic_id1
                 else:
@@ -90,11 +92,12 @@ def main(bot,config):
         while True:
             try:
                 with ThreadPoolExecutor() as executor:
+                    pass
                     await loop.run_in_executor(executor, asyncio.run,check_bili_dynamic(bot,config))
                 #await check_bili_dynamic(bot,config)
             except Exception as e:
                 bot.logger.error(e)
-            await asyncio.sleep(300)  # 每 5 分钟检查一次
+            await asyncio.sleep(600)  # 每 10 分钟检查一次
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.raw_message.startswith("看看动态"):

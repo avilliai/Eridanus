@@ -39,10 +39,15 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Link_Prising_search(event: GroupMessageEvent):
         url=event.raw_message
+        if "QQ小程序" in url and config.settings["bili_dynamic"]["is_QQ_chek"] is not True:
+            return
+        dy_file_path, url_check = await link_prising(url, filepath='data/pictures/cache/')
         try:
-            dy_file_path,url_check=await link_prising(url,filepath='data/pictures/cache/')  #并非所有消息都可以解析，写判断纯浪费时间，不如catch
+            dy_file_path,url_check=await link_prising(url,filepath='data/pictures/cache/')
             if dy_file_path is not None:
+                bot.logger.info('链接解析成功，开始推送~~')
                 await bot.send(event, [f'{botname}识别结果：\n',Image(file=dy_file_path)])
-        except:
+        except Exception as e:
+            bot.logger.warning('链接解析失败')
             pass
 

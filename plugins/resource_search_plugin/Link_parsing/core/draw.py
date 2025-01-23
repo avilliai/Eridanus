@@ -77,7 +77,8 @@ def wrap_text(text, font, max_width,type=None):
         type_check = False
 
     for line in words:  # 遍历每一行（处理换行符的部分）
-        if line in ['',' ']:continue
+        #print(line)
+        if line in ['',' ','	']:continue
         line_check = ""  # 用于拼接当前正在处理的行
         for char in line:  # 遍历每一行的字符，包括空格
             # 获取当前行加上新字符后的宽度
@@ -145,6 +146,63 @@ def add_shaow_image_new(canvas,padding,canvas_width,total_height,x,y):
     shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(10))
     canvas = Image.alpha_composite(background, shadow_layer)
     return canvas
+
+def can_render_character(font, character):
+    try:
+        # 获取字符的掩码
+        mask = font.getmask(character)
+        # 如果掩码的宽度或高度为 0，说明字符无法绘制
+        if mask.size[0] == 0 or mask.size[1] == 0:
+            return False
+        bbox = font.getbbox(character)
+        character_width,character_height = bbox[2] - bbox[0],bbox[3] - bbox[1]
+        bbox = font.getbbox("\uFFFD")
+        placeholder_width, placeholder_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        if character_width == placeholder_width and character_height == placeholder_height:
+            return False
+        return True
+    except Exception as e:
+        # 如果抛出异常，说明字体不支持该字符
+        print(f"Error: {e}")
+        return False
+
+def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=None):
+    """
+    在图片上逐个绘制一行文字。
+
+    :param image: Pillow Image 对象
+    :param position: 起始位置 (x, y)
+    :param text: 要绘制的文字
+    :param font: 字体对象 (ImageFont)
+    :param text_color: 字体颜色
+    :param spacing: 每个字符之间的间距
+    """
+    if spacing is None:
+        spacing=0
+    draw = image
+    x, y = position  # 初始位置
+    #print('yes')
+    for char in text:
+        # 绘制单个字符
+        if can_render_character(font, char):
+            bbox = font.getbbox(char)
+            char_width = bbox[2] - bbox[0]
+            draw.text((x, y), char, font=font, fill=text_color)
+        else:
+            #print('OSError')
+            bbox = font.getbbox(char)
+            char_height = bbox[3] - bbox[1]
+            if char_height == 0:continue
+            font_restore = ImageFont.load_default(char_height-1)
+            if can_render_character(font_restore, char):
+                bbox = font_restore.getbbox(char)
+                char_width = bbox[2] - bbox[0]
+                draw.text((x, y), char, font=font_restore, fill=text_color)
+            else: continue
+        # 获取字符宽度
+
+        x += char_width + spacing  # 字符宽度 + 自定义间距
+    return image
 
 
 def handle_context(contents,font,content_width,total_height,padding,type_check,introduce,font_tx,header_height,
@@ -379,7 +437,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
             if type_check  is True and introduce is not None:
                 padding_x_check=padding_x_text+padding*0.3
             else:padding_x_check=padding_x_text
-
+            #print(content)
             draw = ImageDraw.Draw(canvas)
             check_number=0
             if len(content) == 1:
@@ -388,11 +446,13 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 matches = re.findall(pattern, line)
                 if 'tag:' in line:
                     line = line.split("tag:")[1]
-                    draw.text((padding_x_check, current_y), line, fill=(9, 132, 204), font=font_tx)
+                    draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
                 elif matches:
-                    draw.text((padding_x_check, current_y), line, fill=(9, 132, 204), font=font_tx)
+                    pass
+                    draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
                 else:
-                    draw.text((padding_x_check, current_y), line, fill='black', font=font_tx)
+                    pass
+                    draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0))
                 current_y += font_tx.getbbox("A")[3] +padding
             else:
                 for line in content:
@@ -403,11 +463,11 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                     check_number+=1
                     if 'tag:' in line:
                         line = line.split("tag:")[1]
-                        draw.text((padding_x_check, current_y), line, fill=(9, 132, 204), font=font_tx)
+                        draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
                     elif matches:
-                        draw.text((padding_x_check, current_y), line, fill=(9, 132, 204), font=font_tx)
+                        draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
                     else:
-                        draw.text((padding_x_check, current_y), line, fill='black', font=font_tx)
+                        draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0))
                     current_y += font_tx.getbbox("A")[3] + padding * 0.8
                 current_y += padding* 0.2
 
@@ -514,8 +574,8 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
 
 
     # 保存图片
-    canvas.save(output_path)
     #canvas.show()
+    canvas.save(output_path)
     #print(f"图片已保存到 {output_path}")
     return output_path
 
@@ -523,91 +583,20 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
 
 if __name__ == "__main__":
     # 示例内容
-    contents = [
-        "枫与岚识别：B站:",
-        "我不接受这样的全剧终啊啊！2024年10月新番完结吐槽！【泛式】",
-        'cover.png',
-        '简介：',
-        '这结局我急了这结局我急了这结局我急了这结局我急了我急了我急了我急了',
-        "image1.jpg",  # 假设是图片路径
-        "image2.jpg",  # 假设是图片路径
-        "image3.jpg",  # 假设是图片路径
-        "image4.jpg",  # 假设是图片路径
-        "这是第二段文字",
-        "image5.jpg",  # 假设是图片路径
-        "这是最后一段文字"
-    ]
+    contents = ["E:\Others\github/bot\Eridanus\plugins/resource_search_plugin\Link_parsing\data\cache\orig_cover.jpg",
+                '【逆转裁判】烦死了身边一帮low货'
+                '咕咕，小鸽子们好！我们将于1月10日晚上8点在Pigeon Bar进行迎新春直播杂谈会——我们会在其中提及全新的游戏内容，当然还有全新的神秘周边首次亮相！\n周五，一起在直播间迎接新春吧~\n',
+                "tag:#ARCAEA##Phigros##manshuo#",
+                ]
+    contents_dy = [
+                   '【逆转裁判】烦死了身边一帮low货',
+                   '官方账号介绍我们啦！🌸',
+                   '❣',
+                   '敬请期待✨',
+                    "E:\Others\github/bot\Eridanus\plugins/resource_search_plugin\Link_parsing\data\cache\orig_cover.jpg",
+                    '敬请期待✨',
+                   ]
 
-
-    # 示例内容
-    contents = [
-        "这是第一段文字，非常长的话会自动换行，这里是一个测试。这是第一段文字，非常长的话会自动换行，这里是一个测试。这是第一段文字，非常长的话会自动换行，这里是一个测试。这是第一段文字，非常长的话会自动换行，这里是一个测试。",
-        "tag:#ARCAEA##Phigros##manshuo#",
-        "image5.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg","image4.jpg",
-        "这是第二段文字，继续测试文本换行功能。",
-        "image2.jpg", "image1.jpg", "image3.jpg",
-        "image2.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-    ]
-
-    contents = [
-        "这是第一段文字，非常长的话会自动",
-        "tag:#ARCAEA##Phigros##manshuo#",
-        "image5.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg","image4.jpg",
-        "这是第二段文字，继续测试文本换行功能。",
-        "image2.jpg", "image1.jpg", "image3.jpg",
-        "image2.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg", "image4.jpg",
-        "image3.jpg", "image4.jpg",
-    ]
-    # 调用函数
-    #draw_vertical_layout(contents, name="manshuo",Time='"2025年01月03日 17:00"')
-
-    contents = [
-        '咕咕，小鸽子们好！我们将于1月10日晚上8点在Pigeon Bar进行迎新春直播杂谈会——我们会在其中提及全新的游戏内容，当然还有全新的神秘周边首次亮相！\n周五，一起在直播间迎接新春吧~\n',
-        "tag:#ARCAEA##Phigros##manshuo#",
-        "phigros.jpg",
-    ]
-
-    contents = [
-        '咕咕，小鸽子们好！我们将于1月10日晚上8点在Pigeon Bar进行迎新春直播杂谈会——我们会在其中提及全新的游戏内容，当然还有全新的神秘周边首次亮相！\n周五，一起在直播间迎接新春吧~\n',
-        "tag:#ARCAEA##Phigros##manshuo#",
-        "这是第一段文字，非常长的话会自动",
-        "tag:#ARCAEA##Phigros##manshuo#",
-        "image5.jpg",
-        "这是最后一段文字。",
-        "image3.jpg", "image4.jpg","image2.jpg",
-        "这是第二段文字，继续测试文本换行功能。",
-        "image2.jpg", "image1.jpg", "image3.jpg",
-        "image2.jpg","image2.jpg","image2.jpg",
-
-    ]
-    contents = ['这是一条测试文本\n[保卫萝卜_哇]@酒香亦怕巷子深 \n就测试，不用管\n谢谢']
-    contents_dy = ['data/orig_cover.png','【逆转裁判】烦死了身边一帮low货']
-
-    draw_adaptive_graphic_and_textual(contents, name="Phigros",Time='"2025年01月03日 17:00"',type=14,introduce='ooc致歉',
-                                      contents_dy=contents_dy,orig_avatar_path=None, orig_name="漫朔",orig_Time='"2025年01月03日 17:00"',type_software='BiliBili',
+    draw_adaptive_graphic_and_textual(contents, name="Phigros",Time='"2025年01月03日 17:00"',type=14,avatar_path="E:\Others\github/bot\Eridanus\plugins/resource_search_plugin\Link_parsing\data\cache\orig_cover.jpg",
+                                      contents_dy=contents_dy,orig_avatar_path="E:\Others\github/bot\Eridanus\plugins/resource_search_plugin\Link_parsing\data\cache\orig_cover.jpg", orig_name="漫朔",orig_Time='"2025年01月03日 17:00"',type_software='BiliBili',
                                       color_software=(251,114,153,80),output_path_name='bilibili_dy')
