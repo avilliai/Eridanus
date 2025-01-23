@@ -22,7 +22,7 @@ config = YAMLManager(["config/settings.yaml",
 #或者使用ws适配器
 bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 from run.anime_game_service import blue_archive
-from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw
+from run import api_implements, aiReply, user_data, resource_search, basic_plugin, aiDraw,iwara
 from run.acg_infromation import galgame,bangumi
 from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
 from run.streaming_media import youtube,bilibili,Link_parsing
@@ -39,7 +39,7 @@ galgame.main(bot, config)#加载galgame回复插件
 bangumi.main(bot, config) #加载bangumi插件
 
 wifeyouwant.main(bot, config) #加载wifeyouwant插件
-
+iwara.main(bot,config)
 youtube.main(bot, config) #加载youtube插件
 bilibili.main(bot, config) #加载bilibili插件
 Link_parsing.main(bot, config)
