@@ -15,8 +15,8 @@ resource_search:   #资源搜索功能
     jm_comic_search_level: 0  #jm搜索功能所需权限等级
     jm_comic_download_level: 0          #jm下载功能所需权限等级
   iwara:
-  iwara_search_level: 999  #iwara搜索功能所需权限等级
-  iwara_download_level: 999  #iwara下载功能所需权限等级
+    iwara_search_level: 999  #iwara搜索功能所需权限等级
+    iwara_download_level: 999  #iwara下载功能所需权限等级
 basic_plugin:
   setu_operate_level: 0    #色图功能所需等级
   search_image_resource_operate_level: 0  #图片搜索功能所需等级
