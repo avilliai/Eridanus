@@ -80,6 +80,46 @@ async def download_img(url,path,gray_layer=False,proxy=None):
             with open(path, 'wb') as f:
                 f.write(response.content)
         return path
+async def download_file(url,path,proxy=None):
+    if proxy is not None and proxy!= '':
+        proxies = {"http://": proxy, "https://": proxy}
+    else:
+        proxies = None
+    async with httpx.AsyncClient(proxies=proxies) as client:
+        response = await client.get(url)
+        with open(path, 'wb') as f:
+            f.write(response.content)
+        return path
+
+from pydub import AudioSegment
+def merge_audio_files(audio_files: list, output_file: str) -> str:
+    """
+    合并音频文件列表并保存为一个文件，支持 MP3、FLAC、WAV 等格式。
+
+    :param audio_files: 音频文件路径列表（支持 wav, mp3, flac 等格式）。
+    :param output_file: 输出的合并音频文件路径。
+    :return: 输出文件路径。
+    """
+    if not audio_files:
+        raise ValueError("音频文件列表不能为空。")
+
+    combined = AudioSegment.empty()
+
+    for file in audio_files:
+        audio = AudioSegment.from_file(file)
+        combined += audio
+
+    file_format = output_file.split('.')[-1].lower()
+    if file_format not in ['mp3', 'wav', 'flac']:
+        raise ValueError(f"不支持的输出格式：{file_format}")
+
+    combined.export(output_file, format=file_format)
+    return output_file
+
+
+
+
+
 def get_headers():
     user_agent_list = [
         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",

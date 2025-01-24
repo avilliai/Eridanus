@@ -13,6 +13,7 @@ from run.acg_infromation.bangumi import call_bangumi_search
 from run.streaming_media.youtube import download_youtube
 from run.streaming_media.bilibili import bili_subscribe
 from run.aiDraw import call_text2img,call_aiArtModerate
+from run.scheduledTasks import operate_group_push_tasks
 async def call_quit_chat(bot,event,config):
     return False
 

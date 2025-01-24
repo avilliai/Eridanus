@@ -1,0 +1,5 @@
+update:
+  - jmcomic
+  - pytubefix
+restrict:
+  - httpx==0.27.2

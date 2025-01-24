@@ -5,14 +5,18 @@ import random
 import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
 
-from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Image, Node, Text, File, Music, Record
+from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
+from developTools.message.message_components import Image, Node, Text, File, Music, Record, Card
 from plugins.core.userDB import get_user
 from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
+from plugins.resource_search_plugin.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
+    choose_from_hotest_asmr_100
 from plugins.resource_search_plugin.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
     downloadALLAndToPdf
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
 from plugins.resource_search_plugin.zLibrary.zLibrary import Zlibrary
+from plugins.utils.random_str import random_str
+from plugins.utils.utils import download_file, merge_audio_files, download_img
 
 global Z
 async def search_book_info(bot,event,config,info):
@@ -45,11 +49,54 @@ async def call_download_book(bot,event,config,book_id: str,hash:str):
     else:
         await bot.send(event, "你没有权限使用该功能")
 
-async def call_asmr(bot,event,config,try_again=False):
+async def call_asmr(bot,event,config,try_again=False,mode="random"):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["resource_search"]["asmr"]["asmr_level"]:
+        bot.logger.info("asmr start")
         try:
-            loop = asyncio.get_running_loop()
+            if mode=="random":
+                r=await random_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+            elif mode=="latest":
+                r=await choose_from_latest_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+            elif mode=="hotest":
+                r = await choose_from_hotest_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+            i = random.choice(r['media_urls'])
+
+            await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
+            try:
+                img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",True,proxy=config.api["proxy"]["http_proxy"])
+            except Exception as e:
+                bot.logger.error(f"download_img error:{e}")
+                img=r['mainCoverUrl']
+            forward_list = []
+            if config.settings["asmr"]["with_url"]:
+                forward_list.append(Node(content=[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"), Image(file=img)]))
+            else:
+                await bot.send(event,[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"), Image(file=img)])
+            file_paths=[]
+            main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
+            for i in r['media_urls']:
+                if config.settings["asmr"]["with_file"]:
+                    path=f"data/voice/cache/{i[1]}"
+                    file=await download_file(i[0],path,config.api["proxy"]["http_proxy"])
+                    file_paths.append(file)
+                text=f"音频名称: {i[1]}\n音频url: {i[0]}"
+                forward_list.append(Node(content=[Text(text)]))
+            if config.settings["asmr"]["with_url"]:
+                await bot.send(event, forward_list)
+            if config.settings["asmr"]["with_file"]:
+                loop = asyncio.get_running_loop()
+                try:
+                    bot.logger.info(f"asmr file merge and upload start: path:{main_path},merge_files:{file_paths}")
+                    with ThreadPoolExecutor() as executor:
+                        path = await loop.run_in_executor(executor, merge_audio_files, file_paths, main_path)
+                    await bot.send(event, File(file=path))
+                    await bot.send(event, "完整音频文件已上传", True)
+                except Exception as e:
+                    bot.logger.error(f"asmr file merge and upload error:{e}")
+
+            #youtube实现方式无法使用，改用asmr-100
+            '''loop = asyncio.get_running_loop()
             with ThreadPoolExecutor() as executor:
                 athor, title, video_id, length = await loop.run_in_executor(executor, ASMR_random)
 
@@ -63,7 +110,7 @@ async def call_asmr(bot,event,config,try_again=False):
             if config.api["youtube_asmr"]["send_type"]=="file":
                 await bot.send(event,File(file=audiopath))
             elif config.api["youtube_asmr"]["send_type"]=="record":
-                await bot.send(event,Record(file=audiopath))
+                await bot.send(event,Record(file=audiopath))'''
         except Exception as e:
             bot.logger.error(f"asmr error:{e}")
             if try_again==False:
@@ -73,6 +120,63 @@ async def call_asmr(bot,event,config,try_again=False):
                 await bot.send(event, "失败了！要不再试一次？")
     else:
         await bot.send(event, "你没有权限使用该功能")
+async def check_latest_asmr(bot,event,config):
+    bot.logger.info_func("开始监测 asmr.one 更新")
+    try:
+        r=await latest_asmr_100(proxy=config.api["proxy"]["http_proxy"])
+        if r["id"]!=config.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]:
+            bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 开始推送")
+            group_list = config.scheduledTasks_push_groups["latest_asmr_push"]["groups"]
+            for group_id in group_list:
+                try:
+                    i = random.choice(r['media_urls'])
+                    await bot.send_group_message(group_id, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
+                    try:
+                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png", True,
+                                                 proxy=config.api["proxy"]["http_proxy"])
+                    except Exception as e:
+                        bot.logger.error(f"download_img error:{e}")
+                        img = r['mainCoverUrl']
+                    forward_list = []
+                    if config.settings["asmr"]["with_url"]:
+                        forward_list.append(Node(
+                            content=[Text(f"asmr更新啦\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
+                                     Image(file=img)]))
+                    else:
+                        await bot.send_group_message(group_id,
+                                       [Text(f"asmr更新啦\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
+                                        Image(file=img)])
+                    file_paths = []
+                    main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
+                    for i in r['media_urls']:
+                        if config.settings["asmr"]["with_file"]:
+                            path = f"data/voice/cache/{i[1]}"
+                            file = await download_file(i[0], path, config.api["proxy"]["http_proxy"])
+                            file_paths.append(file)
+                        text = f"音频名称: {i[1]}\n音频url: {i[0]}"
+                        forward_list.append(Node(content=[Text(text)]))
+                    if config.settings["asmr"]["with_url"]:
+                        await bot.send_group_message(group_id, forward_list)
+                    if config.settings["asmr"]["with_file"]:
+                        loop = asyncio.get_running_loop()
+                        try:
+                            bot.logger.info(
+                                f"asmr file merge and upload start: path:{main_path},merge_files:{file_paths}")
+                            with ThreadPoolExecutor() as executor:
+                                path = await loop.run_in_executor(executor, merge_audio_files, file_paths, main_path)
+                            await bot.send_group_message(group_id, File(file=path))
+                            await bot.send_group_message(group_id, "完整音频文件已上传", True)
+                        except Exception as e:
+                            bot.logger.error(f"asmr file merge and upload error:{e}")
+                except Exception as e:
+                    bot.logger.error(f"latest_asmr_push error:{e}")
+            bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
+            config.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
+            config.save_yaml("scheduledTasks_push_groups")
+        else:
+            bot.logger.info_func("asmr.one 无更新")
+    except Exception as e:
+        bot.logger.error(f"check_latest_asmr error:{e}")
 
 
 def main(bot,config):
@@ -97,6 +201,7 @@ def main(bot,config):
     logger = bot.logger
     global operating
     operating = {}
+
     @bot.on(GroupMessageEvent)
     async def book_resource_search(event):
 
@@ -117,6 +222,22 @@ def main(bot,config):
         elif event.raw_message=="随机奥术" or event.raw_message=="随机asmr" or event.raw_message=="随机奥数":
 
             await call_asmr(bot,event,config)
+        elif event.raw_message=="最新asmr" or event.raw_message=="最新奥术" or event.raw_message=="最新奥数":
+            await call_asmr(bot,event,config,mode="latest")
+        elif event.raw_message=="最热asmr" or event.raw_message=="最热奥术" or event.raw_message=="热门asmr":
+            await call_asmr(bot,event,config,mode="hotest")
+
+    @bot.on(LifecycleMetaEvent)
+    async def _(event):
+        loop = asyncio.get_running_loop()
+        while True:
+            try:
+                with ThreadPoolExecutor() as executor:
+                    await loop.run_in_executor(executor, asyncio.run, check_latest_asmr(bot,event ,config))
+                # await check_bili_dynamic(bot,config)
+            except Exception as e:
+                bot.logger.error(e)
+            await asyncio.sleep(700)  # 每 11 分钟检查一次
     """
     以下为jm的功能实现
     """
@@ -207,7 +328,7 @@ def main(bot,config):
                 return
             cmList = []
             logger.info(png_files)
-            cmList.append(Node(content=[Text(f"车牌号：{comic_id} \n腾子吞图严重，bot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。可能显示不出来")]))
+            cmList.append(Node(content=[Text(f"车牌号：{comic_id} \n腾子吞图严重，bot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。预览是黑色是正常的，点进去查看")]))
             shutil.rmtree(f"data/pictures/benzi/temp{comic_id}")
             logger.info("移除预览缓存")
             for path in png_files:

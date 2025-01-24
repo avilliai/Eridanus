@@ -17,6 +17,11 @@ with open('config/controller.yaml', 'r', encoding='utf-8') as f:
     controller = yaml.load(f)
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
+if_save = aiDrawController.get("sd图片是否保存到生图端") if aiDrawController else False
+sd_w = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[0]) if aiDrawController else 1024
+sd_h = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[1]) if aiDrawController else 1536
+sdre_w = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[0]) if aiDrawController else 1064
+sdre_h = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[1]) if aiDrawController else 1064
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
 positives = '{},rating:general, best quality, very aesthetic, absurdres'
@@ -24,12 +29,16 @@ negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, b
 #positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
 #negatives = 'nsfw,lowres,{bad},error,fewer,extra,missing,worst quality,jpeg artifacts,bad quality,watermark,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,[abstract],blurry,film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
 #negatives = '((nsfw)),((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly,poorly drawn,(censor),blurry,watermark,simple background,transparent background,{bad},error,fewer,extra,missing,jpeg artifacts,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract],film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
+round_sd = 0
+round_nai = 0
 
 from plugins.utils.random_str import random_str
+
 async def n4(prompt, path, groupid, config, args):
+    global round_nai
     width = 832
     height = 1216
-    url = "https://spawner.goutou.art"
+    url = "https://image.novelai.net"
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -102,12 +111,16 @@ async def n4(prompt, path, groupid, config, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
+    round_nai += 1
+    list_length = len(config.api['ai绘画']['nai_key'])
+    if round_nai >= list_length:
+        round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
         response = await client.post(url=f'{url}/ai/generate-image', json=payload, headers=headers)
         response.raise_for_status()
@@ -123,7 +136,7 @@ async def n4(prompt, path, groupid, config, args):
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups:
                 check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api["ai绘画"]["sd审核和反推api"])
+                                                   url=config.api['ai绘画']['sd审核和反推api'])
                 if check:
                     return False
             with open(path, 'wb') as img_file:
@@ -132,6 +145,7 @@ async def n4(prompt, path, groupid, config, args):
 
 
 async def n3(prompt, path, groupid, config, args):
+    global round_nai
     width = 832
     height = 1216
     url = "https://image.novelai.net"
@@ -192,12 +206,16 @@ async def n3(prompt, path, groupid, config, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
+    round_nai += 1
+    list_length = len(config.api['ai绘画']['nai_key'])
+    if round_nai >= list_length:
+        round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
         response = await client.post(url=f'{url}/ai/generate-image', json=payload, headers=headers)
         response.raise_for_status()
@@ -213,7 +231,7 @@ async def n3(prompt, path, groupid, config, args):
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups:
                 check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api["ai绘画"]["sd审核和反推api"])
+                                                   url=config.api['ai绘画']['sd审核和反推api'])
                 if check:
                     return False
             with open(path, 'wb') as img_file:
@@ -222,10 +240,11 @@ async def n3(prompt, path, groupid, config, args):
 
 
 async def SdreDraw(prompt, path, config, groupid, b64_in, args):
-    url = config.api["ai绘画"]["sdUrl"]
+    global round_sd
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
-    height = (args.get('h', 1064) if args.get('h', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    width = (args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
+    height = (args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
@@ -234,12 +253,12 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         height = 1064
     if "横" in prompt:
         prompt = prompt.replace("横", "")
-        width = 1600
-        height = 1064
+        width = 1536
+        height = 1024
     if "竖" in prompt:
         prompt = prompt.replace("竖", "")
-        width = 1064
-        height = 1600
+        width = 1024
+        height = 1536
     
     if width > 1600:
         width = 1600
@@ -268,6 +287,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         "batch_size": 1,
         "n_iter": 1,
         "steps": 35,
+        "save_images": if_save,
         "cfg_scale": 6.5,
         "width": width,
         "height": height,
@@ -283,8 +303,12 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         "override_settings_restore_afterwards": False,
     }  # manba out
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
+    round_sd += 1
+    list_length = len(config.api['ai绘画']['sdUrl'])
+    if round_sd >= list_length:
+        round_sd = 0
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     r = response.json()
@@ -305,10 +329,11 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
 
 
 async def SdDraw0(prompt, path, config, groupid, args):
-    url = config.api["ai绘画"]["sdUrl"]
+    global round_sd
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', 1024) if args.get('w', 1024) > 0 else 1024) if isinstance(args, dict) else 1024
-    height = (args.get('h', 1536) if args.get('h', 1536) > 0 else 1536) if isinstance(args, dict) else 1536
+    width = (args.get('w', sd_w) if args.get('w', sd_w) > 0 else sd_w) if isinstance(args, dict) else sd_w
+    height = (args.get('h', sd_h) if args.get('h', sd_h) > 0 else sd_h) if isinstance(args, dict) else sd_h
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
@@ -350,6 +375,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
         "batch_size": 1,
         "n_iter": 1,
         "steps": 35,
+        "save_images": if_save,
         "cfg_scale": 6.5,
         "width": width,
         "height": height,
@@ -365,8 +391,12 @@ async def SdDraw0(prompt, path, config, groupid, args):
         "override_settings_restore_afterwards": False,
     }  # manba out
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
+    round_sd += 1
+    list_length = len(config.api['ai绘画']['sdUrl'])
+    if round_sd >= list_length:
+        round_sd = 0
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
@@ -385,15 +415,13 @@ async def SdDraw0(prompt, path, config, groupid, args):
 
 
 async def getloras(config):
-    url = f'{config.api["ai绘画"]["sdUrl"]}/sdapi/v1/loras'
+    global round_sd
+    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/loras'
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url)
         r = response.json()
         result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
@@ -409,15 +437,13 @@ async def ckpt2(model, config):
 
 
 async def getcheckpoints(config):
-    url = f'{config.api["ai绘画"]["sdUrl"]}/sdapi/v1/sd-models'
+    global round_sd
+    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/sd-models'
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
-    else:
-        proxies = None
-    async with httpx.AsyncClient(timeout=None, proxies=proxies) as client:
+    
+    async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url)
         r = response.json()
         model_lines = [f'{model.get("model_name", "未知")}.safetensors' for model in r]
@@ -425,6 +451,7 @@ async def getcheckpoints(config):
         return result
 
 async def n4re0(prompt, path, groupid, config, b64_in, args):
+    global round_nai
     width = 1024
     height = 1024
     args = args
@@ -506,12 +533,16 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
+    round_nai += 1
+    list_length = len(config.api['ai绘画']['nai_key'])
+    if round_nai >= list_length:
+        round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
         response = await client.post(url=f'{url}/ai/generate-image', json=payload, headers=headers)
         response.raise_for_status()
@@ -527,7 +558,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups:
                 check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api["ai绘画"]["sd审核和反推api"])
+                                                   url=config.api['ai绘画']['sd审核和反推api'])
                 if check:
                     return False
             with open(path, 'wb') as img_file:
@@ -535,6 +566,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     return path
 
 async def n3re0(prompt, path, groupid, config, b64_in, args):
+    global round_nai
     width = 1024
     height = 1024
     args = args
@@ -602,12 +634,16 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
+    round_nai += 1
+    list_length = len(config.api['ai绘画']['nai_key'])
+    if round_nai >= list_length:
+        round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
         response = await client.post(url=f'{url}/ai/generate-image', json=payload, headers=headers)
         response.raise_for_status()
@@ -623,7 +659,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups:
                 check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api["ai绘画"]["sd审核和反推api"])
+                                                   url=config.api['ai绘画']['sd审核和反推api'])
                 if check:
                     return False
             with open(path, 'wb') as img_file:
@@ -631,10 +667,11 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     return path
 
 async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
-    url = config.api["ai绘画"]["sdUrl"]
+    global round_sd
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', 1064) if args.get('w', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
-    height = (args.get('h', 1064) if args.get('h', 1064) > 0 else 1064) if isinstance(args, dict) else 1064
+    width = (args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
+    height = (args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
     denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
 
     if "方" in prompt:
@@ -643,12 +680,12 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         height = 1064
     if "横" in prompt:
         prompt = prompt.replace("横", "")
-        width = 1600
-        height = 1064
+        width = 1536
+        height = 1024
     if "竖" in prompt:
         prompt = prompt.replace("竖", "")
-        width = 1064
-        height = 1600
+        width = 1024
+        height = 1536
     
     if width > 1600:
         width = 1600
@@ -682,6 +719,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         "batch_size": 1,
         "n_iter": 1,
         "steps": 35,
+        "save_images": if_save,
         "cfg_scale": 6.5,
         "width": width,
         "height": height,
@@ -697,8 +735,12 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         "override_settings_restore_afterwards": False,
     }  # manba out
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key']}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
+    round_sd += 1
+    list_length = len(config.api['ai绘画']['sdUrl'])
+    if round_sd >= list_length:
+        round_sd = 0
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     r = response.json()
