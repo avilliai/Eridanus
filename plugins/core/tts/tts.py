@@ -9,7 +9,7 @@ import requests
 
 from ruamel.yaml import YAML
 
-from plugins.core.tts.napcat_tts import napcat_tts_speak
+from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.utils.random_str import random_str
 
 yaml = YAML(typ='safe')
@@ -33,8 +33,10 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker,mood)
     elif mode=="napcat_tts":
         if speaker is None:
-            speaker=config.api["tts"]["napcat_tts"]["character_id"]
-        print(speaker,text)
+            speaker=config.api["tts"]["napcat_tts"]["character_name"]
+        spkss=await napcat_tts_speakers(bot)
+        if speaker in spkss:
+            speaker=spkss[speaker]
         return await napcat_tts_speak(bot, config, text, speaker)
     else:
         pass

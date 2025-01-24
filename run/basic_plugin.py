@@ -10,7 +10,7 @@ from plugins.basic_plugin.cloudMusic import cccdddm
 from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
-from plugins.core.tts.napcat_tts import napcat_tts_speakers, napcat_tts_speak
+from plugins.core.tts.napcat_tts import napcat_tts_speakers
 from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
 
 

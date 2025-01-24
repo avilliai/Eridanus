@@ -31,7 +31,7 @@ tts:
     token: ""             #https://getkey.acgnai.top/注册后，登录获取令牌
     speaker: "玲可【星穹铁道】"
   napcat_tts:
-    character_id: "lucy-voice-female1"
+    character_name: "酥心御姐"
 proxy:
   http_proxy: ""
   socks_proxy: ""
