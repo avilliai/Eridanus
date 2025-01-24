@@ -746,4 +746,29 @@ class WebSocketBot:
             with open(path,"wb") as f:
                 f.write(r.content)
             return path
-
+    """
+    napcat专有接口实现
+    """
+    async def get_ai_characters(self):
+        """
+        获取ai声聊所有可用角色
+        :return:
+        """
+        data={
+            "group_id": 0,
+            "chat_type": 0
+        }
+        return await self._call_api("get_ai_characters", data)
+    async def get_ai_record(self,character: str,text: str):
+        """
+        获取ai声音合成的语音
+        :param character:
+        :param text:
+        :return:
+        """
+        data={
+          "group_id": 0,
+          "character": character,
+          "text": text,
+        }
+        return await self._call_api("get_ai_record", data)

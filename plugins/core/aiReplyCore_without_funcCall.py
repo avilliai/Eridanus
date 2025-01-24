@@ -1,20 +1,11 @@
-
-import asyncio
-import os
 import random
-import time
-from collections import defaultdict
 
-import httpx
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
-from developTools.message.message_components import Record
 from developTools.utils.logger import get_logger
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
-from plugins.core.freeModels import free_model_result
 from plugins.core.llmDB import get_user_history, update_user_history
-from plugins.core.tts import tts
 from plugins.core.userDB import get_user
 
 

@@ -1,29 +1,22 @@
 import os
 
-import asyncio
 from asyncio import sleep
-
-import httpx
-import base64
-from io import BytesIO
-from bs4 import BeautifulSoup
 
 from developTools.event.events import GroupMessageEvent
 
 from developTools.message.message_components import Record, Node, Text, Image,Music
-from plugins.basic_plugin.ai_text2img import bing_dalle3, ideo_gram, flux_speed, recraft_v3, flux_ultra
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.cloudMusic import cccdddm
 from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
-from plugins.core.tts import get_acgn_ai_speaker_list, tts
+from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
 
 
 from plugins.core.userDB import get_user
 
 
-from plugins.utils.utils import download_img,url_to_base64, parse_arguments
+from plugins.utils.utils import download_img
 from plugins.utils.random_str import random_str
 
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow

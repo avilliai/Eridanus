@@ -12,7 +12,7 @@ from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_s
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history
-from plugins.core.tts import tts
+from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
 from plugins.func_map import call_func
 last_trigger_time = defaultdict(float)
