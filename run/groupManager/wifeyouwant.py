@@ -143,7 +143,7 @@ def main(bot,config):
         global membercheck
 
         membercheck_id = int(event.sender.user_id)
-        if str(event.raw_message).startswith('🦌') or str(event.raw_message) in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
+        if str(event.raw_message).startswith('🦌') or str(event.raw_message) in {'戒🦌'}:
             if membercheck_id in membercheck:
                 await bot.send(event,'技能冷却ing')
                 bot.logger.info('检测到有人过于勤奋的🦌，跳过')
