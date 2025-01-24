@@ -59,38 +59,40 @@ async def update_user(user_id, **kwargs):
 
 # 获取用户信息
 async def get_user(user_id,nickname=""): #重要信息无非user_id和nickname，因此get时没有就直接创建。
-    async with aiosqlite.connect(dbpath) as db:
-        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
-            result = await cursor.fetchone()
-            if result:
-                # 如果用户存在，直接返回信息
-                return result
+    try:
+        async with aiosqlite.connect(dbpath) as db:
+            async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cursor:
+                result = await cursor.fetchone()
+                if result:
+                    # 如果用户存在，直接返回信息
+                    return result
 
-        # 如果用户不存在，创建新用户
-        registration_date = datetime.date.today().isoformat()
-        default_user = {
-            "user_id": user_id,
-            "nickname": f"{nickname}",
-            "card": "00000",
-            "sex": "0",
-            "age": 0,
-            "city": "通辽",
-            "permission": 0,
-            "signed_days": "[]",
-            "registration_date": registration_date,
-        }
+            # 如果用户不存在，创建新用户
+            registration_date = datetime.date.today().isoformat()
+            default_user = {
+                "user_id": user_id,
+                "nickname": f"{nickname}",
+                "card": "00000",
+                "sex": "0",
+                "age": 0,
+                "city": "通辽",
+                "permission": 0,
+                "signed_days": "[]",
+                "registration_date": registration_date,
+            }
 
-        await db.execute("""
-        INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, default_user["nickname"], default_user["card"], default_user["sex"],
-              default_user["age"], default_user["city"], default_user["permission"],
-              default_user["signed_days"], default_user["registration_date"]))
-        await db.commit()
-        logger.info(f"查询的用户 {user_id} 不存在，已创建默认用户。")
-        #print(f"用户 {user_id} 不存在，已创建默认用户。")
-        return tuple(default_user.values())  # 返回用户数据
-
+            await db.execute("""
+            INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (user_id, default_user["nickname"], default_user["card"], default_user["sex"],
+                  default_user["age"], default_user["city"], default_user["permission"],
+                  default_user["signed_days"], default_user["registration_date"]))
+            await db.commit()
+            logger.info(f"查询的用户 {user_id} 不存在，已创建默认用户。")
+            #print(f"用户 {user_id} 不存在，已创建默认用户。")
+            return tuple(default_user.values())
+    except:
+        return get_user(user_id,nickname) #最喜欢递归了❤
 # 获取签到记录
 async def get_signed_days(user_id):
     async with aiosqlite.connect(dbpath) as db:
