@@ -57,7 +57,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await prompt_database_updata(user_id,response_message,config)
 
         elif config.api["llm"]["model"]=="openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id)
+            prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -110,7 +110,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
-            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result)
+            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
 
             response_message = await geminiRequest(
                 prompt,

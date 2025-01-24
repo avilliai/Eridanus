@@ -34,7 +34,7 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
 """
 
 
-async def prompt_elements_construct(precessed_message,bot=None,func_result=False):
+async def prompt_elements_construct(precessed_message,bot=None,func_result=False,event=None):
     prompt_elements = []
 
     for i in precessed_message:
@@ -55,14 +55,17 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 "type": "image_url",
                 "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}
                 })
-
+        elif "reply" in i:
+            event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+            message = await prompt_elements_construct(event_obj.processed_message)
+            prompt_elements.extend(message["content"])
         else:
             prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:
         return {"role": "system", "content": prompt_elements}
     return {"role": "user", "content": prompt_elements}
-async def construct_openai_standard_prompt(processed_message,system_instruction,user_id):
-    message=await prompt_elements_construct(processed_message,func_result=False)
+async def construct_openai_standard_prompt(processed_message,system_instruction,user_id,bot=None,func_result=False,event=None):
+    message=await prompt_elements_construct(processed_message,bot,func_result,event)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)

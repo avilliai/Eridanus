@@ -338,8 +338,15 @@ class WebSocketBot:
         self.logger.info_msg(f"发送消息: {data}")
         return await self._call_api("send_private_forward_msg", data)
 
-
-
+    async def get_msg(self, message_id: int):
+        """
+        获取历史消息，返回事件对象
+        :param message_id:
+        :return:
+        """
+        source_msg=await self._call_api("get_msg", {"message_id": message_id})
+        event_obj = EventFactory.create_event(source_msg['data'])
+        return event_obj
     """
     撤回、禁言等群管类
     """

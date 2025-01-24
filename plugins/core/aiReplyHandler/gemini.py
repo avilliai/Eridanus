@@ -42,7 +42,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
 """
 gemini标准prompt构建
 """
-async def gemini_prompt_elements_construct(precessed_message,bot=None,func_result=False):
+async def gemini_prompt_elements_construct(precessed_message,bot=None,func_result=False,event=None):
     prompt_elements=[]
 
     #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
@@ -99,13 +99,17 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
             except:
                 bot.logger.warning(f"下载视频失败:{video_url}")
                 prompt_elements.append({"text": str(i)})
+        elif "reply" in i:
+            event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+            message = await gemini_prompt_elements_construct(event_obj.processed_message)
+            prompt_elements.extend(message["parts"])
         else:
             prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:
         return {"role": "system","parts":prompt_elements}
     return {"role": "user","parts": prompt_elements}
-async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,func_result=False):
-    message=await gemini_prompt_elements_construct(processed_message,bot,func_result=False)
+async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,func_result=False,event=None):
+    message=await gemini_prompt_elements_construct(processed_message,bot,func_result,event=event)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
