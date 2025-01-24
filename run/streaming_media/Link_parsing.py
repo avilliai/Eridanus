@@ -41,7 +41,7 @@ def main(bot,config):
         url=event.raw_message
         if "QQ小程序" in url and config.settings["bili_dynamic"]["is_QQ_chek"] is not True:
             return
-        dy_file_path, url_check = await link_prising(url, filepath='data/pictures/cache/')
+
         try:
             dy_file_path,url_check=await link_prising(url,filepath='data/pictures/cache/')
             if dy_file_path is not None:

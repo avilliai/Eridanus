@@ -608,12 +608,14 @@ class WebSocketBot:
         data={"group_id":group_id}
         return await self._call_api("get_essence_msg_list", data)
 
-    async def set_essence_msg(self,message_id: int):
+    async def set_essence_msg(self,message_id: int|str):
         """
         设置精华消息
         :param message_id:
         :return:
         """
+        if isinstance(message_id,str):
+            message_id=int(message_id)
         data={"message_id":message_id}
         return await self._call_api("set_essence_msg", data)
 
