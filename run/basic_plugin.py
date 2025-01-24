@@ -203,8 +203,8 @@ def main(bot,config):
             image_search.pop(event.sender.user_id)
     @bot.on(GroupMessageEvent)
     async def tts(event: GroupMessageEvent):
-        if "说" in event.raw_message:
-            speaker=event.raw_message.split("说")[0].strip()
+        if "说" in event.raw_message and event.raw_message.startswith("/"):
+            speaker=event.raw_message.split("说")[0].replace("/","").strip()
             text=event.raw_message.split("说")[1].strip()
             await call_tts(bot,event,config,text,speaker)
         elif event.raw_message=="可用角色":
@@ -214,7 +214,7 @@ def main(bot,config):
                 f='\n'.join(f)
             if e:
                 e='\n'.join(e)
-            await bot.send(event, [Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"使用 xx说xxxxx")])])
+            await bot.send(event, [Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"使用 /xx说xxxxx")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
