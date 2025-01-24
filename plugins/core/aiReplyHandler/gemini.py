@@ -47,9 +47,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
 
     #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
     for i in precessed_message:
-        if "at" in i:
-            pass
-        elif "text" in i:
+        if "text" in i:
             prompt_elements.append({"text": i["text"]})
         elif "image" in i or "mface" in i:
             if "mface" in i:

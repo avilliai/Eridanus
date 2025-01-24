@@ -1,4 +1,5 @@
 import asyncio
+import threading
 from asyncio import sleep
 from concurrent.futures import ThreadPoolExecutor
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
@@ -51,8 +52,9 @@ async def check_bili_dynamic(bot,config):
             bot.logger.error(f"动态抓取失败{e} uid: {target_uid}")
             continue
     bot.logger.info_func("完成 B 站动态更新检查")
-
 def main(bot,config):
+    threading.Thread(target=bili_main(bot,config), daemon=True).start()
+def bili_main(bot,config):
 
     @bot.on(LifecycleMetaEvent)
     async def _(event):
