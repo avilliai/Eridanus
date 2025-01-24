@@ -102,7 +102,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if generate_voice and reply_message:
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path = await tts(reply_message, config=config)
+                        path = await tts(reply_message, config=config,bot=bot)
                         await bot.send(event, Record(file=path))
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
@@ -162,7 +162,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                    path = await tts(reply_message, config=config)
+                    path = await tts(reply_message, config=config,bot=bot)
                     await bot.send(event, Record(file=path))
                 except Exception as e:
                     bot.logger.error(f"Error occurred when calling tts: {e}")

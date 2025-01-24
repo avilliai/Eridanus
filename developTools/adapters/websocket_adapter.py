@@ -756,10 +756,10 @@ class WebSocketBot:
         """
         data={
             "group_id": 0,
-            "chat_type": 0
+            "chat_type": 1,
         }
         return await self._call_api("get_ai_characters", data)
-    async def get_ai_record(self,character: str,text: str):
+    async def get_ai_record(self,group_id: int,character: str,text: str):
         """
         获取ai声音合成的语音
         :param character:
@@ -767,7 +767,7 @@ class WebSocketBot:
         :return:
         """
         data={
-          "group_id": 0,
+          "group_id": group_id,
           "character": character,
           "text": text,
         }

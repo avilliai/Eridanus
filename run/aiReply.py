@@ -48,7 +48,7 @@ def main(bot,config):
                         await bot.send(event, reply_message, config.api["llm"]["Quote"])
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path=await tts(reply_message,config=config)
+                        path=await tts(reply_message,config=config,bot=bot)
                         await bot.send(event,Record(file=path))
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
@@ -65,7 +65,7 @@ def main(bot,config):
                         await bot.send(event, reply_message, config.api["llm"]["Quote"])
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path = await tts(reply_message, config=config)
+                        path = await tts(reply_message, config=config,bot=bot)
                         await bot.send(event, Record(file=path))
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
@@ -105,7 +105,7 @@ def main(bot,config):
                       await bot.send(event, reply_message, config.api["llm"]["Quote"])
                   try:
                       bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                      path = await tts(reply_message, config=config)
+                      path = await tts(reply_message, config=config,bot=bot)
                       await bot.send(event, Record(file=path))
                   except Exception as e:
                       bot.logger.error(f"Error occurred when calling tts: {e}")

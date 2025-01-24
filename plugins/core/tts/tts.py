@@ -9,13 +9,14 @@ import requests
 
 from ruamel.yaml import YAML
 
+from plugins.core.tts.napcat_tts import napcat_tts_speak
 from plugins.utils.random_str import random_str
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
 
-async def tts(text, speaker=None, config=None,mood=None):
+async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
 
     # 去除括号及其中的内容
@@ -24,12 +25,17 @@ async def tts(text, speaker=None, config=None,mood=None):
     if config is None:
         config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
-
-    mode = config.api["tts"]["tts_engine"]
+    if mode is None:
+        mode = config.api["tts"]["tts_engine"]
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
         return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker,mood)
+    elif mode=="napcat_tts":
+        if speaker is None:
+            speaker=config.api["tts"]["napcat_tts"]["character_id"]
+        print(speaker,text)
+        return await napcat_tts_speak(bot, config, text, speaker)
     else:
         pass
 

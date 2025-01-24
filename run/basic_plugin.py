@@ -2,7 +2,7 @@ import os
 
 from asyncio import sleep
 
-from developTools.event.events import GroupMessageEvent
+from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 
 from developTools.message.message_components import Record, Node, Text, Image,Music
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
@@ -10,6 +10,7 @@ from plugins.basic_plugin.cloudMusic import cccdddm
 from plugins.basic_plugin.divination import tarotChoice
 from plugins.basic_plugin.image_search import fetch_results
 from plugins.basic_plugin.weather_query import weather_query
+from plugins.core.tts.napcat_tts import napcat_tts_speakers, napcat_tts_speak
 from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
 
 
@@ -116,33 +117,46 @@ async def call_image_search(bot,event,config,image_url=None):
     else:
         await bot.send(event, "权限不够呢.....")
 async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
+    mode = config.api["tts"]["tts_engine"]
     if speaker is None:
-        mode = config.api["tts"]["tts_engine"]
         speaker=config.api["tts"][mode]["speaker"]
-    try:
-        speakers=await get_acgn_ai_speaker_list()
-    except Exception as e:
-        bot.logger.error(f"Error in tts: {e}")
+    ncspk,acgnspk=await call_all_speakers(bot,event,config)
+    if not ncspk and not acgnspk:
+        bot.logger.error("No speakers found")
         return
-    if speaker in speakers:
-        pass
-    elif f"{speaker}【鸣潮】" in speakers:
-        speaker=f"{speaker}【鸣潮】"
-    elif f"{speaker}【原神】" in speakers:
-        speaker=f"{speaker}【原神】"
-    elif f"{speaker}【崩坏3】" in speakers:
-        speaker=f"{speaker}【崩坏3】"
-    elif f"{speaker}【星穹铁道】" in speakers:
-        speaker=f"{speaker}【星穹铁道】"
-    else:
-        #bot.logger.error(f"Invalid speaker: {speaker}")
-        return
-    try:
-        p=await tts(text,speaker,config,mood)
-        await bot.send(event, Record(file=p))
-    except Exception as e:
-        bot.logger.error(f"Error in tts: {e}")
+    if acgnspk:
+        mode="acgn_ai"
+        if speaker in acgnspk:
+            pass
+        elif f"{speaker}【鸣潮】" in acgnspk:
+            speaker=f"{speaker}【鸣潮】"
+        elif f"{speaker}【原神】" in acgnspk:
+            speaker=f"{speaker}【原神】"
+        elif f"{speaker}【崩坏3】" in acgnspk:
+            speaker=f"{speaker}【崩坏3】"
+        elif f"{speaker}【星穹铁道】" in acgnspk:
+            speaker=f"{speaker}【星穹铁道】"
 
+    if ncspk:
+        if speaker in ncspk:
+            mode="napcat_tts"
+            speaker=ncspk[speaker]
+
+    p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
+    await bot.send(event, Record(file=p))
+
+async def call_all_speakers(bot,event,config):
+    try:
+        nc_speakers=await napcat_tts_speakers(bot)
+    except Exception as e:
+        bot.logger.error(f"Error in napcat_tts_speakers: {e}")
+        nc_speakers=None
+    try:
+        acgn_ai_speakers=await get_acgn_ai_speaker_list()
+    except Exception as e:
+        bot.logger.error(f"Error in get_acgn_ai_speaker_list: {e}")
+        acgn_ai_speakers=None
+    return nc_speakers,acgn_ai_speakers
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
@@ -193,9 +207,9 @@ def main(bot,config):
             await call_tts(bot,event,config,text,speaker)
         elif event.raw_message=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
-            ffff=await get_acgn_ai_speaker_list()
+            f,e=await call_all_speakers(bot,event,config)
 
-            await bot.send(event, Node(content=[Text(f"可用角色：{ffff}")]))
+            await bot.send(event, [Node(content=[Text(f"可用角色：{f}")]),Node(content=[Text(f"可用角色：{e}")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
@@ -216,5 +230,8 @@ def main(bot,config):
         if event.raw_message.startswith("点歌 "):
             song_name = event.raw_message.split("点歌 ")[1]
             await call_pick_music(bot, event, config, song_name)
+
+
+
 
 
