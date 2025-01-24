@@ -56,9 +56,12 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}
                 })
         elif "reply" in i:
-            event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-            message = await prompt_elements_construct(event_obj.processed_message,bot)
-            prompt_elements.extend(message["content"])
+            try:
+                event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await prompt_elements_construct(event_obj.processed_message,bot)
+                prompt_elements.extend(message["content"])
+            except Exception as e:
+                bot.logger.warning(f"引用消息解析失败:{e}")
         else:
             prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:
