@@ -49,7 +49,7 @@ async def tecent_prompt_elements_construct(precessed_message,bot=None,func_resul
             message = await tecent_prompt_elements_construct(event_obj.processed_message,bot)
             prompt_elements.extend(message["content"])
         else:
-            prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
+            prompt_elements.append({"type":"text", "text":str(i)})
     if func_result:
         return {"role": "system", "content": prompt_elements}
     return {"role": "user", "content": prompt_elements}
