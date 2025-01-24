@@ -69,9 +69,12 @@ async def construct_openai_standard_prompt(processed_message,system_instruction,
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
-    full_prompt = [
-        {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
-    ]
-    full_prompt.extend(history)
+    if system_instruction:
+        full_prompt = [
+            {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
+        ]
+        full_prompt.extend(history)
+    else:
+        full_prompt = history
     await update_user_history(user_id, full_prompt)  # 更新数据库中的历史记录
     return full_prompt, original_history

@@ -169,7 +169,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
         elif config.api["llm"]["model"]=="腾讯元器":
-            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id)
+            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
                 prompt,
                 config.api["llm"]["腾讯元器"]["智能体ID"],

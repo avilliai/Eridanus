@@ -33,16 +33,14 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
     try:
         if config.api["llm"]["model"]=="default":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
-                                                                              user_id,bot,event)
+                                                                              user_id)
             response_message = await defaultModelRequest(
                 prompt,
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
             )
             reply_message = response_message['content']
         elif config.api["llm"]["model"] == "openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
-                                                                              user_id, bot, func_result=True,
-                                                                              event=event)
+            prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -56,7 +54,7 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
             # print(response_message)
         elif config.api["llm"]["model"] == "gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
-                                                                              func_result,event)
+                                                                              func_result,event=event)
 
             response_message = await geminiRequest(
                 prompt,
@@ -72,7 +70,7 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
             except:
                 reply_message = None
         elif config.api["llm"]["model"]=="腾讯元器":
-            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id)
+            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
                 prompt,
                 config.api["llm"]["腾讯元器"]["智能体ID"],
