@@ -1,7 +1,9 @@
 import asyncio
+import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     GroupIncreaseNoticeEvent, LifecycleMetaEvent
+from developTools.message.message_components import Record
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 from plugins.utils.GCTool import delete_old_files_async
@@ -123,6 +125,16 @@ async def report_to_master(bot,event,config):
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
+        group_list = await bot.get_group_list()
+        group_list = group_list["data"]
+        friend_list = await bot.get_friend_list()
+        friend_list = friend_list["data"]
+        bot.logger.info(f"读取群列表数量: {len(group_list)}")
+        bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
+        await bot.send_friend_message(config.basic_config["master"]['id'], f"启动成功\n当前群数量: {len(group_list)}\n好友数量: {len(friend_list)}")
+        if random.randint(1, 100)<30:
+            await bot.send_friend_message(config.basic_config["master"]['id'], Record(file="data/system/win xp.mp3"))
+        await bot.send_friend_message(config.basic_config["master"]['id'], f"项目地址与文档\nhttps://eridanus-doc.netlify.app/\n本项目源码及一键包完全免费，如您通过付费渠道获得，恭喜你被骗了。")
         while True:
             await garbage_collection(bot,event,config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
