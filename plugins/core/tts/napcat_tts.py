@@ -6,8 +6,7 @@ async def napcat_tts_speakers(bot):
         speakers = {}
         for type in nc_speakers["data"]:
             for speaker in type["characters"]:
-                if speaker["character_name"] not in speakers:
-                    speakers[speaker["character_name"]]=speaker["character_id"]
+                speakers[speaker["character_name"]]=speaker["character_id"]
 
         #print(speakers)
         return speakers
@@ -15,7 +14,7 @@ async def napcat_tts_speakers(bot):
         return None
 async def napcat_tts_speak(bot,config, text, speaker_id):
     try:
-        s = await bot.get_ai_record(config.basic_config["group"]["test_group"],speaker_id, text)
+        s = await bot.get_ai_record(config.basic_config["group"]["test_group"],speaker_id, text=text)
         return s["data"]
     except Exception as e:
         return None

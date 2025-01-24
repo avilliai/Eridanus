@@ -208,8 +208,11 @@ def main(bot,config):
         elif event.raw_message=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             f,e=await call_all_speakers(bot,event,config)
-
-            await bot.send(event, [Node(content=[Text(f"可用角色：{f}")]),Node(content=[Text(f"可用角色：{e}")])])
+            if f:
+                f='\n'.join(f)
+            if e:
+                e='\n'.join(e)
+            await bot.send(event, [Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"使用 xx说xxxxx")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
