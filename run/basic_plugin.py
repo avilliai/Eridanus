@@ -141,9 +141,11 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
         if speaker in ncspk:
             mode="napcat_tts"
             speaker=ncspk[speaker]
-
-    p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
-    await bot.send(event, Record(file=p))
+    try:
+        p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
+        await bot.send(event, Record(file=p))
+    except:
+        pass
 
 async def call_all_speakers(bot,event,config):
     try:

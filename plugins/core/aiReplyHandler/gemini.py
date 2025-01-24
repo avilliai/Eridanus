@@ -100,9 +100,12 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 bot.logger.warning(f"下载视频失败:{video_url}")
                 prompt_elements.append({"text": str(i)})
         elif "reply" in i:
-            event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-            message = await gemini_prompt_elements_construct(event_obj.processed_message)
-            prompt_elements.extend(message["parts"])
+            try:
+                event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await gemini_prompt_elements_construct(event_obj.processed_message)
+                prompt_elements.extend(message["parts"])
+            except Exception as e:
+                bot.logger.warning(f"引用消息解析失败:{e}")
         else:
             prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:

@@ -1,8 +1,12 @@
+from io import BytesIO
+
 import httpx
 import asyncio
 import os
 import re
 import urllib.parse
+
+from PIL import Image
 
 # 全局变量
 DOWNLOAD_LIMIT = 5  # 获取到的视频数量，或者信息条数
@@ -75,14 +79,14 @@ async def fetch_video_info(sort,config):
     else:
         proxies = None
     async with httpx.AsyncClient(proxies=proxies) as client:
-        print(f"发送初始请求到: {url}")
+        #print(f"发送初始请求到: {url}")
         response = await client.get(url)
         response.raise_for_status()  # 检查请求是否成功
-        print(f"初始请求成功, 状态码: {response.status_code}")
+        #print(f"初始请求成功, 状态码: {response.status_code}")
         
         data = response.json()
         results = data.get("results", [])
-        print(f"获取到的视频数量: {len(results)}")
+        #print(f"获取到的视频数量: {len(results)}")
         
         video_info_list = []
         
@@ -91,9 +95,9 @@ async def fetch_video_info(sort,config):
             if video_info:
                 video_info_list.append(video_info)
         
-        print("\n最终视频信息列表:")
+        '''print("\n最终视频信息列表:")
         for video_info in video_info_list:
-            print(video_info)
+            print(video_info)'''
         return video_info_list
 
 async def process_video(client, item):
@@ -101,10 +105,10 @@ async def process_video(client, item):
     video_id = item.get("id")
     
     if not title or not video_id:
-        print(f"缺少必要的字段: 视频 ID: {video_id}, 标题: {title}")
+        #print(f"缺少必要的字段: 视频 ID: {video_id}, 标题: {title}")
         return None
     
-    print(f"\n正在处理视频 ID: {video_id}, 标题: {title}")
+    #print(f"\n正在处理视频 ID: {video_id}, 标题: {title}")
     
     thumbnail_path = await download_thumbnail(client, item)
     
@@ -122,17 +126,18 @@ async def download_thumbnail(client, item):
     custom_thumbnail = item.get("customThumbnail")
     
     if not title or not video_id:
-        print(f"缺少必要的字段: 视频 ID: {video_id}, 标题: {title}")
+        #print(f"缺少必要的字段: 视频 ID: {video_id}, 标题: {title}")
         return None
     
-    print(f"\n正在处理视频 ID: {video_id}, 标题: {title}")
+    #print(f"\n正在处理视频 ID: {video_id}, 标题: {title}")
     
     if custom_thumbnail and custom_thumbnail.get("id"):
         thumbnail_id = custom_thumbnail.get("id")
         thumbnail_url = f"https://i.iwara.tv/image/thumbnail/{thumbnail_id}/{thumbnail_id}.jpg"
-        print(f"尝试下载自定义缩略图 URL: {thumbnail_url}")
+        #print(f"尝试下载自定义缩略图 URL: {thumbnail_url}")
         
         try:
+
             response = await client.get(thumbnail_url)
             response.raise_for_status()
             print(f"自定义缩略图内容请求成功, 状态码: {response.status_code}")
@@ -141,35 +146,41 @@ async def download_thumbnail(client, item):
             file_name = f"{sanitized_title}.jpg"
             absolute_file_path = os.path.abspath(os.path.join(DOWNLOAD_DIR, file_name)).replace("\\", "/")
             os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
-            with open(absolute_file_path, 'wb') as f:
-                f.write(response.content)
+
+            img = Image.open(BytesIO(response.content))  # 从二进制数据创建图片对象
+            image_raw = img
+            image_black_white = image_raw.convert('1')
+            image_black_white.save(absolute_file_path)
             
-            print(f"自定义缩略图已下载并保存为: {absolute_file_path}")
+            #print(f"自定义缩略图已下载并保存为: {absolute_file_path}")
+
             return absolute_file_path
         except httpx.HTTPStatusError as e:
-            print(f"自定义缩略图 URL 请求失败: {e}")
+            #print(f"自定义缩略图 URL 请求失败: {e}")
             return None
     else:
         thumbnail_padded = f"{int(thumbnail):02d}"  # 如果 thumbnail 为 0，则结果为 "00"
         thumbnail_url = f"https://i.iwara.tv/image/thumbnail/{video_id}/thumbnail-{thumbnail_padded}.jpg"
-        print(f"尝试下载缩略图 URL: {thumbnail_url}")
+        #print(f"尝试下载缩略图 URL: {thumbnail_url}")
         
         try:
             response = await client.get(thumbnail_url)
             response.raise_for_status()
-            print(f"缩略图内容请求成功, 状态码: {response.status_code}")
+            #print(f"缩略图内容请求成功, 状态码: {response.status_code}")
             
             sanitized_title = sanitize_filename(title)
             file_name = f"{sanitized_title}.jpg"
             absolute_file_path = os.path.abspath(os.path.join(DOWNLOAD_DIR, file_name)).replace("\\", "/")
             os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
-            with open(absolute_file_path, 'wb') as f:
-                f.write(response.content)
+            img = Image.open(BytesIO(response.content))  # 从二进制数据创建图片对象
+            image_raw = img
+            image_black_white = image_raw.convert('1')
+            image_black_white.save(absolute_file_path)
             
-            print(f"缩略图已下载并保存为: {absolute_file_path}")
+            #print(f"缩略图已下载并保存为: {absolute_file_path}")
             return absolute_file_path
         except httpx.HTTPStatusError as e:
-            print(f"缩略图 URL 请求失败: {e}")
+            #print(f"缩略图 URL 请求失败: {e}")
             return None
 
 async def rank_videos(sort,config):
@@ -179,14 +190,14 @@ async def rank_videos(sort,config):
     else:
         proxies = None
     async with httpx.AsyncClient(proxies=proxies) as client:
-        print(f"发送排行请求到: {url}")
+        #print(f"发送排行请求到: {url}")
         response = await client.get(url)
         response.raise_for_status()  # 检查请求是否成功
-        print(f"排行请求成功, 状态码: {response.status_code}")
+        #print(f"排行请求成功, 状态码: {response.status_code}")
         
         data = response.json()
         results = data.get("results", [])
-        print(f"获取到的视频数量: {len(results)}")
+        #print(f"获取到的视频数量: {len(results)}")
         
         video_download_list = []
         
@@ -195,9 +206,9 @@ async def rank_videos(sort,config):
             if video_info:
                 video_download_list.append(video_info)
         
-        print("\n最终视频下载列表:")
-        for video_info in video_download_list:
-            print(video_info)
+        #print("\n最终视频下载列表:")
+        #for video_info in video_download_list:
+            #print(video_info)
 
 async def download_specific_video(videoid,config):
     if config.api["proxy"]["http_proxy"] is not None:
@@ -207,11 +218,12 @@ async def download_specific_video(videoid,config):
     async with httpx.AsyncClient(proxies=proxies) as client:
         video_info = await download_video(client, videoid)
         if video_info:
-            print("\n最终视频下载信息:")
-            print(video_info)
+            #print("\n最终视频下载信息:")
+            #print(video_info)
             return video_info
         else:
-            print(f"未能下载视频 ID: {videoid}")
+            return None
+            #print(f"未能下载视频 ID: {videoid}")
             
 async def search_videos(word,config):
     query = urllib.parse.quote(word)
@@ -221,14 +233,14 @@ async def search_videos(word,config):
     else:
         proxies = None
     async with httpx.AsyncClient(proxies=proxies) as client:
-        print(f"发送搜索请求到: {url}")
+        #print(f"发送搜索请求到: {url}")
         response = await client.get(url)
         response.raise_for_status()  # 检查请求是否成功
-        print(f"搜索请求成功, 状态码: {response.status_code}")
+        #print(f"搜索请求成功, 状态码: {response.status_code}")
         
         data = response.json()
         results = data.get("results", [])
-        print(f"获取到的视频数量: {len(results)}")
+        #print(f"获取到的视频数量: {len(results)}")
         
         video_info_list = []
         
@@ -237,9 +249,9 @@ async def search_videos(word,config):
             if video_info:
                 video_info_list.append(video_info)
         
-        print("\n最终视频信息列表:")
-        for video_info in video_info_list:
-            print(video_info)
+        #print("\n最终视频信息列表:")
+        #for video_info in video_info_list:
+            #print(video_info)
         return video_info_list
 
 def main(command):
@@ -249,13 +261,15 @@ def main(command):
         if videoid:
             asyncio.run(download_specific_video(videoid))
         else:
-            print("请输入有效的视频ID。")
+            return None
+            #print("请输入有效的视频ID。")
     elif command.startswith("搜索"):
         word = command.replace("搜索", "").strip()
         if word:
             asyncio.run(search_videos(word))
         else:
-            print("请输入有效的搜索关键词。")
+            return None
+            #print("请输入有效的搜索关键词。")
     elif command.startswith("榜单下载"):
         sort = command.replace("榜单", "").strip()
         asyncio.run(rank_videos(sort))
@@ -263,7 +277,8 @@ def main(command):
         sort = command.replace("榜单", "").strip()
         asyncio.run(fetch_video_info(sort))
     else:
-        print("未知命令，请输入 '榜单{name}'、'榜单下载{name}' 、'下载{video_id}、'搜索{关键词}'")
+        pass
+        #print("未知命令，请输入 '榜单{name}'、'榜单下载{name}' 、'下载{video_id}、'搜索{关键词}'")
 
 if __name__ == "__main__":
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)  # 创建下载目录

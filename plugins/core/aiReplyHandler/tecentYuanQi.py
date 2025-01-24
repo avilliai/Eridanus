@@ -45,9 +45,12 @@ async def tecent_prompt_elements_construct(precessed_message,bot=None,func_resul
                     "file_url": {"type": "image", "url": url}
                     })
         elif "reply" in i:
-            event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-            message = await tecent_prompt_elements_construct(event_obj.processed_message,bot)
-            prompt_elements.extend(message["content"])
+            try:
+                event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await tecent_prompt_elements_construct(event_obj.processed_message,bot)
+                prompt_elements.extend(message["content"])
+            except Exception as e:
+                bot.logger.warning(f"引用消息解析失败:{e}")
         else:
             prompt_elements.append({"type":"text", "text":str(i)})
     if func_result:

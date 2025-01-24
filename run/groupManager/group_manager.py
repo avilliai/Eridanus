@@ -10,6 +10,10 @@ def main(bot,config):
                 if event.get("reply"):
                     await bot.set_essence_msg(int(event.get("reply")[0]["id"]))
                     await bot.send(event, "设置成功")
+            elif event.get("text")[0].strip()=="取消精华" or event.get("text")[0].strip()=="取消精华消息" or event.get("text")[0].strip()=="取消设精" or event.get("text")[0].strip()=="取消射精" or event.get("text")[0].strip()=="不射精":
+                if event.get("reply"):
+                    await bot.delete_essence_msg(int(event.get("reply")[0]["id"]))
+                    await bot.send(event, "取消成功")
 
     @bot.on(GroupDecreaseNoticeEvent)
     async def group_decrease(event: GroupDecreaseNoticeEvent):

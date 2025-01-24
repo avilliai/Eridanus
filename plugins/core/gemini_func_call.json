@@ -7,11 +7,15 @@
                     "type": "object",
                     "properties": {
                         "task_type": {
-                            "type": "string", "enum": ["asmr"],"description": "任务类型 "
+                            "type": "string", "enum": ["asmr","bilibili"],"description": "任务类型: asmr/b站动态 "
                         },
                         "operation": {
                             "type": "boolean",
                             "description": "true为添加，false为取消"
+                        },
+                        "target_uid": {
+                            "type": "integer",
+                            "description": "b站动态订阅，目标uid"
                         }
                     },
                     "required": [
@@ -77,26 +81,6 @@
                     "required": [
                         "operation",
                         "target_id"
-                    ]
-                }
-            },
-            {
-                "name": "bili_subscribe",
-                "description": "订阅bilibili动态。",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "operation": {
-                            "type": "string", "enum": ["add","remove"],"description": "添加订阅或取消订阅。"
-                        },
-                        "target_uid": {
-                            "type": "integer",
-                            "description": "关注目标的b站uid。"
-                        }
-                    },
-                    "required": [
-                        "operation",
-                        "target_uid"
                     ]
                 }
             },
