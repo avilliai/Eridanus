@@ -125,7 +125,7 @@ class WebSocketBot:
 
     async def _call_api(self, action: str, params: dict, timeout: int = 20) -> dict:
         """
-        发送请求并异步等待响应。
+        发送请求并异步等待响应，确保 bot 不被阻塞，同时 api调用 仍然能 await 拿到结果。
         """
         if self.websocket is None:
             self.logger.warning("WebSocket 未连接，无法调用 API。")
@@ -134,17 +134,23 @@ class WebSocketBot:
         echo = str(uuid.uuid4())
         message = {"action": action, "params": params, "echo": echo}
 
-        # 创建一个 Future，用于等待响应
+        # 创建 Future，用于等待 API 响应
         future = asyncio.Future()
         self.response_callbacks[echo] = future
         await self.websocket.send(json.dumps(message))
-        try:
-            return await asyncio.wait_for(future, timeout=timeout)
-        except asyncio.TimeoutError:
-            self.logger.error(f"调用 API 超时: {action}")
-            if echo in self.response_callbacks:
-                del self.response_callbacks[echo]
-            return {"status": "failed", "retcode": 98, "data": None, "msg": "API call timeout", "echo": echo}
+
+        async def wait_for_response():
+            try:
+                return await asyncio.wait_for(future, timeout=timeout)
+            except asyncio.TimeoutError:
+                self.logger.error(f"调用 API 超时: {action}")
+                if echo in self.response_callbacks:
+                    del self.response_callbacks[echo]
+                return {"status": "failed", "retcode": 98, "data": None, "msg": "API call timeout", "echo": echo}
+
+        return await asyncio.create_task(wait_for_response())
+
+
 
 
     def run(self):
