@@ -38,7 +38,7 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
     prompt_elements = []
 
     for i in precessed_message:
-        if "text" in i:
+        if "text" in i and i["text"]!="":
             prompt_elements.append({"type":"text", "text":i["text"]})
         elif "image" in i or "mface" in i:
             if "mface" in i:
@@ -57,7 +57,7 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 })
         elif "reply" in i:
             event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-            message = await prompt_elements_construct(event_obj.processed_message)
+            message = await prompt_elements_construct(event_obj.processed_message,bot)
             prompt_elements.extend(message["content"])
         else:
             prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
