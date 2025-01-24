@@ -92,7 +92,7 @@ async def get_user(user_id,nickname=""): #重要信息无非user_id和nickname�
             #print(f"用户 {user_id} 不存在，已创建默认用户。")
             return tuple(default_user.values())
     except:
-        return get_user(user_id) #最喜欢递归了❤
+        return await get_user(user_id) #最喜欢递归了❤
 # 获取签到记录
 async def get_signed_days(user_id):
     async with aiosqlite.connect(dbpath) as db:
