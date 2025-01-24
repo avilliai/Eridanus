@@ -3,13 +3,15 @@ import httpx
 from plugins.core.llmDB import get_user_history, update_user_history
 
 
-async def YuanQiTencent(prompt,assistant_id,token,userID):
+async def YuanQiTencent(prompt:list,assistant_id,token,userID):
     url = 'https://open.hunyuan.tencent.com/openapi/v1/agent/chat/completions'
     headers = {
         'X-Source': 'openapi',
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {token}'
     }
+    prompt.insert(0,{"role": "user", "content": [{"type":"text", "text":"你好"}]})
+    prompt.insert(1, {"role": "assistant", "content": [{"type":"text", "text":"你好呀~"}]})
     data = {
         "assistant_id": assistant_id,
         "user_id": str(userID),
@@ -25,13 +27,13 @@ async def YuanQiTencent(prompt,assistant_id,token,userID):
 """
 
 
-async def tecent_prompt_elements_construct(precessed_message,bot=None,func_result=False):
+async def tecent_prompt_elements_construct(precessed_message,bot=None,func_result=False,event=None):
     prompt_elements = []
 
     for i in precessed_message:
         if "text" in i:
             prompt_elements.append({"type":"text", "text":i["text"]})
-            '''elif "image" in i or "mface" in i:
+        elif "image" in i or "mface" in i:
                 if "mface" in i:
                     url = i["mface"]["url"]
                 else:
@@ -41,14 +43,18 @@ async def tecent_prompt_elements_construct(precessed_message,bot=None,func_resul
                 prompt_elements.append({
                     "type": "file_url",
                     "file_url": {"type": "image", "url": url}
-                    })''' #啥比腾讯，兼容做的和矢一样
+                    })
+        elif "reply" in i:
+            event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+            message = await tecent_prompt_elements_construct(event_obj.processed_message,bot)
+            prompt_elements.extend(message["content"])
         else:
-            prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
+            prompt_elements.append({"type":"text", "text":str(i)})
     if func_result:
         return {"role": "system", "content": prompt_elements}
     return {"role": "user", "content": prompt_elements}
-async def construct_tecent_standard_prompt(processed_message,user_id):
-    message=await tecent_prompt_elements_construct(processed_message,func_result=False)
+async def construct_tecent_standard_prompt(processed_message,user_id,bot,event):
+    message=await tecent_prompt_elements_construct(processed_message,func_result=False,bot=bot,event=event)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)

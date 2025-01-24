@@ -1,16 +1,12 @@
-import os
 import random
-import time
-from asyncio import sleep
-from collections import defaultdict
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
-from developTools.message.message_components import Reply, Record
+from developTools.message.message_components import Record
 from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger
 from plugins.core.llmDB import delete_user_history, clear_all_history
-from plugins.core.tts import tts
+from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
-from plugins.func_map_loader import func_map, gemini_func_map, openai_func_map
+from plugins.func_map_loader import gemini_func_map, openai_func_map
 
 
 def main(bot,config):
@@ -52,7 +48,7 @@ def main(bot,config):
                         await bot.send(event, reply_message, config.api["llm"]["Quote"])
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path=await tts(reply_message,config=config)
+                        path=await tts(reply_message,config=config,bot=bot)
                         await bot.send(event,Record(file=path))
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
@@ -69,7 +65,7 @@ def main(bot,config):
                         await bot.send(event, reply_message, config.api["llm"]["Quote"])
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path = await tts(reply_message, config=config)
+                        path = await tts(reply_message, config=config,bot=bot)
                         await bot.send(event, Record(file=path))
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
@@ -109,7 +105,7 @@ def main(bot,config):
                       await bot.send(event, reply_message, config.api["llm"]["Quote"])
                   try:
                       bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                      path = await tts(reply_message, config=config)
+                      path = await tts(reply_message, config=config,bot=bot)
                       await bot.send(event, Record(file=path))
                   except Exception as e:
                       bot.logger.error(f"Error occurred when calling tts: {e}")

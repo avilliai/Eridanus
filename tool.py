@@ -51,7 +51,7 @@ async def main():
         3 playwright工具安装
         4 开发者工具
         5 若只的检测相关ai库(如奶龙检测)
-        6 B站 or 抖音登录""")
+        6 B站 or 抖音 or 小红书 登录""")
     sleep(0.3)
     user_input=input("请输入指令序号：")
     if user_input=="1":
@@ -104,11 +104,13 @@ async def main():
         logger.info("安装奶龙相关ai库依赖中")
         ai_req()
     elif user_input=="6":
+        try:
+            import PyExecJS
+        except ImportError as e:
+            os.system(f"\"{python_path}\" -m pip install PyExecJS")
+            logger.warning("如为初次运行，请关闭程序并重新进入这一步")
+            #input()
         from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
-        #logger.info("开始执行相关程序ing")
-        os.system(f"\"{python_path}\" -m pip install PyExecJS")
-        logger.warning("如为初次运行，请关闭程序并重新进入这一步")
-        input()
         await login_core_select()
 
 

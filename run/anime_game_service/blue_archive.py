@@ -15,7 +15,7 @@ from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageSt
 
 def main(bot, logger):
     logger=bot.logger
-    logger.info("arona loaded")
+    logger.info_func("arona loaded")
 
 
     @bot.on(GroupMessageEvent)
@@ -26,7 +26,7 @@ def main(bot, logger):
             url = event.raw_message.replace("/arona ", "")
         else:
             return
-        logger.info("查询攻略：" + url)
+        logger.info_func("查询攻略：" + url)
         try:
             p = await stageStrategy(url)
             await bot.send(event, Image(file=p))
@@ -37,12 +37,12 @@ def main(bot, logger):
     @bot.on(LifecycleMetaEvent)
     async def pushAronaData(event: LifecycleMetaEvent):
         while True:
-            logger.info("检查arona订阅更新")
+            logger.info_func("检查arona订阅更新")
             with open("data/pictures/blueArchive/aronaSub.yaml", 'r', encoding='utf-8') as f:
                 result9 = yaml.load(f.read(), Loader=yaml.FullLoader)
                 for i in result9:
                     for ia in result9.get(i).get("hash"):
-                        logger.info("检查" + ia + "更新")
+                        logger.info_func("检查" + ia + "更新")
                         await sleep(25)
                         url1 = "https://arona.diyigemt.com/api/v2/image?name=" + ia
                         async with httpx.AsyncClient(timeout=100) as client:  # 100s超时
@@ -99,14 +99,14 @@ def main(bot, logger):
             for i in bss:
                 p = await stageStrategy(i)
                 await bot.send(event, ["获取到" + i + "数据", Image(file=p)])
-            logger.info(str(event.group_id) + "新增订阅")
+            logger.info_func(str(event.group_id) + "新增订阅")
             await bot.send(event, "成功订阅")
 
     @bot.on(GroupMessageEvent)
     async def aronad(event):
         if event.raw_message == "/arona" or event.raw_message == "/攻略":
             url = "杂图"
-            logger.info("查询攻略：" + url)
+            logger.info_func("查询攻略：" + url)
             try:
                 p = await stageStrategy(url)
                 await bot.send(event, [

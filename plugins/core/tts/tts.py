@@ -1,18 +1,22 @@
 # 语音合成接口
 import asyncio
 import re
+import threading
+import time
 
 import httpx
+import requests
 
 from ruamel.yaml import YAML
 
+from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.utils.random_str import random_str
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
 
-async def tts(text, speaker=None, config=None,mood=None):
+async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
 
     # 去除括号及其中的内容
@@ -21,36 +25,38 @@ async def tts(text, speaker=None, config=None,mood=None):
     if config is None:
         config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
-
-    mode = config.api["tts"]["tts_engine"]
+    if mode is None:
+        mode = config.api["tts"]["tts_engine"]
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
         return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker,mood)
+    elif mode=="napcat_tts":
+        if speaker is None:
+            speaker=config.api["tts"]["napcat_tts"]["character_name"]
+        spkss=await napcat_tts_speakers(bot)
+        if speaker in spkss:
+            speaker=spkss[speaker]
+        return await napcat_tts_speak(bot, config, text, speaker)
     else:
         pass
 
 
-async def gptVitsSpeakers():
+def gptVitsSpeakers():
     url = "https://infer.acgnai.top/infer/spks"
-    async with httpx.AsyncClient(timeout=100) as client:
-        r = await client.post(url, json={
-            "type": "tts",
-            "brand": "gpt-sovits",
-            "name": "anime"
-        })
-    return r.json()["spklist"]
-
+    r=requests.post(url,json={"type":"tts","brand":"gpt-sovits","name":"anime"})
+    global GPTSOVITS_SPEAKERS
+    GPTSOVITS_SPEAKERS=r.json()["spklist"]
+    return GPTSOVITS_SPEAKERS
 
 try:
     if local_config["tts"]["tts_engine"] == "acgn_ai" and local_config["tts"]["acgn_ai"]["token"]!= "":
-        print("GPTSOVITS_SPEAKERS获取中")
-        GPTSOVITS_SPEAKERS = asyncio.run(gptVitsSpeakers())
-        #print(GPTSOVITS_SPEAKERS)
+        r=threading.Thread(target=gptVitsSpeakers, daemon=True).start()
 except:
     print("GPTSOVITS_SPEAKERS获取失败")
 
 async def get_acgn_ai_speaker_list(a=None,b=None,c=None):
+    global GPTSOVITS_SPEAKERS
     spks=list(GPTSOVITS_SPEAKERS.keys())
     return spks
 async def acgn_ai_tts(token, config, text, speaker,mood):

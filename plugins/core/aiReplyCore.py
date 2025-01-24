@@ -12,7 +12,7 @@ from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_s
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history
-from plugins.core.tts import tts
+from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
 from plugins.func_map import call_func
 last_trigger_time = defaultdict(float)
@@ -57,7 +57,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await prompt_database_updata(user_id,response_message,config)
 
         elif config.api["llm"]["model"]=="openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id)
+            prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -102,7 +102,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if generate_voice and reply_message:
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path = await tts(reply_message, config=config)
+                        path = await tts(reply_message, config=config,bot=bot)
                         await bot.send(event, Record(file=path))
                     except Exception as e:
                         bot.logger.error(f"Error occurred when calling tts: {e}")
@@ -110,7 +110,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
-            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result)
+            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
 
             response_message = await geminiRequest(
                 prompt,
@@ -162,14 +162,14 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                    path = await tts(reply_message, config=config)
+                    path = await tts(reply_message, config=config,bot=bot)
                     await bot.send(event, Record(file=path))
                 except Exception as e:
                     bot.logger.error(f"Error occurred when calling tts: {e}")
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
         elif config.api["llm"]["model"]=="腾讯元器":
-            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id)
+            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
                 prompt,
                 config.api["llm"]["腾讯元器"]["智能体ID"],

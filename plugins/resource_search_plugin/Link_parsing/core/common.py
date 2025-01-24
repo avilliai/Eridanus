@@ -11,6 +11,10 @@ import httpx
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
+import sys
+import asyncio
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 """
 通用请求头
 """
@@ -108,25 +112,23 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
         len=1
     # 单个文件下载
     if int(len) == 1 :
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=proxy, headers=headers) as response:
-                #print(response.status)
-                if response.status == 200:
-                    data = await response.read()
-                    with open(path, 'wb') as f:
-                        f.write(data)
-                    return path
+        async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
+            response = await client.get(url)
+            if response.status_code  == 200:
+                with open(path, 'wb') as f:
+                    f.write(response.content)
+                return path
     # 多个文件
     else:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=proxy, headers=headers) as response:
-                #print(response.status)
-                if response.status == 200:
-                    square_image = crop_center_square(Image.open(BytesIO(await response.read())))
-                    if square_image.mode != "RGB":
-                        square_image = square_image.convert("RGB")
-                    square_image.save(path)
-                    return path
+        async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
+            response = await client.get(url)
+            if response.status_code  == 200:
+                square_image = crop_center_square(Image.open(BytesIO(response.content)))
+                if square_image.mode != "RGB":
+                    square_image = square_image.convert("RGB")
+                square_image.save(path)
+                return path
+
 
 
 async def download_audio(url):

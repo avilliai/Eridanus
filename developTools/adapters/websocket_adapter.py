@@ -125,7 +125,7 @@ class WebSocketBot:
 
     async def _call_api(self, action: str, params: dict, timeout: int = 20) -> dict:
         """
-        发送请求并异步等待响应。
+        发送请求并异步等待响应，确保 bot 不被阻塞，同时 api调用 仍然能 await 拿到结果。
         """
         if self.websocket is None:
             self.logger.warning("WebSocket 未连接，无法调用 API。")
@@ -134,17 +134,23 @@ class WebSocketBot:
         echo = str(uuid.uuid4())
         message = {"action": action, "params": params, "echo": echo}
 
-        # 创建一个 Future，用于等待响应
+        # 创建 Future，用于等待 API 响应
         future = asyncio.Future()
         self.response_callbacks[echo] = future
         await self.websocket.send(json.dumps(message))
-        try:
-            return await asyncio.wait_for(future, timeout=timeout)
-        except asyncio.TimeoutError:
-            self.logger.error(f"调用 API 超时: {action}")
-            if echo in self.response_callbacks:
-                del self.response_callbacks[echo]
-            return {"status": "failed", "retcode": 98, "data": None, "msg": "API call timeout", "echo": echo}
+
+        async def wait_for_response():
+            try:
+                return await asyncio.wait_for(future, timeout=timeout)
+            except asyncio.TimeoutError:
+                self.logger.error(f"调用 API 超时: {action}")
+                if echo in self.response_callbacks:
+                    del self.response_callbacks[echo]
+                return {"status": "failed", "retcode": 98, "data": None, "msg": "API call timeout", "echo": echo}
+
+        return await asyncio.create_task(wait_for_response())
+
+
 
 
     def run(self):
@@ -332,8 +338,15 @@ class WebSocketBot:
         self.logger.info_msg(f"发送消息: {data}")
         return await self._call_api("send_private_forward_msg", data)
 
-
-
+    async def get_msg(self, message_id: int):
+        """
+        获取历史消息，返回事件对象
+        :param message_id:
+        :return:
+        """
+        source_msg=await self._call_api("get_msg", {"message_id": message_id})
+        event_obj = EventFactory.create_event(source_msg['data'])
+        return event_obj
     """
     撤回、禁言等群管类
     """
@@ -602,12 +615,14 @@ class WebSocketBot:
         data={"group_id":group_id}
         return await self._call_api("get_essence_msg_list", data)
 
-    async def set_essence_msg(self,message_id: int):
+    async def set_essence_msg(self,message_id: int|str):
         """
         设置精华消息
         :param message_id:
         :return:
         """
+        if isinstance(message_id,str):
+            message_id=int(message_id)
         data={"message_id":message_id}
         return await self._call_api("set_essence_msg", data)
 
@@ -731,4 +746,29 @@ class WebSocketBot:
             with open(path,"wb") as f:
                 f.write(r.content)
             return path
-
+    """
+    napcat专有接口实现
+    """
+    async def get_ai_characters(self):
+        """
+        获取ai声聊所有可用角色
+        :return:
+        """
+        data={
+            "group_id": 0,
+            "chat_type": 1,
+        }
+        return await self._call_api("get_ai_characters", data)
+    async def get_ai_record(self,group_id: int,character: str,text: str):
+        """
+        获取ai声音合成的语音
+        :param character:
+        :param text:
+        :return:
+        """
+        data={
+          "group_id": group_id,
+          "character": character,
+          "text": text,
+        }
+        return await self._call_api("get_ai_record", data)
