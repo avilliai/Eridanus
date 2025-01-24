@@ -5,47 +5,15 @@ from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
 import sys
+
+from run.scheduledTasks import operate_group_push_tasks
+
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 from plugins.resource_search_plugin.Link_parsing.Link_parsing import link_prising
 
-async def bili_subscribe(bot,event,config,target_uid: int,operation):
-    if not isinstance(event,GroupMessageEvent):
-        await bot.send(event,"订阅功能仅支持群聊")   #私聊主动群发消息容易被腾子shutdown
-        return
-    if operation=="add":
-        bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_uid}")
-        if target_uid in config.bili_dynamic:
-            groups=config.bili_dynamic[target_uid]["push_groups"]
 
-            if event.group_id in groups:
-                await bot.send(event,"你已经订阅过了")
-            else:
-                config.bili_dynamic[target_uid]["push_groups"].append(event.group_id)
-                config.save_yaml(str("bili_dynamic"))
-                await bot.send(event, "订阅成功")
-        else:
-            latest_dynamic_id1, latest_dynamic_id2 = await fetch_latest_dynamic_id(int(target_uid))
-            config.bili_dynamic[target_uid] = {"push_groups": [event.group_id], "latest_dynamic_id": [latest_dynamic_id1, latest_dynamic_id2]}
-            config.save_yaml(str("bili_dynamic"))
-            await bot.send(event, "订阅成功")
-        try:
-            p=await fetch_latest_dynamic(target_uid,config)
-            await bot.send(event,Image(file=p))
-        except:
-            bot.logger.error(f"获取动态失败 群号：{event.group_id} 关注id: {target_uid}")
-    elif operation=="remove":
-        bot.logger.info_func(f"取消动态关注 群号：{event.group_id} 关注id: {target_uid}")
-        if target_uid in config.bili_dynamic:
-            groups=config.bili_dynamic[target_uid]["push_groups"]
-            if event.group_id in groups:
-                groups.remove(event.group_id)
-                config.save_yaml(str("bili_dynamic"))
-                await bot.send(event, "取消订阅成功")
-            else:
-                await bot.send(event, "你没有订阅过")
-        else:
-            await bot.send(event, "不存在订阅任务")
+
 async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
     bilibili_type_draw = config.settings["bili_dynamic"]["draw_type"]
@@ -121,7 +89,7 @@ def main(bot,config):
                 await bot.send(event, "无效的uid")
                 return
             bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_id}")
-            await bili_subscribe(bot,event,config,int(target_id),"add")
+            await operate_group_push_tasks(bot,event,config,task_type="bilibili",operation=False,target_uid=int(target_id))
         elif event.raw_message.startswith("/bili remove "):
             target_id = event.raw_message.split("/bili remove ")[1] #注意是str
             try:
@@ -130,5 +98,5 @@ def main(bot,config):
                 await bot.send(event, "无效的uid")
                 return
             bot.logger.info_func(f"取消动态关注 群号：{event.group_id} 关注id: {target_id}")
-            await bili_subscribe(bot,event,config,int(target_id),"remove")
+            await operate_group_push_tasks(bot,event,config,task_type="bilibili",operation=False,target_uid=int(target_id))
 
