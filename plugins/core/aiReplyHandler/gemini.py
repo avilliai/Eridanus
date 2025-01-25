@@ -109,7 +109,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
         else:
             prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:
-        return {"role": "assistant","parts":prompt_elements}
+        return {"role": "model","parts":prompt_elements}
     return {"role": "user","parts": prompt_elements}
 async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,func_result=False,event=None):
     message=await gemini_prompt_elements_construct(processed_message,bot,func_result,event=event)
