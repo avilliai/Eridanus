@@ -106,6 +106,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 # Here we specify the tool_call_id that this result corresponds to
                                 "tool_call_id": part['id']
                             }, user_id)
+                        else:
+                            await add_openai_standard_prompt({
+                                "role": "tool",
+                                "content": json.dumps({"status":"succeed"}),
+                                # Here we specify the tool_call_id that this result corresponds to
+                                "tool_call_id": part['id']
+                            }, user_id)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
@@ -177,6 +184,14 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 "functionResponse": {
                                     "name": func_name,
                                     "response": r
+                                }
+                            }
+                            new_func_prompt.append(func_r)
+                        else:
+                            func_r={
+                                "functionResponse": {
+                                    "name": func_name,
+                                    "response": {"status":"succeed"}
                                 }
                             }
                             new_func_prompt.append(func_r)

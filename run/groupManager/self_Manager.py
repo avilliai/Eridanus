@@ -129,22 +129,22 @@ async def send(bot,event,config,message):
         #print(i)
         if len(i)>1:
             for j in i:
-                if "text"==j:
+                if "text" in j:
                     message_list.append(Text(i[j]))
-                elif "image"==j:
+                elif "image" in j:
                     message_list.append(Image(file=i[j]))
-                elif "audio"==j:
+                elif "audio" in j:
                     message_list.append(Record(file=i[j]))
-                elif "video"==j:
+                elif "video" in j:
                     message_list.append(File(file=i[j]))
         else:
-            if "text"==i:
+            if "text" in i:
                 message_list.append(Text(i["text"]))
-            elif "image"==i:
+            elif "image" in i:
                 message_list.append(Image(file=i["image"]))
-            elif "audio"==i:
+            elif "audio" in i:
                 message_list.append(Record(file=i["audio"]))
-            elif "video"==i:
+            elif "video" in i:
                 message_list.append(File(file=i["video"]))
     await bot.send(event,message_list)
 def main(bot,config):
