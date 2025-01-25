@@ -8,8 +8,10 @@ from collections import defaultdict
 from developTools.message.message_components import Record
 from developTools.utils.logger import get_logger
 from plugins.core.aiReplyHandler.default import defaultModelRequest
-from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt
-from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
+from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
+    add_gemini_standard_prompt,  get_current_gemini_prompt
+from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
+    get_current_openai_prompt, add_openai_standard_prompt
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.core.tts.tts import tts
@@ -57,7 +59,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await prompt_database_updata(user_id,response_message,config)
 
         elif config.api["llm"]["model"]=="openai":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
+            if processed_message:
+                prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
+            else:
+                prompt=await get_current_openai_prompt(user_id)
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -85,20 +90,32 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await prompt_database_updata(user_id,response_message,config)
             #函数调用
             if "tool_calls" in response_message:
+                func_call=False
                 for part in response_message['tool_calls']:
+                    func_call=True
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
                     try:
                         r=await call_func(bot, event, config,func_name, json.loads(args)) #真是到处都不想相互兼容。
                         if r==False:
                             await end_chat(user_id)
+                        if r:
+                            await add_openai_standard_prompt({
+                                "role": "tool",
+                                "content": json.dumps(r),
+                                # Here we specify the tool_call_id that this result corresponds to
+                                "tool_call_id": part['id']
+                            }, user_id)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
-
+                if func_call:
+                    final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
+                                                       system_instruction=system_instruction, func_result=True)
+                    return final_response
                 if generate_voice and reply_message:
                     try:
                         bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
@@ -110,8 +127,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
-            prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
-
+            if processed_message:
+                prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
+            else:
+                prompt=await get_current_gemini_prompt(user_id)
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],
@@ -144,6 +163,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await prompt_database_updata(user_id,response_message,config)
             #函数调用
             for part in response_message["parts"]:
+                new_func_prompt=[]
                 if "functionCall" in part:
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
@@ -152,13 +172,24 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         r=await call_func(bot, event, config,func_name, args)
                         if r==False:
                             await end_chat(user_id)
+                        if r:
+                            func_r={
+                                "functionResponse": {
+                                    "name": func_name,
+                                    "response": r
+                                }
+                            }
+                            new_func_prompt.append(func_r)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
-
+                if new_func_prompt!=[]:
+                    await add_gemini_standard_prompt({"role": "user","parts": new_func_prompt},user_id)# 更新prompt
+                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
+                    return final_response
             if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")

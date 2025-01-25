@@ -33,8 +33,7 @@ async def call_weather_query(bot,event,config,location=None):
     if location is None:
         location = user_info[5]
     r=await weather_query(config.api["proxy"]["http_proxy"],config.api["心知天气"]["api_key"],location)
-    r = await aiReplyCore_shadow([{"text":f"{r}"}], event.user_id, config,func_result=True)
-    await bot.send(event, str(r))
+    return  {"result": r}
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["basic_plugin"]["setu_operate_level"]:
@@ -143,7 +142,8 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
             speaker=ncspk[speaker]
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
-        await bot.send(event, Record(file=p))
+        return {"audio":p}
+        #await bot.send(event, Record(file=p))
     except:
         pass
 
@@ -161,10 +161,11 @@ async def call_all_speakers(bot,event,config):
     return nc_speakers,acgn_ai_speakers
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
-    await bot.send(event,[Text(txt),Image(file=img)])
-    r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
-    if r and config.api["llm"]["aiReplyCore"]:
-        await bot.send(event, r)
+    return {"original_text（do not change）":txt,"image":img}
+
+    #r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
+    #if r and config.api["llm"]["aiReplyCore"]:
+        #await bot.send(event, r)
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
@@ -181,7 +182,9 @@ def main(bot,config):
         if event.raw_message.startswith("查天气"):
             #await bot.send(event, "已修改")
             remark = event.raw_message.split("查天气")[1].strip()
-            await bot.set_friend_remark(event.user_id, remark)
+            r=await call_weather_query(bot,event,config,remark)
+            await bot.send(event,r.get("result"))
+            #await bot.set_friend_remark(event.user_id, remark)
     @bot.on(GroupMessageEvent)
     async def weather(event: GroupMessageEvent):
         if event.raw_message.startswith("/setu"):
@@ -206,7 +209,8 @@ def main(bot,config):
         if "说" in event.raw_message and event.raw_message.startswith("/"):
             speaker=event.raw_message.split("说")[0].replace("/","").strip()
             text=event.raw_message.split("说")[1].strip()
-            await call_tts(bot,event,config,text,speaker)
+            r=await call_tts(bot,event,config,text,speaker)
+            await bot.send(event, Record(file=r.get("audio")))
         elif event.raw_message=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             f,e=await call_all_speakers(bot,event,config)

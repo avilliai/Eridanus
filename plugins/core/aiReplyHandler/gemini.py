@@ -31,7 +31,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
             {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', "threshold": "BLOCK_None"}],
     }
     if tools is not None:
-        pay_load["tools"] = tools  #h函数调用开个头得了。之后再做。
+        pay_load["tools"] = tools
 
 
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
@@ -121,3 +121,13 @@ async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,
     full_prompt.extend(history)
     await update_user_history(user_id, history)  # 更新数据库中的历史记录
     return full_prompt, original_history
+async def get_current_gemini_prompt(user_id):
+    history = await get_user_history(user_id)
+    return history
+async def add_gemini_standard_prompt(prompt,user_id):
+    history = await get_user_history(user_id)
+    original_history = history.copy()  # 备份，出错的时候可以rollback
+    history.append(prompt)
+
+    await update_user_history(user_id, history)  # 更新数据库中的历史记录
+    return history, original_history
