@@ -81,3 +81,13 @@ async def construct_openai_standard_prompt(processed_message,system_instruction,
         full_prompt = history
     await update_user_history(user_id, full_prompt)  # 更新数据库中的历史记录
     return full_prompt, original_history
+async def get_current_openai_prompt(user_id):
+    history = await get_user_history(user_id)
+    return history
+async def add_openai_standard_prompt(prompt,user_id):
+    history = await get_user_history(user_id)
+    original_history = history.copy()  # 备份，出错的时候可以rollback
+    history.append(prompt)
+
+    await update_user_history(user_id, history)  # 更新数据库中的历史记录
+    return history, original_history
