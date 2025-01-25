@@ -241,7 +241,7 @@
             },
             {
                 "name": "call_fortune",
-                "description": "运势占卜。"
+                "description": "运势占卜，返回图片。"
             },
             {
                 "name": "call_quit_chat",
