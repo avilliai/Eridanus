@@ -1,4 +1,5 @@
 import os
+import random
 
 from asyncio import sleep
 
@@ -166,6 +167,19 @@ async def call_tarot(bot,event,config):
     r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
     if r and config.api["llm"]["aiReplyCore"]:
         await bot.send(event, r)
+async def call_fortune(bot,event,config):
+    r=random.randint(1,100)
+    if r<=10:
+        card_="data/pictures/Amamiya/谕吉.jpg"
+    elif 10<r<=30:
+        card_="data/pictures/Amamiya/大吉.jpg"
+    elif 30<r<=60:
+        card_="data/pictures/Amamiya/中吉.jpg"
+    elif 60<r<=90:
+        card_="data/pictures/Amamiya/小吉.jpg"
+    else:
+        card_="data/pictures/Amamiya/凶.jpg"
+    return {"card":card_}
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
@@ -234,6 +248,9 @@ def main(bot,config):
         elif event.raw_message=="bili塔罗" or event.raw_message=="2233塔罗":
             txt, img = tarotChoice('bilibili')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
+        elif event.raw_message=="运势":
+            r=await call_fortune(bot,event,config)
+            await bot.send(event, Image(file=r.get("card")))
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):

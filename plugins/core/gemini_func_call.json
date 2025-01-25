@@ -237,7 +237,11 @@
             },
             {
                 "name": "call_tarot",
-                "description": "触发塔罗牌功能。"
+                "description": "抽取一张塔罗牌。"
+            },
+            {
+                "name": "call_fortune",
+                "description": "运势占卜。"
             },
             {
                 "name": "call_quit_chat",
