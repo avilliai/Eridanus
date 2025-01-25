@@ -250,7 +250,7 @@ def main(bot,config):
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
         elif event.raw_message=="运势":
             r=await call_fortune(bot,event,config)
-            await bot.send(event, Image(file=r.get("card")))
+            await bot.send(event, [Text(f"{event.sender.nickname}今天的运势是："), Image(file=r.get("card"))])
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):
