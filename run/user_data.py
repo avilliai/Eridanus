@@ -100,18 +100,4 @@ def main(bot,config):
                 await call_permit(bot,event,config,target_qq,permission)
             except:
                 await bot.send(event, "请输入正确的权限值。\n指令为\n授权#{target_qq}#{level}\n如授权#1223434343#1")
-    @bot.on(GroupMessageEvent)
-    async def handle_group_message(event):
-        if config.controller["user_data"]["auto_register"]:
-            data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
-            try:
-                await add_user(
-                    data["data"]["user_id"],
-                    data["data"]["nickname"],
-                    data["data"]["card"],
-                    data["data"]["sex"],
-                    data["data"]["age"],
-                    data["data"]["area"])
-            except:
-                pass #我管你这那的....
-            #await bot.send(event, r)
+

@@ -1,6 +1,43 @@
 {
         "function_declarations": [
             {
+              "name": "send",
+              "description": "根据要求发送消息，参数从上下文中获取。",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "array",
+                    "description": "消息内容",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string",
+                          "description": "文本内容"
+                        },
+                        "image": {
+                          "type": "string",
+                          "description": "图片url或path"
+                        },
+                        "audio": {
+                          "type": "string",
+                          "description": "音频url或path"
+                        },
+                        "video": {
+                          "type": "string",
+                          "description": "视频url或path"
+                        }
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "message"
+                ]
+              }
+            },
+            {
                 "name": "operate_group_push_tasks",
                 "description": "添加或取消推送任务",
                 "parameters": {
@@ -200,7 +237,11 @@
             },
             {
                 "name": "call_tarot",
-                "description": "触发塔罗牌功能。"
+                "description": "抽取一张塔罗牌。"
+            },
+            {
+                "name": "call_fortune",
+                "description": "运势占卜，返回图片。"
             },
             {
                 "name": "call_quit_chat",

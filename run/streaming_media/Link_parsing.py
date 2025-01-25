@@ -32,8 +32,6 @@ def main(bot,config):
         import execjs
         if "Node.js" in execjs.get().name:
             bot.logger.info('系统已正确读取到node.js')
-        else:
-            bot.logger.error('系统未能正确读取到node.js')
     except:
         pass
     @bot.on(GroupMessageEvent)

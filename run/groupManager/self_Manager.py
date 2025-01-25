@@ -3,7 +3,7 @@ import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     GroupIncreaseNoticeEvent, LifecycleMetaEvent
-from developTools.message.message_components import Record, Text, Image
+from developTools.message.message_components import Record, Text, Image, File
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 from plugins.utils.GCTool import delete_old_files_async
@@ -122,19 +122,31 @@ async def report_to_master(bot,event,config):
                                      config.basic_config["master"]['id'], config,
                                      func_result=True)
         await bot.send_friend_message(config.basic_config["master"]['id'], r)
-async def send(bot,event,config,target_id,message,type):
+async def send(bot,event,config,message):
     message_list=[]
+    print(message)
     for i in message:
-        if "text" in i:
-            message_list.append(Text(i["text"]))
-        elif "image" in i:
-            message_list.append(Image(file=i["image"]))
-        elif "record" in i:
-            message_list.append(Record(file=i["record"]))
-    if type=="group":
-        await bot.send_group_message(target_id,message_list)
-    elif type=="private":
-        await bot.send_private_message(target_id,message_list)
+        #print(i)
+        if len(i)>1:
+            for j in i:
+                if "text" in j:
+                    message_list.append(Text(i[j]))
+                elif "image" in j:
+                    message_list.append(Image(file=i[j]))
+                elif "audio" in j:
+                    message_list.append(Record(file=i[j]))
+                elif "video" in j:
+                    message_list.append(File(file=i[j]))
+        else:
+            if "text" in i:
+                message_list.append(Text(i["text"]))
+            elif "image" in i:
+                message_list.append(Image(file=i["image"]))
+            elif "audio" in i:
+                message_list.append(Record(file=i["audio"]))
+            elif "video" in i:
+                message_list.append(File(file=i["video"]))
+    await bot.send(event,message_list)
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):

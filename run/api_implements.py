@@ -95,8 +95,11 @@ def main(bot,config):
         """
         if event.target_id==bot.id:
             if event.group_id:
-                data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
-                user_name = data["data"]["nickname"]
+                try:
+                    data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                    user_name = data["data"]["nickname"]
+                except:
+                    user_name = ""
                 bot_name=config.basic_config["bot"]["name"]
                 user_info=await get_user(event.user_id,user_name)
                 text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"

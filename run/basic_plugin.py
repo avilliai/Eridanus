@@ -1,4 +1,5 @@
 import os
+import random
 
 from asyncio import sleep
 
@@ -33,8 +34,7 @@ async def call_weather_query(bot,event,config,location=None):
     if location is None:
         location = user_info[5]
     r=await weather_query(config.api["proxy"]["http_proxy"],config.api["心知天气"]["api_key"],location)
-    r = await aiReplyCore_shadow([{"text":f"{r}"}], event.user_id, config,func_result=True)
-    await bot.send(event, str(r))
+    return  {"result": r}
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["basic_plugin"]["setu_operate_level"]:
@@ -143,7 +143,8 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
             speaker=ncspk[speaker]
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
-        await bot.send(event, Record(file=p))
+        return {"audio":p}
+        #await bot.send(event, Record(file=p))
     except:
         pass
 
@@ -161,10 +162,24 @@ async def call_all_speakers(bot,event,config):
     return nc_speakers,acgn_ai_speakers
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
-    await bot.send(event,[Text(txt),Image(file=img)])
+
+
     r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
     if r and config.api["llm"]["aiReplyCore"]:
         await bot.send(event, r)
+async def call_fortune(bot,event,config):
+    r=random.randint(1,100)
+    if r<=10:
+        card_="data/pictures/Amamiya/谕吉.jpg"
+    elif 10<r<=30:
+        card_="data/pictures/Amamiya/大吉.jpg"
+    elif 30<r<=60:
+        card_="data/pictures/Amamiya/中吉.jpg"
+    elif 60<r<=90:
+        card_="data/pictures/Amamiya/小吉.jpg"
+    else:
+        card_="data/pictures/Amamiya/凶.jpg"
+    return {"发送图片(路径如下)":card_}
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
@@ -181,7 +196,9 @@ def main(bot,config):
         if event.raw_message.startswith("查天气"):
             #await bot.send(event, "已修改")
             remark = event.raw_message.split("查天气")[1].strip()
-            await bot.set_friend_remark(event.user_id, remark)
+            r=await call_weather_query(bot,event,config,remark)
+            await bot.send(event,r.get("result"))
+            #await bot.set_friend_remark(event.user_id, remark)
     @bot.on(GroupMessageEvent)
     async def weather(event: GroupMessageEvent):
         if event.raw_message.startswith("/setu"):
@@ -203,10 +220,11 @@ def main(bot,config):
             image_search.pop(event.sender.user_id)
     @bot.on(GroupMessageEvent)
     async def tts(event: GroupMessageEvent):
-        if "说" in event.raw_message:
-            speaker=event.raw_message.split("说")[0].strip()
+        if "说" in event.raw_message and event.raw_message.startswith("/"):
+            speaker=event.raw_message.split("说")[0].replace("/","").strip()
             text=event.raw_message.split("说")[1].strip()
-            await call_tts(bot,event,config,text,speaker)
+            r=await call_tts(bot,event,config,text,speaker)
+            await bot.send(event, Record(file=r.get("audio")))
         elif event.raw_message=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             f,e=await call_all_speakers(bot,event,config)
@@ -214,7 +232,7 @@ def main(bot,config):
                 f='\n'.join(f)
             if e:
                 e='\n'.join(e)
-            await bot.send(event, [Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"使用 xx说xxxxx")])])
+            await bot.send(event, [Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"使用 /xx说xxxxx")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
@@ -230,6 +248,9 @@ def main(bot,config):
         elif event.raw_message=="bili塔罗" or event.raw_message=="2233塔罗":
             txt, img = tarotChoice('bilibili')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
+        elif event.raw_message=="运势":
+            r=await call_fortune(bot,event,config)
+            await bot.send(event, [Text(f"{event.sender.nickname}今天的运势是："), Image(file=r.get("发送图片(路径如下)"))])
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):
