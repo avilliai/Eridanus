@@ -179,7 +179,7 @@ async def call_fortune(bot,event,config):
         card_="data/pictures/Amamiya/小吉.jpg"
     else:
         card_="data/pictures/Amamiya/凶.jpg"
-    return {"card":card_}
+    return {"fortune_img_path":card_}
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
@@ -250,7 +250,7 @@ def main(bot,config):
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
         elif event.raw_message=="运势":
             r=await call_fortune(bot,event,config)
-            await bot.send(event, [Text(f"{event.sender.nickname}今天的运势是："), Image(file=r.get("card"))])
+            await bot.send(event, [Text(f"{event.sender.nickname}今天的运势是："), Image(file=r.get("fortune_img_path"))])
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):
