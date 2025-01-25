@@ -161,11 +161,11 @@ async def call_all_speakers(bot,event,config):
     return nc_speakers,acgn_ai_speakers
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
-    return {"original_text（do not change）":txt,"image":img}
 
-    #r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
-    #if r and config.api["llm"]["aiReplyCore"]:
-        #await bot.send(event, r)
+
+    r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
+    if r and config.api["llm"]["aiReplyCore"]:
+        await bot.send(event, r)
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
