@@ -87,8 +87,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             #在函数调用之前触发更新上下文。
-            await prompt_database_updata(user_id,response_message,config)
+
             #函数调用
+            temp_history=[]
             if "tool_calls" in response_message:
                 func_call=False
                 for part in response_message['tool_calls']:
@@ -100,25 +101,28 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         if r==False:
                             await end_chat(user_id)
                         if r:
-                            await add_openai_standard_prompt({
+                            temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps(r),
                                 # Here we specify the tool_call_id that this result corresponds to
                                 "tool_call_id": part['id']
-                            }, user_id)
+                            })
                         else:
-                            await add_openai_standard_prompt({
+                            temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps({"status":"succeed"}),
                                 # Here we specify the tool_call_id that this result corresponds to
                                 "tool_call_id": part['id']
-                            }, user_id)
+                            })
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
+                temp_history.insert(0,response_message)
+                for history_part in temp_history:
+                    await prompt_database_updata(user_id, history_part, config)
                 if func_call:
                     final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
                                                        system_instruction=system_instruction, func_result=True)
