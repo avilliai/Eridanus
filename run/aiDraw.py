@@ -50,13 +50,15 @@ async def call_text2img(bot, event, config, prompt):
             # nai3(bot, event, config, tag), 
         ]
     ]
-    
+    r=None
     for future in asyncio.as_completed(tasks):
         try:
-            await future
+            f1=await future
+            if f1:
+                r=f1
         except Exception as e:
             bot.logger.error(f"Task failed: {e}")
-
+    return {"img":r}
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id, event.sender.nickname)
@@ -117,6 +119,7 @@ async def call_text2img1(bot,event,config,tag):
             else:
                 turn -= 1
                 await bot.send(event, [Image(file=p)], True)
+            return p
     
         except Exception as e:
             bot.logger.error(e)
