@@ -13,7 +13,7 @@ from PIL import Image
 
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
-with open('config/controller.yaml', 'r', encoding='utf-8') as f:
+with open('config/settings.yaml', 'r', encoding='utf-8') as f:
     controller = yaml.load(f)
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
