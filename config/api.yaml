@@ -12,6 +12,7 @@ llm:
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
+  recursion_limit: 10 #对话模型最大递归深度，出错时自动递归。
   openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
     api_keys:   #继续像这样添加apikey
     - YOUR_API_KEY_1
