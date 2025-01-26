@@ -231,7 +231,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         else:
             return reply_message
     except Exception as e:
-        logger.error(f"Error occurred: {e}")
+        bot.logger.error(f"Error occurred: {e}")
         if recursion_times<=config.api["llm"]["original_history"]:
 
             bot.logger.warning(f"Recursion times: {recursion_times}")
