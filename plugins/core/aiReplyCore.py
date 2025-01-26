@@ -39,9 +39,10 @@ async def end_chat(user_id):
         last_trigger_time.pop(user_id)
     except:
         print("end_chat error。已不存在对应trigger")
-async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     reply_message = ""
+    original_history = []
     if not system_instruction:
         system_instruction = config.api["llm"]["system"]
         user_info=await get_user(user_id)
@@ -191,14 +192,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 }
                             }
                             new_func_prompt.append(func_r)
-                        else:
-                            func_r={
-                                "functionResponse": {
-                                    "name": func_name,
-                                    "response": {"status":"succeed"}
-                                }
-                            }
-                            new_func_prompt.append(func_r)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         raise Exception(f"Error occurred when calling function: {e}")
@@ -238,9 +231,15 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         else:
             return reply_message
     except Exception as e:
-        await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")
-        raise  # 继续抛出异常以便调用方处理
+        if recursion_times<=config.api["llm"]["original_history"]:
+
+            bot.logger.warning(f"Recursion times: {recursion_times}")
+            return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
+        else:
+            bot.logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+            await update_user_history(user_id, original_history)
+            return "Maximum recursion depth exceeded.Please try again later."
 async def prompt_database_updata(user_id,response_message,config):
     history = await get_user_history(user_id)
     if len(history) > config.api["llm"]["max_history_length"]:

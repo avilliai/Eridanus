@@ -92,7 +92,7 @@ async def call_text2img2(bot, event, config, tag):
         #await bot.send(event, "你没有权限使用该功能。")
 
 async def call_text2img1(bot,event,config,tag):
-    if config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
+    if config.settings["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
         global turn
         global sd_user_args
         tag, log = await replace_wildcards(tag)
@@ -139,7 +139,7 @@ async def call_aiArtModerate(bot,event,config,img_url):
         await bot.send(event, f"aiArtModerate调用失败。{e}")
 
 async def nai4(bot, event, config, tag):
-    if config.controller["ai绘画"]["novel_ai画图"]:
+    if config.settings["ai绘画"]["novel_ai画图"]:
         tag, log = await replace_wildcards(tag)
         if log:
             await bot.send(event, log, True)
@@ -163,7 +163,7 @@ async def nai4(bot, event, config, tag):
                     bot.logger.info(f"nai4调用失败。{e}")
     
 async def nai3(bot, event, config, tag):
-    if config.controller["ai绘画"]["novel_ai画图"]:
+    if config.settings["ai绘画"]["novel_ai画图"]:
         tag, log = await replace_wildcards(tag)
         if log:
             await bot.send(event, log, True)
@@ -208,14 +208,14 @@ def main(bot,config):
     
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
-        if str(event.raw_message).startswith("n4 ") and config.controller["ai绘画"]["novel_ai画图"]:
+        if str(event.raw_message).startswith("n4 ") and config.settings["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n4 ", "")
             await bot.send(event, '正在进行nai4画图', True)
             await nai4(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
     async def naiDraw3(event):
-        if str(event.raw_message).startswith("n3 ") and config.controller["ai绘画"]["novel_ai画图"]:
+        if str(event.raw_message).startswith("n3 ") and config.settings["ai绘画"]["novel_ai画图"]:
             tag = str(event.raw_message).replace("n3 ", "")
             await bot.send(event, '正在进行nai3画图', True)
             await nai3(bot,event,config,tag)
@@ -471,10 +471,10 @@ def main(bot,config):
     async def AiSdDraw(event):
         global turn
         global sd_user_args
-        if str(event.raw_message).startswith("画 ") and config.controller["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
+        if str(event.raw_message).startswith("画 ") and config.settings["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
             tag = str(event.raw_message).replace("画 ", "")
             await call_text2img1(bot,event,config,tag)
-        if str(event.raw_message) == "lora" and config.controller["ai绘画"]["sd画图"]:  # 获取lora列表
+        if str(event.raw_message) == "lora" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询loras中...')
             try:
                 p = await getloras(config)
@@ -484,7 +484,7 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
 
-        if str(event.raw_message) == "ckpt" and config.controller["ai绘画"]["sd画图"]:  # 获取lora列表
+        if str(event.raw_message) == "ckpt" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询checkpoints中...')
             try:
                 p = await getcheckpoints(config)
@@ -494,7 +494,7 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
 
-        if str(event.raw_message).startswith("ckpt2 ") and config.controller["ai绘画"]["sd画图"]:
+        if str(event.raw_message).startswith("ckpt2 ") and config.settings["ai绘画"]["sd画图"]:
             tag = str(event.raw_message).replace("ckpt2 ", "")
             bot.logger.info('切换ckpt中')
             if event.user_id == config.basic_config["master"]["id"]:

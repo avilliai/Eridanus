@@ -432,7 +432,7 @@ async def getloras(config):
 async def ckpt2(model, config):
     global ckpt
     ckpt = model
-    config.controller["ai绘画"]["sd默认启动模型"]=model
+    config.settings["ai绘画"]["sd默认启动模型"]=model
     config.save_yaml("controller")
 
 
