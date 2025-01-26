@@ -1,4 +1,4 @@
-from plugins.core.freeModels import free_model_result
+from plugins.core.aiReplyHandler.default_freeModels import free_model_result
 
 
 async def defaultModelRequest(ask_prompt,proxy=None):
