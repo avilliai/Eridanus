@@ -231,13 +231,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         else:
             return reply_message
     except Exception as e:
-        bot.logger.error(f"Error occurred: {e}")
-        if recursion_times<=config.api["llm"]["original_history"]:
+        logger.error(f"Error occurred: {e}")
+        if recursion_times<=config.api["llm"]["recursion_limit"]:
 
-            bot.logger.warning(f"Recursion times: {recursion_times}")
+            logger.warning(f"Recursion times: {recursion_times}")
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
         else:
-            bot.logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+            logger.warning(f"roll back to original history, recursion times: {recursion_times}")
             await update_user_history(user_id, original_history)
             return "Maximum recursion depth exceeded.Please try again later."
 async def prompt_database_updata(user_id,response_message,config):
