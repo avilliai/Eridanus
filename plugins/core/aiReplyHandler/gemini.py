@@ -102,7 +102,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
         elif "reply" in i:
             try:
                 event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-                message = await gemini_prompt_elements_construct(event_obj.processed_message)
+                message = await gemini_prompt_elements_construct(event_obj.processed_message) #
                 prompt_elements.extend(message["parts"])
             except Exception as e:
                 bot.logger.warning(f"引用消息解析失败:{e}")
