@@ -141,7 +141,6 @@ async def n4(prompt, path, groupid, config, args):
                     return False
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
-    return path
 
 
 async def n3(prompt, path, groupid, config, args):
