@@ -120,7 +120,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             })
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
-                        raise Exception(f"Error occurred when calling function: {e}")
+                        logger.error(f"Error occurred when calling function: {e}")
+                        temp_history.append({
+                            "role": "tool",
+                            "content": json.dumps({"status": "failed to call function"}),
+                            # Here we specify the tool_call_id that this result corresponds to
+                            "tool_call_id": part['id']
+                        })
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
