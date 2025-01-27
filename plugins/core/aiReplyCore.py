@@ -94,7 +94,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if "tool_calls" in response_message:
                 func_call=False
                 for part in response_message['tool_calls']:
-                    func_call=True
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
                     try:
@@ -102,6 +101,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         if r==False:
                             await end_chat(user_id)
                         if r:
+                            func_call = True
                             temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps(r),
