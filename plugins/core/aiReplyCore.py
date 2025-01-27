@@ -199,6 +199,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
                 if new_func_prompt!=[]:
+                    new_func_prompt.append({"text": " "})
                     await add_gemini_standard_prompt({"role": "user","parts": new_func_prompt},user_id)# 更新prompt
                     final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
                     return final_response
