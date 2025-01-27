@@ -91,7 +91,7 @@ def bili_main(bot,config):
                 await bot.send(event, "无效的uid")
                 return
             bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_id}")
-            await operate_group_push_tasks(bot,event,config,task_type="bilibili",operation=False,target_uid=int(target_id))
+            await operate_group_push_tasks(bot,event,config,task_type="bilibili",operation=True,target_uid=int(target_id))
         elif event.raw_message.startswith("/bili remove "):
             target_id = event.raw_message.split("/bili remove ")[1] #注意是str
             try:
