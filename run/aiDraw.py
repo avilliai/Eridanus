@@ -32,7 +32,7 @@ UserGetm = {}
 default_prompt = {}
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
-with open('config/controller.yaml', 'r', encoding='utf-8') as f:
+with open('config/settings.yaml', 'r', encoding='utf-8') as f:
     controller = yaml.load(f)
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
@@ -158,9 +158,10 @@ async def nai4(bot, event, config, tag):
                 return
             except Exception as e:
                 retries_left -= 1
-                #bot.logger.error(f"nai4报错{e}，剩余尝试次数：{retries_left}")  #别让用户看到免得问。
+                bot.logger.error(f"nai4报错{e}，剩余尝试次数：{retries_left}")
                 if retries_left == 0:
                     bot.logger.info(f"nai4调用失败。{e}")
+                    await bot.send(event, f"nai4画图失败{e}", True)
     
 async def nai3(bot, event, config, tag):
     if config.settings["ai绘画"]["novel_ai画图"]:
@@ -183,9 +184,10 @@ async def nai3(bot, event, config, tag):
                     break  # 成功获取结果后结束循环
             except Exception as e:
                 retries_left -= 1
-                #bot.logger.error(f"nai3报错{e}，剩余尝试次数：{retries_left}")
+                bot.logger.error(f"nai3报错{e}，剩余尝试次数：{retries_left}")
                 if retries_left == 0:
-                    bot.logger.error(f"nai3调用失败。{e}")  # 别让用户看到免得问。
+                    bot.logger.error(f"nai3调用失败。{e}")
+                    await bot.send(event, f"nai3画图失败{e}", True)
 
 def main(bot,config):
     ai_img_recognize = {}
@@ -311,7 +313,7 @@ def main(bot,config):
                 async def process_image(image_url):
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id in no_nsfw_groups:
+                        if event.group_id in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
                             audit_result = await pic_audit_standalone(base64_image, return_none=True,
                                                                       url=config.api["ai绘画"]["sd审核和反推api"])
                             if audit_result:
@@ -360,11 +362,17 @@ def main(bot,config):
 
         if event.get('image') == None and (
                 str(event.raw_message) == ("tag") or str(event.raw_message).startswith("tag ")):
+            if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
+                await bot.send(event, "未配置审核和反推api")
+                return
             tag_user[event.sender.user_id] = []
             await bot.send(event, "请发送要识别的图片")
 
         # 处理图片和重绘命令
         if (str(event.raw_message).startswith("tag") or event.sender.user_id in tag_user) and event.get('image'):
+            if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
+                await bot.send(event, "未配置审核和反推api")
+                return
             if (str(event.raw_message).startswith("tag")) and event.get('image'):
                 tag_user[event.sender.user_id] = []
 
@@ -381,7 +389,7 @@ def main(bot,config):
                 b64_in = await url_to_base64(img_url)
                 await bot.send(event, "tag反推中", True)
                 message, tags, tags_str = await pic_audit_standalone(b64_in, is_return_tags=True,
-                                                                     url=config.api["ai绘画"]["sd审核和反推api"])
+                                                                    url=config.api["ai绘画"]["sd审核和反推api"])
                 tags_str = tags_str.replace("_", " ")
                 await bot.send(event, Text(tags_str), True)
             except Exception as e:
@@ -743,4 +751,3 @@ def main(bot,config):
                     bot.logger.info(f"Expected a dictionary for {dict_name}, but got {type(dictionary)}.")
             
             await bot.send(event, "已清除所有输入图片和文本缓存", True)
-            

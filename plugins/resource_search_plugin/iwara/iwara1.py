@@ -78,7 +78,7 @@ async def fetch_video_info(sort,config):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    async with httpx.AsyncClient(proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         #print(f"发送初始请求到: {url}")
         response = await client.get(url)
         response.raise_for_status()  # 检查请求是否成功
@@ -189,7 +189,7 @@ async def rank_videos(sort,config):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    async with httpx.AsyncClient(proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         #print(f"发送排行请求到: {url}")
         response = await client.get(url)
         response.raise_for_status()  # 检查请求是否成功
@@ -215,7 +215,7 @@ async def download_specific_video(videoid,config):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    async with httpx.AsyncClient(proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         video_info = await download_video(client, videoid)
         if video_info:
             #print("\n最终视频下载信息:")
@@ -232,7 +232,7 @@ async def search_videos(word,config):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    async with httpx.AsyncClient(proxies=proxies) as client:
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         #print(f"发送搜索请求到: {url}")
         response = await client.get(url)
         response.raise_for_status()  # 检查请求是否成功
