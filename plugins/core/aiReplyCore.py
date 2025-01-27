@@ -219,6 +219,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
+                    prompt.append(response_message)
+                    prompt.append({"role": "function","parts": new_func_prompt})
                     await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
                     #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
                     final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
