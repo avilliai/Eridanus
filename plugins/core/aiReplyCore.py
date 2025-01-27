@@ -245,6 +245,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
 
         logger.info(f"aiReplyCore returned: {reply_message}")
+        await prompt_length_check(user_id,config)
         if reply_message is not None:
             return reply_message.strip()
         else:
@@ -266,6 +267,13 @@ async def prompt_database_updata(user_id,response_message,config):
         del history[0]
     history.append(response_message)
     await update_user_history(user_id, history)
+async def prompt_length_check(user_id,config):
+    history = await get_user_history(user_id)
+    if len(history) > config.api["llm"]["max_history_length"]:
+        while history[0]["role"]!="user":
+            del history[0]
+    await update_user_history(user_id, history)
+
 
 
 
