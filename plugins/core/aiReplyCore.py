@@ -39,7 +39,7 @@ async def end_chat(user_id):
         last_trigger_time.pop(user_id)
     except:
         print("end_chat error。已不存在对应trigger")
-async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,lock_prompt=None): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     if recursion_times > config.api["llm"]["recursion_limit"]:
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
@@ -149,6 +149,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         elif config.api["llm"]["model"]=="gemini":
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
+            elif lock_prompt:
+                prompt=lock_prompt
             else:
                 prompt=await get_current_gemini_prompt(user_id)
             response_message = await geminiRequest(
@@ -219,7 +221,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     new_func_prompt.append({"text": " "})
                     await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
                     #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
-                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
+                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
                     return final_response
             if generate_voice and reply_message is not None:
                 try:
