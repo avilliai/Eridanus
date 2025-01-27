@@ -51,7 +51,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         user_info=await get_user(user_id)
         system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
     try:
-        last_trigger_time[user_id] = time.time()
+        if recursion_times==0:
+            last_trigger_time[user_id] = time.time()
         if config.api["llm"]["model"]=="default":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
                                                                               user_id)
