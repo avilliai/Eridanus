@@ -9,7 +9,7 @@ from developTools.message.message_components import Record
 from developTools.utils.logger import get_logger
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
-    add_gemini_standard_prompt,  get_current_gemini_prompt
+    add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
     get_current_openai_prompt, add_openai_standard_prompt
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
@@ -39,8 +39,11 @@ async def end_chat(user_id):
         last_trigger_time.pop(user_id)
     except:
         print("end_chat error。已不存在对应trigger")
-async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,lock_prompt=None): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
+    if recursion_times > config.api["llm"]["recursion_limit"]:
+        logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+        return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
     if not system_instruction:
@@ -48,7 +51,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         user_info=await get_user(user_id)
         system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
     try:
-        last_trigger_time[user_id] = time.time()
+        if recursion_times==0 and processed_message:
+            last_trigger_time[user_id] = time.time()
         if config.api["llm"]["model"]=="default":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
                                                                               user_id)
@@ -87,14 +91,11 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
-            #在函数调用之前触发更新上下文。
-
             #函数调用
             temp_history=[]
             if "tool_calls" in response_message:
                 func_call=False
                 for part in response_message['tool_calls']:
-                    func_call=True
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
                     try:
@@ -102,6 +103,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         if r==False:
                             await end_chat(user_id)
                         if r:
+                            func_call = True
                             temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps(r),
@@ -117,7 +119,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             })
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
-                        raise Exception(f"Error occurred when calling function: {e}")
+                        logger.error(f"Error occurred when calling function: {e}")
+                        temp_history.append({
+                            "role": "tool",
+                            "content": json.dumps({"status": "failed to call function"}),
+                            # Here we specify the tool_call_id that this result corresponds to
+                            "tool_call_id": part['id']
+                        })
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
@@ -141,6 +149,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         elif config.api["llm"]["model"]=="gemini":
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
+            elif lock_prompt:
+                prompt=lock_prompt
             else:
                 prompt=await get_current_gemini_prompt(user_id)
             response_message = await geminiRequest(
@@ -172,7 +182,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             #在函数调用之前触发更新上下文。
-            await prompt_database_updata(user_id,response_message,config)
+            message=prompt[-1]
+            await query_and_insert_gemini(user_id,message,insert_message=response_message)
+            #await prompt_database_updata(user_id, response_message, config)
             #函数调用
             for part in response_message["parts"]:
                 new_func_prompt=[]
@@ -194,13 +206,24 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             new_func_prompt.append(func_r)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
-                        raise Exception(f"Error occurred when calling function: {e}")
+                        logger.error(f"Error occurred when calling function: {e}")
+                        func_r = {
+                            "functionResponse": {
+                                "name": func_name,
+                                "response": {"result": "failed to call function"}
+                            }
+                        }
+                        new_func_prompt.append(func_r)
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
                 if new_func_prompt!=[]:
-                    await add_gemini_standard_prompt({"role": "user","parts": new_func_prompt},user_id)# 更新prompt
-                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
+                    new_func_prompt.append({"text": " "})
+                    prompt.append(response_message)
+                    prompt.append({"role": "function","parts": new_func_prompt})
+                    await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
+                    #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
+                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
                     return final_response
             if generate_voice and reply_message is not None:
                 try:
@@ -226,6 +249,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
 
         logger.info(f"aiReplyCore returned: {reply_message}")
+        await prompt_length_check(user_id,config)
         if reply_message is not None:
             return reply_message.strip()
         else:
@@ -247,6 +271,13 @@ async def prompt_database_updata(user_id,response_message,config):
         del history[0]
     history.append(response_message)
     await update_user_history(user_id, history)
+async def prompt_length_check(user_id,config):
+    history = await get_user_history(user_id)
+    if len(history) > config.api["llm"]["max_history_length"]:
+        while history[0]["role"]!="user":
+            del history[0]
+    await update_user_history(user_id, history)
+
 
 
 

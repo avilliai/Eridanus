@@ -44,10 +44,13 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
 
 def gptVitsSpeakers():
     url = "https://infer.acgnai.top/infer/spks"
-    r=requests.post(url,json={"type":"tts","brand":"gpt-sovits","name":"anime"})
-    global GPTSOVITS_SPEAKERS
-    GPTSOVITS_SPEAKERS=r.json()["spklist"]
-    return GPTSOVITS_SPEAKERS
+    try:
+        r=requests.post(url,json={"type":"tts","brand":"gpt-sovits","name":"anime"})
+        global GPTSOVITS_SPEAKERS
+        GPTSOVITS_SPEAKERS=r.json()["spklist"]
+        return GPTSOVITS_SPEAKERS
+    except:
+        print("GPTSOVITS_SPEAKERS获取失败")
 
 try:
     if local_config["tts"]["tts_engine"] == "acgn_ai" and local_config["tts"]["acgn_ai"]["token"]!= "":

@@ -103,21 +103,21 @@ def main(bot,config):
     async def api_collect(event: GroupMessageEvent):
         async with httpx.AsyncClient() as client:
             flag = 0
-            if '今日一言' in str(event.raw_message) or '答案之书' in str(event.raw_message) or '每日一言' in str(
+            if '今日一言' == str(event.raw_message) or '答案之书' == str(event.raw_message) or '每日一言' == str(
                     event.raw_message):
                 url = 'https://api.dwo.cc/api/yi?api=yan'
                 flag = 1
                 bot.logger.info("今日一言")
-            elif 'emo时刻' in str(event.raw_message) or 'emo了' in str(event.raw_message) or '网抑云' in str(
+            elif 'emo时刻' == str(event.raw_message) or 'emo了' == str(event.raw_message) or '网抑云' == str(
                     event.raw_message):
                 url = 'https://api.dwo.cc/api/yi?api=emo'
                 flag = 1
                 bot.logger.info("emo时刻")
-            elif 'wyy评论' in str(event.raw_message) or '网易云评论' in str(event.raw_message):
+            elif 'wyy评论' == str(event.raw_message) or '网易云评论' == str(event.raw_message):
                 url = 'https://api.dwo.cc/api/yi?api=wyy'
                 flag = 1
                 bot.logger.info("网易云评论")
-            elif '舔狗日记' in str(event.raw_message):
+            elif '舔狗日记' == str(event.raw_message):
                 url = 'https://api.dwo.cc/api/dog'
                 flag = 1
                 bot.logger.info("舔狗日记")

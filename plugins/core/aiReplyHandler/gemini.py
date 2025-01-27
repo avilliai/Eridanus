@@ -102,7 +102,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
         elif "reply" in i:
             try:
                 event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-                message = await gemini_prompt_elements_construct(event_obj.processed_message)
+                message = await gemini_prompt_elements_construct(event_obj.processed_message) #
                 prompt_elements.extend(message["parts"])
             except Exception as e:
                 bot.logger.warning(f"引用消息解析失败:{e}")
@@ -117,10 +117,22 @@ async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
 
-    full_prompt = []
-    full_prompt.extend(history)
     await update_user_history(user_id, history)  # 更新数据库中的历史记录
-    return full_prompt, original_history
+    return history, original_history
+async def query_and_insert_gemini(user_id,aim_element,insert_message):
+    if insert_message=={
+        "parts": [
+            {
+                "text": ""
+            }
+        ],
+        "role": "model"
+    }:
+        return
+    history = await get_user_history(user_id)
+    index=history.index(aim_element)
+    history.insert(index+1,insert_message)
+    await update_user_history(user_id, history)
 async def get_current_gemini_prompt(user_id):
     history = await get_user_history(user_id)
     return history
