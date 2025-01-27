@@ -116,11 +116,18 @@ async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
+    history.append({"role": "model","parts":[{"text": "system:executing...."}]})
 
     full_prompt = []
     full_prompt.extend(history)
     await update_user_history(user_id, history)  # 更新数据库中的历史记录
     return full_prompt, original_history
+async def clean_gemini_history(user_id,aim_element=None):
+    if aim_element is None:
+        aim_element={"role": "model", "parts": [{"text": "system:executing...."}]}
+    history = await get_user_history(user_id)
+    new_list = [x for x in history if x != aim_element]
+    await update_user_history(user_id, new_list)
 async def get_current_gemini_prompt(user_id):
     history = await get_user_history(user_id)
     return history
