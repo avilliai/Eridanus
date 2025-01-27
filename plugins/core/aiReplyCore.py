@@ -90,8 +90,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
-            #在函数调用之前触发更新上下文。
-
             #函数调用
             temp_history=[]
             if "tool_calls" in response_message:
@@ -181,7 +179,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             #在函数调用之前触发更新上下文。
-            await prompt_database_updata(user_id,response_message,config)
+
             #函数调用
             for part in response_message["parts"]:
                 new_func_prompt=[]
@@ -216,6 +214,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
+                    await prompt_database_updata(user_id, response_message, config)
                     await add_gemini_standard_prompt({"role": "user","parts": new_func_prompt},user_id)# 更新prompt
                     final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
                     return final_response
