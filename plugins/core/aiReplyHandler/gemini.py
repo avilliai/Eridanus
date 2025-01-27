@@ -120,6 +120,15 @@ async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,
     await update_user_history(user_id, history)  # 更新数据库中的历史记录
     return history, original_history
 async def query_and_insert_gemini(user_id,aim_element,insert_message):
+    if insert_message=={
+        "parts": [
+            {
+                "text": ""
+            }
+        ],
+        "role": "model"
+    }:
+        return
     history = await get_user_history(user_id)
     index=history.index(aim_element)
     history.insert(index+1,insert_message)
