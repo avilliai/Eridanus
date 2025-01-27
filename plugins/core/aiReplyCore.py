@@ -201,7 +201,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         func_r = {
                             "functionResponse": {
                                 "name": func_name,
-                                "response": "failed to call function"
+                                "response": {"status","failed to call function"}
                             }
                         }
                         new_func_prompt.append(func_r)
