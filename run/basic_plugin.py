@@ -106,10 +106,9 @@ async def call_image_search(bot,event,config,image_url=None):
         ]
 
         for future in asyncio.as_completed(functions):
-            try:
-                await future
-            except Exception as e:
-                bot.logger.error(f"Error in image_search: {e}")
+
+            await future
+
 
     else:
         await bot.send(event, "权限不够呢.....")
