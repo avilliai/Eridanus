@@ -140,6 +140,8 @@ async def call_image_search2(bot,event,config,img_url):
     forMeslist=[]
     r,img=await automate_browser(img_path)
     bot.logger.info(f"搜索结果：{r}")
+    if not r:
+        return
     forMeslist.append(Node(content=[Text(f"图片已经过处理，但不保证百分百不被吞。")]))
     for item in r:
         sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
