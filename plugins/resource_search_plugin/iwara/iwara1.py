@@ -147,14 +147,11 @@ async def download_thumbnail(client, item):
             absolute_file_path = os.path.abspath(os.path.join(DOWNLOAD_DIR, file_name)).replace("\\", "/")
             os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
 
-            img = Image.open(BytesIO(response.content))  # 从二进制数据创建图片对象
-            image_raw = img
-            image_black_white = image_raw.convert('1')
-            image_black_white.save(absolute_file_path)
-            
-            #print(f"自定义缩略图已下载并保存为: {absolute_file_path}")
+            with open(absolute_file_path, 'wb') as f:
+                f.write(response.content)
 
             return absolute_file_path
+
         except httpx.HTTPStatusError as e:
             #print(f"自定义缩略图 URL 请求失败: {e}")
             return None
