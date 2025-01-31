@@ -114,6 +114,7 @@ async def call_image_search(bot,event,config,image_url=None):
     else:
         await bot.send(event, "权限不够呢.....")
 async def call_image_search1(bot,event,config,img_url):
+    bot.logger.info("调用聚合接口搜索图片")
     results = await fetch_results(config.api["proxy"]["http_proxy"], img_url,
                                   config.api["image_search"]["sauceno_api_key"])
     image_search.pop(event.sender.user_id)
