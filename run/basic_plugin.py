@@ -109,8 +109,7 @@ async def call_image_search(bot,event,config,image_url=None):
             try:
                 await future
             except Exception as e:
-                bot.logger.error(f"Error in image search: {e}")
-
+                bot.logger.error(f"Error in image_search: {e}")
 
     else:
         await bot.send(event, "权限不够呢.....")
@@ -143,7 +142,7 @@ async def call_image_search2(bot,event,config,img_url):
     for item in r:
         sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
         sst_img=f"data/pictures/cache/{random_str()}.png"
-        await download_img(item['image_url'], sst_img, proxy=config.api["proxy"]["http_proxy"])
+        await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
         forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
     await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n{r[0]['title']}\n{r[0]['detail_page_url']}")],True)
     await bot.send(event, forMeslist)
