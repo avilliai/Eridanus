@@ -128,7 +128,6 @@ async def fetch_results(proxies, url: str,sauceno_api:str) -> Dict[str, Optional
 
 async def automate_browser(image_path):
     async with async_playwright() as p:
-        # 启动浏览器
         browser = await p.chromium.launch(headless=True)  # 改为 False 以便观察
         context = await browser.new_context()
         page = await context.new_page()
@@ -141,12 +140,9 @@ async def automate_browser(image_path):
         file_input = page.locator('input[type="file"]')
         await file_input.set_input_files(image_path)
 
-        # 等待跳转到结果页面
         await page.wait_for_url("https://soutubot.moe/results/*", timeout=90000)
-        # 等待页面加载完成
         await page.wait_for_load_state("networkidle", timeout=90000)
 
-        # 提取目标部分的原始 HTML 源代码
         extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML")
 
         img_path = "data/pictures/cache/" + random_str() + ".png"
@@ -155,7 +151,6 @@ async def automate_browser(image_path):
             page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path)
         )
 
-        # 关闭浏览器
         try:
             await browser.close()
         except:
@@ -164,8 +159,6 @@ async def automate_browser(image_path):
 
 
 async def extract_data(html_code):
-    # 使用 asyncio.to_thread 在不同的线程中执行 BeautifulSoup 解析
-    # 避免阻塞事件循环
     soup = await asyncio.to_thread(BeautifulSoup, html_code, 'html.parser')
     cards = soup.find_all('div', class_='card-2')
     data = []
@@ -173,28 +166,24 @@ async def extract_data(html_code):
     for card in cards:
       item = {}
 
-      # Extract title
       title_span = card.find('div', class_='sm:text-xl')
       if title_span:
           item['title'] = title_span.span.text.strip()
       else:
           item['title'] = ""
 
-      # Extract similarity
       similarity_span = card.find('span', class_='bg-emerald-600')
       if similarity_span:
           item['similarity'] = similarity_span.text.strip()
       else:
           item['similarity'] = ""
 
-      # Extract image URL
       img_tag = card.find('img')
       if img_tag:
           item['image_url'] = img_tag['src']
       else:
           item['image_url'] = ""
 
-      # Extract links
       links = card.find_all('a', class_='el-button')
       if len(links) > 0:
           item['detail_page_url'] = links[0]['href']
