@@ -177,6 +177,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+
                     generate_voice=True
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
@@ -207,6 +208,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {e}")
+                    reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
                     prompt.append(response_message)
