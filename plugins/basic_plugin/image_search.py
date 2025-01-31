@@ -144,7 +144,7 @@ async def automate_browser(image_path):
 
 
         file_input = page.locator('input[type="file"]')
-        await file_input.set_input_files(image_path)
+        await file_input.set_input_files(image_path,timeout=900000)
 
         await page.wait_for_load_state("networkidle",timeout=900000)
 
@@ -155,7 +155,7 @@ async def automate_browser(image_path):
         img_path = "data/pictures/cache/" + random_str() + ".png"
         r, _ = await asyncio.gather(
             extract_data(extracted_html),
-            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path)
+            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path,timeout=900000)
         )
 
         # 关闭浏览器
