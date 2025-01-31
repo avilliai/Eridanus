@@ -259,12 +259,13 @@ def main(bot,config):
             image_search[event.sender.user_id] = []
         if ("搜图" in str(event.raw_message) or event.sender.user_id in image_search) and event.get('image'):
             try:
+                image_search.pop(event.sender.user_id)
+            except:
+                pass
+            try:
                 await call_image_search(bot,event,config)
             finally:
-                try:
-                    image_search.pop(event.sender.user_id)
-                except:
-                    pass
+                pass
     @bot.on(GroupMessageEvent)
     async def tts(event: GroupMessageEvent):
         if "说" in event.raw_message and event.raw_message.startswith("/"):
