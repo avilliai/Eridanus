@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import sleep
 from typing import Optional, Tuple, List, Dict, Any
 
 
@@ -128,25 +129,27 @@ async def fetch_results(proxies, url: str,sauceno_api:str) -> Dict[str, Optional
 async def automate_browser(image_path):
     async with async_playwright() as p:
         # 启动浏览器
+        p.context_options = {
+            "timeout": 110000  # 设置默认超时时间为 60 秒
+        }
         browser = await p.chromium.launch(headless=True)  # headless=False 以便观察操作
         context = await browser.new_context()
         page = await context.new_page()
 
         # 打开目标网页
-        await page.goto("https://soutubot.moe/")
+        await page.goto("https://soutubot.moe/",wait_until="load")
 
         # 点击目标元素
         await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=900000)
 
-        # 选择图片（假设上传文件）
+
         file_input = page.locator('input[type="file"]')
         await file_input.set_input_files(image_path)
 
-        # 等待页面刷新
         await page.wait_for_load_state("networkidle")
 
         # 提取目标部分的原始 HTML 源代码
-        extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML")
+        extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML",timeout=900000)
 
 
         img_path = "data/pictures/cache/" + random_str() + ".png"

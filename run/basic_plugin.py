@@ -107,10 +107,10 @@ async def call_image_search(bot,event,config,image_url=None):
 
         for future in asyncio.as_completed(functions):
             try:
-                result = await future
-                print(f"Task succeed: {e}")
+                await future
             except Exception as e:
-                print(f"Task failed: {e}")
+                bot.logger.error(f"Error in image search: {e}")
+
 
     else:
         await bot.send(event, "权限不够呢.....")
@@ -135,8 +135,9 @@ async def call_image_search1(bot,event,config,img_url):
             forMeslist.append(Node(content=[Text(f"{name} 返回失败或无结果")]))
     await bot.send(event, forMeslist)
 async def call_image_search2(bot,event,config,img_url):
+    bot.logger.info("调用soutu.bot搜索图片")
     img_path = "data/pictures/cache/" + random_str() + ".png"
-    await download_img(img_url, img_path, proxy=config.api["proxy"]["http_proxy"])
+    await download_img(img_url, img_path)
     forMeslist=[]
     r,img=await automate_browser(img_path)
     for item in r:
@@ -144,7 +145,7 @@ async def call_image_search2(bot,event,config,img_url):
         sst_img=f"data/pictures/cache/{random_str()}.png"
         await download_img(item['image_url'], sst_img, proxy=config.api["proxy"]["http_proxy"])
         forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
-    await bot.send(event,Image(file=img),True)
+    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n{r[0]['title']}\n{r[0]['detail_page_url']}")],True)
     await bot.send(event, forMeslist)
 
 
