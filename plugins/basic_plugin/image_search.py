@@ -155,7 +155,7 @@ async def automate_browser(image_path):
         img_path = "data/pictures/cache/" + random_str() + ".png"
         r, _ = await asyncio.gather(
             extract_data(extracted_html),
-            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path,timeout=900000)
+            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path,timeout=90000)
         )
 
         # 关闭浏览器
@@ -166,6 +166,7 @@ async def automate_browser(image_path):
         return r,img_path
 
 async def extract_data(html_code):
+    print(html_code)
     # 使用 asyncio.to_thread 在不同的线程中执行 BeautifulSoup 解析
     # 避免阻塞事件循环
     soup = await asyncio.to_thread(BeautifulSoup, html_code, 'html.parser')

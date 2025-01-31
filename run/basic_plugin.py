@@ -140,9 +140,11 @@ async def call_image_search2(bot,event,config,img_url):
     img_path = "data/pictures/cache/" + random_str() + ".png"
     await download_img(img_url, img_path)
     forMeslist=[]
-
-    r,img=await automate_browser(img_path)
-
+    try:
+        r,img=await automate_browser(img_path)
+    except Exception as e:
+        bot.logger.error(f"Error in automate_browser: {e}")
+        return
     bot.logger.info(f"搜索结果：{r}")
     if not r:
         return
