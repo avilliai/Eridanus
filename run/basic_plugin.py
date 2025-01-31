@@ -91,6 +91,7 @@ async def call_setu(bot,event,config,tags,num=3):
 async def call_image_search(bot,event,config,image_url=None):
     user_info = await get_user(event.user_id, event.sender.nickname)
     bot.logger.info("接收来自 用户：" + str(event.sender.user_id) + " 的搜图指令")
+    await bot.send(event, "正在搜索图片，请等待结果返回.....")
     if user_info[6] >= config.controller["basic_plugin"]["search_image_resource_operate_level"]:
         image_search[event.sender.user_id] = []
         if not image_url:
