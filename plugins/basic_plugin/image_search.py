@@ -5,6 +5,10 @@ from typing import Optional, Tuple, List, Dict, Any
 from PicImageSearch import Network
 
 from developTools.utils.logger import get_logger
+from bs4 import BeautifulSoup
+from playwright.async_api import async_playwright
+
+from plugins.utils.random_str import random_str
 
 # proxies =
 #proxies = "http://127.0.0.1:10809"
@@ -117,4 +121,86 @@ async def fetch_results(proxies, url: str,sauceno_api:str) -> Dict[str, Optional
 
     # 转换为字典形式，方便查看各任务结果
     return {name: result for name, result in results}
+"""
+来源：soutu.bot
+"""
 
+async def automate_browser(image_path):
+    async with async_playwright() as p:
+        # 启动浏览器
+        browser = await p.chromium.launch(headless=True)  # headless=False 以便观察操作
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        # 打开目标网页
+        await page.goto("https://soutubot.moe/")
+
+        # 点击目标元素
+        await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click()
+
+        # 选择图片（假设上传文件）
+        file_input = page.locator('input[type="file"]')
+        await file_input.set_input_files(image_path)
+
+        # 等待页面刷新
+        await page.wait_for_load_state("networkidle")
+
+        # 提取目标部分的原始 HTML 源代码
+        extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML")
+
+
+        img_path = "data/pictures/cache/" + random_str() + ".png"
+        r, _ = await asyncio.gather(
+            extract_data(extracted_html),
+            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path)
+        )
+
+        # 关闭浏览器
+        await browser.close()
+        return r,img_path
+
+async def extract_data(html_code):
+    # 使用 asyncio.to_thread 在不同的线程中执行 BeautifulSoup 解析
+    # 避免阻塞事件循环
+    soup = await asyncio.to_thread(BeautifulSoup, html_code, 'html.parser')
+    cards = soup.find_all('div', class_='card-2')
+    data = []
+
+    for card in cards:
+      item = {}
+
+      # Extract title
+      title_span = card.find('div', class_='sm:text-xl')
+      if title_span:
+          item['title'] = title_span.span.text.strip()
+      else:
+          item['title'] = ""
+
+      # Extract similarity
+      similarity_span = card.find('span', class_='bg-emerald-600')
+      if similarity_span:
+          item['similarity'] = similarity_span.text.strip()
+      else:
+          item['similarity'] = ""
+
+      # Extract image URL
+      img_tag = card.find('img')
+      if img_tag:
+          item['image_url'] = img_tag['src']
+      else:
+          item['image_url'] = ""
+
+      # Extract links
+      links = card.find_all('a', class_='el-button')
+      if len(links) > 0:
+          item['detail_page_url'] = links[0]['href']
+      else:
+          item['detail_page_url'] = ""
+      if len(links) > 1:
+          item['image_page_url'] = links[1]['href']
+      else:
+          item['image_page_url'] = ""
+
+      data.append(item)
+
+    return data
