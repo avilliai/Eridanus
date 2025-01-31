@@ -129,34 +129,30 @@ async def fetch_results(proxies, url: str,sauceno_api:str) -> Dict[str, Optional
 async def automate_browser(image_path):
     async with async_playwright() as p:
         # 启动浏览器
-        p.context_options = {
-            "timeout": 110000  # 设置默认超时时间为 60 秒
-        }
-        browser = await p.chromium.launch(headless=True)  # headless=False 以便观察操作
+        browser = await p.chromium.launch(headless=True)  # 改为 False 以便观察
         context = await browser.new_context()
         page = await context.new_page()
 
-        # 打开目标网页
         await page.goto("https://soutubot.moe/")
-        await sleep(5)
 
-        # 点击目标元素
-        await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=900000)
 
+        await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=90000)
 
         file_input = page.locator('input[type="file"]')
-        await file_input.set_input_files(image_path,timeout=900000)
-        await sleep(10)
-        await page.wait_for_load_state("networkidle",timeout=900000)
+        await file_input.set_input_files(image_path)
+
+        # 等待跳转到结果页面
+        await page.wait_for_url("https://soutubot.moe/results/*", timeout=90000)
+        # 等待页面加载完成
+        await page.wait_for_load_state("networkidle", timeout=90000)
 
         # 提取目标部分的原始 HTML 源代码
-        extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML",timeout=900000)
-
+        extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML")
 
         img_path = "data/pictures/cache/" + random_str() + ".png"
         r, _ = await asyncio.gather(
             extract_data(extracted_html),
-            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path,timeout=90000)
+            page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').screenshot(path=img_path)
         )
 
         # 关闭浏览器
@@ -164,7 +160,8 @@ async def automate_browser(image_path):
             await browser.close()
         except:
             pass
-        return r,img_path
+        return r, img_path
+
 
 async def extract_data(html_code):
     # 使用 asyncio.to_thread 在不同的线程中执行 BeautifulSoup 解析
