@@ -55,20 +55,26 @@ async def check_bili_dynamic(bot,config):
 def main(bot,config):
     threading.Thread(target=bili_main(bot,config), daemon=True).start()
 def bili_main(bot,config):
-
+    global bili_activate
+    bili_activate=False
     @bot.on(LifecycleMetaEvent)
     async def _(event):
-        loop = asyncio.get_running_loop()
-        while True:
-            try:
-                with ThreadPoolExecutor() as executor:
-                    pass
-                    await loop.run_in_executor(executor, asyncio.run,check_bili_dynamic(bot,config))
-                #await check_bili_dynamic(bot,config)
-            except Exception as e:
-                bot.logger.error(e)
+        global bili_activate
+        if not bili_activate:
+            bili_activate=True
+            loop = asyncio.get_running_loop()
+            while True:
+                try:
+                    with ThreadPoolExecutor() as executor:
+                        pass
+                        await loop.run_in_executor(executor, asyncio.run,check_bili_dynamic(bot,config))
+                    #await check_bili_dynamic(bot,config)
+                except Exception as e:
+                    bot.logger.error(e)
 
-            await asyncio.sleep(1700)  #哈哈
+                await asyncio.sleep(1700)  #哈哈
+        else:
+            bot.logger.info("B站动态更新检查已启动")
 
     @bot.on(GroupMessageEvent)
     async def _(event):
