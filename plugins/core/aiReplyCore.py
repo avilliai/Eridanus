@@ -192,7 +192,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
                     try:
-                         #只能在这里导入，否则会循环导入，解释器会不给跑。
+
                         r=await call_func(bot, event, config,func_name, args)
                         if r==False:
                             await end_chat(user_id)
@@ -207,16 +207,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {e}")
-                        func_r = {
-                            "functionResponse": {
-                                "name": func_name,
-                                "response": {"result": "failed to call function"}
-                            }
-                        }
-                        new_func_prompt.append(func_r)
-
-                    #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
-                    reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
                     prompt.append(response_message)
