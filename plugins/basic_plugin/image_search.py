@@ -137,7 +137,8 @@ async def automate_browser(image_path):
         page = await context.new_page()
 
         # 打开目标网页
-        await page.goto("https://soutubot.moe/",wait_until="load")
+        await page.goto("https://soutubot.moe/")
+        await sleep(5)
 
         # 点击目标元素
         await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=900000)
@@ -145,7 +146,7 @@ async def automate_browser(image_path):
 
         file_input = page.locator('input[type="file"]')
         await file_input.set_input_files(image_path,timeout=900000)
-
+        await sleep(10)
         await page.wait_for_load_state("networkidle",timeout=900000)
 
         # 提取目标部分的原始 HTML 源代码
@@ -166,7 +167,6 @@ async def automate_browser(image_path):
         return r,img_path
 
 async def extract_data(html_code):
-    print(html_code)
     # 使用 asyncio.to_thread 在不同的线程中执行 BeautifulSoup 解析
     # 避免阻塞事件循环
     soup = await asyncio.to_thread(BeautifulSoup, html_code, 'html.parser')
