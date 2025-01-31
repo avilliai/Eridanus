@@ -96,7 +96,6 @@ async def call_image_search(bot,event,config,image_url=None):
         return
     await bot.send(event, "正在搜索图片，请等待结果返回.....")
     if user_info[6] >= config.controller["basic_plugin"]["search_image_resource_operate_level"]:
-        image_search[event.sender.user_id] = []
         if not image_url:
             img_url = event.get("image")[0]["url"]
         else:
@@ -272,7 +271,10 @@ def main(bot,config):
             try:
                 await call_image_search(bot,event,config)
             finally:
-                pass
+                try:
+                    image_search.pop(event.sender.user_id)
+                except:
+                    pass
     @bot.on(GroupMessageEvent)
     async def tts(event: GroupMessageEvent):
         if "说" in event.raw_message and event.raw_message.startswith("/"):
