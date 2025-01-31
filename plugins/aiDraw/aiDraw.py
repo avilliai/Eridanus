@@ -71,7 +71,7 @@ async def n4(prompt, path, groupid, config, args):
             "width": width,
             "height": height,
             "scale": 6,
-            "sampler": "k_dpmpp_2m",
+            "sampler": "k_euler_ancestral",
             "steps": 23,
             "n_samples": 1,
             "ucPreset": 0,
@@ -81,7 +81,7 @@ async def n4(prompt, path, groupid, config, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "exponential",
+            "noise_schedule": "karras",
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "use_coords": False,
@@ -111,7 +111,24 @@ async def n4(prompt, path, groupid, config, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "content-type": "application/json",
+        "dnt": "1",
+        "origin": "https://novelai.net",
+        "priority": "u=1, i",
+        "referer": "https://novelai.net/",
+        "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132", "Microsoft Edge";v="132"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0",
+        "x-correlation-id": "89SHW4",
+        "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
@@ -181,7 +198,7 @@ async def n3(prompt, path, groupid, config, args):
             "width": width,
             "height": height,
             "scale": 5,
-            "sampler": "k_dpmpp_2m",
+            "sampler": "k_euler_ancestral",
             "steps": 23,
             "n_samples": 1,
             "ucPreset": 0,
@@ -193,7 +210,7 @@ async def n3(prompt, path, groupid, config, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "exponential",
+            "noise_schedule": "karras",
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "seed": random.randint(0, 2 ** 32 - 1),
@@ -206,7 +223,24 @@ async def n3(prompt, path, groupid, config, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "content-type": "application/json",
+        "dnt": "1",
+        "origin": "https://novelai.net",
+        "priority": "u=1, i",
+        "referer": "https://novelai.net/",
+        "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132", "Microsoft Edge";v="132"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0",
+        "x-correlation-id": "89SHW4",
+        "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
@@ -489,7 +523,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             "width": width,
             "height": height,
             "scale": 6,
-            "sampler": "k_dpmpp_2m",
+            "sampler": "k_euler_ancestral",
             "steps": 23,
             "n_samples": 1,
             "strength": denoising_strength,
@@ -501,7 +535,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "exponential",
+            "noise_schedule": "karras",
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "use_coords": False,
@@ -533,7 +567,24 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "content-type": "application/json",
+        "dnt": "1",
+        "origin": "https://novelai.net",
+        "priority": "u=1, i",
+        "referer": "https://novelai.net/",
+        "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132", "Microsoft Edge";v="132"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0",
+        "x-correlation-id": "89SHW4",
+        "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
@@ -604,7 +655,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             "width": width,
             "height": height,
             "scale": 6,
-            "sampler": "k_dpmpp_2m",
+            "sampler": "k_euler_ancestral",
             "steps": 23,
             "n_samples": 1,
             "strength":denoising_strength,
@@ -616,7 +667,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "exponential",
+            "noise_schedule": "karras",
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "use_coords": False,
@@ -634,7 +685,24 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
+        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+        "content-type": "application/json",
+        "dnt": "1",
+        "origin": "https://novelai.net",
+        "priority": "u=1, i",
+        "referer": "https://novelai.net/",
+        "sec-ch-ua": '"Not A(Brand";v="8", "Chromium";v="132", "Microsoft Edge";v="132"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 Edg/132.0.0.0",
+        "x-correlation-id": "89SHW4",
+        "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if config.api["proxy"]["http_proxy"] is not None:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
