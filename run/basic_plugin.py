@@ -116,7 +116,6 @@ async def call_image_search1(bot,event,config,img_url):
     bot.logger.info("调用聚合接口搜索图片")
     results = await fetch_results(config.api["proxy"]["http_proxy"], img_url,
                                   config.api["image_search"]["sauceno_api_key"])
-    image_search.pop(event.sender.user_id)
     forMeslist = []
     for name, result in results.items():
         if result and result[0] != "":
