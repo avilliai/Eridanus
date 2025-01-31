@@ -159,7 +159,10 @@ async def automate_browser(image_path):
         )
 
         # 关闭浏览器
-        await browser.close()
+        try:
+            await browser.close()
+        except:
+            pass
         return r,img_path
 
 async def extract_data(html_code):
