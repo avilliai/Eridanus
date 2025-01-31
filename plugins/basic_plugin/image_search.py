@@ -136,7 +136,7 @@ async def automate_browser(image_path):
         await page.goto("https://soutubot.moe/")
 
         # 点击目标元素
-        await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click()
+        await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=900000)
 
         # 选择图片（假设上传文件）
         file_input = page.locator('input[type="file"]')
