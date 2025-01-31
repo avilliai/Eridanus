@@ -146,7 +146,7 @@ async def automate_browser(image_path):
         file_input = page.locator('input[type="file"]')
         await file_input.set_input_files(image_path)
 
-        await page.wait_for_load_state("networkidle")
+        await page.wait_for_load_state("networkidle",timeout=900000)
 
         # 提取目标部分的原始 HTML 源代码
         extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML",timeout=900000)
