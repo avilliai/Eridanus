@@ -1,5 +1,6 @@
 import os
 import random
+import re
 
 from asyncio import sleep
 
@@ -211,9 +212,20 @@ async def call_all_speakers(bot,event,config):
     return nc_speakers,acgn_ai_speakers
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
-    await bot.send(event,[Text(text),Image(file=img)])
+    await bot.send(event,[Text(txt),Image(file=img)])
     if config.api["llm"]["aiReplyCore"]:
         r=await aiReplyCore_shadow([{"text":f"system:阐释这张塔罗牌：{txt}"}], event.user_id, config,func_result=True)
+        if r is not None:
+            pattern_think = r"<think>\n(.*?)\n</think>"
+            match_think = re.search(pattern_think, r, re.DOTALL)
+
+            if match_think:
+                think_text = match_think.group(1)
+                await bot.send(event, [Node(content=[Text(think_text)])])
+                pattern_rest = r"</think>\n\n(.*?)$"
+                match_rest = re.search(pattern_rest, r, re.DOTALL)
+                if match_rest:
+                    r = match_rest.group(1)
         await bot.send(event, r)
 async def call_fortune(bot,event,config):
     r=random.randint(1,100)

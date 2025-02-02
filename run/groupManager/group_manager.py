@@ -1,4 +1,7 @@
+import re
+
 from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
+from developTools.message.message_components import Node, Text
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 
 
@@ -31,6 +34,17 @@ def main(bot,config):
                     name = "有新人"
                 r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,
                                              func_result=True)
+                if r is not None:
+                    pattern_think = r"<think>\n(.*?)\n</think>"
+                    match_think = re.search(pattern_think, r, re.DOTALL)
+
+                    if match_think:
+                        think_text = match_think.group(1)
+                        await bot.send(event, [Node(content=[Text(think_text)])])
+                        pattern_rest = r"</think>\n\n(.*?)$"
+                        match_rest = re.search(pattern_rest, r, re.DOTALL)
+                        if match_rest:
+                            r = match_rest.group(1)
                 await bot.send(event, str(r))
             else:
                 await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")
