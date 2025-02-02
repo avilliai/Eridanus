@@ -1,6 +1,10 @@
 {
         "function_declarations": [
             {
+                "name": "send_contract",
+                "description": "发送管理员的联系方式"
+            },
+            {
               "name": "send",
               "description": "根据要求发送消息，参数从上下文中获取。",
               "parameters": {
@@ -221,7 +225,7 @@
             },
             {
                 "name": "call_image_search",
-                "description": "只有当用户要求搜索图片来源时才可触发，搜索图片的来源。",
+                "description": "按照用户要求搜索给定图片的来源，当且仅当用户要求搜索时才可触发。",
                 "parameters": {
                     "type": "object",
                     "properties": {

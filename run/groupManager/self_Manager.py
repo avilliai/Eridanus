@@ -3,7 +3,7 @@ import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     GroupIncreaseNoticeEvent, LifecycleMetaEvent
-from developTools.message.message_components import Record, Text, Image, File
+from developTools.message.message_components import Record, Text, Image, File, Contact_user
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 from plugins.utils.GCTool import delete_old_files_async
@@ -147,6 +147,10 @@ async def send(bot,event,config,message):
             elif "video" in i:
                 message_list.append(File(file=i["video"]))
     await bot.send(event,message_list)
+async def send_contract(bot,event,config,target_id=None):
+    if target_id is None:
+        target_id=str(config.basic_config["master"]['id'])
+    await bot.send(event,Contact_user(user_id=target_id))
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
