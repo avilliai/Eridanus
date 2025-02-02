@@ -160,7 +160,7 @@ async def call_image_search2(bot,event,config,img_url):
         sst_img=f"data/pictures/cache/{random_str()}.png"
         await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
         forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
-    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}")],True)
+    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}\n\n")],True)
     await bot.send(event, forMeslist)
 
 
