@@ -133,7 +133,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 "tool_call_id": part['id']
                             })
                     except Exception as e:
-                        func_call = True
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {e}")
                         temp_history.append({
