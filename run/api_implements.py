@@ -107,6 +107,17 @@ def main(bot,config):
                 #print(text)
                 if config.api["llm"]["aiReplyCore"]:
                     r = await aiReplyCore([{"text": text}], event.user_id, config)
+                    if r is not None:
+                        pattern_think = r"<think>\n(.*?)\n</think>"
+                        match_think = re.search(pattern_think, r, re.DOTALL)
+    
+                        if match_think:
+                            think_text = match_think.group(1)
+                            await bot.send(event, [Node(content=[Text(think_text)])])
+                            pattern_rest = r"</think>\n\n(.*?)$"
+                            match_rest = re.search(pattern_rest, r, re.DOTALL)
+                            if match_rest:
+                                r = match_rest.group(1)
                 else:
                     reply_list=config.settings['api_implements']['nudge']['replylist']
                     r=random.choice(reply_list)
@@ -120,6 +131,17 @@ def main(bot,config):
                 bot.logger.info(text)
                 if config.api["llm"]["aiReplyCore"]:
                     r = await aiReplyCore([{"text": text}], event.user_id, config)
+                    if r is not None:
+                        pattern_think = r"<think>\n(.*?)\n</think>"
+                        match_think = re.search(pattern_think, r, re.DOTALL)
+    
+                        if match_think:
+                            think_text = match_think.group(1)
+                            await bot.send(event, [Node(content=[Text(think_text)])])
+                            pattern_rest = r"</think>\n\n(.*?)$"
+                            match_rest = re.search(pattern_rest, r, re.DOTALL)
+                            if match_rest:
+                                r = match_rest.group(1)
                 else:
                     reply_list = config.settings['api_implements']['nudge']['replylist']
                     r = random.choice(reply_list)
