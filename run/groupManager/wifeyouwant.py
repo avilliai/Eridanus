@@ -14,12 +14,14 @@ from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
 from plugins.game_plugin.galgame import get_game_image
 from plugins.game_plugin.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker,\
-    run_async_task,daily_task
+    run_async_task,daily_task,today_check_api
 from datetime import datetime
 from asyncio import sleep
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
+
+
 
 def main(bot,config):
     global filepath
@@ -32,17 +34,18 @@ def main(bot,config):
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=0))
     scheduler.start()
+    today_wife_api,header = config.api["today_wife"]["api"],config.api["today_wife"]["header"]
     bot.logger.info(f"今日老婆功能成功加载！")
 
     @bot.on(GroupMessageEvent)
     async def today_wife(event: GroupMessageEvent):
         async with httpx.AsyncClient() as client:
+            global num_check, today_api
             if not event.raw_message.startswith("今"):
                 return
             if ('今日' in str(event.raw_message) or '今天' in str(event.raw_message) or '今日' in str(
                     event.raw_message)) and '老婆' in str(event.raw_message):
                 bot.logger.info("今日老婆开启！")
-                today_api = config.api["today_wife"]["api"]
                 if '张' in str(event.raw_message) or '个' in str(event.raw_message) or '位' in str(
                         event.raw_message):
                     cmList = []
@@ -54,8 +57,7 @@ def main(bot,config):
                             await bot.send(event, '数量过多，渣男！！！！')
                             return
                     for i in range(number):
-                        headers = {'Referer': 'https://weibo.com/'}
-                        response = requests.get(today_api, headers=headers)
+                        response = today_check_api(today_wife_api,header)
                         with open(f'{filepath}/today_wife_{i}.jpg', 'wb') as file:
                             file.write(response.content)
                         bot.logger.info(f"api获取到第{i+1}个老婆！")
@@ -63,8 +65,7 @@ def main(bot,config):
                     await bot.send(event, cmList)
                     pass
                 else:
-                    headers = {'Referer': 'https://weibo.com/'}
-                    response = requests.get(today_api, headers=headers)
+                    response = today_check_api(today_wife_api,header)
                     #bot.logger.info("今日老婆开启！")
                     with open(f'{filepath}/today_wife.jpg', 'wb') as file:
                         file.write(response.content)
@@ -143,11 +144,14 @@ def main(bot,config):
         global membercheck
 
         membercheck_id = int(event.sender.user_id)
-        if str(event.raw_message).startswith('🦌') or str(event.raw_message) in {'戒🦌'}:
+        if str(event.raw_message).startswith('🦌') or str(event.raw_message) in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
             if membercheck_id in membercheck:
-                await bot.send(event,'技能冷却ing')
-                bot.logger.info('检测到有人过于勤奋的🦌，跳过')
-                return
+                if str(event.raw_message) in {'补🦌'}:
+                    membercheck.pop(membercheck_id)
+                else:
+                    await bot.send(event,'技能冷却ing')
+                    bot.logger.info('检测到有人过于勤奋的🦌，跳过')
+                    return
             else:
                 membercheck[membercheck_id] = 1
         else:return
@@ -224,7 +228,8 @@ def main(bot,config):
             current_month = current_date.month
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
-            membercheck.pop(membercheck_id)
+            if membercheck_id in membercheck:
+                membercheck.pop(membercheck_id)
             try:
                 times_record = int(await manage_group_status('lu_record', f'lu_others', target_id))
                 times_record_check=times_record//3

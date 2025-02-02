@@ -35,7 +35,7 @@ async def check_bili_dynamic(bot,config):
                     if bilibili_type_draw == 1:
                         dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
                     elif bilibili_type_draw == 2:
-                        dynamic, url_check = await link_prising(f'https://t.bilibili.com/{latest_dynamic_id}', filepath='data/pictures/cache/')
+                        dynamic= (await link_prising(f'https://t.bilibili.com/{latest_dynamic_id}', filepath='data/pictures/cache/'))['pic_path']
                 except Exception as e:
                     bot.logger.error(f"动态获取失败 ：{e} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
                     continue

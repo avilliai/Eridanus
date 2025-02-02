@@ -1,6 +1,7 @@
 import aiosqlite
 import asyncio
 import threading
+import requests
 
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
@@ -354,6 +355,17 @@ async def daily_task():
 # 包装一个同步任务来调用异步任务
 def run_async_task():
     asyncio.run(daily_task())
+
+def today_check_api(today_wife_api,header,num_check=None):
+    if num_check is None:
+        num_check=0
+    headers = {'Referer': header}
+    try:
+        response=requests.get(today_wife_api[num_check], headers=headers)
+        return response
+    except:
+        return today_check_api(today_wife_api,header,                                                                                                                                                                                                                                num_check=num_check+1)
+
 
 if __name__ == '__main__':
     target_id=1270858640

@@ -206,12 +206,14 @@ def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=No
 
 
 def handle_context(contents,font,content_width,total_height,padding,type_check,introduce,font_tx,header_height,
-                   type_software=None,height_software=None):
+                   type_software=None,height_software=None,avatar_path=None):
 
     if type_software is not None:
         total_height +=height_software
-
-    total_height+=header_height + padding +50
+    if avatar_path is not None:
+        total_height+=header_height + padding +50
+    else:
+        total_height+= padding +50
     # 处理内容
     processed_contents = []
     image_row = []  # 存储连续图片的队列
@@ -357,7 +359,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
         if Time is not None:
             draw.text((name_x, current_y+20 + (avatar_size - font_size) // 2), Time, fill=(148,148,148), font=font_tx)
 
-    current_y += header_height
+        current_y += header_height
     img_check=False
     # 绘制内容
     for content in processed_contents:
@@ -508,7 +510,8 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     if output_path_name is not None:
         output_path=f'{filepath}{output_path_name}.png'
     if avatar_path is None:
-        avatar_path = f"{filepath}touxiang.png"
+        pass
+        #avatar_path = f"{filepath}touxiang.png"
     if orig_avatar_path is None:
         orig_avatar_path = f"{filepath}orig_touxiang.png"
 
@@ -540,7 +543,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     # 文本自动换行
     (processed_contents,introduce_content,introduce_height,total_height) = handle_context(contents,font, content_width,
                                 total_height, padding, type_check, introduce, font_tx_introduce,header_height,
-                                type_software,height_software)
+                                type_software,height_software,avatar_path=avatar_path)
     #print(processed_contents,introduce_content,introduce_height,total_height)
     if type == 14:
         type_check = True
@@ -548,7 +551,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
          orig_introduce_height, total_height) = handle_context(contents_dy,font, content_width- padding_x,
                                                 total_height, padding,
                                                 type_check, introduce,font_tx_introduce,header_height,
-                                                orig_type_software,height_software)
+                                                orig_type_software,height_software,avatar_path=avatar_path)
 
         #print(orig_processed_contents, orig_introduce_content,orig_introduce_height, total_height)
 
