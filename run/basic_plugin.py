@@ -211,10 +211,9 @@ async def call_all_speakers(bot,event,config):
     return nc_speakers,acgn_ai_speakers
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
-
-
-    r=await aiReplyCore_shadow([{"text":txt}], event.user_id, config,func_result=True)
-    if r and config.api["llm"]["aiReplyCore"]:
+    await bot.send(event,[Text(text),Image(file=img)])
+    if config.api["llm"]["aiReplyCore"]:
+        r=await aiReplyCore_shadow([{"text":f"system:阐释这张塔罗牌：{txt}"}], event.user_id, config,func_result=True)
         await bot.send(event, r)
 async def call_fortune(bot,event,config):
     r=random.randint(1,100)
@@ -228,7 +227,7 @@ async def call_fortune(bot,event,config):
         card_="data/pictures/Amamiya/小吉.jpg"
     else:
         card_="data/pictures/Amamiya/凶.jpg"
-    return {"发送图片(路径如下)":card_}
+    await bot.send(event, [Text(f"{event.sender.nickname}今天的运势是："), Image(file=card_)])
 async def call_pick_music(bot,event,config,aim):
     try:
         r=await cccdddm(aim)
@@ -306,8 +305,8 @@ def main(bot,config):
             txt, img = tarotChoice('bilibili')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
         elif event.raw_message=="运势":
-            r=await call_fortune(bot,event,config)
-            await bot.send(event, [Text(f"{event.sender.nickname}今天的运势是："), Image(file=r.get("发送图片(路径如下)"))])
+            await call_fortune(bot,event,config)
+            
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
         if event.raw_message.startswith("点歌 "):
