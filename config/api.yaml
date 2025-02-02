@@ -18,6 +18,8 @@ llm:
     - YOUR_API_KEY_1
     model: gpt-4o-mini
     quest_url: https://api.openai.com/v1/chat/completions   #完整调用地址。只填base_url不行
+    temperature: 0.9
+    max_tokens: 2048
   gemini:         #https://ai.google.dev/
     api_keys:  #继续像这样添加apikey
       - YOUR_API_KEY_1

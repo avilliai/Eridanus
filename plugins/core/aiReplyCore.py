@@ -77,6 +77,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 False,
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
+                temperature=config.api["llm"]["openai"]["temperature"],
+                max_tokens=config.api["llm"]["openai"]["max_tokens"]
             )
             reply_message=response_message["content"]
             if reply_message is not None:
