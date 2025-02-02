@@ -304,4 +304,7 @@ __all__ = [
     "Forward",
     "Node",
     "Xml",
+    "Json",
+    "Contact_user",
+    "Contact_group",
 ]
