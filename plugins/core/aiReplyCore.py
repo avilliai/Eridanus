@@ -1,11 +1,12 @@
 
 import json
 import random
+import re
 import time
 from collections import defaultdict
 
 
-from developTools.message.message_components import Record
+from developTools.message.message_components import Record, Text, Node
 from developTools.utils.logger import get_logger
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
@@ -78,6 +79,18 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 tools=tools,
             )
             reply_message=response_message["content"]
+            if reply_message is not None:
+                pattern_think = r"<think>\n(.*?)\n</think>"
+                match_think = re.search(pattern_think, reply_message, re.DOTALL)
+
+                if match_think:
+                    think_text = match_think.group(1)
+                    await bot.send(event,[Node(content=[Text(think_text)])])
+                    pattern_rest = r"</think>\n\n(.*?)$"
+                    match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
+                    if match_rest:
+                        reply_message = match_rest.group(1)
+
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
