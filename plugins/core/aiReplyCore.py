@@ -93,7 +93,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             #函数调用
             temp_history=[]
-            if "tool_calls" in response_message:
+            if "tool_calls" in response_message and config.api["llm"]["func_calling"]:
                 func_call=False
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
@@ -170,7 +170,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             for part in response_message["parts"]:
-                if "functionCall" in part:
+                if "functionCall" in part and config.api["llm"]["func_calling"]:
                     status=True
             generate_voice=False
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
