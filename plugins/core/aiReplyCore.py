@@ -93,7 +93,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             #函数调用
             temp_history=[]
-            if "tool_calls" in response_message and config.api["llm"]["func_calling"]:
+            if "tool_calls" in response_message and config.api["llm"]["func_calling"] and response_message['tool_calls'] is not None:
                 func_call=False
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
