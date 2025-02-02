@@ -25,7 +25,10 @@ def main(bot,config):
         if event.user_id!=event.self_id:
             if config.api["llm"]["aiReplyCore"]:
                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
-                name = data["data"]["nickname"]
+                try:
+                    name = data["data"]["nickname"]
+                except:
+                    name = "有新人"
                 r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,
                                              func_result=True)
                 await bot.send(event, str(r))
