@@ -8,7 +8,7 @@ from PIL import Image
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.utils.random_str import random_str
 
-async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=0.9,max_tokens=256):
+async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=0.9,max_tokens=2560):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
     else:
