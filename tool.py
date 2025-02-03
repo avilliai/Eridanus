@@ -131,7 +131,7 @@ def updaat(f=False,source=None,yamls={}):
 
     if source is not None:
         source = int(source)
-        if source < 1 or source > len(sources):
+        if source < 0 or source > len(sources):
             logger.error("无效输入，重新执行")
             updaat()
         # os.system("git pull https://github.com/avilliai/Manyana.git")
