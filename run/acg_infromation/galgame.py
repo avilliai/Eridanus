@@ -69,7 +69,7 @@ def main(bot,config):
                     flag = 5
                 bot.logger.info(f'access_token：{access_token}，flag:{flag}，gal查询目标：{keyword}')
 
-        if "新作" in str(event.raw_message):
+        if "新作" in str(event.raw_message) and event.get("at") and event.get("at")[0]["qq"]==str(bot.id):
             now = datetime.datetime.now().date()
             flag=7
             month = datetime.datetime.now().date().month

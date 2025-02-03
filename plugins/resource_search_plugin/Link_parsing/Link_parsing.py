@@ -1,16 +1,17 @@
 import sys
 import asyncio
-
+import copy
 from bilibili_api import video, Credential, live, article
 from bilibili_api import dynamic
 from bilibili_api.opus import Opus
+from bilibili_api.video import VideoDownloadURLDataDetecter
 import os
 import requests
 import base64
 import re
 import httpx
 from urllib.parse import urlparse
-
+import time
 import os.path
 from urllib.parse import parse_qs
 from datetime import datetime, timedelta
@@ -18,9 +19,9 @@ import json
 
 from developTools.utils.logger import get_logger
 from plugins.resource_search_plugin.Link_parsing.core.draw import draw_adaptive_graphic_and_textual
-from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_and_process_image
+from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_and_process_image,download_b_file,merge_file_to_mp4,download_b
 from plugins.resource_search_plugin.Link_parsing.core.weibo import mid2id,WEIBO_SINGLE_INFO
-from plugins.resource_search_plugin.Link_parsing.core.common import download_video,download_img,add_append_img
+from plugins.resource_search_plugin.Link_parsing.core.common import download_video,download_img,add_append_img,GENERAL_REQ_LINK,get_file_size_mb
 from plugins.resource_search_plugin.Link_parsing.core.tiktok import generate_x_bogus_url, dou_transfer_other, \
     COMMON_HEADER,DOUYIN_VIDEO,URL_TYPE_CODE_DICT,DY_TOUTIAO_INFO
 from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
@@ -33,13 +34,16 @@ if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 settings.http_client = settings.HTTPClient.HTTPX
 
-
+json_init={'status':False,'content':{},'reason':{},'pic_path':{},'url':{},'video_url':False,'soft_type':False}
 filepath_init=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(bili_init))))}/data/cache/'
 GLOBAL_NICKNAME='Bot'
 if not os.path.exists(filepath_init):  # 初始化检测文件夹
     os.makedirs(filepath_init)
 
 logger=get_logger()
+
+
+
 async def bilibili(url,filepath=None,is_twice=None):
     """
         哔哩哔哩解析
@@ -50,6 +54,10 @@ async def bilibili(url,filepath=None,is_twice=None):
     # 消息
     #url: str = str(event.message).strip()
     BILIBILI_HEADER, credential,BILI_SESSDATA=bili_init()#获取构建credential
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'bilibili'
+    json_check['status'] = True
+    json_check['video_url'] = False
     #logger.info(f'credential: {credential}')
     if not ( 'bili' in url or 'b23' in url ):return
     #构建绘图消息链
@@ -74,6 +82,7 @@ async def bilibili(url,filepath=None,is_twice=None):
     if "av" in url:url= 'https://www.bilibili.com/video/' + av_to_bv(url)
     if re.match(r'^BV[1-9a-zA-Z]{10}$', url):
         url = 'https://www.bilibili.com/video/' + url
+    json_check['url'] = url
     # ===============发现解析的是动态，转移一下===============
     if ('t.bilibili.com' in url or '/opus' in url or '/space' in url ) and BILI_SESSDATA != '':
         # 去除多余的参数
@@ -83,7 +92,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         #logger.info(dynamic_id)
         dy = dynamic.Dynamic(dynamic_id, credential)
         is_opus = dy.is_opus()#判断动态是否为图文
-
+        json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
         if is_opus is False:#若判断为图文则换另一种方法读取
             #logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
@@ -125,7 +134,9 @@ async def bilibili(url,filepath=None,is_twice=None):
                     out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                   Time=f'{pub_time}',filepath=filepath,type_software='BiliBili 动态',
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
-                    return out_path,f'https://t.bilibili.com/{dynamic_id}'
+                    json_check['pic_path'] = out_path
+
+                    return json_check
                 return contents,avatar_path,owner_name,pub_time,type,introduce
 
 
@@ -179,7 +190,8 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                           Time=f'{pub_time}', type=type_set, introduce=desc,
                                                       filepath=filepath,type_software=type_software,
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
-                        return out_path,f'https://t.bilibili.com/{dynamic_id}'
+                        json_check['pic_path'] = out_path
+                        return json_check
                     return contents, avatar_path, owner_name, pub_time, type, desc
                 elif orig_check ==2:
                     words=paragraphs['desc']['text']
@@ -229,7 +241,8 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                     output_path_name=f'{dynamic_id}',
                                                     orig_type_software='转发动态'
                                                     )
-                    return out_path,f'https://t.bilibili.com/{dynamic_id}'
+                    json_check['pic_path'] = out_path
+                    return json_check
         return None
     # 直播间识别
     if 'live' in url:
@@ -256,7 +269,8 @@ async def bilibili(url,filepath=None,is_twice=None):
             out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                           Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath,type_software='BiliBili 直播',
                                       color_software=(251,114,153,80),output_path_name=f'{room_id}')
-            return out_path,f'https://live.bilibili.com/{room_id}'
+            json_check['pic_path'] = out_path
+            return json_check
         return contents, avatar_path, owner_name, video_time, type, introduce
     # 专栏识别
     if 'read' in url:
@@ -273,6 +287,8 @@ async def bilibili(url,filepath=None,is_twice=None):
         video_info = await v.get_info()
     except Exception as e:
         logger.info('无法获取视频内容，该进程已退出')
+        json_check['status'] = False
+        return json_check
     owner_cover_url=video_info['owner']['face']
     owner_name = video_info['owner']['name']
     #logger.info(owner_cover)
@@ -301,6 +317,15 @@ async def bilibili(url,filepath=None,is_twice=None):
         else:
             # 如果索引超出范围，使用 video_info['duration'] 或者其他默认值
             video_duration = video_info.get('duration', 0)
+    download_url_data = await v.get_download_url(page_index=page_num)
+    detecter = VideoDownloadURLDataDetecter(download_url_data)
+    streams = detecter.detect_best_streams()
+    video_url, audio_url = streams[0].url, streams[1].url
+    json_check['video_url']=video_url
+    json_check['audio_url']=audio_url
+
+
+
     contents.append((await asyncio.gather(*[asyncio.create_task(download_img(video_cover, f'{filepath}'))]))[0])
     avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(owner_cover_url, f'{filepath}'))]))[0]
 
@@ -311,7 +336,8 @@ async def bilibili(url,filepath=None,is_twice=None):
         out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,Time=f'{video_time}',type=type,introduce=introduce,
                                     filepath=filepath,type_software='BiliBili',
                                     color_software=(251,114,153,80),output_path_name=f'{video_id}')
-        return out_path,url
+        json_check['pic_path'] = out_path
+        return json_check
     return contents, avatar_path, owner_name, video_time, type, introduce
 
 async def dy(url,filepath=None):
@@ -325,11 +351,16 @@ async def dy(url,filepath=None):
     contents=[]
     # 消息
     msg=url
+    json_check = copy.deepcopy(json_init)
+    json_check['status'] = True
+    json_check['video_url'] = False
+    json_check['soft_type'] = 'dy'
     #logger.info(msg)
     # 正则匹配
     reg = r"(http:|https:)\/\/v.douyin.com\/[A-Za-z\d._?%&+\-=#]*"
     dou_url = re.search(reg, msg, re.I)[0]
     dou_url_2 = httpx.get(dou_url).headers.get('location')
+    json_check['url'] = dou_url
     logger.info(f'dou_url:{dou_url}')
     #logger.info(f'dou_url_2:{dou_url_2}')
 
@@ -368,9 +399,10 @@ async def dy(url,filepath=None):
             # await douyin.send(Message(f"{GLOBAL_NICKNAME}识别：抖音，解析失败！"))
             return
         # 获取信息
+
         detail = detail['aweme_detail']
         formatted_json = json.dumps(detail, indent=4)
-        # logger.info(formatted_json)
+        #print(formatted_json)
         # 判断是图片还是视频
         url_type_code = detail['aweme_type']
         url_type = URL_TYPE_CODE_DICT.get(url_type_code, 'video')
@@ -378,7 +410,7 @@ async def dy(url,filepath=None):
         avatar_url, cover_url = detail['author']['avatar_thumb']['url_list'][0], \
         detail['author']['cover_url'][0]['url_list'][1]
         owner_name = detail['author']['nickname']
-        # logger.info(f'avatar_url: {avatar_url}\ncover_url: {cover_url}')
+        #logger.info(f'avatar_url: {avatar_url}\ncover_url: {cover_url}')
         download_img_funcs = [asyncio.create_task(download_img(avatar_url, f'{filepath}'))]
         avatar_path = await asyncio.gather(*download_img_funcs)
         video_time = datetime.utcfromtimestamp(detail['create_time']) + timedelta(hours=8)
@@ -389,13 +421,19 @@ async def dy(url,filepath=None):
             player_uri = detail.get("video").get("play_addr")['uri']
             player_real_addr = DY_TOUTIAO_INFO.replace("{}", player_uri)
             cover_url = detail.get("video").get("dynamic_cover")['url_list'][0]
-            # logger.info(f'cover_url: {cover_url}\nplayer_real_addr: {player_real_addr}')
+            #logger.info(f'cover_url: {cover_url}\nplayer_real_addr: {player_real_addr}')
             download_img_funcs = [asyncio.create_task(download_img(cover_url, f'{filepath}'))]
             cover_path = await asyncio.gather(*download_img_funcs)
-            # logger.info(cover_path)
+            #logger.info(cover_path)
             contents = await add_append_img(contents, cover_path)
             context = detail.get("desc").replace('#', '\n#', 1)
             contents.append(f'{context}')
+
+            player_uri = detail.get("video").get("play_addr")['uri']
+            player_real_addr = DY_TOUTIAO_INFO.replace("{}", player_uri)
+            #print(player_real_addr)
+            json_check['video_url'] = player_real_addr
+            #video_path = await download_video(player_real_addr, filepath=filepath)
 
         elif url_type == 'image':
             # 无水印图片列表/No watermark image list
@@ -417,10 +455,16 @@ async def dy(url,filepath=None):
                                                      filepath=filepath, type_software='抖音',
                                                      color_software=(0, 0, 0, 80),
                                                      output_path_name=f'{dou_id}')
-        return out_path, dou_url
 
+        json_check['pic_path'] = out_path
+        #print(out_path)
+        return json_check
 
 async def wb(url,filepath=None):
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'wb'
+    json_check['status'] = True
+    json_check['video_url'] = False
     message = url
     weibo_id = None
     content=[]
@@ -463,6 +507,7 @@ async def wb(url,filepath=None):
         logger.info("解析失败：无法获取到wb的id")
     # 最终获取到的 id
     weibo_id = weibo_id.split("/")[1] if "/" in weibo_id else weibo_id
+    json_check['url'] = f"https://m.weibo.cn/detail/{weibo_id}"
     # 请求数据
     resp = httpx.get(WEIBO_SINGLE_INFO.replace('{}', weibo_id), headers={
                                                                             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -501,6 +546,9 @@ async def wb(url,filepath=None):
         #logger.info(page_info)
         formatted_json = json.dumps(page_info, indent=4)
         #logger.info(formatted_json)
+        video_url = page_info.get('urls', '').get('mp4_720p_mp4', '') or page_info.get('urls', '').get('mp4_hd_mp4', '')
+        if video_url:
+            json_check['video_url'] = video_url
         if 'page_pic' in page_info:
             if page_info.get('type') != 'topic' and page_info.get('type') != 'place':
                 page_pic=page_info.get('page_pic').get('url')
@@ -514,8 +562,8 @@ async def wb(url,filepath=None):
                                                  filepath=filepath, type_software='微博',
                                                  color_software=(255, 92, 0, 80),
                                                  output_path_name=f'{weibo_id}')
-    return out_path, None
-
+    json_check['pic_path'] = out_path
+    return json_check
 
 async def xiaohongshu(url,filepath=None):
     """
@@ -524,6 +572,10 @@ async def xiaohongshu(url,filepath=None):
     :return:
     """
     contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'xhs'
+    json_check['video_url'] = False
+    json_check['status'] = True
     if filepath is None: filepath = filepath_init
     introduce=None
     msg_url = re.search(r"(http:|https:)\/\/(xhslink|(www\.)xiaohongshu).com\/[A-Za-z\d._?%&+\-=\/#@]*",
@@ -550,6 +602,7 @@ async def xiaohongshu(url,filepath=None):
         xhs_id = re.search(r'source=note&noteId=(\w+)', msg_url)
     xhs_id = xhs_id[1]
     # 解析 URL 参数
+    json_check['url']=msg_url
     parsed_url = urlparse(msg_url)
     params = parse_qs(parsed_url.query)
     # 提取 xsec_source 和 xsec_token
@@ -593,6 +646,7 @@ async def xiaohongshu(url,filepath=None):
         introduce=note_desc
         #logger.info(note_data['video'])
         video_url = note_data['video']['media']['stream']['h264'][0]['masterUrl']
+        json_check['video_url'] = video_url
         image_list = note_data['imageList']
         contents = await add_append_img(contents, await asyncio.gather(
             *[asyncio.create_task(download_img(item['urlDefault'], f'{filepath}', len=len(image_list))) for item in
@@ -605,31 +659,151 @@ async def xiaohongshu(url,filepath=None):
                                                  color_software=(255, 38, 66, 80),
                                                  output_path_name=f'{xhs_id}')
 
-    return out_path,None
+    json_check['pic_path'] = out_path
+    return json_check
 
 
-async def link_prising(url,filepath=None):
-    dy_path=None
-    if 'bili' in url or 'b23' in url:
-        dy_path,url=await bilibili(url,filepath=filepath)
-    elif 'douyin' in url or 'douyin' in url:
-        dy_path,url=await dy(url, filepath=filepath)
-    elif 'weibo' in url:
-        dy_path,url=await wb(url, filepath=filepath)
-    elif 'xhslink' in url or 'xiaohongshu' in url:
-        dy_path,url=await xiaohongshu(url, filepath=filepath)
-    return dy_path,url
+async def twitter(url,filepath=None,proxy=None):
+    """
+        X解析
+    :param bot:
+    :param event:
+    :return:
+    """
+    msg=url
+    contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'x'
+    json_check['status'] = True
+    json_check['video_url'] = False
+    if filepath is None: filepath = filepath_init
+    x_url = re.search(r"https?:\/\/x.com\/[0-9-a-zA-Z_]{1,20}\/status\/([0-9]*)", msg)[0]
+
+    x_url = GENERAL_REQ_LINK.replace("{}", x_url)
+
+    # 内联一个请求
+    def x_req(url):
+        return httpx.get(url, headers={
+            'Accept': 'ext/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
+                      'application/signed-exchange;v=b3;q=0.7',
+            'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Host': '47.99.158.118',
+            'Proxy-Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-User': '?1',
+            **COMMON_HEADER
+        })
+    #print(x_req(x_url).json())
+    x_data: object = x_req(x_url).json()['data']
+
+    if x_data is None:
+        x_url = x_url + '/photo/1'
+        x_data = x_req(x_url).json()['data']
+    #print(x_data)
+
+    x_url_res = x_data['url']
+    #print(x_url_res)
+    #await twit.send(Message(f"{GLOBAL_NICKNAME}识别：小蓝鸟学习版"))
+
+    # 海外服务器判断
+    #proxy = None if IS_OVERSEA else resolver_proxy
+    logger.info(x_url_res)
+    # 图片
+    if x_url_res.endswith(".jpg") or x_url_res.endswith(".png"):
+        contents = await add_append_img(contents, await asyncio.gather(
+            *[asyncio.create_task(download_img(x_url_res, f'{filepath}',proxy=proxy))]))
+        #print(contents)
+        #res = await download_img(x_url_res, filepath,proxy=proxy)
+        out_path = draw_adaptive_graphic_and_textual(contents,type=11,filepath=filepath, type_software='推特',
+                                                     color_software=(0, 0, 0, 80),
+                                                     output_path_name=f'{int(time.time())}')
+        json_check['pic_path'] = out_path
+        return json_check
+    else:
+        # 视频
+        json_check['video_url'] = x_url_res
+        return json_check
+        #res = await download_video(x_url_res, proxy)
+
+async def download_video_link_prising(json,filepath=None,proxy=None):
+    if filepath is None:filepath = filepath_init
+    video_json={}
+    if json['soft_type'] == 'bilibili':
+        video_path=await download_b(json['video_url'], json['audio_url'], int(time.time()), filepath=filepath)
+    elif json['soft_type'] == 'dy':
+        video_path = await download_video(json['video_url'], filepath=filepath)
+    elif json['soft_type'] == 'wb':
+        video_path = await download_video(json['video_url'], filepath=filepath, ext_headers={
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                "referer": "https://weibo.com/"
+            })
+    elif json['soft_type'] == 'x':
+        video_path = await download_video(json['video_url'], filepath=filepath,proxy=proxy)
+    elif json['soft_type'] == 'xhs':
+        video_path = await download_video(json['video_url'], filepath=filepath)
+    video_json['video_path'] = video_path
+    file_size_in_mb = get_file_size_mb(video_path)
+    if file_size_in_mb < 10:
+        video_type='video'
+    elif file_size_in_mb < 30:
+        video_type='video_bigger'
+    else:
+        video_type='file'
+    video_json['type']=video_type
+    return video_json
+
+
+async def link_prising(url,filepath=None,proxy=None):
+    json_check = copy.deepcopy(json_init)
+    link_prising_json=None
+    #print(f'json_init:{json_init}\njson_check:{json_check}\nlink_prising_json:{link_prising_json}\n\n')
+    try:
+        if 'bili' in url or 'b23' in url:
+            link_prising_json=await bilibili(url,filepath=filepath)
+            #print(link_prising_json)
+        elif 'douyin' in url or 'douyin' in url:
+            link_prising_json=await dy(url, filepath=filepath)
+        elif 'weibo' in url:
+            link_prising_json=await wb(url, filepath=filepath)
+        elif 'xhslink' in url or 'xiaohongshu' in url:
+            link_prising_json=await xiaohongshu(url, filepath=filepath)
+        elif 'x.com' in url:
+            link_prising_json=await twitter(url, filepath=filepath, proxy=proxy)
+
+    except Exception as e:
+        json_check['status'] = False
+        json_check['reason'] = str(e)
+        return json_check
+    if link_prising_json:
+        #print(link_prising_json)
+        link_prising_json=link_prising_json
+        return link_prising_json
+    else:
+        json_check['status'] = False
+        return json_check
+
+
+
 
 
 #draw_video_thumbnail()
 if __name__ == "__main__":#测试用，不用管
+    url='【【游戏公司十大IP ATLUS】由女神转生到女神异闻录】https://www.bilibili.com/video/BV1TVfUYvEux?vd_source=5e640b2c90e55f7151f23234cae319ec'
     #asyncio.run(dy(url))
-    #asyncio.run(bilibili(url))
+
+    #url='https://t.bilibili.com/1028199317971664899?share_source=pc_native'
+    url='0.56 Q@K.Jv 09/17 icA:/ 属于老六的春晚！新年快乐！ # cs2 # 老六麦克雷 # 出生 # csgo麦克雷  https://v.douyin.com/ifgP79T3/ 复制此链接，打开Dou音搜索，直接观看视频！'
+    url='https://x.com/fliosofem/status/1827202917306433845?s=46'
+    url='https://x.com/myuto54321/status/1884528807824196074?s=46'
+    url='https://x.com/gosari542/status/1884258207985721387?s=46'
+    asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
     url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
     url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
 
     url='44 【来抄作业✨早秋彩色衬衫叠穿｜时髦知识分子风 - 杨意子_ | 小红书 - 你的生活指南】 😆 Inw56apL6vWYuoS 😆 https://www.xiaohongshu.com/discovery/item/64c0e9c0000000001201a7de?source=webshare&xhsshare=pc_web&xsec_token=AB8GfF7dOtdlB0n_mqoz61fDayAXpCqWbAz9xb45p6huE=&xsec_source=pc_share'
     url='79 【感谢大数据！椰青茉莉也太太太好喝了吧 - 胖琪琪 | 小红书 - 你的生活指南】 😆 78VORl9ln3YDBKi 😆 https://www.xiaohongshu.com/discovery/item/63dcee03000000001d022015?source=webshare&xhsshare=pc_web&xsec_token=ABJoHbAtOG98_7RnFR3Mf2MuQ1JC8tRVlzHPAG5BGKdCc=&xsec_source=pc_share'
-    asyncio.run(xiaohongshu(url))
+    #asyncio.run(xiaohongshu(url))
+    #asyncio.run(link_prising(url))
 

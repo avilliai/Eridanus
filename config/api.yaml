@@ -52,8 +52,12 @@ youtube_asmr:
     - '@emococh'
     - '@-gabisroom-4153'
 today_wife:
-  api: 'https://api.iw233.cn/api.php?sort=top'  #今日老婆的获取api，可以替换成自己的图床
-  wifePrefix: '/'   #透群友的指令前缀
+  api:
+  - 'http://127.0.0.1:5000/today_wife'  #今日老婆的获取api，可以替换成自己的图床，可以添加多个链接
+  - 'https://api.iw233.cn/api.php?sort=top'
+  header: 'https://weibo.com/'          #知道的自己改，不知道的不要动
+  wifePrefix: '/'                       #透群友的指令前缀
+
 ai绘画:
   sdUrl: # 你自己搭建的sd，地址，示例http://127.0.0.1:17858（示例≠你能直接填示例用），免费云部署见文档，本地部署https://www.bilibili.com/video/BV1iM4y1y7oA/
     - '' 
