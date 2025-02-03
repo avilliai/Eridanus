@@ -1,5 +1,7 @@
 import random
+import re
 
+from developTools.message.message_components import Node, Text
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
@@ -42,6 +44,18 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
                 tools=tools,
             )
             reply_message = response_message["content"]
+            if reply_message is not None:
+                pattern_think = r"<think>\n(.*?)\n</think>"
+                match_think = re.search(pattern_think, reply_message, re.DOTALL)
+
+                if match_think:
+                    think_text = match_think.group(1)
+                    if bot is not None:
+                        await bot.send(event,[Node(content=[Text(think_text)])])
+                    pattern_rest = r"</think>\n\n(.*?)$"
+                    match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
+                    if match_rest:
+                        reply_message = match_rest.group(1)
             # print(response_message)
         elif config.api["llm"]["model"] == "gemini":
             prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,

@@ -43,7 +43,6 @@ def main(bot,config):
         #print(proxy)
         url=event.raw_message
         if event.sender.user_id == 2684831639:return
-
         if event.sender.user_id in teamlist:
             json=teamlist[event.sender.user_id]
             teamlist.pop(event.sender.user_id)
@@ -70,7 +69,6 @@ def main(bot,config):
         send_context=f'{botname}识别结果：'
         #print(link_prising_json)
         if link_prising_json['status']:
-            print(link_prising_json)
             bot.logger.info('链接解析成功，开始推送~~')
             if link_prising_json['video_url']:
                 send_context=f'该视频可下载，发送“下载视频”以推送'
