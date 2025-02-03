@@ -1,5 +1,6 @@
 import os
 import sys
+import asyncio
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from plugins.core.yamlLoader import YAMLManager
