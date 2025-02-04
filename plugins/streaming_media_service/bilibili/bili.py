@@ -122,7 +122,7 @@ async def fetch_latest_dynamic(uid, config):
         if bilibili_type_draw == 1:
             dynamic = await fetch_dynamic(r1, config.settings["bili_dynamic"]["screen_shot_mode"])
         elif bilibili_type_draw == 2:
-            dynamic, url_check = await link_prising(f'https://t.bilibili.com/{r1}',filepath='data/pictures/cache/')
+            dynamic= (await link_prising(f'https://t.bilibili.com/{r1}',filepath='data/pictures/cache/'))['pic_path']
         return dynamic
     else:
         return None

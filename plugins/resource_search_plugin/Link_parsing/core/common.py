@@ -25,10 +25,11 @@ COMMON_HEADER = {
 # 插件名字
 PLUGIN_NAME = "nonebot-plugin-resolver"
 
+GENERAL_REQ_LINK = "http://47.99.158.118/video-crack/v2/parse?content={}"
 # 解析列表文件名
 RESOLVE_SHUTDOWN_LIST_NAME = "resolver_shutdown_list"
 
-async def download_video(url, proxy: str = None, ext_headers=None) -> str:
+async def download_video(url, proxy: str = None, ext_headers=None,filepath=None) -> str:
     """
     异步下载（httpx）视频，并支持通过代理下载。
     文件名将使用时间戳生成，以确保唯一性。
@@ -40,8 +41,9 @@ async def download_video(url, proxy: str = None, ext_headers=None) -> str:
     :return: 保存视频的路径。
     """
     # 使用时间戳生成文件名，确保唯一性
-    path = os.path.join(os.getcwd(), f"{int(time.time())}.mp4")
-
+    #path = os.path.join(os.getcwd(), f"{int(time.time())}.mp4")
+    path=filepath+f"{int(time.time())}.mp4"
+    print(f"下载视频路径:{path}")
     # 判断 ext_headers 是否为 None
     if ext_headers is None:
         headers = COMMON_HEADER

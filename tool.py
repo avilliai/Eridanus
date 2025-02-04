@@ -115,23 +115,29 @@ async def main():
 
 
 def updaat(f=False,source=None,yamls={}):
-
+    sources = [
+        "https://github.com/avilliai/Eridanus.git",
+        "https://github.moeyy.xyz/https://github.com/avilliai/Eridanus",
+        "https://mirror.ghproxy.com/https://github.com/avilliai/Eridanus",
+        "https://ghfast.top/https://github.com/avilliai/Eridanus.git",
+        "https://gh.llkk.cc/https://github.com/avilliai/Eridanus.git"
+    ]
     if source==None:
+        for i in sources:
+            logger.info(f"{sources.index(i)}. {i}")
         logger.info("拉取bot代码\n--------------------")
-        logger.info("选择更新源(git源 镜像源相互兼容)：\n1 git源\n2 git代理源1\n3 git代理源2")
+        sleep(0.3)
         source = input("选择更新源(输入数字 )：")
-    else:
-        source=str(source)
-    if source == "1":
+
+    if source is not None:
+        source = int(source)
+        if source < 0 or source > len(sources):
+            logger.error("无效输入，重新执行")
+            updaat()
         # os.system("git pull https://github.com/avilliai/Manyana.git")
         # 启动进程
-        p = subprocess.Popen([f'{git_path}', 'pull', 'https://github.com/avilliai/Eridanus.git'], stdout=subprocess.PIPE,
+        p = subprocess.Popen([f'{git_path}', 'pull', sources[source]], stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-    elif source=="2":
-        p = subprocess.Popen([f'{git_path}', 'pull', 'https://github.moeyy.xyz/https://github.com/avilliai/Eridanus'], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-    elif source=="3":
-        p=subprocess.Popen([f'{git_path}', 'pull', 'https://mirror.ghproxy.com/https://github.com/avilliai/Eridanus'], stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
     else:
         logger.error("无效输入，重新执行")
@@ -161,8 +167,16 @@ def updaat(f=False,source=None,yamls={}):
         logger.info("处理冲突文件完成")
         logger.info("旧的冲突文件被保存到了temp文件夹，以防万一你需要它们。")
         logger.warning("开始检查依赖....请不要关闭窗口")
+        logger.warning("开始检查依赖....请不要关闭窗口")
+        logger.warning("开始检查依赖....请不要关闭窗口")
+        logger.warning("开始检查依赖....请不要关闭窗口")
+        logger.warning("开始检查依赖....请不要关闭窗口")
         check_requirements("requirements.txt", pip_path)
         logger.warning("依赖检查完成，开始依赖约束检查")
+        logger.error("出现红色、黄色警告为正常现象，请忽略")
+        logger.warning("出现红色、黄色警告为正常现象，请忽略")
+        logger.error("出现红色、黄色警告为正常现象，请忽略")
+        logger.warning("出现红色、黄色警告为正常现象，请忽略")
         fuck_requirements()
         logger.info("更新成功，请关闭此窗口，重新启动bot")
         input()

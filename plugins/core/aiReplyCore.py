@@ -1,11 +1,12 @@
 
 import json
 import random
+import re
 import time
 from collections import defaultdict
 
 
-from developTools.message.message_components import Record
+from developTools.message.message_components import Record, Text, Node
 from developTools.utils.logger import get_logger
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
@@ -76,11 +77,25 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 False,
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
+                temperature=config.api["llm"]["openai"]["temperature"],
+                max_tokens=config.api["llm"]["openai"]["max_tokens"]
             )
             reply_message=response_message["content"]
+            if reply_message is not None:
+                pattern_think = r"<think>\n(.*?)\n</think>"
+                match_think = re.search(pattern_think, reply_message, re.DOTALL)
+
+                if match_think:
+                    think_text = match_think.group(1)
+                    await bot.send(event,[Node(content=[Text(think_text)])])
+                    pattern_rest = r"</think>\n\n(.*?)$"
+                    match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
+                    if match_rest:
+                        reply_message = match_rest.group(1)
+
             #检查是否存在函数调用，如果还有提示词就发
             status=False
-            if "tool_calls" in response_message:
+            if "tool_calls" in response_message and response_message['tool_calls'] is not None:
                 status=True
             generate_voice=False
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
@@ -93,7 +108,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             #函数调用
             temp_history=[]
-            if "tool_calls" in response_message:
+            if "tool_calls" in response_message and response_message['tool_calls'] is not None:
                 func_call=False
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
@@ -170,7 +185,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             for part in response_message["parts"]:
-                if "functionCall" in part:
+                if "functionCall" in part and config.api["llm"]["func_calling"]:
                     status=True
             generate_voice=False
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音

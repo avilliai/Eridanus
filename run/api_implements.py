@@ -106,7 +106,8 @@ def main(bot,config):
                 bot.logger.info(text)
                 #print(text)
                 if config.api["llm"]["aiReplyCore"]:
-                    r = await aiReplyCore([{"text": text}], event.user_id, config)
+                    r = await aiReplyCore([{"text": text}], event.user_id, config,bot=bot)
+
                 else:
                     reply_list=config.settings['api_implements']['nudge']['replylist']
                     r=random.choice(reply_list)
@@ -119,7 +120,8 @@ def main(bot,config):
                 text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
                 bot.logger.info(text)
                 if config.api["llm"]["aiReplyCore"]:
-                    r = await aiReplyCore([{"text": text}], event.user_id, config)
+                    r = await aiReplyCore([{"text": text}], event.user_id, config,bot=bot)
+
                 else:
                     reply_list = config.settings['api_implements']['nudge']['replylist']
                     r = random.choice(reply_list)

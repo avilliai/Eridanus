@@ -108,7 +108,7 @@ def draw_video_thumbnail():
     template.save(output_path)
     #template.show()
 
-async def download_b_file(url, full_file_name, progress_callback):
+async def download_b_file(url, full_file_name, progress_callback=None):
     """
         下载视频文件和音频文件
     :param url:
@@ -126,12 +126,14 @@ async def download_b_file(url, full_file_name, progress_callback):
         async with client.stream("GET", url, headers=BILIBILI_HEADER) as resp:
             current_len = 0
             total_len = int(resp.headers.get('content-length', 0))
-            print(total_len)
+            #print(total_len)
             async with aiofiles.open(full_file_name, "wb") as f:
                 async for chunk in resp.aiter_bytes():
                     current_len += len(chunk)
                     await f.write(chunk)
-                    progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
+                    #print(f'{current_len} bytes downloaded')
+                    #print(f'下载进度：{round(current_len / total_len, 3)}')
+                    #progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
 
 def download_and_process_image(image_url, save_path):
     """
@@ -161,13 +163,13 @@ async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output
     :param log_output: 是否显示 ffmpeg 输出日志，默认忽略
     :return:
     """
-    print(f'正在合并：{output_file_name}')
+    #print(f'正在合并：{output_file_name}')
 
     # 构建 ffmpeg 命令
     command = f'ffmpeg -y -i "{v_full_file_name}" -i "{a_full_file_name}" -c copy "{output_file_name}"'
     stdout = None if log_output else subprocess.DEVNULL
     stderr = None if log_output else subprocess.DEVNULL
-
+    #print(platform.system())
     if platform.system() == "Windows":
         # Windows 下使用 run_in_executor
         loop = asyncio.get_event_loop()
@@ -255,3 +257,17 @@ async def fetch_latest_dynamic_id_api(uid):
     dy_id_1=(await dynamic_list[0].get_info())['item']['id_str']
     dy_id_2=(await dynamic_list[1].get_info())['item']['id_str']
     return dy_id_1,dy_id_2
+
+
+async def download_b(video_url,audio_url,video_id,filepath=None):
+    path = filepath  + str(video_id)
+    #print('start video downloading')
+    try:
+        await asyncio.gather(
+            download_b_file(video_url, f"{path}-video.m4s"),
+            download_b_file(audio_url, f"{path}-audio.m4s"))
+        await merge_file_to_mp4(f"{path}-video.m4s", f"{path}-audio.m4s", f"{path}-res.mp4")
+        return f"{path}-res.mp4"
+    except Exception as e:
+        pass
+

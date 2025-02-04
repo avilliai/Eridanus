@@ -1,4 +1,7 @@
+import re
+
 from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
+from developTools.message.message_components import Node, Text
 from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 
 
@@ -25,8 +28,11 @@ def main(bot,config):
         if event.user_id!=event.self_id:
             if config.api["llm"]["aiReplyCore"]:
                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
-                name = data["data"]["nickname"]
-                r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,
+                try:
+                    name = data["data"]["nickname"]
+                except:
+                    name = "有新人"
+                r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,bot=bot,
                                              func_result=True)
                 await bot.send(event, str(r))
             else:
