@@ -16,7 +16,7 @@ from plugins.utils.random_str import random_str
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
-
+GPTSOVITS_SPEAKERS=None
 async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
 
