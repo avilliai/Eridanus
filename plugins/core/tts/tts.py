@@ -9,6 +9,7 @@ import requests
 
 from ruamel.yaml import YAML
 
+from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.utils.random_str import random_str
 
@@ -27,6 +28,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
+
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
@@ -38,6 +40,10 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         if speaker in spkss:
             speaker=spkss[speaker]
         return await napcat_tts_speak(bot, config, text, speaker)
+    elif mode=="modelscope_tts":
+        if speaker is None:
+            speaker=config.api["tts"]["modelscope_tts"]["speaker"]
+        return await modelscope_tts(text,speaker)
     else:
         pass
 

@@ -30,12 +30,14 @@ llm:
     智能体ID: ""
     token: ""
 tts:
-  tts_engine: acgn_ai     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai，配了哪个填哪个。
+  tts_engine: modelscope_tts     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai，配了哪个填哪个。
   acgn_ai:
     token: ""             #https://getkey.acgnai.top/注册后，登录获取令牌
     speaker: "玲可【星穹铁道】"
   napcat_tts:
     character_name: "酥心御姐"
+  modelscope_tts:
+    speaker: "东雪莲"
 proxy:
   http_proxy: ""
   socks_proxy: ""
