@@ -172,7 +172,10 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     if speaker is None:
         speaker=config.api["tts"][mode]["speaker"]
     all_speakers=await call_all_speakers(bot,event,config)
-    ncspk=all_speakers[0], acgnspk=all_speakers[1], modelscope_speakers=all_speakers[2]
+    all_speakers=all_speakers["speakers"]
+    ncspk=all_speakers[0]
+    acgnspk=all_speakers[1]
+    modelscope_speakers=all_speakers[2]
     if not ncspk and not acgnspk and not modelscope_speakers:
         bot.logger.error("No speakers found")
         return
@@ -208,11 +211,10 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     if modelscope_speakers and lock_mode is None and lock_speaker is None:
         if speaker in modelscope_speakers:
             mode="modelscope_tts"
-            speaker=modelscope_speakers[speaker]
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
-        return {"audio":p}
-        #await bot.send(event, Record(file=p))
+        await bot.send(event, Record(file=p))
+        return {"status":"success"}
     except:
         pass
 
@@ -304,7 +306,10 @@ def main(bot,config):
         elif event.raw_message=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             all_speakers = await call_all_speakers(bot, event, config)
-            f= all_speakers[0], e= all_speakers[1], c = all_speakers[2]
+            all_speakers = all_speakers["speakers"]
+            f= all_speakers[0]
+            e= all_speakers[1]
+            c = all_speakers[2]
             if f:
                 f='\n'.join(f)
             if e:
