@@ -316,7 +316,7 @@ def main(bot,config):
                 e='\n'.join(e)
             if c:
                 c='\n'.join(c)
-            await bot.send(event, [Node(content=[Text(f"使用 /xx说xxxxx")])],Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"modelscope_tts可用角色：\n{c}")]))
+            await bot.send(event, [Node(content=[Text(f"使用 /xx说xxxxx")]),Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"modelscope_tts可用角色：\n{c}")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
