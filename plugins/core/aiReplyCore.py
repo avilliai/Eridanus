@@ -272,7 +272,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             logger.warning(f"Recursion times: {recursion_times}")
             if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_fail"]:
-                bot.logger.warning(f"清空历史记录。")
+                bot.logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
         else:
