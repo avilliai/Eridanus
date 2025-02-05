@@ -27,7 +27,6 @@ from plugins.resource_search_plugin.Link_parsing.core.tiktok import generate_x_b
 from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
 from plugins.resource_search_plugin.Link_parsing.core.acfun import parse_url, download_m3u8_videos, parse_m3u8, merge_ac_file_to_mp4
 from plugins.resource_search_plugin.Link_parsing.core.xhs import XHS_REQ_LINK
-
 import inspect
 from bilibili_api import settings
 if sys.platform == 'win32':
@@ -135,7 +134,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                   Time=f'{pub_time}',filepath=filepath,type_software='BiliBili 动态',
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
                     json_check['pic_path'] = out_path
-
+                    json_check['time'] = pub_time
                     return json_check
                 return contents,avatar_path,owner_name,pub_time,type,introduce
 
@@ -191,6 +190,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                       filepath=filepath,type_software=type_software,
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
                         json_check['pic_path'] = out_path
+                        json_check['time'] = pub_time
                         return json_check
                     return contents, avatar_path, owner_name, pub_time, type, desc
                 elif orig_check ==2:
@@ -242,6 +242,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                     orig_type_software='转发动态'
                                                     )
                     json_check['pic_path'] = out_path
+                    json_check['time'] = pub_time
                     return json_check
         return None
     # 直播间识别
@@ -270,6 +271,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                           Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath,type_software='BiliBili 直播',
                                       color_software=(251,114,153,80),output_path_name=f'{room_id}')
             json_check['pic_path'] = out_path
+
             return json_check
         return contents, avatar_path, owner_name, video_time, type, introduce
     # 专栏识别
@@ -748,13 +750,15 @@ async def download_video_link_prising(json,filepath=None,proxy=None):
         video_type='video'
     elif file_size_in_mb < 30:
         video_type='video_bigger'
-    else:
+    elif file_size_in_mb < 100:
         video_type='file'
+    else:
+        video_type = 'too_big'
     video_json['type']=video_type
     return video_json
 
 
-async def link_prising(url,filepath=None,proxy=None):
+async def link_prising(url,filepath=None,proxy=None,type=None):
     json_check = copy.deepcopy(json_init)
     link_prising_json=None
     #print(f'json_init:{json_init}\njson_check:{json_check}\nlink_prising_json:{link_prising_json}\n\n')
@@ -770,14 +774,13 @@ async def link_prising(url,filepath=None,proxy=None):
             link_prising_json=await xiaohongshu(url, filepath=filepath)
         elif 'x.com' in url:
             link_prising_json=await twitter(url, filepath=filepath, proxy=proxy)
-
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
         return json_check
     if link_prising_json:
-        #print(link_prising_json)
-        link_prising_json=link_prising_json
+        if type == 'dynamic_check' and (datetime.strptime(link_prising_json['time'], "%Y年%m月%d日 %H:%M")).date() != datetime.now().date():
+            link_prising_json['status'] = False
         return link_prising_json
     else:
         json_check['status'] = False
