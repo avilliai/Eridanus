@@ -80,18 +80,21 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 temperature=config.api["llm"]["openai"]["temperature"],
                 max_tokens=config.api["llm"]["openai"]["max_tokens"]
             )
-            reply_message=response_message["content"]
-            if reply_message is not None:
-                pattern_think = r"<think>\n(.*?)\n</think>"
-                match_think = re.search(pattern_think, reply_message, re.DOTALL)
+            if "content" in response_message:
+                reply_message=response_message["content"]
+                if reply_message is not None:
+                    pattern_think = r"<think>\n(.*?)\n</think>"
+                    match_think = re.search(pattern_think, reply_message, re.DOTALL)
 
-                if match_think:
-                    think_text = match_think.group(1)
-                    await bot.send(event,[Node(content=[Text(think_text)])])
-                    pattern_rest = r"</think>\n\n(.*?)$"
-                    match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
-                    if match_rest:
-                        reply_message = match_rest.group(1)
+                    if match_think:
+                        think_text = match_think.group(1)
+                        await bot.send(event,[Node(content=[Text(think_text)])])
+                        pattern_rest = r"</think>\n\n(.*?)$"
+                        match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
+                        if match_rest:
+                            reply_message = match_rest.group(1)
+            else:
+                reply_message=None
 
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -181,7 +184,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
                 reply_message=None
-
+            if reply_message is not None:
+                if reply_message=="\n" or reply_message=="" or reply_message==" ":
+                    raise Exception("Empty response。Gemini API返回的文本为空。")
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             for part in response_message["parts"]:
