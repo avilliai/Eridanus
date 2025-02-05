@@ -6,13 +6,14 @@ llm:
     - "测试机"
   aiReplyCore: True   #ai回复核心，将优化其他功能回复表现
   enable_proxy: False
-  max_history_length: 100 #最大聊天记录条数
-  Quote: False #回复时是否引用
-  focus_time: 1  #单次触发对话后持续有效时间
+  max_history_length: 40 #最大上下文长度
+  Quote: False     #回复时是否引用
+  focus_time: 1    #单次触发对话后持续有效时间
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
-  recursion_limit: 10 #对话模型最大递归深度，出错时自动递归。
+  recursion_limit: 10                  #对话模型最大递归深度，出错时自动递归。
+  auto_clear_when_recursion_fail: True #对话模型递归失败时是否自动清除历史记录。
   openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
     api_keys:   #继续像这样添加apikey
     - YOUR_API_KEY_1
