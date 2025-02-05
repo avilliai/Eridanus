@@ -14,7 +14,7 @@ from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_s
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
     get_current_openai_prompt, add_openai_standard_prompt
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
-from plugins.core.llmDB import get_user_history, update_user_history
+from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
 from plugins.func_map import call_func
@@ -80,18 +80,21 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 temperature=config.api["llm"]["openai"]["temperature"],
                 max_tokens=config.api["llm"]["openai"]["max_tokens"]
             )
-            reply_message=response_message["content"]
-            if reply_message is not None:
-                pattern_think = r"<think>\n(.*?)\n</think>"
-                match_think = re.search(pattern_think, reply_message, re.DOTALL)
+            if "content" in response_message:
+                reply_message=response_message["content"]
+                if reply_message is not None:
+                    pattern_think = r"<think>\n(.*?)\n</think>"
+                    match_think = re.search(pattern_think, reply_message, re.DOTALL)
 
-                if match_think:
-                    think_text = match_think.group(1)
-                    await bot.send(event,[Node(content=[Text(think_text)])])
-                    pattern_rest = r"</think>\n\n(.*?)$"
-                    match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
-                    if match_rest:
-                        reply_message = match_rest.group(1)
+                    if match_think:
+                        think_text = match_think.group(1)
+                        await bot.send(event,[Node(content=[Text(think_text)])])
+                        pattern_rest = r"</think>\n\n(.*?)$"
+                        match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
+                        if match_rest:
+                            reply_message = match_rest.group(1)
+            else:
+                reply_message=None
 
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -181,7 +184,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
                 reply_message=None
-
+            if reply_message is not None:
+                if reply_message=="\n" or reply_message=="" or reply_message==" ":
+                    raise Exception("Empty response。Gemini API返回的文本为空。")
             #检查是否存在函数调用，如果还有提示词就发
             status=False
             for part in response_message["parts"]:
@@ -222,7 +227,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             new_func_prompt.append(func_r)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
-                        logger.error(f"Error occurred when calling function: {e}")
+                        logger.error(f"Error occurred when calling function: {func_name}")
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
@@ -266,6 +271,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         if recursion_times<=config.api["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
+            if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_fail"]:
+                bot.logger.warning(f"clear ai reply history for user: {event.user_id}")
+                await delete_user_history(event.user_id)
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
         else:
             logger.warning(f"roll back to original history, recursion times: {recursion_times}")
