@@ -24,7 +24,7 @@ config = YAMLManager(["config/settings.yaml",
 #或者使用ws适配器
 bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 from run.anime_game_service import blue_archive
-from run import api_implements, aiReply, user_data, basic_plugin, aiDraw
+from run import api_implements, aiReply, user_data, basic_plugin, aiDraw, engine_search
 from run.resource_search import iwara,resource_search
 from run.acg_infromation import galgame,bangumi
 from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
@@ -46,6 +46,7 @@ iwara.main(bot, config)
 youtube.main(bot, config) #加载youtube插件
 bilibili.main(bot, config) #加载bilibili插件
 Link_parsing.main(bot, config)
+engine_search.main(bot, config)
 
 #以下为游戏相关
 blue_archive.main(bot, config) #加载blue_archive插件
