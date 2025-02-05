@@ -252,7 +252,7 @@
                 "description": "在数据库中注册用户"
             },
             {
-                "name": "get_acgn_ai_speaker_list",
+                "name": "call_all_speakers",
                 "description": "获取可用的语音合成角色列表。"
             },
             {

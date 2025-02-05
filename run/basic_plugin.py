@@ -171,7 +171,8 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     mode = config.api["tts"]["tts_engine"]
     if speaker is None:
         speaker=config.api["tts"][mode]["speaker"]
-    ncspk,acgnspk,modelscope_speakers=await call_all_speakers(bot,event,config)
+    all_speakers=await call_all_speakers(bot,event,config)
+    ncspk=all_speakers[0], acgnspk=all_speakers[1], modelscope_speakers=all_speakers[2]
     if not ncspk and not acgnspk and not modelscope_speakers:
         bot.logger.error("No speakers found")
         return
@@ -227,7 +228,7 @@ async def call_all_speakers(bot,event,config):
         bot.logger.error(f"Error in get_acgn_ai_speaker_list: {e}")
         acgn_ai_speakers=None
     modelscope_speakers=get_modelscope_tts_speakers()
-    return nc_speakers,acgn_ai_speakers,modelscope_speakers
+    return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers]}
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
@@ -302,12 +303,15 @@ def main(bot,config):
             await bot.send(event, Record(file=r.get("audio")))
         elif event.raw_message=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
-            f,e=await call_all_speakers(bot,event,config)
+            all_speakers = await call_all_speakers(bot, event, config)
+            f= all_speakers[0], e= all_speakers[1], c = all_speakers[2]
             if f:
                 f='\n'.join(f)
             if e:
                 e='\n'.join(e)
-            await bot.send(event, [Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"使用 /xx说xxxxx")])])
+            if c:
+                c='\n'.join(c)
+            await bot.send(event, [Node(content=[Text(f"使用 /xx说xxxxx")])],Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"modelscope_tts可用角色：\n{c}")]))
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
