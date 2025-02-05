@@ -227,7 +227,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             new_func_prompt.append(func_r)
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
-                        logger.error(f"Error occurred when calling function: {e}")
+                        logger.error(f"Error occurred when calling function: {func_name}")
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
