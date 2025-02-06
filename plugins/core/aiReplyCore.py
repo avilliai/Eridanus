@@ -178,7 +178,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 config.api["llm"]["gemini"]["model"],
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
-                system_instruction=system_instruction)
+                system_instruction=system_instruction,
+                temperature=config.api["llm"]["gemini"]["temperature"],
+                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+            )
             #print(response_message)
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。

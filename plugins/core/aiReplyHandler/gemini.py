@@ -8,7 +8,7 @@ from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.utils.random_str import random_str
 
 
-async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None):
+async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None,temperature=0.7,maxOutputTokens=2048):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
     else:
@@ -29,6 +29,13 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
             {'category': 'HARM_CATEGORY_HATE_SPEECH', "threshold": "BLOCK_None"},
             {'category': 'HARM_CATEGORY_HARASSMENT', "threshold": "BLOCK_None"},
             {'category': 'HARM_CATEGORY_DANGEROUS_CONTENT', "threshold": "BLOCK_None"}],
+        "generationConfig": {
+            "temperature": temperature,
+            "topK": 64,
+            "topP": 0.95,
+            "maxOutputTokens": maxOutputTokens,
+            "responseMimeType": "text/plain"
+        }
     }
     if tools is not None:
         pay_load["tools"] = tools
