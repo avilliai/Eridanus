@@ -23,7 +23,7 @@ def main(bot,config):
             await bot.set_friend_remark(event.user_id, remark)
     @bot.on(GroupBanNoticeEvent)
     async def _(event: GroupBanNoticeEvent):
-        if event.user_id==bot.id:
+        if event.user_id==bot.id and event.duration!=0:
             await bot.send_friend_message(config.basic_config["master"]['id'], f"bot在群{event.group_id}被禁言了{event.duration}秒\n操作者id:{event.operator_id}\n建议拉黑该群和该用户")
 
 
