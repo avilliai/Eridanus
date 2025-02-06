@@ -420,6 +420,22 @@
                         "info"
                     ]
                 }
+            },
+            {
+                "name": "search_net",
+                "description": "当用户明确告知上网查或是你无法回答用户问题时，上网查询相关信息并总结",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "你认为合适的上网查询的关键词或句子，注意，如果用户想知道当前时间，直接查询‘百度时间’"
+                        }
+                    },
+                    "required": [
+                        "query"
+                    ]
+                }
             }
         ]
     }
