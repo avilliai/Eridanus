@@ -3,6 +3,7 @@ import json
 import random
 import re
 import time
+import traceback
 from collections import defaultdict
 
 
@@ -138,6 +139,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {e}")
+                        traceback.print_exc()
                         temp_history.append({
                             "role": "tool",
                             "content": json.dumps({"status": "failed to call function"}),
@@ -238,6 +240,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {func_name}")
+                        traceback.print_exc()
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
@@ -278,6 +281,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             return reply_message
     except Exception as e:
         logger.error(f"Error occurred: {e}")
+        traceback.print_exc()
         if recursion_times<=config.api["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
