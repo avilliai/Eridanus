@@ -2,7 +2,7 @@ llm:
   model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
   func_calling: True #是否开启函数调用功能
-  联网搜索显示原始数据: True
+  联网搜索显示原始数据: True   #此处联网搜索基于函数调用实现。
   prefix:
     - "测试机"
   aiReplyCore: True   #ai回复核心，将优化其他功能回复表现
