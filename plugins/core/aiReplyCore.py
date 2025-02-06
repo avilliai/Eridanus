@@ -3,6 +3,7 @@ import json
 import random
 import re
 import time
+import traceback
 from collections import defaultdict
 
 
@@ -138,6 +139,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {e}")
+                        traceback.print_exc()
                         temp_history.append({
                             "role": "tool",
                             "content": json.dumps({"status": "failed to call function"}),
@@ -178,7 +180,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 config.api["llm"]["gemini"]["model"],
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
-                system_instruction=system_instruction)
+                system_instruction=system_instruction,
+                temperature=config.api["llm"]["gemini"]["temperature"],
+                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+            )
             #print(response_message)
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
@@ -187,11 +192,18 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if reply_message is not None:
                 if reply_message=="\n" or reply_message=="" or reply_message==" ":
                     raise Exception("Empty response。Gemini API返回的文本为空。")
+            text_elements = [part for part in response_message['parts'] if 'text' in part]
+            if text_elements!=[] and len(text_elements)>1:
+                for i in text_elements:
+                    await bot.send(event, i['text'].strip())
+                reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
+
             for part in response_message["parts"]:
                 if "functionCall" in part and config.api["llm"]["func_calling"]:
                     status=True
+
             generate_voice=False
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
@@ -228,6 +240,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     except Exception as e:
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {func_name}")
+                        traceback.print_exc()
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
@@ -268,6 +281,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             return reply_message
     except Exception as e:
         logger.error(f"Error occurred: {e}")
+        traceback.print_exc()
         if recursion_times<=config.api["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")

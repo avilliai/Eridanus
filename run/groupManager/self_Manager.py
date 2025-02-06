@@ -3,8 +3,7 @@ import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     GroupIncreaseNoticeEvent, LifecycleMetaEvent
-from developTools.message.message_components import Record, Text, Image, File, Contact_user
-from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
+from developTools.message.message_components import Record, Text, Image, File, Contact_user, Node
 from plugins.core.userDB import get_user
 from plugins.utils.GCTool import delete_old_files_async
 
@@ -113,15 +112,22 @@ async def garbage_collection(bot,event,config):
 async def report_to_master(bot,event,config):
     mes_type="bad_content"
     if mes_type=="bad_content":
-        r = await aiReplyCore_shadow([{"text": f"id为{event.user_id}，昵称为{event.sender.nickname}的用户发送了内容：{event.raw_message}。向管理员报告这一事件，你必须保留发送者id即{event.user_id}以及原消息的大概内容，同时保持你的角色设定，并保持语言简洁，你接下来的回复将直接被发送给管理员。"}], config.basic_config["master"]['id'], config,
-                                     func_result=True)
-        await bot.send_friend_message(config.basic_config["master"]['id'],r)
+
+        r=f"违规内容上报\n发送者id为{event.user_id}"
+
     elif mes_type=="ideas":
-        r = await aiReplyCore_shadow([{
-                                          "text": f"id为{event.user_id}，昵称为{event.sender.nickname}的用户反馈了 {event.raw_message}。上报消息中必须保留发送者id即{event.user_id}。请注意在处理该任务时，保持你的角色设定，并保持语言简洁，你接下来的回复将直接被发送给管理员。"}],
-                                     config.basic_config["master"]['id'], config,
-                                     func_result=True)
-        await bot.send_friend_message(config.basic_config["master"]['id'], r)
+        r = f"反馈意见上报\n发送者id为{event.user_id}"
+    node_li=[]
+    node_li.append(Node(content=[Text(r)]))
+    for i in event.processed_message:
+        if "text" in i:
+            node_li.append(Node(content=[Text(i["text"])]))
+        elif "image" in i:
+            node_li.append(Node(content=[Image(file=i["image"])]))
+        else:
+            node_li.append(Node(content=[Text(str(i))]))
+    await bot.send_friend_message(config.basic_config["master"]['id'], node_li)
+
 async def send(bot,event,config,message):
     message_list=[]
     print(message)
