@@ -7,14 +7,14 @@ from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_s
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt
 from developTools.utils.logger import get_logger
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
-from plugins.core.llmDB import get_user_history, update_user_history
+from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history
 from plugins.core.userDB import get_user
 
 
 
 logger=get_logger()
 
-async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     reply_message = ""
     if not system_instruction:
@@ -74,6 +74,9 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
             except:
                 reply_message = None
+            if reply_message is not None:
+                if reply_message=="\n" or reply_message=="" or reply_message==" ":
+                    raise Exception("Empty response。Gemini API返回的文本为空。")
         elif config.api["llm"]["model"]=="腾讯元器":
             prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
@@ -106,9 +109,18 @@ async def aiReplyCore_shadow(processed_message,user_id,config,tools=None,bot=Non
         else:
             return reply_message
     except Exception as e:
-        await update_user_history(user_id, original_history)
         logger.error(f"Error occurred: {e}")
-        raise  # 继续抛出异常以便调用方处理
+        if recursion_times <= config.api["llm"]["recursion_limit"]:
+
+            logger.warning(f"Recursion times: {recursion_times}")
+            if recursion_times + 1 == config.api["llm"]["recursion_limit"] and config.api["llm"][
+                "auto_clear_when_recursion_fail"]:
+                bot.logger.warning(f"clear ai reply history for user: {event.user_id}")
+                await delete_user_history(event.user_id)
+            return await aiReplyCore_shadow(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times + 1)
+        else:
+            logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+            return "Maximum recursion depth exceeded.Please try again later."
 async def prompt_database_updata(user_id,response_message,config):
     history = await get_user_history(user_id)
     if len(history) > config.api["llm"]["max_history_length"]:
