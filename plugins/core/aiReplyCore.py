@@ -187,11 +187,18 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if reply_message is not None:
                 if reply_message=="\n" or reply_message=="" or reply_message==" ":
                     raise Exception("Empty response。Gemini API返回的文本为空。")
+            text_elements = [part for part in response_message['parts'] if 'text' in part]
+            if text_elements!=[] and len(text_elements)>1:
+                for i in text_elements:
+                    await bot.send(event, i['text'].strip())
+                reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
+
             for part in response_message["parts"]:
                 if "functionCall" in part and config.api["llm"]["func_calling"]:
                     status=True
+
             generate_voice=False
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:

@@ -18,6 +18,19 @@ def main(bot,config):
             tools = openai_func_map()
     else:
         tools = None
+    if config.api["llm"]["联网搜索"]:
+        if config.api["llm"]["model"] == "gemini":
+            if tools is None:
+                tools=[
+
+                    { "googleSearch": {} },
+                    ]
+            else:
+                tools=[
+                    { "googleSearch": {} },
+                    tools
+                ]
+                print(tools)
     '''@bot.on(GroupMessageEvent) #测试异步
     async def aiReplys(event):
         await sleep(10)
