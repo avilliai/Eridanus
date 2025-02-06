@@ -130,7 +130,7 @@ async def query_and_insert_gemini(user_id,aim_element,insert_message):
     if insert_message=={
         "parts": [
             {
-                "text": ""
+                "text": "\n"
             }
         ],
         "role": "model"
