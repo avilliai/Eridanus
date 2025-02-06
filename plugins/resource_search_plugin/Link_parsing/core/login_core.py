@@ -240,7 +240,11 @@ async def xhs_login():
 
 def ini_login_Link_Prising(type=None):
     init_data()
-    data_file = SaveData("user_data")
+    try:
+        data_file = SaveData("user_data")
+    except:
+        os.remove(f'plugins/resource_search_plugin/Link_parsing/user_data.json')
+        data_file = SaveData("user_data")
     bili_login_check, douyin_login_check,xhs_login_check=None,None,None
     if type == 1:
         if data_file.data["login"].get(f'bili_login') is not None:

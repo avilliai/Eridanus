@@ -25,7 +25,6 @@ from plugins.core.userDB import get_user
 from plugins.utils.utils import download_img
 from plugins.utils.random_str import random_str
 
-from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 
 
 image_search={}
@@ -234,9 +233,7 @@ async def call_all_speakers(bot,event,config):
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
-    if config.api["llm"]["aiReplyCore"]:
-        r=await aiReplyCore_shadow([{"text":f"system:阐释这张塔罗牌：{txt}"}], event.user_id, config,bot=bot,func_result=True)
-        await bot.send(event, r)
+    return {"text": txt,"img":img}
 async def call_fortune(bot,event,config):
     r=random.randint(1,100)
     if r<=10:

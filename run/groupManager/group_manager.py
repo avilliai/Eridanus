@@ -2,7 +2,7 @@ import re
 
 from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
 from developTools.message.message_components import Node, Text
-from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
+from plugins.core.aiReplyCore import aiReplyCore
 
 
 def main(bot,config):
@@ -32,8 +32,8 @@ def main(bot,config):
                     name = data["data"]["nickname"]
                 except:
                     name = "有新人"
-                r = await aiReplyCore_shadow([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,bot=bot,
-                                             func_result=True)
+                r = await aiReplyCore([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,bot=bot,
+                                             tools=None)
                 await bot.send(event, str(r))
             else:
                 await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")
