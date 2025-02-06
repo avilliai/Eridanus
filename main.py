@@ -24,8 +24,8 @@ config = YAMLManager(["config/settings.yaml",
 #或者使用ws适配器
 bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 from run.anime_game_service import blue_archive
-from run import api_implements, aiReply, user_data, basic_plugin, aiDraw, engine_search
-from run.resource_search import iwara,resource_search
+from run import api_implements, aiReply, user_data, basic_plugin, aiDraw
+from run.resource_search import iwara, resource_search, engine_search
 from run.acg_infromation import galgame,bangumi
 from run.groupManager import group_manager, self_Manager, wifeyouwant, nailong_get
 from run.streaming_media import youtube,bilibili,Link_parsing
