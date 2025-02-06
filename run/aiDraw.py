@@ -11,7 +11,6 @@ from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.aiArtModerate import aiArtModerate
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
-from plugins.core.aiReplyCore_without_funcCall import aiReplyCore_shadow
 from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
