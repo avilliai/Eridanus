@@ -103,6 +103,9 @@ async def call_text2img1(bot,event,config,tag):
             if turn!=0:
                 await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
             else:
+                if turn>config.settings["ai绘画"]["sd队列长度限制"] and event.user_id!=config.basic_config["master"]["id"]:
+                    await bot.send(event,"服务端任务队列已满，稍后再试")
+                    return 
                 await bot.send(event, f"正在绘制，请耐心等待~", True)
             turn += 1
             args = sd_user_args.get(event.sender.user_id, {})
