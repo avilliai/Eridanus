@@ -12,7 +12,7 @@ from run.acg_infromation.bangumi import call_bangumi_search
 from run.streaming_media.youtube import download_youtube
 from run.aiDraw import call_text2img,call_aiArtModerate
 from run.scheduledTasks import operate_group_push_tasks
-from run.resource_search.engine_search import search_net
+from run.resource_search.engine_search import search_net, html_read
 
 async def call_quit_chat(bot,event,config):
     return False
