@@ -1,7 +1,12 @@
 import asyncio
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Node, Text
-from plugins.resource_search_plugin.engine_search import baidu_search, searx_search
+from plugins.resource_search_plugin.engine_search import baidu_search, searx_search, html_read
+
+async def read_html(bot,event,config,url):
+    bot.logger.info(f"正在阅读网页:{url}")
+    html_content = await html_read(url, config)
+    return  {"result": html_content}
 
 async def search_net(bot,event,config,query):
     functions = [
