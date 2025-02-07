@@ -3,8 +3,10 @@ import os
 import textwrap
 import re
 import inspect
-
-
+from plugins.resource_search_plugin.Link_parsing.core.common import download_img
+import traceback
+import requests
+from urllib.parse import urlparse
 
 def create_gradient_background(size, color1, color2):
 
@@ -166,7 +168,7 @@ def can_render_character(font, character):
         print(f"Error: {e}")
         return False
 
-def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=None):
+def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=None,emoji_list=None,filepath=None):
     """
     在图片上逐个绘制一行文字。
 
@@ -178,30 +180,47 @@ def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=No
     :param spacing: 每个字符之间的间距
     """
     if spacing is None:
-        spacing=0
-    draw = image
+        spacing=1
     x, y = position  # 初始位置
-    #print('yes')
-    for char in text:
-        # 绘制单个字符
-        if can_render_character(font, char):
-            bbox = font.getbbox(char)
-            char_width = bbox[2] - bbox[0]
-            draw.text((x, y), char, font=font, fill=text_color)
-        else:
-            #print('OSError')
-            bbox = font.getbbox(char)
-            char_height = bbox[3] - bbox[1]
-            if char_height == 0:continue
-            font_restore = ImageFont.load_default(char_height-1)
-            if can_render_character(font_restore, char):
-                bbox = font_restore.getbbox(char)
-                char_width = bbox[2] - bbox[0]
-                draw.text((x, y), char, font=font_restore, fill=text_color)
-            else: continue
-        # 获取字符宽度
+    flag_emoji=False
+    draw = ImageDraw.Draw(image)
+    check_emoji_forward=''
+    i = 0
+    #print(text[0:2])
 
-        x += char_width + spacing  # 字符宽度 + 自定义间距
+    while i < len(text)-1:
+        if text[i:i + 2] == '![':
+            char = text[i+2]
+            i += 3
+            emoji_width = font.getbbox('[1]')[2] - font.getbbox('[1]')[0]
+            response = requests.get(emoji_list[int(char)])
+            emoji_Path = f"{filepath}/{urlparse(emoji_list[int(char)]).path.split('/')[-1]}.jpg"
+            with open(emoji_Path, 'wb') as file:
+                file.write(response.content)
+            img = Image.open(emoji_Path).convert("RGBA")
+            img = img.resize((emoji_width, int(emoji_width * img.height / img.width)))
+            image.paste(img, (int(x), int(y - 5)), img.split()[3])
+            x += emoji_width + spacing + 3
+        else:
+            # 普通字符输出
+            char = text[i]
+            i += 1
+            if can_render_character(font, char):
+                bbox = font.getbbox(char)
+                char_width = bbox[2] - bbox[0]
+                draw.text((x, y), char, font=font, fill=text_color)
+            else:
+                bbox = font.getbbox(char)
+                char_height = bbox[3] - bbox[1]
+                if char_height == 0: continue
+                font_restore = ImageFont.load_default(char_height - 1)
+                if can_render_character(font_restore, char):
+                    bbox = font_restore.getbbox(char)
+                    char_width = bbox[2] - bbox[0]
+                    draw.text((x, y), char, font=font_restore, fill=text_color)
+                else:
+                    continue
+            x += char_width + spacing
     return image
 
 
@@ -298,7 +317,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
 def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,name,Time,header_height,
                processed_contents,content_width,introduce,type_check,font_tx,font_tx_pil,introduce_height,
                introduce_contentm,introduce_content,font_tx_introduce,current_y_set=None,total_height=None,type_software=None,
-               color_software=None,layer=None,height_software=None):
+               color_software=None,layer=None,height_software=None,emoji_list=None,filepath=None):
 
     draw = ImageDraw.Draw(canvas)
     # 显示头像和名字
@@ -448,13 +467,13 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 matches = re.findall(pattern, line)
                 if 'tag:' in line:
                     line = line.split("tag:")[1]
-                    draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
+                    canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
                 elif matches:
                     pass
-                    draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
+                    canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
                 else:
                     pass
-                    draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0))
+                    canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0),filepath=filepath,emoji_list=emoji_list)
                 current_y += font_tx.getbbox("A")[3] +padding
             else:
                 for line in content:
@@ -465,11 +484,11 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                     check_number+=1
                     if 'tag:' in line:
                         line = line.split("tag:")[1]
-                        draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
+                        canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
                     elif matches:
-                        draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204))
+                        canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
                     else:
-                        draw = draw_text_step(draw, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0))
+                        canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0),filepath=filepath,emoji_list=emoji_list)
                     current_y += font_tx.getbbox("A")[3] + padding * 0.8
                 current_y += padding* 0.2
 
@@ -490,7 +509,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
                          avatar_path=None, name=None,Time=None,type=None,introduce=None,title=None,
                          contents_dy=None,orig_avatar_path=None, orig_name=None,orig_Time=None,
                          filepath=None,output_path=None,output_path_name=None,type_software=None,
-                         color_software=None,orig_type_software=None):
+                         color_software=None,orig_type_software=None,emoji_list=None):
     """
     图像绘制
     type类型说明：
@@ -565,7 +584,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     canvas,current_y=handle_img(canvas, padding, padding_x,padding_x, avatar_path, font_size, name, Time, header_height,
                    processed_contents, content_width, introduce, type_check, font_tx, font_tx_pil, introduce_height,
                    introduce_content, introduce_content, font_tx_introduce,total_height=total_height,type_software=type_software,
-                   color_software=color_software,height_software=height_software)
+                   color_software=color_software,height_software=height_software,emoji_list=emoji_list,filepath=filepath)
 
     if type == 14:
         current_y_set=current_y
@@ -573,7 +592,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
         canvas ,current_y= handle_img(canvas, padding, padding_x, padding_x +20 ,orig_avatar_path, font_size, orig_name, orig_Time, header_height,
                             orig_processed_contents, content_width - padding_x, introduce, type_check, font_tx, font_tx_pil,
                             orig_introduce_height,orig_introduce_content, orig_introduce_content, font_tx_introduce,current_y,
-                            total_height,layer=2,type_software=orig_type_software,color_software=color_software,height_software=height_software)
+                            total_height,layer=2,type_software=orig_type_software,color_software=color_software,height_software=height_software,emoji_list=emoji_list,filepath=filepath)
 
 
     # 保存图片

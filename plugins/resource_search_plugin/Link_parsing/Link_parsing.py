@@ -16,7 +16,7 @@ import os.path
 from urllib.parse import parse_qs
 from datetime import datetime, timedelta
 import json
-
+import traceback
 from developTools.utils.logger import get_logger
 from plugins.resource_search_plugin.Link_parsing.core.draw import draw_adaptive_graphic_and_textual
 from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_and_process_image,download_b_file,merge_file_to_mp4,download_b
@@ -64,6 +64,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         filepath = filepath_init
     contents=[]
     contents_dy=[]
+    emoji_list = []
     orig_desc=None
     type=None
     introduce=None
@@ -96,6 +97,8 @@ async def bilibili(url,filepath=None,is_twice=None):
             #logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
             tags = ''
+            number=0
+            text_list_check=''
             if dynamic_info is not None:
                 title = dynamic_info['item']['basic']['title']
                 paragraphs = []
@@ -103,16 +106,21 @@ async def bilibili(url,filepath=None,is_twice=None):
                     if 'module_content' in module:
                         paragraphs = module['module_content']['paragraphs']
                         break
-
+                #print(json.dumps(paragraphs, indent=4))
                 for desc_check in paragraphs[0]['text']['nodes']:
                     if 'word' in desc_check:
                         desc = desc_check['word']['words']
                         if f'{desc}' not in {'',' '}:
-                            contents.append(f"{desc}")
-                            #logger.info(f"{desc}")
-                for tags_check in paragraphs[0]['text']['nodes']:
-                    if tags_check['type'] =='TEXT_NODE_TYPE_RICH':
-                        tags+=tags_check['rich']['text'] + ' '
+                            text_list_check+=f"{desc}"
+                    elif desc_check['type'] =='TEXT_NODE_TYPE_RICH':
+                        if desc_check['rich']['type'] =='RICH_TEXT_NODE_TYPE_EMOJI':
+                            emoji_list.append(desc_check['rich']['emoji']['icon_url'])
+                            text_list_check += f'![{number}'
+                            number += 1
+                        else:
+                            tags+=desc_check['rich']['text'] + ' '
+                if text_list_check != '':
+                    contents.append(text_list_check)
                 if tags != '':
                     contents.append(f'tag:{tags}')
 
@@ -131,7 +139,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                 contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item['url'], f'{filepath}', len=len(pics_context))) for item in pics_context]))
                 if is_twice is not True:
                     out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
-                                                  Time=f'{pub_time}',filepath=filepath,type_software='BiliBili 动态',
+                                                  Time=f'{pub_time}',filepath=filepath,type_software='BiliBili 动态',emoji_list=emoji_list,
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
                     json_check['pic_path'] = out_path
                     json_check['time'] = pub_time
@@ -168,8 +176,19 @@ async def bilibili(url,filepath=None,is_twice=None):
                     type_software='BiliBili 动态'
                     if 'opus' in dynamic_info['item']['modules']['module_dynamic']['major']:
                         opus_paragraphs = dynamic_info['item']['modules']['module_dynamic']['major']['opus']
-                        title = opus_paragraphs['summary']['text']
-                        contents.append(title)
+                        text_list_check = ''
+                        number=0
+                        for text_check in opus_paragraphs['summary']['rich_text_nodes']:
+                            #print('\n\n')
+                            if 'emoji' in text_check:
+                                #print(text_check['emoji']['icon_url'])
+                                text_list_check += f'![{number}'
+                                number += 1
+                                emoji_list.append(text_check['emoji']['icon_url'])
+                            elif 'orig_text' in text_check:
+                                text_list_check += text_check['orig_text']
+                        #title = opus_paragraphs['summary']['text']
+                        contents.append(text_list_check)
                     elif 'live_rcmd' in dynamic_info['item']['modules']['module_dynamic']['major']:
                         live_paragraphs = dynamic_info['item']['modules']['module_dynamic']['major']['live_rcmd']
                         content = json.loads(live_paragraphs['content'])
@@ -187,7 +206,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                     if is_twice is not True:
                         out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                           Time=f'{pub_time}', type=type_set, introduce=desc,
-                                                      filepath=filepath,type_software=type_software,
+                                                      filepath=filepath,type_software=type_software,emoji_list=emoji_list,
                                       color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
                         json_check['pic_path'] = out_path
                         json_check['time'] = pub_time
@@ -664,7 +683,6 @@ async def xiaohongshu(url,filepath=None):
     json_check['pic_path'] = out_path
     return json_check
 
-
 async def twitter(url,filepath=None,proxy=None):
     """
         X解析
@@ -777,6 +795,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
+        traceback.print_exc()
         return json_check
     if link_prising_json:
         if type == 'dynamic_check' and (datetime.strptime(link_prising_json['time'], "%Y年%m月%d日 %H:%M")).date() != datetime.now().date():
@@ -800,6 +819,9 @@ if __name__ == "__main__":#测试用，不用管
     url='https://x.com/fliosofem/status/1827202917306433845?s=46'
     url='https://x.com/myuto54321/status/1884528807824196074?s=46'
     url='https://x.com/gosari542/status/1884258207985721387?s=46'
+    url='https://t.bilibili.com/1031109038029406228?share_source=pc_native'
+    url='https://t.bilibili.com/1031169489701437442?share_source=pc_native'
+    url='https://t.bilibili.com/1031193215122800644?share_source=pc_native'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
     url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
