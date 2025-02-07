@@ -130,7 +130,10 @@ async def n4(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
@@ -152,9 +155,12 @@ async def n4(prompt, path, groupid, config, args):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
-                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api['ai绘画']['sd审核和反推api'])
-                if check:
+                try:
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    if check:
+                        return False
+                except Exception as e:
+                    print(f"审核api失效,为保证安全已禁止画图请求: {e}")
                     return False
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
@@ -242,7 +248,10 @@ async def n3(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
@@ -264,9 +273,12 @@ async def n3(prompt, path, groupid, config, args):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
-                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api['ai绘画']['sd审核和反推api'])
-                if check:
+                try:
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    if check:
+                        return False
+                except Exception as e:
+                    print(f"审核api失效,为保证安全已禁止画图请求: {e}")
                     return False
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
@@ -339,6 +351,9 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
     round_sd += 1
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
@@ -350,11 +365,14 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:  # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
-        check = await pic_audit_standalone(b64, return_none=True, url=config.api["ai绘画"][
-            "sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
-        if check:  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
-            return False  # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
+    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+        try:
+            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            if check:
+                return False
+        except Exception as e:
+            print(f"审核api失效,为保证安全已禁止画图请求: {e}")
+            return False
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
     # image = Image.open(io.BytesIO(base64.b64decode(p)))
     image.save(f'{path}')
@@ -427,6 +445,9 @@ async def SdDraw0(prompt, path, config, groupid, args):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
     round_sd += 1
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
@@ -436,11 +457,14 @@ async def SdDraw0(prompt, path, config, groupid, args):
     r = response.json()
 
     b64 = r['images'][0]
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:  # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
-        check = await pic_audit_standalone(b64, return_none=True, url=config.api["ai绘画"][
-            "sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
-        if check:  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
-            return False  # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
+    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+        try:
+            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            if check:
+                return False
+        except Exception as e:
+            print(f"审核api失效,为保证安全已禁止画图请求: {e}")
+            return False
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
     # image = Image.open(io.BytesIO(base64.b64decode(p)))
     image.save(f'{path}')
@@ -586,10 +610,13 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
     round_nai += 1
     list_length = len(config.api['ai绘画']['nai_key'])
     if round_nai >= list_length:
@@ -608,9 +635,12 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
-                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api['ai绘画']['sd审核和反推api'])
-                if check:
+                try:
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    if check:
+                        return False
+                except Exception as e:
+                    print(f"审核api失效,为保证安全已禁止画图请求: {e}")
                     return False
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
@@ -704,10 +734,13 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if config.api["proxy"]["http_proxy"] is not None:
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
     round_nai += 1
     list_length = len(config.api['ai绘画']['nai_key'])
     if round_nai >= list_length:
@@ -726,9 +759,12 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
             if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
-                check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
-                                                   url=config.api['ai绘画']['sd审核和反推api'])
-                if check:
+                try:
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    if check:
+                        return False
+                except Exception as e:
+                    print(f"审核api失效,为保证安全已禁止画图请求: {e}")
                     return False
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
@@ -805,6 +841,9 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("未配置审核api,为保证安全已禁止画图请求")
+        return False
     round_sd += 1
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
@@ -816,11 +855,14 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:  # 推荐用kaggle部署sd，防止占线（kaggle搜spawnerqwq）
-        check = await pic_audit_standalone(b64, return_none=True, url=config.api["ai绘画"][
-            "sd审核和反推api"])  # 这里如果是使用我（spawnerqwq）的kaggle云端脚本部署的sd，参数可以写(b64,return_none=True,url)
-        if check:  # 注意自己装的wd14打标插件没用，官方插件有bug，我在kaggle部署的插件是修改过的
-            return False  # 注意这里的url是sdurl，如果你在不是sd的画图模块也想开审核，注意把那个url的参数填sdurl
+    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+        try:
+            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            if check:
+                return False
+        except Exception as e:
+            print(f"审核api失效,为保证安全已禁止画图请求: {e}")
+            return False
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
     # image = Image.open(io.BytesIO(base64.b64decode(p)))
     image.save(f'{path}')
