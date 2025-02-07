@@ -1,7 +1,7 @@
 import random
 
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
-    ProfileLikeEvent, PokeNotifyEvent, GroupRequestEvent
+    ProfileLikeEvent, PokeNotifyEvent, GroupRequestEvent,GroupBanNoticeEvent
 from developTools.message.message_components import Record, Node, Text
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
@@ -21,6 +21,10 @@ def main(bot,config):
             await bot.send(event, "已修改")
             remark = event.raw_message.split("改备注")[1].strip()
             await bot.set_friend_remark(event.user_id, remark)
+    @bot.on(GroupBanNoticeEvent)
+    async def _(event: GroupBanNoticeEvent):
+        if event.user_id==bot.id and event.duration!=0:
+            await bot.send_friend_message(config.basic_config["master"]['id'], f"bot在群{event.group_id}被禁言了{event.duration}秒\n操作者id:{event.operator_id}\n建议拉黑该群和该用户")
 
 
     @bot.on(GroupMessageEvent)

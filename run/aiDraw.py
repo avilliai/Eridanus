@@ -101,6 +101,9 @@ async def call_text2img1(bot,event,config,tag):
         bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
         try:
             if turn!=0:
+                if turn>config.settings["ai绘画"]["sd队列长度限制"] and event.user_id!=config.basic_config["master"]["id"]:
+                    await bot.send(event,"服务端任务队列已满，稍后再试")
+                    return 
                 await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
             else:
                 await bot.send(event, f"正在绘制，请耐心等待~", True)
