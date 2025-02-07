@@ -1,7 +1,7 @@
 llm:
   model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
-  system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。"
-  func_calling: True  #是否开启函数调用功能
+  system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。注意，你需要在回复时避免使用markdown语法。"
+  func_calling: True  #开启函数调用功能
   联网搜索: false      #官方版本联网搜索，与函数调用不可同时开启
   联网搜索显示原始数据: True   #此处联网搜索基于函数调用实现(非官方)，与上面的联网搜索不同，所以可以同时开启函数调用和实现联网搜索。
   prefix:
@@ -9,13 +9,13 @@ llm:
   aiReplyCore: True   #ai回复核心，将优化其他功能回复表现
   enable_proxy: False
   max_history_length: 40 #最大上下文长度
-  Quote: False     #回复时是否引用
+  Quote: False     #回复时引用
   focus_time: 1    #单次触发对话后持续有效时间
   语音回复几率: 30
   语音回复附带文本: True
   文本语音同时发送: false
   recursion_limit: 10                  #对话模型最大递归深度，出错时自动递归。
-  auto_clear_when_recursion_fail: True #对话模型递归失败时是否自动清除历史记录。
+  auto_clear_when_recursion_failed: True #对话模型递归失败时自动清除历史记录。
   openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
     api_keys:   #继续像这样添加apikey
     - YOUR_API_KEY_1
