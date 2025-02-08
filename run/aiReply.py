@@ -112,7 +112,7 @@ def main(bot,config):
                     await bot.send(event, reply_message, config.api["llm"]["Quote"])
     def prefix_check(message:str,prefix:list):
         for p in prefix:
-            if p in message:
+            if message.startswith(p):
                 bot.logger.info(f"消息{message}匹配到关键词{p}")
                 return True
         return False
