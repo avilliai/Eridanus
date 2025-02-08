@@ -13,6 +13,7 @@ from run.streaming_media.youtube import download_youtube
 from run.aiDraw import call_text2img,call_aiArtModerate
 from run.scheduledTasks import operate_group_push_tasks
 from run.resource_search.engine_search import search_net, read_html
+
 async def call_quit_chat(bot,event,config):
     return False
 
