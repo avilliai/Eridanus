@@ -5,6 +5,7 @@ import re
 import time
 import traceback
 from collections import defaultdict
+import os
 
 
 from developTools.message.message_components import Record, Text, Node
@@ -15,7 +16,7 @@ from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_s
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
     get_current_openai_prompt, add_openai_standard_prompt
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
-from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history
+from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, clear_all_history, change_folder_chara, read_chara, use_folder_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
 from plugins.func_map import call_func
@@ -36,11 +37,13 @@ async def judge_trigger(processed_message,user_id,config,tools=None,bot=None,eve
         return r
     else:
         return None
+
 async def end_chat(user_id):
     try:
         last_trigger_time.pop(user_id)
     except:
         print("end_chat error。已不存在对应trigger")
+
 async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,lock_prompt=None): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     if recursion_times > config.api["llm"]["recursion_limit"]:
@@ -49,7 +52,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
     reply_message = ""
     original_history = []
     if not system_instruction:
-        system_instruction = config.api["llm"]["system"]
+        if config.api["llm"]["system"]:
+            system_instruction = await read_chara(user_id, config.api["llm"]["system"])
+        else:
+            system_instruction = await read_chara(user_id, await use_folder_chara(config.api["llm"]["chara_file_name"]))
         user_info=await get_user(user_id)
         system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
     try:

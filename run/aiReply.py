@@ -3,10 +3,11 @@ import random
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
 from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger
-from plugins.core.llmDB import delete_user_history, clear_all_history
+from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
 from plugins.func_map_loader import gemini_func_map, openai_func_map
+from developTools.message.message_components import Record, Text, Node, At
 
 
 def main(bot,config):
@@ -48,6 +49,17 @@ def main(bot,config):
         elif event.raw_message=="/clearall" and event.user_id == config.basic_config["master"]["id"]:
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
+        elif event.raw_message.startswith("/clear") and event.user_id == config.basic_config["master"]["id"] and event.get("at"):
+            await delete_user_history(event.get("at")[0]["qq"])
+            await bot.send(event, [Text("已清理"),At(event.get('at')[0]['qq']),Text(" 的对话记录")])
+        elif event.raw_message.startswith("/切人设 "):
+            chara_file = str(event.raw_message).replace("/切人设 ", "")
+            reply = await change_folder_chara(chara_file, event.user_id)
+            await bot.send(event, reply, True)
+        elif event.raw_message.startswith("/查人设"):
+            chara_file = str(event.raw_message).replace("/查人设", "")
+            all_chara = await get_folder_chara()
+            await bot.send(event, all_chara)
         elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.raw_message),config.api["llm"]["prefix"]):
             bot.logger.info(f"接受消息{event.processed_message}")
             user_info = await get_user(event.user_id, event.sender.nickname)
@@ -89,8 +101,8 @@ def main(bot,config):
                     await bot.send(event, reply_message, config.api["llm"]["Quote"])
     def prefix_check(message:str,prefix:list):
         for p in prefix:
-            if message.startswith(p):
-                bot.logger.info(f"消息{message}匹配到前缀{p}")
+            if p in message:
+                bot.logger.info(f"消息{message}匹配到关键词{p}")
                 return True
         return False
 
