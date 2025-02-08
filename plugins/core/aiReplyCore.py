@@ -111,6 +111,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
+                        if reply_message.strip()=="" or reply_message.strip()=="\n":
+                            logger.error("gemini返回了空回复，不发送。")
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
