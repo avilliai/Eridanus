@@ -16,13 +16,13 @@ else:
     DATABASE_FILE = "data/dataBase/openai_conversation.db"
 
 async def use_folder_chara(file_name):
-    full_path = f"config/chara/{file_name}"
+    full_path = f"data/system/chara/{file_name}"
     if file_name.endswith(".txt"):
         with open(full_path, "r", encoding="utf-8") as f:
             return f.read()
         
 async def get_folder_chara():
-    chara_list =  [f for f in os.listdir('config/chara')]
+    chara_list =  [f for f in os.listdir('data/system/chara')]
     return "\n".join(chara_list)
 
 # --- 异步数据库操作 ---
@@ -51,7 +51,7 @@ async def init_charas_db():
         
 asyncio.run(init_charas_db())
 
-async def change_folder_chara(file_name, user_id, folder_path='config/chara'):
+async def change_folder_chara(file_name, user_id, folder_path='data/system/chara'):
     """根据文件名更改用户的角色，并删除用户的聊天记录"""
     try:
         # 获取文件夹中的所有文件名
@@ -74,7 +74,7 @@ async def change_folder_chara(file_name, user_id, folder_path='config/chara'):
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
     
-async def set_all_users_chara(file_name, folder_path='config/chara'):
+async def set_all_users_chara(file_name, folder_path='data/system/chara'):
     """
     将所有用户的chara字段设置为指定的file_name对应的角色信息。
     不会删除任何用户的聊天记录。
