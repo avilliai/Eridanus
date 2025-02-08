@@ -1,7 +1,7 @@
 llm:
   model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
   system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。注意，你需要在回复时避免使用markdown语法。"
-  chara_file_name: 猫娘.txt   # 默认启动的人设文件名，在config/chara文件夹内(目前只支持txt文件)，当上一项system值不为空时无效
+  chara_file_name: 猫娘.txt   #system为""时生效 默认启动的人设文件名，在config/chara文件夹内(目前只支持txt文件)
   func_calling: True  #开启函数调用功能
   联网搜索: false      #官方版本联网搜索，与函数调用不可同时开启
   联网搜索显示原始数据: True   #此处联网搜索基于函数调用实现(非官方)，与上面的联网搜索不同，所以可以同时开启函数调用和实现联网搜索。
