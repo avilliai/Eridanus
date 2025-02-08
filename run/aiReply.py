@@ -61,7 +61,7 @@ def main(bot,config):
             chara_file = str(event.raw_message).replace("/全切人设 ", "")
             reply = await set_all_users_chara(chara_file)
             await bot.send(event, reply, True)
-        elif event.raw_message.startswith("/查人设"):
+        elif event.raw_message=="/查人设":
             chara_file = str(event.raw_message).replace("/查人设", "")
             all_chara = await get_folder_chara()
             await bot.send(event, all_chara)
