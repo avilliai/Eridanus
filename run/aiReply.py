@@ -55,11 +55,17 @@ def main(bot,config):
             await bot.send(event, [Text("已清理"),At(event.get('at')[0]['qq']),Text(" 的对话记录")])
         elif event.raw_message.startswith("/切人设 ") and user_info[6] >= config.controller["core"]["ai_change_character"]:
             chara_file = str(event.raw_message).replace("/切人设 ", "")
-            reply = await change_folder_chara(chara_file, event.user_id)
+            if chara_file == "0":
+                reply = await clear_user_chara(event.user_id)
+            else:
+                reply = await change_folder_chara(chara_file, event.user_id)
             await bot.send(event, reply, True)
         elif event.raw_message.startswith("/全切人设 ") and event.user_id == config.basic_config["master"]["id"]:
             chara_file = str(event.raw_message).replace("/全切人设 ", "")
-            reply = await set_all_users_chara(chara_file)
+            if chara_file == "0":
+                reply = await clear_all_users_chara()
+            else:
+                reply = await set_all_users_chara(chara_file)
             await bot.send(event, reply, True)
         elif event.raw_message=="/查人设":
             chara_file = str(event.raw_message).replace("/查人设", "")
