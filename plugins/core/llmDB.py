@@ -77,7 +77,7 @@ async def change_folder_chara(file_name, user_id, folder_path='data/system/chara
 async def set_all_users_chara(file_name, folder_path='data/system/chara'):
     """
     将所有用户的chara字段设置为指定的file_name对应的角色信息。
-    不会删除任何用户的聊天记录。
+    删除所有用户的聊天记录。
     """
     try:
         if not os.path.isfile(os.path.join(folder_path, file_name)):
@@ -98,6 +98,40 @@ async def set_all_users_chara(file_name, folder_path='data/system/chara'):
             await db.commit()
         
         return "所有用户的人设已切换为：" + file_name
+    except Exception as e:
+        print(f"发生了一个错误: {e}")
+        return f"发生了一个错误: {e}"
+
+async def clear_all_users_chara():
+    """
+    清空chara数据库中的所有内容。
+    """
+    try:
+        await clear_all_history()
+        async with aiosqlite.connect('data/dataBase/charas.db') as db:
+            await db.execute("DELETE FROM user_chara")
+            await db.commit()
+        return "所有用户的人设已清空"
+    except Exception as e:
+        print(f"发生了一个错误: {e}")
+        return f"发生了一个错误: {e}"
+
+async def clear_user_chara(user_id):
+    """
+    删除指定user_id的数据，包括chara字段。
+    
+    参数:
+    - user_id: 要删除数据的用户的ID。
+    返回:
+    - 操作结果的消息字符串。
+    """
+    try:
+        await delete_user_history(user_id)
+        async with aiosqlite.connect('data/dataBase/charas.db') as db:
+            await db.execute("DELETE FROM user_chara WHERE user_id = ?", (user_id,))
+            await db.commit()
+            
+        return f"用户ID为 {user_id} 的人设已删除"
     except Exception as e:
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
