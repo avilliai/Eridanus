@@ -74,6 +74,34 @@ async def change_folder_chara(file_name, user_id, folder_path='config/chara'):
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
     
+async def set_all_users_chara(file_name, folder_path='config/chara'):
+    """
+    将所有用户的chara字段设置为指定的file_name对应的角色信息。
+    不会删除任何用户的聊天记录。
+    """
+    try:
+        if not os.path.isfile(os.path.join(folder_path, file_name)):
+            return f"文件{file_name}不存在"
+
+        chara = await use_folder_chara(file_name)
+        await clear_all_history()
+
+        async with aiosqlite.connect('data/dataBase/charas.db') as db:
+            cursor = await db.execute("SELECT user_id FROM user_chara")
+            all_users = await cursor.fetchall()
+            
+            for user in all_users:
+                user_id = user[0]
+                await db.execute("INSERT OR REPLACE INTO user_chara (user_id, chara) VALUES (?, ?)",
+                                 (user_id, chara))
+            
+            await db.commit()
+        
+        return "所有用户的人设已切换为：" + file_name
+    except Exception as e:
+        print(f"发生了一个错误: {e}")
+        return f"发生了一个错误: {e}"
+    
 async def read_chara(user_id, chara_str): # 这里的chara_str是一个字符串，表示用户默认的角色
     """读取用户的角色信息，如果不存在则设置默认值"""
     if not isinstance(chara_str, str):
