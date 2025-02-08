@@ -10,40 +10,69 @@ def main(bot,config):
         user_info = await get_user(event.user_id, event.sender.nickname)
         if str(event.raw_message).startswith("iwara下载") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_download_level"]:
             videoid = str(event.raw_message).replace("iwara下载", "")
-            list = await download_specific_video(videoid,config)
-            msg = [Node(content=[Text(list.get('title')),Text("\nvideo_id:"), Text(list.get('video_id'))]),Node(content=[File(file=list.get('path'))])]
-            await bot.send(event, msg)
+            await bot.send(event, Text(f"正在下载iwara视频{videoid}"))
+            try:
+                list = await download_specific_video(videoid,config)
+                msg = [Node(content=[Text(list.get('title')),Text("\nvideo_id:"), Text(list.get('video_id'))]),Node(content=[File(file=list.get('path'))])]
+                await bot.send(event, msg)
+            except Exception as e:
+                await bot.send(event, Text(f"iwara视频{videoid}下载失败：{e}"))
         elif str(event.raw_message).startswith("iwara搜") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
             word = str(event.raw_message).replace("iwara搜", "")
-            list = await search_videos(word,config)
-            node_list = [
-                Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
-                for i in list
-            ]
-            await bot.send(event, node_list)
+            await bot.send(event, Text(f"正在iwara搜索{word}"))
+            try:
+                list = await search_videos(word,config)
+                if len(list) == 0:
+                    await bot.send(event, Text(f"未搜索到{word}相关iwara视频"))
+                    return
+                node_list = [
+                    Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
+                    for i in list
+                ]
+                await bot.send(event, node_list)
+            except Exception as e:
+                await bot.send(event, Text(f"iwara搜索{word}失败：{e}"))
         elif str(event.raw_message).startswith("iwara最新") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
-            videoid = str(event.raw_message).replace("iwara最新", "")
-            list = await fetch_video_info('date',config)
-            node_list = [
-                Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
-                for i in list
-            ]
-            await bot.send(event, node_list)
+            await bot.send(event, Text(f"正在获取iwara最新视频"))
+            try:
+                list = await fetch_video_info('date',config)
+                if len(list) == 0:
+                    await bot.send(event, Text(f"未获取到iwara最新视频"))
+                    return
+                node_list = [
+                    Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
+                    for i in list
+                ]
+                await bot.send(event, node_list)
+            except Exception as e:
+                await bot.send(event, Text(f"iwara最新获取失败：{e}"))
         elif str(event.raw_message).startswith("iwara趋势") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
-            videoid = str(event.raw_message).replace("iwara趋势", "")
-            list = await fetch_video_info('trending',config)
-            node_list = [
-                Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
-                for i in list
-            ]
-            await bot.send(event, node_list)
+            await bot.send(event, Text(f"正在获取iwara趋势视频"))
+            try:
+                list = await fetch_video_info('trending',config)
+                if len(list) == 0:
+                    await bot.send(event, Text(f"未获取到iwara趋势视频"))
+                    return
+                node_list = [
+                    Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
+                    for i in list
+                ]
+                await bot.send(event, node_list)
+            except Exception as e:
+                await bot.send(event, Text(f"iwara趋势获取失败：{e}"))
         elif str(event.raw_message).startswith("iwara热门") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
-            videoid = str(event.raw_message).replace("iwara热门", "")
-            list = await fetch_video_info('popularity',config)
-            node_list = [
-                Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
-                for i in list
-            ]
-            await bot.send(event, node_list)
-        elif str(event.raw_message).startswith("iwara热门") or str(event.raw_message).startswith("iwara趋势") or str(event.raw_message).startswith("iwara最新") or str(event.raw_message).startswith("iwara搜") or str(event.raw_message).startswith("iwara下载"):
+            await bot.send(event, Text(f"正在获取iwara热门视频"))
+            try:
+                list = await fetch_video_info('popularity',config)
+                if len(list) == 0:
+                    await bot.send(event, Text(f"未获取到iwara热门视频"))
+                    return
+                node_list = [
+                    Node(content=[Text(i.get('title')),Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
+                    for i in list
+                ]
+                await bot.send(event, node_list)
+            except Exception as e:
+                await bot.send(event, Text(f"iwara热门获取失败：{e}"))
+        elif str(event.raw_message).startswith("iwara"):
             await bot.send(event, "无权限或指令无效")
