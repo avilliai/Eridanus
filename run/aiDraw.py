@@ -118,6 +118,10 @@ async def call_text2img1(bot,event,config,tag):
                 turn -= 1
                 bot.logger.info("色图已屏蔽")
                 await bot.send(event, "杂鱼，色图不给你喵~", True)
+            elif p.startswith("审核api"):
+                turn -= 1
+                bot.logger.info(p)
+                await bot.send(event, p, True)
             else:
                 turn -= 1
                 await bot.send(event, [Image(file=p)], True)
@@ -155,6 +159,10 @@ async def nai4(bot, event, config, tag):
                 if p is False:
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
+                elif p.startswith("审核api"):
+                    turn -= 1
+                    bot.logger.info(p)
+                    await bot.send(event, p, True)
                 else:
                     await bot.send(event, [Text("nai4画图结果"), Image(file=p)], True)
                 return
@@ -181,6 +189,10 @@ async def nai3(bot, event, config, tag):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                     break  # 结束循环，因为没有需要重试的情况
+                elif p.startswith("审核api"):
+                    turn -= 1
+                    bot.logger.info(p)
+                    await bot.send(event, p, True)
                 else:
                     await bot.send(event, [Text("nai3画图结果"), Image(file=p)], True)
                     break  # 成功获取结果后结束循环
@@ -313,14 +325,23 @@ def main(bot,config):
                         raise
 
                 async def process_image(image_url):
+                    image_url = image_url.replace('180x180', '720x720').replace('360x360', '720x720').replace('.jpg', '.webp')
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
-                            audit_result = await pic_audit_standalone(base64_image, return_none=True,
-                                                                      url=config.api["ai绘画"]["sd审核和反推api"])
-                            if audit_result:
-                                bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
-                                return [Text(f"太涩了{image_url}")]
+                        if event.group_id in no_nsfw_groups:
+                            if config.api['ai绘画']['sd审核和反推api']:
+                                try:
+                                    audit_result = await pic_audit_standalone(base64_image, return_none=True,url=config.api["ai绘画"]["sd审核和反推api"])
+                                    if audit_result:
+                                        bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
+                                        return [Text(f"太涩了{image_url}")]
+                                except Exception as e:
+                                    bot.logger.error(f"error to audit image at {image_url}: {e}")
+                                    return [Text(f"审核失败{image_url}: {e}")]
+                            else:
+                                bot.logger.warning(f"审核api未配置，为了安全起见，已屏蔽图片{image_url}")
+                                return [Text(f"审核api未配置，为了安全起见，已屏蔽图片{image_url}")]
+                                    
                         bot.logger.info(f"Image at URL {image_url} passed the audit")
                         path = f"data/pictures/cache/{random_str()}.png"
                         p = await download_img(image_url, path)
@@ -470,6 +491,10 @@ def main(bot,config):
                     turn -= 1
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
+                elif p.startswith("审核api"):
+                    turn -= 1
+                    bot.logger.info(p)
+                    await bot.send(event, p, True)
                 else:
                     turn -= 1
                     await bot.send(event, [Text("sd重绘结果"),Image(file=p)], True)
@@ -574,6 +599,10 @@ def main(bot,config):
                     if p == False:
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    elif p.startswith("审核api"):
+                        turn -= 1
+                        bot.logger.info(p)
+                        await bot.send(event, p, True)
                     else:
                         await bot.send(event, [Text("nai4重绘结果"),Image(file=p)], True)
                 except Exception as e:
@@ -628,6 +657,10 @@ def main(bot,config):
                     if p == False:
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    elif p.startswith("审核api"):
+                        turn -= 1
+                        bot.logger.info(p)
+                        await bot.send(event, p, True)
                     else:
                         await bot.send(event, [Text("nai3重绘结果"),Image(file=p)], True)
                 except Exception as e:
@@ -675,6 +708,10 @@ def main(bot,config):
                     turn -= 1
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
+                elif p.startswith("审核api"):
+                    turn -= 1
+                    bot.logger.info(p)
+                    await bot.send(event, p, True)
                 else:
                     turn -= 1
                     await bot.send(event, [Text("sd局部重绘结果"),Image(file=p)], True)

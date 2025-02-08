@@ -131,8 +131,8 @@ async def n4(prompt, path, groupid, config, args):
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
@@ -161,7 +161,7 @@ async def n4(prompt, path, groupid, config, args):
                         return False
                 except Exception as e:
                     print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-                    return False
+                    return f"审核api失效,为保证安全已禁止画图请求: {e}"
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
     return path
@@ -249,8 +249,8 @@ async def n3(prompt, path, groupid, config, args):
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
@@ -279,7 +279,7 @@ async def n3(prompt, path, groupid, config, args):
                         return False
                 except Exception as e:
                     print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-                    return False
+                    return f"审核api失效,为保证安全已禁止画图请求: {e}"
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
     return path
@@ -352,8 +352,8 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
@@ -372,7 +372,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
                 return False
         except Exception as e:
             print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-            return False
+            return f"审核api失效,为保证安全已禁止画图请求: {e}"
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
     # image = Image.open(io.BytesIO(base64.b64decode(p)))
     image.save(f'{path}')
@@ -446,8 +446,8 @@ async def SdDraw0(prompt, path, config, groupid, args):
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
@@ -464,7 +464,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
                 return False
         except Exception as e:
             print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-            return False
+            return f"审核api失效,为保证安全已禁止画图请求: {e}"
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
     # image = Image.open(io.BytesIO(base64.b64decode(p)))
     image.save(f'{path}')
@@ -615,8 +615,8 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     else:
         proxies = None
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
     list_length = len(config.api['ai绘画']['nai_key'])
     if round_nai >= list_length:
@@ -641,7 +641,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
                         return False
                 except Exception as e:
                     print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-                    return False
+                    return f"审核api失效,为保证安全已禁止画图请求: {e}"
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
     return path
@@ -739,8 +739,8 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     else:
         proxies = None
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
     list_length = len(config.api['ai绘画']['nai_key'])
     if round_nai >= list_length:
@@ -765,7 +765,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
                         return False
                 except Exception as e:
                     print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-                    return False
+                    return f"审核api失效,为保证安全已禁止画图请求: {e}"
             with open(path, 'wb') as img_file:
                 img_file.write(image_data)
     return path
@@ -842,8 +842,8 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
-        print("未配置审核api,为保证安全已禁止画图请求")
-        return False
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
@@ -862,7 +862,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
                 return False
         except Exception as e:
             print(f"审核api失效,为保证安全已禁止画图请求: {e}")
-            return False
+            return f"审核api失效,为保证安全已禁止画图请求: {e}"
     image = Image.open(io.BytesIO(base64.b64decode(r['images'][0])))
     # image = Image.open(io.BytesIO(base64.b64decode(p)))
     image.save(f'{path}')
