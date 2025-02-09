@@ -63,7 +63,6 @@ def main(bot,config):
     叫我{nickname} #修改自己的昵称
     授权#{target_qq}#{level} #授权某人相应权限，为高等级权限专有指令
     """
-    bot.logger.info("user_data plugin loaded")
     master_id = config.basic_config["master"]["id"]
     master_name = config.basic_config["master"]["name"]
     asyncio.run(add_user(master_id, master_name, master_name))

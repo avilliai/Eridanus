@@ -58,8 +58,10 @@ def main(bot,config):
                             await bot.send(event, f'视频有些大，请耐心等待喵~~')
                         await bot.send(event, Video(file=video_json['video_path']))
                     elif video_json['type'] == 'file':
-                        #print('file')
+                        await bot.send(event, f'好大的视频，小的将发送至群文件喵~')
                         await bot.send(event, File(file=video_json['video_path']))
+                    elif video_json['type'] == 'too_big':
+                        await bot.send(event, f'太大了，罢工！')
                 except Exception as e:
                     await bot.send(event, f'下载失败\n{e}')
             return

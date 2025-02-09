@@ -20,6 +20,7 @@ from asyncio import sleep
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
+from urllib.parse import urlparse
 
 
 
@@ -35,7 +36,6 @@ def main(bot,config):
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=0))
     scheduler.start()
     today_wife_api,header = config.api["today_wife"]["api"],config.api["today_wife"]["header"]
-    bot.logger.info(f"今日老婆功能成功加载！")
 
     @bot.on(GroupMessageEvent)
     async def today_wife(event: GroupMessageEvent):
@@ -297,6 +297,45 @@ def main(bot,config):
                         await bot.send(event, 'api失效了喵，请过一段时间再试试吧')
 
     @bot.on(GroupMessageEvent)  # 透群友合集
+    async def today_group_owner(event: GroupMessageEvent):
+        flag_aim = 0
+        if ('今日群主' == str(event.raw_message)):
+            flag_persona = 1
+            check = 'owner'
+        else:
+            flag_persona = 0
+        if flag_persona != 0:
+            bot.logger.info("今日群主任务开启")
+            friendlist = []
+            target_group = int(event.group_id)
+            friendlist_get = await bot.get_group_member_list(event.group_id)
+            data_count = len(friendlist_get["data"])
+            if flag_persona == 2 or flag_persona == 3 or flag_persona == 4 or flag_persona == 5:
+                if data_count > 500:
+                    await bot.send(event, '抱歉，群聊人数过多，bot服务压力过大，仅开放今日群主功能，谢谢')
+                    return
+            for friend in friendlist_get["data"]:
+                data_test = None
+                data_check = friend['role']
+                if flag_persona == 1 or flag_persona == 2 or flag_persona == 5:
+                    if data_check == check:data_test = friend['user_id']
+                elif flag_persona == 3 or flag_persona == 4:data_test = friend['user_id']
+                if data_test != None:friendlist.append(data_test)
+                if flag_persona == 1 or flag_persona == 5:
+                    if data_check == 'owner': break
+            target_id = friendlist[random.randint(1, len(friendlist)) - 1]
+            target_name = (await bot.get_group_member_info(target_group, target_id))['data']['nickname']
+
+            if flag_persona == 1:
+                today_wife_api, header = config.api["today_wife"]["api"], config.api["today_wife"]["header"]
+                response = today_check_api(today_wife_api, header)
+                img_path = f'data/pictures/wife_you_want_img/today_wife.jpg'
+                with open(img_path, 'wb') as file:
+                    file.write(response.content)
+                await bot.send(event, [f'这里是今天的{target_name}哟~~~\n', Image(file=img_path)])
+
+
+    @bot.on(GroupMessageEvent)  # 透群友合集
     async def wife_you_want(event: GroupMessageEvent):
         async with (aiosqlite.connect("data/dataBase/wifeyouwant.db") as db):
             global filepath
@@ -319,7 +358,6 @@ def main(bot,config):
                     pass
                 elif ('娶群友' in str(event.raw_message)):
                     flag_persona = 4
-
                     if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
                         target_id_aim = await manage_group_status(from_id,target_group,'wife_you_get')
                         flag_aim = 1
@@ -330,6 +368,10 @@ def main(bot,config):
                     if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
                         await manage_group_status(from_id, target_group, 'wife_you_get',0)
                         await bot.send(event, '离婚啦，您现在是单身贵族咯~')
+                elif ('/今日群主' == str(event.raw_message)):
+                    flag_persona = 5
+                    check = 'owner'
+                    #print('test')
                 else:
                     flag_persona = 0
 
@@ -424,18 +466,15 @@ def main(bot,config):
                             data_test = None
                             data_check = friend['role']
                             # print(data_check)
-                            if flag_persona == 1 or flag_persona == 2:
+                            if flag_persona == 1 or flag_persona == 2 or flag_persona == 5:
                                 if data_check == check:
                                     data_test = friend['user_id']
                             elif flag_persona == 3 or flag_persona == 4:
                                 data_test = friend['user_id']
                             if data_test != None:
                                 friendlist.append(data_test)
-                            if flag_persona == 1:
-                                if data_check == 'owner':
-                                    data_check_number = 1
-                                if data_check_number == 1:
-                                    break
+                            if flag_persona == 1 or flag_persona == 5:
+                                if data_check == 'owner':break
                         #print(friendlist)
                         number_target = len(friendlist)
                         target_number = random.randint(1, number_target)
@@ -509,6 +548,15 @@ def main(bot,config):
                             await bot.send(event,[f'@{from_name} 今天你的结婚对象是',
                                                 Image(file=target_img_path),
                                                 f'【{target_name}】 ({target_id})哒！'])
+
+                    elif flag_persona == 5:
+                        today_wife_api, header = config.api["today_wife"]["api"], config.api["today_wife"]["header"]
+                        response = today_check_api(today_wife_api, header)
+                        img_path = f'data/pictures/wife_you_want_img/today_wife.jpg'
+                        with open(img_path, 'wb') as file:
+                            file.write(response.content)
+                        await bot.send(event, [f'这里是今天的{target_name}哟~~~\n', Image(file=img_path)])
+
 
                 if flag_persona != 0 and target_name is not None:
                     await manage_group_add(from_id, target_id, target_group)

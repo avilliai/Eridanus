@@ -19,7 +19,7 @@ async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
     bilibili_type_draw = config.settings["bili_dynamic"]["draw_type"]
     for target_uid in config.bili_dynamic:
-        await sleep(30)#设置好内间隔，以防被冻
+        await sleep(20)#设置好内间隔，以防被冻
         try:
             latest_dynamic_id1,latest_dynamic_id2=await fetch_latest_dynamic_id(int(target_uid))
             dy_store = [config.bili_dynamic[target_uid]["latest_dynamic_id"][0],config.bili_dynamic[target_uid]["latest_dynamic_id"][1]]
@@ -35,7 +35,9 @@ async def check_bili_dynamic(bot,config):
                     if bilibili_type_draw == 1:
                         dynamic = await fetch_dynamic(latest_dynamic_id,config.settings["bili_dynamic"]["screen_shot_mode"])
                     elif bilibili_type_draw == 2:
-                        dynamic= (await link_prising(f'https://t.bilibili.com/{latest_dynamic_id}', filepath='data/pictures/cache/'))['pic_path']
+                        linking_prising_json=await link_prising(f'https://t.bilibili.com/{latest_dynamic_id}', filepath='data/pictures/cache/',type = 'dynamic_check')
+                        if not linking_prising_json['status']:continue
+                        dynamic= linking_prising_json['pic_path']
                 except Exception as e:
                     bot.logger.error(f"动态获取失败 ：{e} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
                     continue
@@ -71,8 +73,7 @@ def bili_main(bot,config):
                     #await check_bili_dynamic(bot,config)
                 except Exception as e:
                     bot.logger.error(e)
-
-                await asyncio.sleep(1700)  #哈哈
+            await asyncio.sleep(900)  #哈哈
         else:
             bot.logger.info("B站动态更新检查已启动")
 
