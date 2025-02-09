@@ -9,7 +9,6 @@ import traceback
 import requests
 from urllib.parse import urlparse
 
-
 def pillow_color_emoji(text, output_file, color):
     system = platform.system()
     if system == "Darwin":  # macOS 系统标识
