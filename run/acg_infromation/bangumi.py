@@ -64,7 +64,6 @@ def main(bot,config):
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=1))
     scheduler.start()
-    bot.logger.info("Bangumi功能已启动")
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
         if ("新番排行" in str(event.raw_message)) or ("新番top" in str(event.raw_message)) or (

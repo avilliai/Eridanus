@@ -36,7 +36,6 @@ def main(bot,config):
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=0))
     scheduler.start()
     today_wife_api,header = config.api["today_wife"]["api"],config.api["today_wife"]["header"]
-    bot.logger.info(f"今日老婆功能成功加载！")
 
     @bot.on(GroupMessageEvent)
     async def today_wife(event: GroupMessageEvent):

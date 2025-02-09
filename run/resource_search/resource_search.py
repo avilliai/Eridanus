@@ -180,8 +180,6 @@ async def check_latest_asmr(bot,event,config):
 
 
 def main(bot,config):
-    #实例化对象，进行进一步操作
-    bot.logger.info("resource_search plugin loaded,contains z_library, jmcomic, asmr")
     proxy = config.api["proxy"]["http_proxy"]
     if proxy!= "":
         proxies = {
