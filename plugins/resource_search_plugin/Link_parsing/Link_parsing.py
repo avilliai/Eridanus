@@ -95,7 +95,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         is_opus = dy.is_opus()#判断动态是否为图文
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
         if is_opus is False:#若判断为图文则换另一种方法读取
-            logger.info('not opus')
+            #logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
             tags = ''
             number=0
@@ -151,7 +151,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         if is_opus is True:
             dynamic_info = await dy.get_info()
             #logger.info(dynamic_info)
-            logger.info('is opus')
+            #logger.info('is opus')
             orig_check=1        #判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -812,7 +812,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-        traceback.print_exc()
+        #traceback.print_exc()
         return json_check
     if link_prising_json:
         if type == 'dynamic_check':
@@ -820,8 +820,27 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                 time_check=link_prising_json['time'].split("编辑于 ")[1].strip()
             else:
                 time_check = link_prising_json['time']
-            if (datetime.strptime(time_check, "%Y年%m月%d日 %H:%M")).date() != datetime.now().date():
-                link_prising_json['status'] = False
+            possible_formats = [
+                "%Y年%m月%d日 %H:%M",  # 示例格式 1：2025年02月09日 14:30
+                "%Y/%m/%d %H:%M",  # 示例格式 2：2025/02/09 14:30
+                "%Y-%m-%d %H:%M",  # 示例格式 3：2025-02-09 14:30
+                "%d-%m-%Y %H:%M",  # 示例格式 4：09-02-2025 14:30
+                "%Y.%m.%d %H:%M",  # 示例格式 5：2025.02.09 14:30
+            ]
+
+            for fmt in possible_formats:
+                try:
+                    # 尝试解析日期字符串
+                    check_time=datetime.strptime(time_check, fmt)
+                    if check_time != datetime.now().date():
+                        link_prising_json['status'] = False
+                        print(f"时间不匹配，拒绝发送{link_prising_json['time']}")
+                    break
+                except ValueError:
+                    # 如果解析失败，继续尝试下一个格式
+                    continue
+
+
         return link_prising_json
     else:
         json_check['status'] = False
