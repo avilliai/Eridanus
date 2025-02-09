@@ -43,7 +43,7 @@ for module_name, functions in dynamic_imports.items():
         for func in functions:
             if hasattr(module, func):
                 loaded_functions[func] = getattr(module, func)  # 存入字典
-                logger.info(f"✅ 成功加载 {module_name}.{func}")
+                #logger.info(f"✅ 成功加载 {module_name}.{func}")
             else:
                 logger.warning(f"⚠️ {module_name} 中不存在 {func}")
     except Exception as e:
