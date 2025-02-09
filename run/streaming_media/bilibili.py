@@ -73,8 +73,7 @@ def bili_main(bot,config):
                     #await check_bili_dynamic(bot,config)
                 except Exception as e:
                     bot.logger.error(e)
-
-            await asyncio.sleep(1700)  #哈哈
+                await asyncio.sleep(1700)  #哈哈
         else:
             bot.logger.info("B站动态更新检查已启动")
 
