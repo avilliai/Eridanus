@@ -49,34 +49,48 @@ def clean_invalid_characters(s, clear_html=False):
     return cleaned.strip()
 
 def silly_tavern_card(image_path, clear_html=False):
-    """
-    从给定路径的图片中提取元数据，尝试解码可能存在的base64编码的内容，并返回处理后的字符串。
+    image = Image.open(image_path)
+    # 打印基本信息
+    #print("图片基本信息:")
+    #print(f"格式: {image.format}")
+    #print(f"大小: {image.size}")
+    #print(f"模式: {image.mode}")
     
-    :param image_path: 图片文件的路径
-    :param clear_html: 是否需要移除包含HTML标签及其内容及其前缀
-    :return: 处理后的字符串或提示信息
-    """
-    chara_output = []
-
+    # 打印所有图像信息
+    #print("\n所有图像信息:")
+    #for key, value in image.info.items():
+        #print(f"{key}: {value}")
+    
+    # 尝试打印文本块
     try:
-        with Image.open(image_path) as img:
-            for key, value in img.info.items():
-                if isinstance(value, str) and "chara" in key.lower():
-                    try:
-                        decoded = base64.b64decode(value)
-                        unicode_escaped_str = decoded.decode('utf-8', errors='ignore')
-                        actual_chars = unicode_escaped_str.encode('latin1').decode('unicode_escape')
-                        
-                        cleaned_chars = clean_invalid_characters(actual_chars, clear_html=clear_html)
-                        chara_output.append(cleaned_chars)
-                    except Exception as e:
-                        return f"错误, 无法解码的元数据项 '{key}': {str(e)}"
+        print("\n文本块信息:")
+        for k, v in image.text.items():
+            print(f"{k}: {len(v)} 字符")
+            # 如果文本很长，只打印前100个字符
+            print(f"预览: {v[:100]}...")
+            pass
+    except AttributeError:
+        return "错误，没有文本块信息"
         
-        if not chara_output:
-            return "错误, 未找到chara元数据"
-        return "\n".join(chara_output)
+    final = []
+    
+    # 尝试解码 base64
+    try:
+        for key, value in image.info.items():
+            if isinstance(value, str) and 'chara' in key.lower():
+                print(f"\n尝试解码 {key} 的 base64:")
+                decoded = base64.b64decode(value)
+                res = decoded.decode('utf-8', errors='ignore')
+                final.append(res)
+                
     except Exception as e:
-        return f"错误, 处理图片时出错: {str(e)}"
+        return (f"错误，解码失败: {e}")
+        
+    if final:
+        s = "\n".join(final)
+        return clean_invalid_characters(s, clear_html=False)
+    else:
+        return "错误，没有人设信息"
 
 # --- 异步数据库操作 ---
 

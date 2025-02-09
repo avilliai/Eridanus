@@ -5,7 +5,7 @@ user_data:
 core:
   ai_reply_group: 0    #群内ai对话所需权限等级
   ai_reply_private: 0  #私聊ai对话所需权限等级
-  ai_change_character: 0  #ai更换角色所需权限等级
+  ai_change_character: 99  #ai更换角色所需权限等级
 resource_search:   #资源搜索功能
   z_library:
     search_operate_level: 0    #书籍搜索所需等级
