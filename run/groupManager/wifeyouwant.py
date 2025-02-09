@@ -20,6 +20,7 @@ from asyncio import sleep
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
+from urllib.parse import urlparse
 
 
 

@@ -28,6 +28,7 @@ from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_logi
 from plugins.resource_search_plugin.Link_parsing.core.acfun import parse_url, download_m3u8_videos, parse_m3u8, merge_ac_file_to_mp4
 from plugins.resource_search_plugin.Link_parsing.core.xhs import XHS_REQ_LINK
 import inspect
+
 from bilibili_api import settings
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -94,7 +95,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         is_opus = dy.is_opus()#判断动态是否为图文
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
         if is_opus is False:#若判断为图文则换另一种方法读取
-            #logger.info('not opus')
+            logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
             tags = ''
             number=0
@@ -144,14 +145,14 @@ async def bilibili(url,filepath=None,is_twice=None):
                     json_check['pic_path'] = out_path
                     json_check['time'] = pub_time
                     return json_check
-                return contents,avatar_path,owner_name,pub_time,type,introduce
+                return contents,avatar_path,owner_name,pub_time,type,introduce,emoji_list
 
 
         if is_opus is True:
             dynamic_info = await dy.get_info()
             #logger.info(dynamic_info)
-            #logger.info('is opus')
-            orig_check=1#判断是否为转发，转发为2
+            logger.info('is opus')
+            orig_check=1        #判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
                 paragraphs = []
@@ -211,10 +212,22 @@ async def bilibili(url,filepath=None,is_twice=None):
                         json_check['pic_path'] = out_path
                         json_check['time'] = pub_time
                         return json_check
-                    return contents, avatar_path, owner_name, pub_time, type, desc
+                    return contents, avatar_path, owner_name, pub_time, type, desc,emoji_list
                 elif orig_check ==2:
-                    words=paragraphs['desc']['text']
-                    contents.append(words)
+                    #print(json.dumps(paragraphs, indent=4))
+
+                    text_list_check = ''
+                    number = 0
+                    for text_check in paragraphs['desc']['rich_text_nodes']:
+                        if 'emoji' in text_check:
+                            # print(text_check['emoji']['icon_url'])
+                            text_list_check += f'![{number}'
+                            number += 1
+                            emoji_list.append(text_check['emoji']['icon_url'])
+                        elif 'orig_text' in text_check:
+                            text_list_check += text_check['orig_text']
+                    contents.append(text_list_check)
+                    #print(text_list_check)
 
                     for module in orig_context['modules']:
                         if 'module_dynamic' in module:
@@ -245,11 +258,13 @@ async def bilibili(url,filepath=None,is_twice=None):
                     if is_twice is True:
                         avatar_path =(await asyncio.gather(*[asyncio.create_task(download_img(orig_owner_cover, f'{filepath}'))]))[0]
                         if orig_pub_time == '':
-                            return contents_dy, avatar_path, orig_owner_name, pub_time, type, orig_desc
+                            return contents_dy, avatar_path, orig_owner_name, pub_time, type, orig_desc,emoji_list
                         else:
-                            return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc
+                            return contents_dy, avatar_path, orig_owner_name, orig_pub_time, type, orig_desc,emoji_list
                     orig_url= 'orig_url:'+'https://t.bilibili.com/' + orig_context['id_str']
-                    orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce=await bilibili(orig_url,f'{filepath}orig_',is_twice=True)
+                    orig_contents,orig_avatar_path,orig_name,orig_Time,orig_type,orig_introduce,orig_emoji_list=await bilibili(orig_url,f'{filepath}orig_',is_twice=True)
+                    #print(f'contents:{contents}\norig_contents:{orig_contents}\n')
+                    #print(f'emoji_list:{emoji_list}\norig_emoji_list:{orig_emoji_list}')
                     out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path,
                                                     name=owner_name, Time=f'{pub_time}', type=type_set,
                                                     introduce=orig_desc,filepath=filepath,
@@ -258,7 +273,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                     type_software='BiliBili 动态',
                                                     color_software=(251, 114, 153, 80),
                                                     output_path_name=f'{dynamic_id}',
-                                                    orig_type_software='转发动态'
+                                                    orig_type_software='转发动态',emoji_list=emoji_list,orig_emoji_list=orig_emoji_list
                                                     )
                     json_check['pic_path'] = out_path
                     json_check['time'] = pub_time
@@ -292,7 +307,7 @@ async def bilibili(url,filepath=None,is_twice=None):
             json_check['pic_path'] = out_path
 
             return json_check
-        return contents, avatar_path, owner_name, video_time, type, introduce
+        return contents, avatar_path, owner_name, video_time, type, introduce,emoji_list
     # 专栏识别
     if 'read' in url:
         logger.info('专栏未做识别，跳过，欢迎催更')
@@ -301,6 +316,8 @@ async def bilibili(url,filepath=None,is_twice=None):
     if 'favlist' in url and BILI_SESSDATA != '':
         logger.info('收藏夹未做识别，跳过，欢迎催更')
         return None
+
+
     # 获取视频信息
     video_id = re.search(r"video\/[^\?\/ ]+", url)[0].split('/')[1]
     v = video.Video(video_id, credential=credential)
@@ -359,7 +376,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                     color_software=(251,114,153,80),output_path_name=f'{video_id}')
         json_check['pic_path'] = out_path
         return json_check
-    return contents, avatar_path, owner_name, video_time, type, introduce
+    return contents, avatar_path, owner_name, video_time, type, introduce,emoji_list
 
 async def dy(url,filepath=None):
     """
@@ -640,9 +657,9 @@ async def xiaohongshu(url,filepath=None):
     response_json = response_json.replace("undefined", "null")
     response_json = json.loads(response_json)
     note_data = response_json['note']['noteDetailMap'][xhs_id]['note']
-    formatted_json = json.dumps(note_data, indent=4)
-    #logger.info(formatted_json)
+    #print(json.dumps(note_data, indent=4))
     note_title,note_desc,type = note_data['title'],note_data['desc'], note_data['type']
+
     avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(note_data['user']['avatar'], f'{filepath}'))]))[0]
     if 'time' in note_data:
         xhs_time=note_data['time']
@@ -798,8 +815,13 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
         traceback.print_exc()
         return json_check
     if link_prising_json:
-        if type == 'dynamic_check' and (datetime.strptime(link_prising_json['time'], "%Y年%m月%d日 %H:%M")).date() != datetime.now().date():
-            link_prising_json['status'] = False
+        if type == 'dynamic_check':
+            if '编辑于 ' in link_prising_json['time']:
+                time_check=link_prising_json['time'].split("编辑于 ")[1].strip()
+            else:
+                time_check = link_prising_json['time']
+            if (datetime.strptime(time_check, "%Y年%m月%d日 %H:%M")).date() != datetime.now().date():
+                link_prising_json['status'] = False
         return link_prising_json
     else:
         json_check['status'] = False
@@ -822,6 +844,9 @@ if __name__ == "__main__":#测试用，不用管
     url='https://t.bilibili.com/1031109038029406228?share_source=pc_native'
     url='https://t.bilibili.com/1031169489701437442?share_source=pc_native'
     url='https://t.bilibili.com/1031193215122800644?share_source=pc_native'
+    url='https://t.bilibili.com/1031508830772527126'
+    url='https://t.bilibili.com/1031518515952091161?share_source=pc_native'
+    url='97 沉夕cxxx发布了一篇小红书笔记，快来看吧！ 😆 Kde9g1dqG8kAiaG 😆 http://xhslink.com/a/TOydUquIB8p5，复制本条信息，打开【小红书】App查看精彩内容！'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
     url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
