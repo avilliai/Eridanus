@@ -687,7 +687,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
 
 
     # 保存图片
-    canvas.show()
+    #canvas.show()
     canvas.save(output_path)
     #print(f"图片已保存到 {output_path}")
     return output_path
