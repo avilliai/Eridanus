@@ -27,6 +27,7 @@ config = YAMLManager(["config/settings.yaml",
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
 bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
+#插件列表
 plugin_modules = [
     ("aiDraw", "run.aiDraw"),
     ("basic_plugin", "run.basic_plugin"),
@@ -67,7 +68,7 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
     }
     for future in concurrent.futures.as_completed(futures):
         try:
-            future.result()  # 捕获异常并打印日志
+            future.result()
         except Exception as e:
             bot.logger.warning(f"❌ 插件 {futures[future]} 加载过程中发生异常：{e}")
 
@@ -75,6 +76,8 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
 try:
     if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
         safe_import_and_load("nailong_get", "run.groupManager.nailong_get")
+    else:
+        bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
 except Exception as e:
     bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
 
