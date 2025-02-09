@@ -34,6 +34,13 @@ round_nai = 0
 
 from plugins.utils.random_str import random_str
 
+def check_censored(positive, censored_words):
+    words = positive.lower().replace(',', ' ').split()
+    for word in censored_words:
+        if word.lower() in words:
+            return True
+    return
+
 async def n4(prompt, path, groupid, config, args):
     global round_nai
     width = 832
@@ -58,9 +65,8 @@ async def n4(prompt, path, groupid, config, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
 
     payload = {
         "input": positive,
@@ -191,9 +197,8 @@ async def n3(prompt, path, groupid, config, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
 
     payload = {
         "input": positive,
@@ -316,9 +321,8 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
     
     payload = {
         "init_images": [b64_in],
@@ -411,9 +415,8 @@ async def SdDraw0(prompt, path, config, groupid, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
     
     payload = {
         "denoising_strength": denoising_strength,
@@ -534,9 +537,8 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
 
     payload = {
         "input": positive,
@@ -672,9 +674,8 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
 
     payload = {
         "input": positive,
@@ -801,9 +802,8 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
-        for word in censored_words:
-            if word in positive:
-                return False
+        if check_censored(positive, censored_words):
+            return False
 
     payload = {
         "init_images": [b64_in],
