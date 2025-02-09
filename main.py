@@ -60,6 +60,7 @@ def safe_import_and_load(plugin_name, module_path):
         bot.logger.warning(f"❌ 插件 {plugin_name} 加载失败：{e}")
         traceback.print_exc()
         bot.logger.warning(f"❌ 建议执行一次更新脚本(windows)/tool.py(linux)并重启以尝试修复此问题")
+        bot.logger.warning(f"❌ 如仍无法解决，请反馈此问题至 https://github.com/avilliai/Eridanus/issues 或我们的QQ群 913122269")
 
 # 并行加载插件
 with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -76,8 +77,7 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
 try:
     if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
         safe_import_and_load("nailong_get", "run.groupManager.nailong_get")
-    else:
-        bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
+
 except Exception as e:
     bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
 
