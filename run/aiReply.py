@@ -2,7 +2,7 @@ import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
-from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger
+from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
@@ -136,6 +136,7 @@ def main(bot,config):
           reply_message = await aiReplyCore(event.processed_message, event.user_id, config, tools=tools, bot=bot,
                                             event=event)
           if reply_message is not None:
+              await add_self_rep(bot,event,config,reply_message)
               if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                   if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                       await bot.send(event, reply_message, config.api["llm"]["Quote"])
