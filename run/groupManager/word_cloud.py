@@ -9,5 +9,9 @@ def main(bot,config):
             user_name=event.sender.nickname
         except:
             user_name=event.user_id
-        message={"user_name":user_name,"user_id":event.user_id,"message":event.processed_message}
-        await add_to_group(event.group_id,message)
+        try:
+            message={"user_name":user_name,"user_id":event.user_id,"message":event.processed_message}
+            await add_to_group(event.group_id,message)
+        except Exception as e:
+            bot.logger.error(f"group_mes database error {e}")
+            
