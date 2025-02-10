@@ -7,6 +7,13 @@ onebot v11标准的多功能bot，大部分功能支持gemini/openai函数调用
 [文档](https://eridanus-doc.netlify.app/)
 # 部署
 见[文档](https://eridanus-doc.netlify.app/)
+
+## 快捷部署
+[linux脚本](https://gitee.com/laixi_lingdun/eridanus_deploy)
+
+[windows整合包](https://github.com/avilliai/Eridanus/releases)
+
+如使用快捷部署部署失败，请参照文档部署。
 # 交流
 QQ群：913122269
 # 派生项目
