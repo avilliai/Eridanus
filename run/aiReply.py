@@ -78,6 +78,7 @@ def main(bot,config):
                 await bot.send(event,"你没有足够的权限使用该功能哦~")
                 return
             reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
+            if reple_message=="Maximum recursion depth exceeded.Please try again later.": await delete_user_history(event.user_id)
             if reply_message is not None:
                 if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
@@ -95,6 +96,7 @@ def main(bot,config):
                     await bot.send(event,reply_message,config.api["llm"]["Quote"])
         else:
             reply_message = await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event)
+            if reple_message=="Maximum recursion depth exceeded.Please try again later.": await delete_user_history(event.user_id)
             if reply_message is not None:
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
@@ -133,8 +135,7 @@ def main(bot,config):
           if not user_info[6] >= config.controller["core"]["ai_reply_private"]:
               await bot.send(event, "你没有足够的权限使用该功能哦~")
               return
-          reply_message = await aiReplyCore(event.processed_message, event.user_id, config, tools=tools, bot=bot,
-                                            event=event)
+          reply_message = await aiReplyCore(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event)
           if reply_message is not None:
               if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                   if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
