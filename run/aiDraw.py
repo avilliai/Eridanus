@@ -57,7 +57,10 @@ async def call_text2img(bot, event, config, prompt):
                 r=f1
         except Exception as e:
             bot.logger.error(f"Task failed: {e}")
-    
+    if r:
+        return {"status": "success"}
+    else:
+        return {"status": "failed"}
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id, event.sender.nickname)
