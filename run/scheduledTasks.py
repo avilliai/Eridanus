@@ -37,7 +37,11 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                     config.save_yaml(str("bili_dynamic"))
                     await bot.send(event, "订阅成功")
             else:
-                latest_dynamic_id1, latest_dynamic_id2 = await fetch_latest_dynamic_id(int(target_uid))
+                try:
+                    latest_dynamic_id1, latest_dynamic_id2 = await fetch_latest_dynamic_id(int(target_uid))
+                except:
+                    await bot.send(event, "获取动态id失败，但任务已添加至配置文件。")
+                    latest_dynamic_id1, latest_dynamic_id2 = 0, 0
                 config.bili_dynamic[target_uid] = {"push_groups": [event.group_id], "latest_dynamic_id": [latest_dynamic_id1, latest_dynamic_id2]}
                 config.save_yaml(str("bili_dynamic"))
                 await bot.send(event, "订阅成功")

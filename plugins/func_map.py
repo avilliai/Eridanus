@@ -35,39 +35,41 @@ dynamic_imports = {
 # 存储成功加载的函数
 loaded_functions = {}
 
+
 # 动态导入模块和函数
 for module_name, functions in dynamic_imports.items():
     try:
-        module = importlib.import_module(module_name)  # 导入模块
+        module = importlib.import_module(module_name)  # 动态导入模块
         for func in functions:
             if hasattr(module, func):
-                loaded_functions[func] = getattr(module, func)
-                #logger.info(f"✅ 函数调用 成功加载 {module_name}.{func}")
+                loaded_functions[func] = getattr(module, func)  # 存入字典
+                #logger.info(f"✅ 成功加载 {module_name}.{func}")
             else:
-                logger.warning(f"⚠️ 函数调用 {module_name} 中不存在 {func}")
+                logger.warning(f"⚠️ {module_name} 中不存在 {func}")
     except Exception as e:
-        logger.error(f"❌ 函数调用 无法导入模块 {module_name}: {e}")
-async def call_quit_chat(bot,event,config):
+        logger.error(f"❌ 无法导入模块 {module_name}: {e}")
+
+async def call_quit_chat(bot, event, config):
     return False
 
-async def call_func(bot,event,config,func_name, params):
-
+async def call_func(bot, event, config, func_name, params):
     """
     动态调用已导入的函数。
 
     参数:
         func_name (str): 函数名。
-        params (str): JSON 字符串，包含函数参数。
+        params (dict): 函数参数字典。
 
     返回:
         异步函数的返回值。
     """
     print(f"Calling function '{func_name}' with parameters: {params}")
-    # 从全局作用域中获取函数对象
-    func = globals().get(func_name)
+
+    # **改成从 `loaded_functions` 获取函数**
+    func = loaded_functions.get(func_name)
 
     if func is None:
-        raise ValueError(f"Function '{func_name}' not found.")
+        raise ValueError(f"Function '{func_name}' not found in loaded_functions.")
 
     # 检查是否为可调用对象
     if not callable(func):
@@ -77,8 +79,5 @@ async def call_func(bot,event,config,func_name, params):
     if not inspect.iscoroutinefunction(func):
         raise TypeError(f"'{func_name}' is not an async function.")
 
-    # 将 JSON 字符串解析为字典
-
-
     # 调用函数并传入参数
-    return await func(bot,event,config,**params)
+    return await func(bot, event, config, **params)
