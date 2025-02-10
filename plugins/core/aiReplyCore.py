@@ -10,7 +10,7 @@ import os
 
 from developTools.message.message_components import Record, Text, Node
 from developTools.utils.logger import get_logger
-from plugins.core.Group_Message_DB import get_last_20_and_convert_to_prompt
+from plugins.core.Group_Message_DB import get_last_20_and_convert_to_prompt, add_to_group
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
@@ -209,8 +209,12 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     raise Exception("Empty response。Gemini API返回的文本为空。")
             text_elements = [part for part in response_message['parts'] if 'text' in part]
             if text_elements!=[] and len(text_elements)>1:
+                self_rep=[]
                 for i in text_elements:
+                    self_rep.append({"text":i['text'].strip()})
                     await bot.send(event, i['text'].strip())
+                message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+                await add_to_group(event.group_id, message)
                 reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -256,6 +260,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {func_name}")
                         traceback.print_exc()
+                    await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
@@ -335,7 +340,17 @@ async def read_context(bot,event,config,prompt):
         prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
     return prompt
 
-
+async def add_self_rep(bot,event,config,reply_message):
+    if event is None:
+        return None
+    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+        return None
+    try:
+        self_rep = [{"text":reply_message.strip()}]
+        message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+        await add_to_group(event.group_id, message)
+    except Exception as e:
+        logger.error(f"Error occurred when adding self-reply: {e}")
 
 
 
