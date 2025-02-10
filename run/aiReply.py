@@ -59,7 +59,7 @@ def main(bot,config):
             max_memory = int(config.api["llm"]["群聊临时记录消息数"])
             user_info_str = "qq号为{},昵称为{}".format(user_info[0], user_info[1])
             user_info_dict = {'user_info': user_info_str}
-            processed_message_with_user_info = [user_info_dict] + event.processed_message
+            processed_message_with_user_info = [user_info_dict] + event.processed_message + [{"msg_id": f"消息id为{str(event.message_id)}"}]
             if event.group_id not in input_text_list:
                 input_text_list[event.group_id] = []
             input_text_list[event.group_id].append(processed_message_with_user_info)
