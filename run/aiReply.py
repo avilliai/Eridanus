@@ -2,7 +2,7 @@ import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
-from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger
+from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, aireply_history_add
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
