@@ -106,7 +106,11 @@ def main(bot,config):
                     user_name = ""
                 bot_name=config.basic_config["bot"]["name"]
                 user_info=await get_user(event.user_id,user_name)
-                text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
+                try:
+                    text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
+                except:
+                    bot.logger.error("获取不到戳一戳文本")
+                    text="戳一戳你~"
                 bot.logger.info(text)
                 #print(text)
                 if config.api["llm"]["aiReplyCore"]:

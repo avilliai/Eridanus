@@ -812,7 +812,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-        #traceback.print_exc()
+
         return json_check
     if link_prising_json:
         if type == 'dynamic_check':

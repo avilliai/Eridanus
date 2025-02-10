@@ -14,7 +14,6 @@ from plugins.game_plugin.galgame import Get_Access_Token,Get_Access_Token_json,f
     context_assemble,developers_check,character_check,get_introduction
 
 def main(bot,config):
-    bot.logger.info(f"Galgame功能成功加载！")
     @bot.on(GroupMessageEvent)
     async def galgame_group_reply(event: GroupMessageEvent):
         loop = asyncio.get_running_loop()
