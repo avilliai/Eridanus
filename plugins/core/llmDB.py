@@ -233,12 +233,32 @@ async def get_user_history(user_id):
             else:
                 return []
 
-async def update_user_history(user_id, history):
-    """更新用户历史对话"""
+async def update_user_history(user_id, new_history):
+    """更新用户历史对话，避免重复并保证写入新内容"""
     async with aiosqlite.connect(DATABASE_FILE) as db:
+        cursor = await db.execute("SELECT history FROM conversation_history WHERE user_id = ?", (user_id,))
+        row = await cursor.fetchone()
+        
+        if row is None:
+            existing_history = []
+        else:
+            existing_history = json.loads(row[0])
+        
+        existing_set = {json.dumps(item, sort_keys=True) for item in existing_history}
+        updated_history = []
+
+        for item in new_history:
+            serialized_item = json.dumps(item, sort_keys=True)
+            if serialized_item not in existing_set:
+                updated_history.append(item)
+                existing_set.add(serialized_item)
+        
+        combined_history = existing_history + updated_history
+        
         await db.execute("INSERT OR REPLACE INTO conversation_history (user_id, history) VALUES (?, ?)",
-                       (user_id, json.dumps(history)))
+                         (user_id, json.dumps(combined_history)))
         await db.commit()
+
 async def delete_user_history(user_id):
     """删除指定用户的聊天记录"""
     async with aiosqlite.connect(DATABASE_FILE) as db:

@@ -40,6 +40,8 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
     prompt_elements = []
 
     for i in precessed_message:
+        if "user_info" in i:
+            prompt_elements.append({"type":"text", "text": i["user_info"] + "的用户说: "})
         if "text" in i and i["text"]!="":
             prompt_elements.append({"type":"text", "text":i["text"]})
         elif "image" in i or "mface" in i:
