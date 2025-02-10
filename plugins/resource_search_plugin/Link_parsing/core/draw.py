@@ -11,15 +11,17 @@ from urllib.parse import urlparse
 
 def pillow_color_emoji(text, output_file, color):
     system = platform.system()
+    image_size = 40
     if system == "Darwin":  # macOS 系统标识
         font_path = "/System/Library/Fonts/Apple Color Emoji.ttc"
     elif system == "Windows":
         font_path = r"C:\Windows\Fonts\seguiemj.ttf"
+        image_size = 55
     elif system == "Linux":
         font_path = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
     else:
         raise OSError("暂不支持")
-    image_size = 40  # 图像大小（宽高相等）
+      # 图像大小（宽高相等）
     image = Image.new('RGBA', (image_size, image_size), (255, 255, 255, 0))  # 背景透明
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(font_path, 40)
@@ -121,7 +123,11 @@ def fit_font_size(text, font_path, max_width, starting_font_size=30):
     return font
 
 def wrap_text(text, font, max_width,type=None):
-    #print(f'max_width:{max_width}')
+    check_type=False
+    if text.startswith("title:"):
+        text = text.split("title:")[1]
+        check_type=True
+        start_text='title:'
     number_check = 0
     lines = []  # 用于存储最终的每一行
     check_lines=[]
@@ -141,6 +147,8 @@ def wrap_text(text, font, max_width,type=None):
             text_width = bbox[2] - bbox[0]  # 计算宽度
 
             if text_width + 20 > max_width:  # 判断加上字符后是否超过最大宽度
+                if check_type:
+                    line_check= start_text + line_check
                 check_lines.append(line_check)
                 lines.append(check_lines)  # 将当前行加入结果
                 check_lines=[]
@@ -152,6 +160,8 @@ def wrap_text(text, font, max_width,type=None):
             line_check += char  # 将当前字符加入当前行
 
         if line_check:  # 如果还有剩余内容（最后一行未加入）
+            if check_type:
+                line_check = start_text + line_check
             check_lines.append(line_check)
             lines.append(check_lines)  # 将当前行加入结果
             check_lines = []
@@ -287,7 +297,7 @@ def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=No
 
 
 def handle_context(contents,font,content_width,total_height,padding,type_check,introduce,font_tx,header_height,
-                   type_software=None,height_software=None,avatar_path=None,layer=None):
+                   type_software=None,height_software=None,avatar_path=None,layer=None,font_tx_pil=None):
 
     if type_software is not None:
         total_height +=height_software
@@ -314,7 +324,10 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
             if image_row:
                 processed_contents.append(image_row)
                 image_row = []
-            lines = wrap_text(content, font, content_width)
+            if content.startswith("title:"):
+                lines = wrap_text(content, font_tx_pil, content_width)
+            else:
+                lines = wrap_text(content, font, content_width)
             if lines != []:
                 processed_contents.append(lines)
     if image_row:
@@ -341,26 +354,27 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
                 img = content[0]
                 new_height = int(((content_width- 2 * padding) // 3 ) * img.height / img.width)
                 total_height += new_height + padding
-            elif len(content) > 3:  # 三张以上图片
+            elif len(content) == 4:
+                img = content[0]
+                new_height = int(((content_width - padding) // 2) * img.height / img.width) * 2
+                total_height += new_height + padding * 2
+            elif len(content) > 4:  # 三张以上图片
                 if len(content)%3 == 0 :
                     len_number=len(content)//3
                 else:len_number=len(content)//3+1
                 img = content[0]
                 new_height = int(((content_width- 2 * padding) // 3 ) * img.height / img.width)*len_number
                 total_height += new_height + padding * len_number
-                #print(int(((content_width- 2 * padding) // 3 ) * img.height / img.width),new_height,padding * len_number,len_number)
-                #print(int((((content_width - 2 * padding) // 3)) * img.height / img.width),total_height)
         elif isinstance(content, list):  # 文字
             check_text=1
             check_img = 0
-            if len(content) == 1:  # 单张图片
+            if content[0][0].startswith("title:"):
                 line_height = font.getbbox("A")[3]
-                total_height += line_height + padding
-                check_text_height+= line_height + padding
             else:
                 line_height = font.getbbox("A")[3]
-                total_height += len(content) * line_height + padding + padding*(len(content)-1)*0.8
-                check_text_height+= len(content) * line_height + padding + padding*(len(content)-1)*0.8
+            total_height += len(content) * line_height + padding + padding * (len(content) - 1) * 0.8
+            check_text_height += len(content) * line_height + padding + padding * (len(content) - 1) * 0.8
+
 
 
     if check_img == 0 and check_text==1 and type_check:#如果是图片结尾则不加长，若是文字结尾则加长一小段
@@ -382,7 +396,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
 def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,name,Time,header_height,
                processed_contents,content_width,introduce,type_check,font_tx,font_tx_pil,introduce_height,
                introduce_contentm,introduce_content,font_tx_introduce,current_y_set=None,total_height=None,type_software=None,
-               color_software=None,layer=None,height_software=None,emoji_list=None,filepath=None):
+               color_software=None,layer=None,height_software=None,emoji_list=None,filepath=None,font_tx_title=None,avatar_json=None):
 
     draw = ImageDraw.Draw(canvas)
     # 显示头像和名字
@@ -439,12 +453,25 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
             avatar = add_rounded_corners(avatar, radius=min(avatar.size) // 2)
             canvas.paste(avatar, (int(padding_x_tx), int(current_y)), avatar)
             name_x = padding_x_tx + avatar_size + padding_x_text-20
-
             canvas = draw_text_step(canvas, position=(name_x, current_y-30 + (avatar_size - font_size) // 2), text=name, font=font_tx_pil,text_color=(251,114,153))
-            #draw.text((name_x, current_y-30 + (avatar_size - font_size) // 2), name, fill=(251,114,153), font=font_tx_pil)
             if Time is not None:
-                #draw.text((name_x, current_y+20 + (avatar_size - font_size) // 2), Time, fill=(148,148,148), font=font_tx)
                 canvas = draw_text_step(canvas, position=(name_x, current_y+20 + (avatar_size - font_size) // 2),text=Time, font=font_tx, text_color=(148,148,148))
+            if avatar_json is not None:
+                if avatar_json['pendant_path']:
+                    pendant_size=avatar_size*1.7
+                    pendant = Image.open(avatar_json['pendant_path']).convert("RGBA")
+                    pendant.thumbnail((pendant_size, pendant_size))
+                    canvas.paste(pendant, (int(padding_x_tx-35), int(current_y-30)), pendant)
+                if avatar_json['card_path']:
+                    if layer == 2:padding_right=400
+                    else:padding_right=450
+                    card_size = avatar_size*5
+                    card = Image.open(avatar_json['card_path']).convert("RGBA")
+                    card.thumbnail((card_size, card_size))
+                    width, height = card.size
+                    canvas.paste(card, (int(padding_x_tx + padding_right + int(438- width)), int(current_y-15)), card)
+                    if avatar_json['card_is_fan']:
+                        canvas = draw_text_step(canvas, position=(int(padding_x_tx + padding_right+ 140), int(current_y+35)),text=avatar_json['card_number'], font=font_tx, text_color=avatar_json['card_color'])
             current_y += header_height
         elif layer == 1:
             draw = ImageDraw.Draw(canvas)
@@ -460,7 +487,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
             canvas = draw_text_step(canvas, position=(name_x, current_y -10 + (avatar_size - font_size) // 2),text=name, font=font_tx_pil, text_color=(251, 114, 153))
             if Time is not None:
                 text_width = font_tx_pil.getbbox(name)[2] - font_tx_pil.getbbox(name)[0]
-                canvas = draw_text_step(canvas, position=(name_x +int(text_width) + 30 , current_y +5 + (avatar_size - font_size) // 2),text=Time, font=font_tx, text_color=(148,148,148))
+                canvas = draw_text_step(canvas, position=(name_x +int(text_width) + 30 , current_y -2 + (avatar_size - font_size) // 2),text=Time, font=font_tx, text_color=(148,148,148))
             current_y += header_height - 60
 
 
@@ -475,6 +502,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 img = content[0]
                 img = img.resize((content_width, int(content_width * img.height / img.width)))
                 img = add_rounded_corners(img, radius=20)
+                #print(f'introduce:{introduce}\nintroduce_height:{introduce_height}')
                 if type_check is True and introduce is not None and introduce_height is not None:
                     creat_white_corners(canvas, content_width, int(content_width * img.height / img.width+introduce_height), padding_x_text,current_y)
                 else:
@@ -513,7 +541,35 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                         canvas.paste(img, (int(x_offset), int(current_y)))
                     x_offset += new_width + padding
                 current_y += img.height + padding
-            elif len(content) > 3:  # 三张以上图片
+
+            elif len(content) == 4:  # 四张图片
+                new_width = ((content_width - padding) // 2)
+                x_offset = padding_x_text
+                check = 0
+                check_flag = 1
+                check_fix_y = 0
+                for img in content:
+                    check_y = current_y
+                    img = img.resize((new_width, int(new_width * img.height / img.width)))
+                    img = add_rounded_corners(img, radius=20)
+                    creat_white_corners(canvas, new_width, int(new_width * img.height / img.width), x_offset, current_y)
+                    # 检查透明通道
+                    if img.mode == "RGBA":
+                        canvas.paste(img, (int(x_offset), int(current_y)), img.split()[3])
+                    else:
+                        canvas.paste(img, (int(x_offset), int(current_y)))
+                    x_offset += new_width + padding
+                    check += 1
+                    if img.height >= check_fix_y:
+                        check_fix_y = img.height
+                    if check == 2:
+                        check = 0
+                        check_flag += 1
+                        current_y += check_fix_y + padding
+                        x_offset = padding_x_text
+                current_y = check_y + check_fix_y + padding
+
+            elif len(content) > 4:  # 三张以上图片
                 new_width = ((content_width- 2 * padding) // 3)
                 x_offset = padding_x_text
                 check=0
@@ -554,13 +610,18 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 if 'tag:' in line:
                     line = line.split("tag:")[1]
                     canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
+                    current_y_add=font_tx.getbbox("A")[3]
                 elif matches:
-                    pass
                     canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
+                    current_y_add = font_tx.getbbox("A")[3]
+                elif 'title:' in line:
+                    line = line.split("title:")[1]
+                    canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx_title,text_color=(0, 0, 0), filepath=filepath, emoji_list=emoji_list)
+                    current_y_add = font_tx_title.getbbox("A")[3]
                 else:
-                    pass
                     canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0),filepath=filepath,emoji_list=emoji_list)
-                current_y += font_tx.getbbox("A")[3] +padding
+                    current_y_add = font_tx.getbbox("A")[3]
+                current_y += current_y_add +padding
             else:
                 for line in content:
                     line = line[0]
@@ -571,11 +632,18 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                     if 'tag:' in line:
                         line = line.split("tag:")[1]
                         canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
+                        current_y_add=font_tx.getbbox("A")[3]
                     elif matches:
                         canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(9, 132, 204),filepath=filepath,emoji_list=emoji_list)
+                        current_y_add = font_tx.getbbox("A")[3]
+                    elif 'title:' in line:
+                        line = line.split("title:")[1]
+                        canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx_title,text_color=(0, 0, 0), filepath=filepath, emoji_list=emoji_list)
+                        current_y_add = font_tx_title.getbbox("A")[3]
                     else:
                         canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0),filepath=filepath,emoji_list=emoji_list)
-                    current_y += font_tx.getbbox("A")[3] + padding * 0.8
+                        current_y_add = font_tx.getbbox("A")[3]
+                    current_y += current_y_add + padding * 0.8
                 current_y += padding* 0.2
 
             #绘制简介
@@ -594,7 +662,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
 def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, font_size=30,
                          avatar_path=None, name=None,Time=None,type=None,introduce=None,title=None,
                          contents_dy=None,orig_avatar_path=None, orig_name=None,orig_Time=None,
-                         filepath=None,output_path=None,output_path_name=None,type_software=None,
+                         filepath=None,output_path=None,output_path_name=None,type_software=None,avatar_json=None,
                          color_software=None,orig_type_software=None,emoji_list=None,orig_emoji_list=None):
     """
     图像绘制
@@ -623,10 +691,11 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
 
     try:
         filepath_fort=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(draw_adaptive_graphic_and_textual))))}/data/fort/'
-        font = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
-        font_tx = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size)  # 替换为本地字体路径
-        font_tx_introduce = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size-5)  # 替换为本地字体路径
-        font_tx_pil = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Bold.ttf", font_size+10)  # 替换为本地字体路径
+        font = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Regular.ttf", font_size)
+        font_tx = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Regular.ttf", font_size)
+        font_tx_introduce = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Regular.ttf", font_size-5)
+        font_tx_pil = ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Regular.ttf", font_size+10)
+        font_tx_title= ImageFont.truetype(f"{filepath_fort}LXGWWenKai-Medium.ttf", font_size+10)
     except IOError:
         print("字体 LXGWWenKai-Bold.ttf 未找到，改用默认字体")
         font = ImageFont.load_default()
@@ -642,17 +711,19 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     type_check = None
     height_software=40
     if type in {11,12,13}:
-        type_check=1
+        type_check=True
         layer=None
     elif type == 14:
         layer=1
+    else:
+        layer = None
 
 
 
     # 文本自动换行
     (processed_contents,introduce_content,introduce_height,total_height) = handle_context(contents,font, content_width,
                                 total_height, padding, type_check, introduce, font_tx_introduce,header_height,
-                                type_software,height_software,avatar_path=avatar_path,layer=layer)
+                                type_software,height_software,avatar_path=avatar_path,layer=layer,font_tx_pil=font_tx_pil)
     #print(processed_contents,introduce_content,introduce_height,total_height)
     if type == 14:
         type_check = True
@@ -660,12 +731,13 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
          orig_introduce_height, total_height) = handle_context(contents_dy,font, content_width- padding_x,
                                                 total_height, padding,
                                                 type_check, introduce,font_tx_introduce,header_height,
-                                                orig_type_software,height_software,avatar_path=avatar_path,layer=2)
+                                                orig_type_software,height_software,avatar_path=avatar_path,layer=2,font_tx_pil=font_tx_pil)
 
         #print(orig_processed_contents, orig_introduce_content,orig_introduce_height, total_height)
 
     # 创建画布
     total_height = int(total_height)
+    #print(total_height)
     canvas = create_gradient_background((canvas_width, total_height), color1=(191, 202, 255), color2=(185, 246, 236))
     draw = ImageDraw.Draw(canvas)
 
@@ -674,7 +746,8 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     canvas,current_y=handle_img(canvas, padding, padding_x,padding_x, avatar_path, font_size, name, Time, header_height,
                    processed_contents, content_width, introduce, type_check, font_tx, font_tx_pil, introduce_height,
                    introduce_content, introduce_content, font_tx_introduce,total_height=total_height,type_software=type_software,
-                   color_software=color_software,height_software=height_software,emoji_list=emoji_list,filepath=filepath,layer=layer)
+                   color_software=color_software,height_software=height_software,emoji_list=emoji_list,filepath=filepath,layer=layer
+                                ,font_tx_title=font_tx_title,avatar_json=avatar_json)
 
     if type == 14:
         current_y_set=current_y
@@ -682,7 +755,8 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
         canvas ,current_y= handle_img(canvas, padding, padding_x, padding_x +20 ,orig_avatar_path, font_size, orig_name, orig_Time, header_height,
                             orig_processed_contents, content_width - padding_x, introduce, type_check, font_tx, font_tx_pil,
                             orig_introduce_height,orig_introduce_content, orig_introduce_content, font_tx_introduce,current_y,
-                            total_height,layer=2,type_software=orig_type_software,color_software=color_software,height_software=height_software,emoji_list=orig_emoji_list,filepath=filepath)
+                            total_height,layer=2,type_software=orig_type_software,color_software=color_software,height_software=height_software,emoji_list=orig_emoji_list,filepath=filepath
+                                      ,font_tx_title=font_tx_title,avatar_json=avatar_json)
 
 
     # 保存图片

@@ -12,10 +12,10 @@ import os.path
 from PIL import Image, ImageDraw, ImageFont
 import yaml
 import time
-import inspect
+import json
 from io import BytesIO
 from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
-
+import traceback
 
 def bili_init():
     BILIBILI_HEADER = {
@@ -271,3 +271,91 @@ async def download_b(video_url,audio_url,video_id,filepath=None):
     except Exception as e:
         pass
 
+async def download_img(url: str, path: str = '', proxy: str = None, session=None, headers=None,len=None) -> str:
+    """
+    异步下载（aiohttp）网络图片，并支持通过代理下载。
+    如果未指定path，则图片将保存在当前工作目录并以图片的文件名命名。
+    如果提供了代理地址，则会通过该代理下载图片。
+
+    :param url: 要下载的图片的URL。
+    :param path: 图片保存的路径。如果为空，则保存在当前目录。
+    :param proxy: 可选，下载图片时使用的代理服务器的URL。
+    :return: 保存图片的路径。
+    """
+    def crop_center_square(image):
+        width, height = image.size
+        min_edge = min(width, height)
+        left = (width - min_edge) // 2
+        top = (height - min_edge) // 2
+        right = left + min_edge
+        bottom = top + min_edge
+        return image.crop((left, top, right, bottom))
+    file_name=re.sub(r'[:]', '_', url.split('/').pop().split('?')[0])
+    path=f'{path}{file_name}'
+    if 'gif' in path:
+        path=path.replace("gif", "jpg")
+    #if not ('jpg' in path or 'png' in path or 'webp' in path or 'jpeg' in path):
+    if not path.lower().endswith((".jpg", ".jpeg", ".png")):
+        path = f'{path}.jpg'
+    if 'jpeg' in path:
+        path=path.replace("jpeg", "jpg")
+    # print(f'url:{url}\nfilename:{file_name}\npath:{path}')
+    if len is None:
+        len=1
+    # 单个文件下载
+    if int(len) == 1 :
+        async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
+            response = await client.get(url)
+            if response.status_code  == 200:
+                with open(path, 'wb') as f:
+                    f.write(response.content)
+                return path
+    # 多个文件
+    else:
+        async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
+            response = await client.get(url)
+            if response.status_code  == 200:
+                square_image = crop_center_square(Image.open(BytesIO(response.content)))
+                if square_image.mode != "RGB":
+                    square_image = square_image.convert("RGB")
+                square_image.save(path)
+                return path
+
+
+async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None):
+    #print(f'is_opus:{is_opus}')
+    #print(json.dumps(dy_info, indent=4))
+    try:
+        json_dy = {'status': False,'pendant_path':False,'card_path':False,'card_number':False,'card_color':False,'card_is_fan':False}
+        try:
+            dy_info_check=dy_info['item']['modules']['module_author']
+        except:
+            for check in dy_info['item']['modules']:
+                if 'module_author' in check:
+                    dy_info_check = check['module_author']
+        if 'pendant' in dy_info_check:
+            pendant_url=dy_info_check['pendant']['image']
+            if pendant_url != '':
+                pendant_path=await asyncio.gather(*[asyncio.create_task(download_img(pendant_url, f'{filepath}'))])
+                json_dy['pendant_path']=pendant_path[0]
+
+        if 'decorate' in dy_info_check:
+            card_check = dy_info_check['decorate']
+            json_dy['card_number'] = card_check['fan']['num_str']
+            card_url = card_check['card_url']
+            card_path = await asyncio.gather(*[asyncio.create_task(download_img(card_url, f'{filepath}'))])
+            json_dy['card_color'] = card_check['fan']['color']
+            json_dy['card_is_fan'] = card_check['fan']['is_fan']
+            json_dy['card_path'] = card_path[0]
+        elif 'decorate_card' in dy_info_check:
+            card_check = dy_info_check['decorate_card']
+            json_dy['card_number'] = card_check['fan']['num_desc']
+            card_url = card_check['card_url']
+            card_path = await asyncio.gather(*[asyncio.create_task(download_img(card_url, f'{filepath}'))])
+            json_dy['card_color'] = card_check['fan']['color']
+            json_dy['card_is_fan'] = card_check['fan']['is_fan']
+            json_dy['card_path'] = card_path[0]
+        return json_dy
+    except Exception as e:
+        #traceback.print_exc()
+        return None

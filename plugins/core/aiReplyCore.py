@@ -328,17 +328,20 @@ async def prompt_length_check(user_id,config):
     await update_user_history(user_id, history)
 
 async def read_context(bot,event,config,prompt):
-    if event is None:
+    try:
+        if event is None:
+            return None
+        if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+            return None
+        if config.api["llm"]["model"]=="gemini":
+    
+            group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
+            bot.logger.info(f"群聊上下文消息：已读取")
+            insert_pos = max(len(prompt) - 3, 0)
+            prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
+        return prompt
+    except:
         return None
-    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
-        return None
-    if config.api["llm"]["model"]=="gemini":
-
-        group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
-        bot.logger.info(f"群聊上下文消息：已读取")
-        insert_pos = max(len(prompt) - 3, 0)
-        prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
-    return prompt
 
 async def add_self_rep(bot,event,config,reply_message):
     if event is None:
