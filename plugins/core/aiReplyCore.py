@@ -10,6 +10,7 @@ import os
 
 from developTools.message.message_components import Record, Text, Node
 from developTools.utils.logger import get_logger
+from plugins.core.Group_Message_DB import get_last_20_and_convert_to_prompt
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
@@ -177,10 +178,16 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         elif config.api["llm"]["model"]=="gemini":
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
+                p=await read_context(bot,event,config,prompt)
+                if p:
+                    prompt=p
             elif lock_prompt:
                 prompt=lock_prompt
             else:
                 prompt=await get_current_gemini_prompt(user_id)
+                p = await read_context(bot, event, config, prompt)
+                if p:
+                    prompt = p
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],
@@ -315,7 +322,18 @@ async def prompt_length_check(user_id,config):
             del history[0]
     await update_user_history(user_id, history)
 
+async def read_context(bot,event,config,prompt):
+    if event is None:
+        return None
+    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+        return None
+    if config.api["llm"]["model"]=="gemini":
 
+        group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
+        bot.logger.info(f"群聊上下文消息：已读取")
+        insert_pos = max(len(prompt) - 3, 0)
+        prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
+    return prompt
 
 
 

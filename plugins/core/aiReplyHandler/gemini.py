@@ -1,13 +1,15 @@
 import base64
 import io
+import os
 
 import httpx
 from PIL import Image
 
+from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.utils.random_str import random_str
 
-
+logger=get_logger()
 async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None,temperature=0.7,maxOutputTokens=2048):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
@@ -57,30 +59,33 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
         if "text" in i:
             prompt_elements.append({"text": i["text"]})
         elif "image" in i or "mface" in i:
-            if "mface" in i:
-                url=i["mface"]["url"]
-            else:
-                url=i["image"]["url"]
-            prompt_elements.append({"text": f"system提示: 当前图片的url为{url}"})
-            # 下载图片转base64
-            async with httpx.AsyncClient(timeout=60) as client:
-                res = await client.get(url)
-                # res.raise_for_status()  # Check for HTTP errors
+            try:
+                if "mface" in i:
+                    url=i["mface"]["url"]
+                else:
+                    url=i["image"]["url"]
+                prompt_elements.append({"text": f"system提示: 当前图片的url为{url}"})
+                # 下载图片转base64
+                async with httpx.AsyncClient(timeout=60) as client:
+                    res = await client.get(url)
+                    # res.raise_for_status()  # Check for HTTP errors
 
-                image = Image.open(io.BytesIO(res.content))
-                image = image.convert("RGB")
+                    image = Image.open(io.BytesIO(res.content))
+                    image = image.convert("RGB")
 
-                quality = 85
-                while True:
-                    img_byte_arr = io.BytesIO()
-                    image.save(img_byte_arr, format='JPEG', quality=quality)
-                    size_kb = img_byte_arr.tell() / 1024
-                    if size_kb <= 400 or quality <= 10:
-                        break
-                    quality -= 5
-                img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
-            prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
-            #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
+                    quality = 85
+                    while True:
+                        img_byte_arr = io.BytesIO()
+                        image.save(img_byte_arr, format='JPEG', quality=quality)
+                        size_kb = img_byte_arr.tell() / 1024
+                        if size_kb <= 400 or quality <= 10:
+                            break
+                        quality -= 5
+                    img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+                prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
+                #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
+            except Exception as e:
+                prompt_elements.append({"text": f"系统提示：下载图片失败"})
 
         elif "record" in i:
             origin_voice_url=i["record"]["file"]
@@ -98,13 +103,18 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
             try:
                 video=await bot.get_video(video_url,f"data/pictures/cache/{random_str()}.mp4")
 
+                # 下载视频文件大小限制(15MB)
+                file_size = os.path.getsize(video)
+                if file_size > 15 * 1024 * 1024:
+                    raise Exception(f"视频文件大小超出限制: {file_size / (1024 * 1024):.2f}MB，最大允许 15MB")
+
                 with open(video, "rb") as mp4_file:
                     mp4_data = mp4_file.read()
                     base64_encoded_data = base64.b64encode(mp4_data)
                     base64_message = base64_encoded_data.decode('utf-8')
                     prompt_elements.append({"inline_data": {"mime_type": "video/mp4", "data": base64_message}})
-            except:
-                bot.logger.warning(f"下载视频失败:{video_url}")
+            except Exception as e:
+                logger.warning(f"下载视频失败:{video_url} 原因:{e}")
                 prompt_elements.append({"text": str(i)})
         elif "reply" in i:
             try:
@@ -112,7 +122,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 message = await gemini_prompt_elements_construct(event_obj.processed_message) #
                 prompt_elements.extend(message["parts"])
             except Exception as e:
-                bot.logger.warning(f"引用消息解析失败:{e}")
+                logger.warning(f"引用消息解析失败:{e}")
         else:
             prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:

@@ -37,15 +37,17 @@ plugin_modules = [
     ("api_implements", "run.api_implements"),
     ("self_Manager", "run.groupManager.self_Manager"),
     ("group_manager", "run.groupManager.group_manager"),
+    ("word_cloud", "run.groupManager.word_cloud"),
+    ("wifeyouwant", "run.groupManager.wifeyouwant"),
     ("galgame", "run.acg_infromation.galgame"),
     ("bangumi", "run.acg_infromation.bangumi"),
-    ("wifeyouwant", "run.groupManager.wifeyouwant"),
     ("iwara", "run.resource_search.iwara"),
     ("youtube", "run.streaming_media.youtube"),
     ("bilibili", "run.streaming_media.bilibili"),
     ("Link_parsing", "run.streaming_media.Link_parsing"),
     ("engine_search", "run.resource_search.engine_search"),
     ("blue_archive", "run.anime_game_service.blue_archive"),
+
 ]
 
 def safe_import_and_load(plugin_name, module_path):

@@ -37,7 +37,7 @@ def main(bot,config):
         await sleep(10)
         await bot.send(event,"async task over")'''
     @bot.on(GroupMessageEvent)
-    async def aiReply(event):
+    async def aiReply(event: GroupMessageEvent):
         #print(event.processed_message)
         #print(event.message_id,type(event.message_id))
         user_info = await get_user(event.user_id, event.sender.nickname)
