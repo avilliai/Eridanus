@@ -54,8 +54,6 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
 
     #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
     for i in precessed_message:
-        if "user_info" in i:
-            prompt_elements.append({"text": i["user_info"] + "的用户说: "})
         if "text" in i:
             prompt_elements.append({"text": i["text"]})
         elif "image" in i or "mface" in i:

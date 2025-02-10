@@ -10,14 +10,14 @@ import html
 
 from ruamel.yaml import YAML
 
-
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
-if local_config["llm"]["model"]=="gemini":
+if local_config["llm"]["model"] == "gemini":
     DATABASE_FILE = "data/dataBase/conversation.db"
 else:
     DATABASE_FILE = "data/dataBase/openai_conversation.db"
+
 
 async def use_folder_chara(file_name):
     full_path = f"data/system/chara/{file_name}"
@@ -26,10 +26,12 @@ async def use_folder_chara(file_name):
             return f.read()
     elif file_name.endswith((".jpg", ".jpeg", ".png")):
         return silly_tavern_card(full_path, clear_html=True)
-        
+
+
 async def get_folder_chara():
-    chara_list =  [f for f in os.listdir('data/system/chara')]
+    chara_list = [f for f in os.listdir('data/system/chara')]
     return "\n".join(chara_list)
+
 
 def clean_invalid_characters(s, clear_html=False):
     """
@@ -43,24 +45,25 @@ def clean_invalid_characters(s, clear_html=False):
         cleaned = re.sub(r'^.*?(?=:|：)', '', cleaned).lstrip(':： ').lstrip()
     cleaned = re.sub(r'[ \t]+', ' ', cleaned)
     cleaned = re.sub(r'\n\s+', '\n', cleaned)
-    
+
     cleaned = cleaned.replace('{{user}}', '{用户}').replace('{{char}}', '{bot_name}')
-    
+
     return cleaned.strip()
+
 
 def silly_tavern_card(image_path, clear_html=False):
     image = Image.open(image_path)
     # 打印基本信息
-    #print("图片基本信息:")
-    #print(f"格式: {image.format}")
-    #print(f"大小: {image.size}")
-    #print(f"模式: {image.mode}")
-    
+    # print("图片基本信息:")
+    # print(f"格式: {image.format}")
+    # print(f"大小: {image.size}")
+    # print(f"模式: {image.mode}")
+
     # 打印所有图像信息
-    #print("\n所有图像信息:")
-    #for key, value in image.info.items():
-        #print(f"{key}: {value}")
-    
+    # print("\n所有图像信息:")
+    # for key, value in image.info.items():
+    # print(f"{key}: {value}")
+
     # 尝试打印文本块
     try:
         print("\n文本块信息:")
@@ -71,9 +74,9 @@ def silly_tavern_card(image_path, clear_html=False):
             pass
     except AttributeError:
         return "错误，没有文本块信息"
-        
+
     final = []
-    
+
     # 尝试解码 base64
     try:
         for key, value in image.info.items():
@@ -82,15 +85,16 @@ def silly_tavern_card(image_path, clear_html=False):
                 decoded = base64.b64decode(value)
                 res = decoded.decode('utf-8', errors='ignore')
                 final.append(res)
-                
+
     except Exception as e:
         return (f"错误，解码失败: {e}")
-        
+
     if final:
         s = "\n".join(final)
         return clean_invalid_characters(s, clear_html=False)
     else:
         return "错误，没有人设信息"
+
 
 # --- 异步数据库操作 ---
 
@@ -104,7 +108,8 @@ async def init_db():
             )
         """)
         await db.commit()
-        
+
+
 async def init_charas_db():
     """初始化角色数据库"""
     async with aiosqlite.connect('data/dataBase/charas.db') as db:
@@ -115,15 +120,17 @@ async def init_charas_db():
             )
         """)
         await db.commit()
-        
+
+
 asyncio.run(init_charas_db())
+
 
 async def change_folder_chara(file_name, user_id, folder_path='data/system/chara'):
     """根据文件名更改用户的角色，并删除用户的聊天记录"""
     try:
         # 获取文件夹中的所有文件名
         folder_contents = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-        
+
         # 检查文件名是否在文件夹内容中
         if file_name in folder_contents:
             chara = await use_folder_chara(file_name)
@@ -135,14 +142,15 @@ async def change_folder_chara(file_name, user_id, folder_path='data/system/chara
                 await db.execute("INSERT OR REPLACE INTO user_chara (user_id, chara) VALUES (?, ?)",
                                  (user_id, chara))
                 await db.commit()
-            
+
             return "人设已切换为：" + file_name
         else:
             return f"文件{file_name}不存在"
     except Exception as e:
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
-    
+
+
 async def set_all_users_chara(file_name, folder_path='data/system/chara'):
     """
     将所有用户的chara字段设置为指定的file_name对应的角色信息。
@@ -160,18 +168,19 @@ async def set_all_users_chara(file_name, folder_path='data/system/chara'):
         async with aiosqlite.connect('data/dataBase/charas.db') as db:
             cursor = await db.execute("SELECT user_id FROM user_chara")
             all_users = await cursor.fetchall()
-            
+
             for user in all_users:
                 user_id = user[0]
                 await db.execute("INSERT OR REPLACE INTO user_chara (user_id, chara) VALUES (?, ?)",
                                  (user_id, chara))
-            
+
             await db.commit()
-        
+
         return "所有用户的人设已切换为：" + file_name
     except Exception as e:
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
+
 
 async def clear_all_users_chara():
     """
@@ -187,10 +196,11 @@ async def clear_all_users_chara():
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
 
+
 async def clear_user_chara(user_id):
     """
     删除指定user_id的数据，包括chara字段。
-    
+
     参数:
     - user_id: 要删除数据的用户的ID。
     返回:
@@ -201,13 +211,14 @@ async def clear_user_chara(user_id):
         async with aiosqlite.connect('data/dataBase/charas.db') as db:
             await db.execute("DELETE FROM user_chara WHERE user_id = ?", (user_id,))
             await db.commit()
-            
+
         return f"用户ID为 {user_id} 的人设已删除"
     except Exception as e:
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
-    
-async def read_chara(user_id, chara_str): # 这里的chara_str是一个字符串，表示用户默认的角色
+
+
+async def read_chara(user_id, chara_str):  # 这里的chara_str是一个字符串，表示用户默认的角色
     """读取用户的角色信息，如果不存在则设置默认值"""
     if not isinstance(chara_str, str):
         raise ValueError("chara_str 必须是字符串类型")
@@ -223,6 +234,7 @@ async def read_chara(user_id, chara_str): # 这里的chara_str是一个字符串
         else:
             return result[0]
 
+
 async def get_user_history(user_id):
     """获取用户历史对话"""
     async with aiosqlite.connect(DATABASE_FILE) as db:
@@ -233,41 +245,28 @@ async def get_user_history(user_id):
             else:
                 return []
 
-async def update_user_history(user_id, new_history):
-    """更新用户历史对话，避免重复并保证写入新内容"""
-    async with aiosqlite.connect(DATABASE_FILE) as db:
-        cursor = await db.execute("SELECT history FROM conversation_history WHERE user_id = ?", (user_id,))
-        row = await cursor.fetchone()
-        
-        if row is None:
-            existing_history = []
-        else:
-            existing_history = json.loads(row[0])
-        
-        existing_set = {json.dumps(item, sort_keys=True) for item in existing_history}
-        updated_history = []
 
-        for item in new_history:
-            serialized_item = json.dumps(item, sort_keys=True)
-            if serialized_item not in existing_set:
-                updated_history.append(item)
-                existing_set.add(serialized_item)
-        
-        combined_history = existing_history + updated_history
-        
+async def update_user_history(user_id, history):
+    """更新用户历史对话"""
+    async with aiosqlite.connect(DATABASE_FILE) as db:
         await db.execute("INSERT OR REPLACE INTO conversation_history (user_id, history) VALUES (?, ?)",
-                         (user_id, json.dumps(combined_history)))
+                         (user_id, json.dumps(history)))
         await db.commit()
+
 
 async def delete_user_history(user_id):
     """删除指定用户的聊天记录"""
     async with aiosqlite.connect(DATABASE_FILE) as db:
         await db.execute("DELETE FROM conversation_history WHERE user_id = ?", (user_id,))
         await db.commit()
+
+
 async def clear_all_history():
     """清理所有用户的聊天记录"""
     async with aiosqlite.connect(DATABASE_FILE) as db:
         await db.execute("DELETE FROM conversation_history")
         await db.commit()
         print("所有用户的对话记录已清理。")
+
+
 asyncio.run(init_db())

@@ -315,58 +315,6 @@ async def prompt_length_check(user_id,config):
             del history[0]
     await update_user_history(user_id, history)
 
-async def aireply_history_add(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,lock_prompt=None):
-    logger.info(f"写入记录: {processed_message}")
-    if recursion_times > config.api["llm"]["recursion_limit"]:
-        logger.warning(f"roll back to original history, recursion times: {recursion_times}")
-        return "Maximum recursion depth exceeded.Please try again later."
-    original_history = []
-    if not system_instruction:
-        if config.api["llm"]["system"]:
-            system_instruction = await read_chara(user_id, config.api["llm"]["system"])
-        else:
-            system_instruction = await read_chara(user_id, await use_folder_chara(config.api["llm"]["chara_file_name"]))
-        user_info=await get_user(user_id)
-        system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
-    try:
-        if recursion_times==0 and processed_message:
-            last_trigger_time[user_id] = time.time()
-        if config.api["llm"]["model"]=="default":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
-                                                                              user_id)
-
-        elif config.api["llm"]["model"]=="openai":
-            if processed_message:
-                prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
-            else:
-                prompt=await get_current_openai_prompt(user_id)
-
-            #print(response_message)
-        elif config.api["llm"]["model"]=="gemini":
-            if processed_message:
-                prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
-            elif lock_prompt:
-                prompt=lock_prompt
-            else:
-                prompt=await get_current_gemini_prompt(user_id)
-
-        elif config.api["llm"]["model"]=="腾讯元器":
-            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
-    except Exception as e:
-        logger.error(f"Error occurred: {e}")
-        traceback.print_exc()
-        if recursion_times<=config.api["llm"]["recursion_limit"]:
-
-            logger.warning(f"Recursion times: {recursion_times}")
-            if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
-                logger.warning(f"clear ai reply history for user: {event.user_id}")
-                await delete_user_history(event.user_id)
-            return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
-        else:
-            logger.warning(f"roll back to original history, recursion times: {recursion_times}")
-            await update_user_history(user_id, original_history)
-            return "Maximum recursion depth exceeded.Please try again later."
-
 
 
 
