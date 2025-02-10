@@ -19,7 +19,7 @@ import json
 import traceback
 from developTools.utils.logger import get_logger
 from plugins.resource_search_plugin.Link_parsing.core.draw import draw_adaptive_graphic_and_textual
-from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_and_process_image,download_b_file,merge_file_to_mp4,download_b
+from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_b,info_search_bili
 from plugins.resource_search_plugin.Link_parsing.core.weibo import mid2id,WEIBO_SINGLE_INFO
 from plugins.resource_search_plugin.Link_parsing.core.common import download_video,download_img,add_append_img,GENERAL_REQ_LINK,get_file_size_mb
 from plugins.resource_search_plugin.Link_parsing.core.tiktok import generate_x_bogus_url, dou_transfer_other, \
@@ -70,6 +70,7 @@ async def bilibili(url,filepath=None,is_twice=None):
     type=None
     introduce=None
     desc=None
+    avatar_json=None
     url_reg = r"(http:|https:)\/\/(space|www|live).bilibili.com\/[A-Za-z\d._?%&+\-=\/#]*"
     b_short_rex = r"(https?://(?:b23\.tv|bili2233\.cn)/[A-Za-z\d._?%&+\-=\/#]+)"
     # 处理短号、小程序问题
@@ -78,7 +79,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         #logger.info(f'b_short_url:{b_short_url}')
         resp = httpx.get(b_short_url, headers=BILIBILI_HEADER, follow_redirects=True)
         url: str = str(resp.url)
-        #logger.info(f'url:{url}')
+        #print(f'url:{url}')
     # AV/BV处理
     if "av" in url:url= 'https://www.bilibili.com/video/' + av_to_bv(url)
     if re.match(r'^BV[1-9a-zA-Z]{10}$', url):
@@ -94,9 +95,11 @@ async def bilibili(url,filepath=None,is_twice=None):
         dy = dynamic.Dynamic(dynamic_id, credential)
         is_opus = dy.is_opus()#判断动态是否为图文
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
+
         if is_opus is False:#若判断为图文则换另一种方法读取
-            #logger.info('not opus')
+            logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
+            avatar_json = await info_search_bili(dynamic_info, is_opus,filepath=filepath)
             tags = ''
             number=0
             text_list_check=''
@@ -141,7 +144,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                 if is_twice is not True:
                     out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                   Time=f'{pub_time}',filepath=filepath,type_software='BiliBili 动态',emoji_list=emoji_list,
-                                      color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
+                                      color_software=(251,114,153,80),output_path_name=f'{dynamic_id}',avatar_json=avatar_json)
                     json_check['pic_path'] = out_path
                     json_check['time'] = pub_time
                     return json_check
@@ -150,8 +153,8 @@ async def bilibili(url,filepath=None,is_twice=None):
 
         if is_opus is True:
             dynamic_info = await dy.get_info()
-            #logger.info(dynamic_info)
-            #logger.info('is opus')
+
+            logger.info('is opus')
             orig_check=1        #判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -174,11 +177,17 @@ async def bilibili(url,filepath=None,is_twice=None):
                 pub_time=dynamic_info['item']['modules']['module_author']['pub_time']
                 avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(owner_cover, f'{filepath}'))]))[0]
                 if orig_check ==1:
+                    avatar_json = await info_search_bili(dynamic_info, is_opus, filepath=filepath)
+                    #print('非转发')
                     type_software='BiliBili 动态'
                     if 'opus' in dynamic_info['item']['modules']['module_dynamic']['major']:
                         opus_paragraphs = dynamic_info['item']['modules']['module_dynamic']['major']['opus']
                         text_list_check = ''
                         number=0
+                        pics_context=[]
+                        #print(json.dumps(dynamic_info['item']['modules']['module_dynamic']['major'], indent=4))
+
+
                         for text_check in opus_paragraphs['summary']['rich_text_nodes']:
                             #print('\n\n')
                             if 'emoji' in text_check:
@@ -188,8 +197,16 @@ async def bilibili(url,filepath=None,is_twice=None):
                                 emoji_list.append(text_check['emoji']['icon_url'])
                             elif 'orig_text' in text_check:
                                 text_list_check += text_check['orig_text']
-                        #title = opus_paragraphs['summary']['text']
-                        contents.append(text_list_check)
+                        #print(text_list_check)
+                        if dynamic_info['item']['type'] == 'DYNAMIC_TYPE_ARTICLE':
+                            type_software = 'BiliBili 专栏'
+                            contents.append(f"title:{opus_paragraphs['title']}")
+                            contents.append(text_list_check)
+                            for pic_check in opus_paragraphs['pics']:
+                                pics_context.append(pic_check['url'])
+                            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(pics_context))) for item in pics_context]))
+                        else:
+                            contents.append(text_list_check)
                     elif 'live_rcmd' in dynamic_info['item']['modules']['module_dynamic']['major']:
                         live_paragraphs = dynamic_info['item']['modules']['module_dynamic']['major']['live_rcmd']
                         content = json.loads(live_paragraphs['content'])
@@ -204,11 +221,13 @@ async def bilibili(url,filepath=None,is_twice=None):
                         contents.append((await asyncio.gather(*[asyncio.create_task(download_img(cover, f'{filepath}'))]))[0])
                         contents.append(title)
 
+
+
                     if is_twice is not True:
                         out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                                           Time=f'{pub_time}', type=type_set, introduce=desc,
                                                       filepath=filepath,type_software=type_software,emoji_list=emoji_list,
-                                      color_software=(251,114,153,80),output_path_name=f'{dynamic_id}')
+                                      color_software=(251,114,153,80),output_path_name=f'{dynamic_id}',avatar_json=avatar_json)
                         json_check['pic_path'] = out_path
                         json_check['time'] = pub_time
                         return json_check
@@ -272,7 +291,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                                                     orig_name=orig_name,orig_Time=orig_Time,
                                                     type_software='BiliBili 动态',
                                                     color_software=(251, 114, 153, 80),
-                                                    output_path_name=f'{dynamic_id}',
+                                                    output_path_name=f'{dynamic_id}',avatar_json=avatar_json,
                                                     orig_type_software='转发动态',emoji_list=emoji_list,orig_emoji_list=orig_emoji_list
                                                     )
                     json_check['pic_path'] = out_path
@@ -284,7 +303,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         room_id = re.search(r'\/(\d+)$', url).group(1)
         room = live.LiveRoom(room_display_id=int(room_id))
         data_get_url_context=await room.get_room_info()
-        #logger.info(data_get_url_context['room_info'])
+
         room_info = data_get_url_context['room_info']
         title, cover, keyframe = room_info['title'], room_info['cover'], room_info['keyframe']
         owner_name,owner_cover = data_get_url_context['anchor_info']['base_info']['uname'], data_get_url_context['anchor_info']['base_info']['face']
@@ -303,7 +322,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         if is_twice is not True:
             out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,
                                           Time=f'{video_time}',type=12,introduce=introduce,filepath=filepath,type_software='BiliBili 直播',
-                                      color_software=(251,114,153,80),output_path_name=f'{room_id}')
+                                      color_software=(251,114,153,80),output_path_name=f'{room_id}',avatar_json=avatar_json)
             json_check['pic_path'] = out_path
 
             return json_check
@@ -311,6 +330,7 @@ async def bilibili(url,filepath=None,is_twice=None):
     # 专栏识别
     if 'read' in url:
         logger.info('专栏未做识别，跳过，欢迎催更')
+
         return None
     # 收藏夹识别
     if 'favlist' in url and BILI_SESSDATA != '':
@@ -327,6 +347,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         logger.info('无法获取视频内容，该进程已退出')
         json_check['status'] = False
         return json_check
+    #print(json.dumps(video_info, indent=4))
     owner_cover_url=video_info['owner']['face']
     owner_name = video_info['owner']['name']
     #logger.info(owner_cover)
@@ -369,10 +390,11 @@ async def bilibili(url,filepath=None,is_twice=None):
 
     contents.append(f"{video_title}")
     introduce=f'{video_desc}'
+
     type=11
     if is_twice is not True:
         out_path=draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=owner_name,Time=f'{video_time}',type=type,introduce=introduce,
-                                    filepath=filepath,type_software='BiliBili',
+                                    filepath=filepath,type_software='BiliBili',avatar_json=avatar_json,
                                     color_software=(251,114,153,80),output_path_name=f'{video_id}')
         json_check['pic_path'] = out_path
         return json_check
@@ -821,11 +843,11 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
             else:
                 time_check = link_prising_json['time']
             possible_formats = [
-                "%Y年%m月%d日 %H:%M",  # 示例格式 1：2025年02月09日 14:30
-                "%Y/%m/%d %H:%M",  # 示例格式 2：2025/02/09 14:30
-                "%Y-%m-%d %H:%M",  # 示例格式 3：2025-02-09 14:30
-                "%d-%m-%Y %H:%M",  # 示例格式 4：09-02-2025 14:30
-                "%Y.%m.%d %H:%M",  # 示例格式 5：2025.02.09 14:30
+                "%Y年%m月%d日 %H:%M",
+                "%Y/%m/%d %H:%M",
+                "%Y-%m-%d %H:%M",
+                "%d-%m-%Y %H:%M",
+                "%Y.%m.%d %H:%M",
             ]
 
             for fmt in possible_formats:
@@ -834,7 +856,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                     check_time=datetime.strptime(time_check, fmt)
                     if check_time != datetime.now().date():
                         link_prising_json['status'] = False
-                        print(f"时间不匹配，拒绝发送{link_prising_json['time']}")
+                        #print(f"时间不匹配，拒绝发送{link_prising_json['time']}")
                     break
                 except ValueError:
                     # 如果解析失败，继续尝试下一个格式
@@ -852,24 +874,23 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
 
 #draw_video_thumbnail()
 if __name__ == "__main__":#测试用，不用管
-    url='【【游戏公司十大IP ATLUS】由女神转生到女神异闻录】https://www.bilibili.com/video/BV1TVfUYvEux?vd_source=5e640b2c90e55f7151f23234cae319ec'
-    #asyncio.run(dy(url))
-
-    #url='https://t.bilibili.com/1028199317971664899?share_source=pc_native'
-    url='0.56 Q@K.Jv 09/17 icA:/ 属于老六的春晚！新年快乐！ # cs2 # 老六麦克雷 # 出生 # csgo麦克雷  https://v.douyin.com/ifgP79T3/ 复制此链接，打开Dou音搜索，直接观看视频！'
-    url='https://x.com/fliosofem/status/1827202917306433845?s=46'
-    url='https://x.com/myuto54321/status/1884528807824196074?s=46'
-    url='https://x.com/gosari542/status/1884258207985721387?s=46'
-    url='https://t.bilibili.com/1031109038029406228?share_source=pc_native'
-    url='https://t.bilibili.com/1031169489701437442?share_source=pc_native'
-    url='https://t.bilibili.com/1031193215122800644?share_source=pc_native'
-    url='https://t.bilibili.com/1031508830772527126'
-    url='https://t.bilibili.com/1031518515952091161?share_source=pc_native'
-    url='97 沉夕cxxx发布了一篇小红书笔记，快来看吧！ 😆 Kde9g1dqG8kAiaG 😆 http://xhslink.com/a/TOydUquIB8p5，复制本条信息，打开【小红书】App查看精彩内容！'
+    url='https://t.bilibili.com/1032160407411752961?share_source=pc_native'
+    #url='97 沉夕cxxx发布了一篇小红书笔记，快来看吧！ 😆 Kde9g1dqG8kAiaG 😆 http://xhslink.com/a/TOydUquIB8p5，复制本条信息，打开【小红书】App查看精彩内容！'
+    url='【【温水和彦×八奈见杏菜】用心但不精致的礼物，却意外的收获了笑容-哔哩哔哩】 https://b23.tv/Zm7mYo0'
+    #url='【34【PC+KR/gal推荐】《9nine》全系列分享-哔哩哔哩】 https://b23.tv/Um3ewuT'
+    #url='https://www.bilibili.com/opus/975425280952762370?spm_id_from=main.mine-history.0.0.pv'
+    #url='https://www.bilibili.com/opus/1031855559216726016?plat_id=186&share_from=dynamic&share_medium=iphone&share_plat=ios&share_session_id=3A30238A-7EFA-4778-9339-AEFC6E6BC886&share_source=COPY&share_tag=s_i&spmid=dt.opus-detail.0.0&timestamp=1739177704&unique_k=UfWkGLP'
+    url='https://b23.tv/LELSW8u'
+    url='https://b23.tv/MNARaEN'
+    #url='https://b23.tv/umdU5bb'
+    #url='https://b23.tv/waAdNuB'
+    #url='https://b23.tv/bicqrKN'
+    #url='https://b23.tv/t9YeH0m'
+    url='【【明日方舟抽卡】王牌！主播在商店花300凭证单抽出了烛煌！黑子说话！】https://www.bilibili.com/video/BV1dYfUYDE96?vd_source=5e640b2c90e55f7151f23234cae319ec'
+    url='https://b23.tv/pTZYuNq'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
-    url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
-    url='90 双木扶苏发布了一篇小红书笔记，快来看吧！ 😆 qfWhccRIsgcrjZj 😆 http://xhslink.com/a/DcAsetCH0703，复制本条信息，打开【小红书】App查看精彩内容！'
+
 
     url='44 【来抄作业✨早秋彩色衬衫叠穿｜时髦知识分子风 - 杨意子_ | 小红书 - 你的生活指南】 😆 Inw56apL6vWYuoS 😆 https://www.xiaohongshu.com/discovery/item/64c0e9c0000000001201a7de?source=webshare&xhsshare=pc_web&xsec_token=AB8GfF7dOtdlB0n_mqoz61fDayAXpCqWbAz9xb45p6huE=&xsec_source=pc_share'
     url='79 【感谢大数据！椰青茉莉也太太太好喝了吧 - 胖琪琪 | 小红书 - 你的生活指南】 😆 78VORl9ln3YDBKi 😆 https://www.xiaohongshu.com/discovery/item/63dcee03000000001d022015?source=webshare&xhsshare=pc_web&xsec_token=ABJoHbAtOG98_7RnFR3Mf2MuQ1JC8tRVlzHPAG5BGKdCc=&xsec_source=pc_share'
