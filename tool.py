@@ -109,7 +109,11 @@ async def main():
         except ImportError as e:
             os.system(f"\"{python_path}\" -m pip install PyExecJS")
             logger.warning("如为初次运行，请关闭程序并重新进入这一步")
-            #input()
+        try:
+            import gi
+        except ImportError as e:
+            os.system(f"\"{python_path}\" -m pip install PyGObject")
+
         from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
         await login_core_select()
 

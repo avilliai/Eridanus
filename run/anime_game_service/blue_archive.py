@@ -15,7 +15,7 @@ from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageSt
 
 def main(bot, logger):
     logger=bot.logger
-    logger.info_func("arona loaded")
+
 
 
     @bot.on(GroupMessageEvent)

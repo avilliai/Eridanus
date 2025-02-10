@@ -8,8 +8,6 @@ from plugins.resource_search_plugin.Link_parsing.core.common import download_img
 import traceback
 import requests
 from urllib.parse import urlparse
-import matplotlib.pyplot as plt
-
 
 def pillow_color_emoji(text, output_file, color):
     system = platform.system()
