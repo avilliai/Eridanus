@@ -10,6 +10,7 @@ import os
 
 from developTools.message.message_components import Record, Text, Node
 from developTools.utils.logger import get_logger
+from plugins.core.Group_Message_DB import get_last_20_and_convert_to_prompt, add_to_group
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
@@ -177,10 +178,16 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         elif config.api["llm"]["model"]=="gemini":
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
+                p=await read_context(bot,event,config,prompt)
+                if p:
+                    prompt=p
             elif lock_prompt:
                 prompt=lock_prompt
             else:
                 prompt=await get_current_gemini_prompt(user_id)
+                p = await read_context(bot, event, config, prompt)
+                if p:
+                    prompt = p
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],
@@ -202,8 +209,12 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     raise Exception("Empty response。Gemini API返回的文本为空。")
             text_elements = [part for part in response_message['parts'] if 'text' in part]
             if text_elements!=[] and len(text_elements)>1:
+                self_rep=[]
                 for i in text_elements:
+                    self_rep.append({"text":i['text'].strip()})
                     await bot.send(event, i['text'].strip())
+                message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+                await add_to_group(event.group_id, message)
                 reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -249,6 +260,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         #logger.error(f"Error occurred when calling function: {e}")
                         logger.error(f"Error occurred when calling function: {func_name}")
                         traceback.print_exc()
+                    await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
                 if new_func_prompt!=[]:
                     new_func_prompt.append({"text": " "})
@@ -315,61 +327,30 @@ async def prompt_length_check(user_id,config):
             del history[0]
     await update_user_history(user_id, history)
 
-async def aireply_history_add(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,lock_prompt=None):
-    logger.info(f"写入记录: {processed_message}")
-    if recursion_times > config.api["llm"]["recursion_limit"]:
-        logger.warning(f"roll back to original history, recursion times: {recursion_times}")
-        return "Maximum recursion depth exceeded.Please try again later."
-    original_history = []
-    if not system_instruction:
-        if config.api["llm"]["system"]:
-            system_instruction = await read_chara(user_id, config.api["llm"]["system"])
-        else:
-            system_instruction = await read_chara(user_id, await use_folder_chara(config.api["llm"]["chara_file_name"]))
-        user_info=await get_user(user_id)
-        system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
+async def read_context(bot,event,config,prompt):
+    if event is None:
+        return None
+    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+        return None
+    if config.api["llm"]["model"]=="gemini":
+
+        group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
+        bot.logger.info(f"群聊上下文消息：已读取")
+        insert_pos = max(len(prompt) - 3, 0)
+        prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
+    return prompt
+
+async def add_self_rep(bot,event,config,reply_message):
+    if event is None:
+        return None
+    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+        return None
     try:
-        if recursion_times==0 and processed_message:
-            last_trigger_time[user_id] = time.time()
-        if config.api["llm"]["model"]=="default":
-            prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
-                                                                              user_id)
-
-        elif config.api["llm"]["model"]=="openai":
-            if processed_message:
-                prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
-            else:
-                prompt=await get_current_openai_prompt(user_id)
-
-            #print(response_message)
-        elif config.api["llm"]["model"]=="gemini":
-            if processed_message:
-                prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
-            elif lock_prompt:
-                prompt=lock_prompt
-            else:
-                prompt=await get_current_gemini_prompt(user_id)
-
-        elif config.api["llm"]["model"]=="腾讯元器":
-            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
+        self_rep = [{"text":reply_message.strip()}]
+        message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+        await add_to_group(event.group_id, message)
     except Exception as e:
-        logger.error(f"Error occurred: {e}")
-        traceback.print_exc()
-        if recursion_times<=config.api["llm"]["recursion_limit"]:
-
-            logger.warning(f"Recursion times: {recursion_times}")
-            if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
-                logger.warning(f"clear ai reply history for user: {event.user_id}")
-                await delete_user_history(event.user_id)
-            return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
-        else:
-            logger.warning(f"roll back to original history, recursion times: {recursion_times}")
-            await update_user_history(user_id, original_history)
-            return "Maximum recursion depth exceeded.Please try again later."
-
-
-
-
+        logger.error(f"Error occurred when adding self-reply: {e}")
 
 
 

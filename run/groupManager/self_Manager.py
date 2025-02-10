@@ -38,6 +38,7 @@ async def call_operate_user_blacklist(bot,event,config,target_user_id,status):
             try:
                 config.censor_user["blacklist"].remove(target_user_id)
                 config.save_yaml(str("censor_user"))
+                await bot.send(event,f"{target_user_id} 已被移出黑名单")
             except ValueError:
                 await bot.send(event,f"{target_user_id} 不在黑名单中")
     else:
@@ -54,6 +55,7 @@ async def call_operate_user_whitelist(bot,event,config,target_user_id,status):
             try:
                 config.censor_user["whitelist"].remove(target_user_id)
                 config.save_yaml(str("censor_user"))
+                await bot.send(event,f"{target_user_id} 已被移出白名单")
             except ValueError:
                 await bot.send(event,f"{target_user_id} 不在白名单中")
     else:
@@ -70,6 +72,7 @@ async def call_operate_group_blacklist(bot,event,config,target_group_id,status):
             try:
                 config.censor_group["blacklist"].remove(target_group_id)
                 config.save_yaml(str("censor_group"))
+                await bot.send(event, f"已将群{target_group_id}移出黑名单")
             except ValueError:
                 await bot.send(event, f"群{target_group_id} 不在黑名单中")
     else:
@@ -86,6 +89,7 @@ async def call_operate_group_whitelist(bot,event,config,target_group_id,status):
             try:
                 config.censor_group["whitelist"].remove(target_group_id)
                 config.save_yaml(str("censor_group"))
+                await bot.send(event, f"已将群{target_group_id}移出白名单")
             except ValueError:
                 await bot.send(event, f"群{target_group_id} 不在白名单中")
     else:
