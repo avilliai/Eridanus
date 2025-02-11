@@ -10,6 +10,8 @@ from .setu_moderate import pic_audit_standalone
 import ruamel.yaml
 import json
 from PIL import Image
+from plugins.utils.utils import parse_arguments
+from plugins.utils.random_str import random_str
 
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
@@ -32,7 +34,11 @@ negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, b
 round_sd = 0
 round_nai = 0
 
-from plugins.utils.random_str import random_str
+configs = aiDrawController.get("sd默认启动模型",[])
+default_args = {}
+
+for config in configs:
+    default_args = parse_arguments(config, default_args)
 
 def check_censored(positive, censored_words):
     words = positive.lower().replace(',', ' ').split()
@@ -60,10 +66,13 @@ async def n4(prompt, path, groupid, config, args):
         width = 832
         height = 1216
 
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
-
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
+    
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
             return False
@@ -76,8 +85,8 @@ async def n4(prompt, path, groupid, config, args):
             "params_version": 3,
             "width": width,
             "height": height,
-            "scale": 6,
-            "sampler": "k_euler_ancestral",
+            "scale": nai_cfg,
+            "sampler": nai_sampler,
             "steps": 23,
             "n_samples": 1,
             "ucPreset": 0,
@@ -87,7 +96,7 @@ async def n4(prompt, path, groupid, config, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "karras",
+            "noise_schedule": nai_scheduler,
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "use_coords": False,
@@ -192,9 +201,12 @@ async def n3(prompt, path, groupid, config, args):
         width = 832
         height = 1216
         
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
@@ -209,7 +221,7 @@ async def n3(prompt, path, groupid, config, args):
             "width": width,
             "height": height,
             "scale": 5,
-            "sampler": "k_euler_ancestral",
+            "sampler": nai_sampler,
             "steps": 23,
             "n_samples": 1,
             "ucPreset": 0,
@@ -221,7 +233,7 @@ async def n3(prompt, path, groupid, config, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "karras",
+            "noise_schedule": nai_scheduler,
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "seed": random.randint(0, 2 ** 32 - 1),
@@ -294,9 +306,14 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
-    height = (args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
-    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    width = int(args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
+    height = int(args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
+    denoising_strength = float(
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
+        if isinstance(args, dict) else 
+        (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+    )
+    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -316,9 +333,12 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     if height > 1600:
         height = 1600
 
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
 
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
@@ -336,15 +356,15 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         "seed": -1,
         "batch_size": 1,
         "n_iter": 1,
-        "steps": 35,
+        "steps": steps,
         "save_images": if_save,
-        "cfg_scale": 6.5,
+        "cfg_scale": cfg,
         "width": width,
         "height": height,
         "restore_faces": False,
         "tiling": False,
-        "sampler_name": 'Restart',
-        "scheduler": 'Align Your Steps',
+        "sampler_name": sampler,
+        "scheduler": scheduler,
         "clip_skip_steps": 2,
         "override_settings": {
             "CLIP_stop_at_last_layers": 2,
@@ -388,9 +408,14 @@ async def SdDraw0(prompt, path, config, groupid, args):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', sd_w) if args.get('w', sd_w) > 0 else sd_w) if isinstance(args, dict) else sd_w
-    height = (args.get('h', sd_h) if args.get('h', sd_h) > 0 else sd_h) if isinstance(args, dict) else sd_h
-    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    width = int(args.get('w', sd_w) if args.get('w', sd_w) > 0 else sd_w) if isinstance(args, dict) else sd_w
+    height = int(args.get('h', sd_h) if args.get('h', sd_h) > 0 else sd_h) if isinstance(args, dict) else sd_h
+    denoising_strength = float(
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
+        if isinstance(args, dict) else 
+        (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+    )
+    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -410,9 +435,12 @@ async def SdDraw0(prompt, path, config, groupid, args):
     if height > 1600:
         height = 1600
 
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
 
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
@@ -429,15 +457,15 @@ async def SdDraw0(prompt, path, config, groupid, args):
         "seed": -1,
         "batch_size": 1,
         "n_iter": 1,
-        "steps": 35,
+        "steps": steps,
         "save_images": if_save,
-        "cfg_scale": 6.5,
+        "cfg_scale": cfg,
         "width": width,
         "height": height,
         "restore_faces": False,
         "tiling": False,
-        "sampler_name": 'Restart',
-        "scheduler": 'Align Your Steps',
+        "sampler_name": sampler,
+        "scheduler": scheduler,
         "clip_skip_steps": 2,
         "override_settings": {
             "CLIP_stop_at_last_layers": 2,
@@ -517,7 +545,14 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     height = 1024
     args = args
     url = "https://image.novelai.net"
-    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    denoising_strength = float(
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
+        if isinstance(args, dict) else 
+        (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+    )
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -532,9 +567,10 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
@@ -548,8 +584,8 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             "params_version": 3,
             "width": width,
             "height": height,
-            "scale": 6,
-            "sampler": "k_euler_ancestral",
+            "scale": nai_cfg,
+            "sampler": nai_sampler,
             "steps": 23,
             "n_samples": 1,
             "strength": denoising_strength,
@@ -561,7 +597,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "karras",
+            "noise_schedule": nai_scheduler,
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "use_coords": False,
@@ -654,7 +690,14 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     height = 1024
     args = args
     url = "https://image.novelai.net"
-    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    denoising_strength = float(
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
+        if isinstance(args, dict) else 
+        (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+    )
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -669,8 +712,8 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
 
     if groupid in no_nsfw_groups:
@@ -685,8 +728,8 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             "params_version": 3,
             "width": width,
             "height": height,
-            "scale": 6,
-            "sampler": "k_euler_ancestral",
+            "scale": nai_cfg,
+            "sampler": nai_sampler,
             "steps": 23,
             "n_samples": 1,
             "strength":denoising_strength,
@@ -698,7 +741,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             "legacy": False,
             "add_original_image": True,
             "cfg_rescale": 0,
-            "noise_schedule": "karras",
+            "noise_schedule": nai_scheduler,
             "legacy_v3_extend": False,
             "skip_cfg_above_sigma": None,
             "use_coords": False,
@@ -775,9 +818,14 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = (args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
-    height = (args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
-    denoising_strength = (args.get('d', 0.7) if args.get('d', 0.7) > 0 else 0.7) if isinstance(args, dict) else 0.7
+    width = int(args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
+    height = int(args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
+    denoising_strength = float(
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
+        if isinstance(args, dict) else 
+        (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+    )
+    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -797,9 +845,12 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     if height > 1600:
         height = 1600
 
-    positive = str(args.get('p', positives) if isinstance(args, dict) else positives)
-    negative = str(args.get('n', negatives) if isinstance(args, dict) else negatives)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
 
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
@@ -822,15 +873,15 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         "seed": -1,
         "batch_size": 1,
         "n_iter": 1,
-        "steps": 35,
+        "steps": steps,
         "save_images": if_save,
-        "cfg_scale": 6.5,
+        "cfg_scale": cfg,
         "width": width,
         "height": height,
         "restore_faces": False,
         "tiling": False,
-        "sampler_name": 'Restart',
-        "scheduler": 'Align Your Steps',
+        "sampler_name": sampler,
+        "scheduler": scheduler,
         "clip_skip_steps": 2,
         "override_settings": {
             "CLIP_stop_at_last_layers": 2,
