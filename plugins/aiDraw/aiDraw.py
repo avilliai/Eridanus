@@ -514,7 +514,7 @@ async def getloras(config):
         response = await client.get(url)
         r = response.json()
         result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
-        result = '以下是可用的lora：\n' + '\n'.join(result_lines) + '\n'
+        result = '以下是可用的lora：\n' + '\n'.join(result_lines)
         return result
 
 
@@ -536,7 +536,7 @@ async def getcheckpoints(config):
         response = await client.get(url)
         r = response.json()
         model_lines = [f'{model.get("model_name", "未知")}.safetensors' for model in r]
-        result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines) + '\n'
+        result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines)
         return result
 
 async def n4re0(prompt, path, groupid, config, b64_in, args):
@@ -919,3 +919,67 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     image.save(f'{path}')
     # image.save(f'{path}')
     return path
+
+async def getsampler(config):
+    global round_sd
+    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/samplers'
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.get(url)
+        r = response.json()
+        names_list = [item["name"] for item in r if "name" in item]
+        result = f'\n'.join(names_list)
+        return result
+    
+async def getscheduler(config):
+    global round_sd
+    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/schedulers'
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.get(url)
+        r = response.json()
+        label_list = [item["label"] for item in r if "label" in item]
+        result = f'\n'.join(label_list)
+        return result
+
+async def interrupt(config):
+    global round_sd
+    try:
+        adjusted_index = int(round_sd) - 1
+        sdUrls = config.api["ai绘画"]["sdUrl"]
+        if adjusted_index < 0 or adjusted_index >= len(sdUrls):
+            raise IndexError("索引超出范围，请检查 round_sd 的值。")
+        url = f'{sdUrls[adjusted_index]}/sdapi/v1/interrupt'
+        post_data = {
+            "114514": "1919810"
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=post_data)
+            response.raise_for_status()
+            return response.json()
+    except (ValueError, IndexError) as e:
+        print(f"参数错误: {e}")
+        return None
+    except httpx.HTTPError as e:
+        print(f"请求失败: {e}")
+        return None
+    
+async def skipsd(config):
+    global round_sd
+    try:
+        adjusted_index = int(round_sd) - 1
+        sdUrls = config.api["ai绘画"]["sdUrl"]
+        if adjusted_index < 0 or adjusted_index >= len(sdUrls):
+            raise IndexError("索引超出范围，请检查 round_sd 的值。")
+        url = f'{sdUrls[adjusted_index]}/sdapi/v1/skip'
+        post_data = {
+            "114514": "1919810"
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=post_data)
+            response.raise_for_status()
+            return response.json()
+    except (ValueError, IndexError) as e:
+        print(f"参数错误: {e}")
+        return None
+    except httpx.HTTPError as e:
+        print(f"请求失败: {e}")
+        return None
