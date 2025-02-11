@@ -34,7 +34,7 @@ negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, b
 round_sd = 0
 round_nai = 0
 
-configs = aiDrawController.get("sd默认启动模型",[])
+configs = aiDrawController.get("其他默认绘图参数",[])
 default_args = {}
 
 for config in configs:
