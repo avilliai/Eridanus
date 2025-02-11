@@ -575,14 +575,14 @@ def main(bot,config):
                 bot.logger.error(e)
                 await bot.send(event, f"中断任务失败: {e}")
                 
-        if str(event.raw_message) == "skipsd" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+        if str(event.raw_message) == "skip" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
             global turn
             try:
-                await skipsd(config)
+                await skip(config)
                 await bot.send(event, f"跳过任务成功")
             except Exception as e:
                 bot.logger.error(e)
-                await bot.send(event, f"跳过任务成功: {e}")
+                await bot.send(event, f"跳过任务失败: {e}")
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
