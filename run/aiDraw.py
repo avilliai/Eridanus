@@ -578,7 +578,7 @@ def main(bot,config):
         if str(event.raw_message) == "skip" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
             global turn
             try:
-                await skip(config)
+                await skipsd(config)
                 await bot.send(event, f"跳过任务成功")
             except Exception as e:
                 bot.logger.error(e)
