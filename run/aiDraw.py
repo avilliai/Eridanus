@@ -14,7 +14,7 @@ from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
-    SdmaskDraw
+    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
@@ -545,6 +545,46 @@ def main(bot,config):
                     await bot.send(event, "ckpt切换失败", True)
             else:
                 await bot.send(event, "仅master可执行此操作", True)
+                
+        if str(event.raw_message) == "sampler" and config.settings["ai绘画"]["sd画图"]:
+            bot.logger.info('查询sampler中...')
+            try:
+                p = await getsampler(config)
+                bot.logger.info(str(p))
+                await bot.send(event, p, True)
+                # logger.info("success")
+            except Exception as e:
+                bot.logger.error(e)
+        
+        if str(event.raw_message) == "scheduler" and config.settings["ai绘画"]["sd画图"]:
+            bot.logger.info('查询scheduler中...')
+            try:
+                p = await getscheduler(config)
+                bot.logger.info(str(p))
+                await bot.send(event, p, True)
+                # logger.info("success")
+            except Exception as e:
+                bot.logger.error(e)
+                
+        if str(event.raw_message) == "interrupt" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+            global turn
+            try:
+                await interrupt(config)
+                await bot.send(event, f"中断任务成功")
+                turn -= 1
+            except Exception as e:
+                bot.logger.error(e)
+                await bot.send(event, f"中断任务失败: {e}")
+                
+        if str(event.raw_message) == "skipsd" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+            global turn
+            try:
+                await skipsd(config)
+                await bot.send(event, f"跳过任务成功")
+                turn -= 1
+            except Exception as e:
+                bot.logger.error(e)
+                await bot.send(event, f"跳过任务成功: {e}")
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
