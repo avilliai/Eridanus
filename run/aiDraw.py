@@ -571,7 +571,6 @@ def main(bot,config):
             try:
                 await interrupt(config)
                 await bot.send(event, f"中断任务成功")
-                turn -= 1
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, f"中断任务失败: {e}")
@@ -581,7 +580,6 @@ def main(bot,config):
             try:
                 await skipsd(config)
                 await bot.send(event, f"跳过任务成功")
-                turn -= 1
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, f"跳过任务成功: {e}")
