@@ -7,7 +7,7 @@ from plugins.core.aiReplyHandler.gemini import gemini_prompt_elements_construct
 
 DB_NAME = "data/dataBase/group_message.db"
 MAX_RETRIES = 5  # 最大重试次数
-INITIAL_DELAY = 0.1  # 初始延迟时间 (秒)
+INITIAL_DELAY = 2  # 初始延迟时间 (秒)
 
 async def execute_with_retry(db, query, params=None):
     """带重试机制的数据库操作"""
