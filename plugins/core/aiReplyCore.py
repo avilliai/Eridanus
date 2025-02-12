@@ -33,11 +33,7 @@ async def judge_trigger(processed_message,user_id,config,tools=None,bot=None,eve
         else:
             last_trigger_time.pop(event.user_id)
             trigger = False
-    if trigger:
-        r=await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result)
-        return r
-    else:
-        return None
+    return trigger
 
 async def end_chat(user_id):
     try:
