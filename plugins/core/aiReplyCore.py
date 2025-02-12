@@ -264,7 +264,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
                 if new_func_prompt!=[]:
-                    new_func_prompt.append({"text": " "})
                     prompt.append(response_message)
                     prompt.append({"role": "function","parts": new_func_prompt})
                     await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
@@ -338,8 +337,9 @@ async def read_context(bot,event,config,prompt):
     
             group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
             bot.logger.info(f"群聊上下文消息：已读取")
-            insert_pos = max(len(prompt) - 3, 0)
+            insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
             prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
+
         return prompt
     except:
         return None
