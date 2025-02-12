@@ -214,7 +214,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     self_rep.append({"text":i['text'].strip()})
                     await bot.send(event, i['text'].strip())
                 message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
-                await add_to_group(event.group_id, message)
+                if hasattr(event, "group_id"):
+                    await add_to_group(event.group_id, message)
                 reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -331,7 +332,7 @@ async def read_context(bot,event,config,prompt):
     try:
         if event is None:
             return None
-        if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+        if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
             return None
         if config.api["llm"]["model"]=="gemini":
     
@@ -346,12 +347,13 @@ async def read_context(bot,event,config,prompt):
 async def add_self_rep(bot,event,config,reply_message):
     if event is None:
         return None
-    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+    if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
         return None
     try:
         self_rep = [{"text":reply_message.strip()}]
         message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
-        await add_to_group(event.group_id, message)
+        if hasattr(event, "group_id"):
+            await add_to_group(event.group_id, message)
     except Exception as e:
         logger.error(f"Error occurred when adding self-reply: {e}")
 
