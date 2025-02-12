@@ -64,12 +64,13 @@ async def call_character_identify(bot, event,config,image_url,model_name):
                     f"出自作品：{char['cartoonname']}\n"
                     f"萌娘百科：zh.moegirl.org.cn/index.php?search={quote(char['name'])}\n"
                     f"bing搜索：www.bing.com/images/search?q={quote(char['name'])}\n\n")
-                forward_meslist.append(Node(content=[Text(st1),Image(file=filename)]))
+            forward_meslist.append(Node(content=[Text(st1),Image(file=filename)]))
 
 
 
         bot.logger.info("角色识别成功")
         await bot.send(event, forward_meslist)
+        return {"result": st1}
 
     except Exception as e:
         bot.logger.error(f"角色识别出错：{e}")
