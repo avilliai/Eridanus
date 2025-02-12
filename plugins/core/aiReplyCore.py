@@ -214,7 +214,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     self_rep.append({"text":i['text'].strip()})
                     await bot.send(event, i['text'].strip())
                 message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
-                await add_to_group(event.group_id, message)
+                if hasattr(event, "group_id"):
+                    await add_to_group(event.group_id, message)
                 reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -238,8 +239,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await query_and_insert_gemini(user_id,message,insert_message=response_message)
             #await prompt_database_updata(user_id, response_message, config)
             #函数调用
+            new_func_prompt = []
             for part in response_message["parts"]:
-                new_func_prompt=[]
                 if "functionCall" in part:
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
@@ -262,14 +263,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         traceback.print_exc()
                     await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
-                if new_func_prompt!=[]:
-                    new_func_prompt.append({"text": " "})
-                    prompt.append(response_message)
-                    prompt.append({"role": "function","parts": new_func_prompt})
-                    await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
-                    #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
-                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
-                    return final_response
+            if new_func_prompt!=[]:
+                await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
+                #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
+                return await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
+
+
+
             if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
@@ -331,14 +331,15 @@ async def read_context(bot,event,config,prompt):
     try:
         if event is None:
             return None
-        if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+        if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
             return None
         if config.api["llm"]["model"]=="gemini":
     
             group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
             bot.logger.info(f"群聊上下文消息：已读取")
-            insert_pos = max(len(prompt) - 3, 0)
+            insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
             prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
+
         return prompt
     except:
         return None
@@ -346,12 +347,13 @@ async def read_context(bot,event,config,prompt):
 async def add_self_rep(bot,event,config,reply_message):
     if event is None:
         return None
-    if not config.api["llm"]["读取群聊上下文"] and not event.hasattr(event, "group_id"):
+    if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
         return None
     try:
         self_rep = [{"text":reply_message.strip()}]
         message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
-        await add_to_group(event.group_id, message)
+        if hasattr(event, "group_id"):
+            await add_to_group(event.group_id, message)
     except Exception as e:
         logger.error(f"Error occurred when adding self-reply: {e}")
 

@@ -240,6 +240,26 @@
                 }
             },
             {
+                "name": "call_character_identify",
+                "description": "按照用户要求识别图片中的人物",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "image_url": {
+                            "type": "string",
+                            "description": "图片的url"
+                        },
+                        "model_name": {
+                            "type": "string", "enum": ["anime_model_lovelive","game_model_kirakira"],"description": "game_model_kirakira为galgame游戏角色识别，anime_model_lovelive为动漫角色识别"
+                        }
+                    },
+                    "required": [
+                        "image_url",
+                        "model_name"
+                    ]
+                }
+            },
+            {
                 "name": "call_tarot",
                 "description": "抽取一张塔罗牌。"
             },

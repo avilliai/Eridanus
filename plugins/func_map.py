@@ -26,6 +26,7 @@ dynamic_imports = {
         "search_book_info", "call_asmr", "call_download_book"
     ],
     "run.acg_infromation.bangumi": ["call_bangumi_search"],
+    "run.acg_infromation.character_identify": ["call_character_identify"],
     "run.streaming_media.youtube": ["download_youtube"],
     "run.aiDraw": ["call_text2img", "call_aiArtModerate"],
     "run.scheduledTasks": ["operate_group_push_tasks"],
