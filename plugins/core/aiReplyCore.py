@@ -345,7 +345,7 @@ async def read_context(bot,event,config,prompt):
         return None
 
 async def add_self_rep(bot,event,config,reply_message):
-    if event is None:
+    if event is None or reply_message is None:
         return None
     if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
         return None
