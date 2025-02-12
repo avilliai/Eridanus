@@ -239,8 +239,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             await query_and_insert_gemini(user_id,message,insert_message=response_message)
             #await prompt_database_updata(user_id, response_message, config)
             #函数调用
+            new_func_prompt = []
             for part in response_message["parts"]:
-                new_func_prompt=[]
                 if "functionCall" in part:
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
@@ -263,13 +263,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         traceback.print_exc()
                     await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
-                if new_func_prompt!=[]:
-                    prompt.append(response_message)
-                    prompt.append({"role": "function","parts": new_func_prompt})
-                    await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
-                    #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
-                    final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
-                    return final_response
+            if new_func_prompt!=[]:
+                await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
+                #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
+                return await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
+
+
+
             if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
