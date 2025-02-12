@@ -45,7 +45,7 @@ async def end_chat(user_id):
     except:
         print("end_chat error。已不存在对应trigger")
 
-async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,lock_prompt=None): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     if recursion_times > config.api["llm"]["recursion_limit"]:
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
@@ -77,6 +77,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
             else:
                 prompt=await get_current_openai_prompt(user_id)
+            if processed_message is None:  #防止二次递归无限循环
+                tools=None
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -181,13 +183,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 p=await read_context(bot,event,config,prompt)
                 if p:
                     prompt=p
-            elif lock_prompt:
-                prompt=lock_prompt
             else:
                 prompt=await get_current_gemini_prompt(user_id)
                 p = await read_context(bot, event, config, prompt)
                 if p:
                     prompt = p
+            if processed_message is None:  #防止二次递归无限循环
+                tools=None
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],
@@ -264,12 +266,14 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
             if new_func_prompt!=[]:
-                await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
+                rsf=await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
+                if rsf is None:
+                    await prompt_database_updata(user_id, message, config)
+                    await prompt_database_updata(user_id, response_message, config)
+                    await prompt_database_updata(user_id, {"role": "function", "parts": new_func_prompt}, config)
                 #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
-                return await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True,lock_prompt=prompt)
-
-
-
+                final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
+                return final_response
             if generate_voice and reply_message is not None:
                 try:
                     bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
