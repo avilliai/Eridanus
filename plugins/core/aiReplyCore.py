@@ -211,9 +211,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 for i in text_elements:
                     self_rep.append({"text":i['text'].strip()})
                     await bot.send(event, i['text'].strip())
-                message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+                self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
                 if hasattr(event, "group_id"):
-                    await add_to_group(event.group_id, message)
+                    await add_to_group(event.group_id, self_message)
                 reply_message=None
             #检查是否存在函数调用，如果还有提示词就发
             status=False
@@ -233,9 +233,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             #在函数调用之前触发更新上下文。
-            message=prompt[-1]
-            await query_and_insert_gemini(user_id,message,insert_message=response_message)
-            #await prompt_database_updata(user_id, response_message, config)
+            await prompt_database_updata(user_id, response_message, config)
             #函数调用
             new_func_prompt = []
             for part in response_message["parts"]:
@@ -262,11 +260,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
             if new_func_prompt!=[]:
-                rsf=await query_and_insert_gemini(user_id,response_message,insert_message={"role": "function","parts": new_func_prompt})
-                if rsf is None:
-                    await prompt_database_updata(user_id, message, config)
-                    await prompt_database_updata(user_id, response_message, config)
-                    await prompt_database_updata(user_id, {"role": "function", "parts": new_func_prompt}, config)
+
+                await prompt_database_updata(user_id, {"role": "function", "parts": new_func_prompt}, config)
                 #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
                 final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
                 return final_response
