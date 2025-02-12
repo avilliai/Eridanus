@@ -64,7 +64,7 @@ async def call_character_identify(bot, event,config,image_url,model_name):
                     f"出自作品：{char['cartoonname']}\n"
                     f"萌娘百科：zh.moegirl.org.cn/index.php?search={quote(char['name'])}\n"
                     f"bing搜索：www.bing.com/images/search?q={quote(char['name'])}\n\n")
-            forward_meslist.append(Node(content=[Text(st1),Image(file=filename)]))
+                forward_meslist.append(Node(content=[Text(st1),Image(file=filename)]))
 
 
 
