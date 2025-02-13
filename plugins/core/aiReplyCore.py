@@ -341,7 +341,7 @@ async def read_context(bot,event,config,prompt):
     try:
         if event is None:
             return None
-        if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
+        if config.api["llm"]["读取群聊上下文"]==False or not hasattr(event, "group_id"):
             return None
         if config.api["llm"]["model"]=="gemini":
             group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
