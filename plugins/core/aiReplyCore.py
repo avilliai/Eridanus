@@ -80,6 +80,12 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 prompt=await get_current_openai_prompt(user_id)
             if processed_message is None:  #防止二次递归无限循环
                 tools=None
+            """
+            读取上下文
+            """
+            p = await read_context(bot, event, config, prompt)
+            if p:
+                prompt = p
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -338,12 +344,21 @@ async def read_context(bot,event,config,prompt):
         if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
             return None
         if config.api["llm"]["model"]=="gemini":
-    
             group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
-            bot.logger.info(f"群聊上下文消息：已读取")
-            insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
-            prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
-
+        elif config.api["llm"]["model"]=="openai":
+            if config.api["llm"]["openai"]["使用旧版prompt结构"]:
+                group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,
+                                                                            config.api["llm"]["可获取的群聊上下文长度"],
+                                                                            "old_openai", bot)
+            else:
+                group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,
+                                                                            config.api["llm"]["可获取的群聊上下文长度"],
+                                                                            "new_openai", bot)
+        else:
+            return None
+        bot.logger.info(f"群聊上下文消息：已读取")
+        insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
+        prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
         return prompt
     except:
         return None
