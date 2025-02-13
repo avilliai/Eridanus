@@ -152,3 +152,16 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
         except Exception as e:
             logger.info(f"Error getting last 20 and converting to prompt for group {group_id}: {e}")
             return []
+async def clear_group_messages(group_id: int):
+    """删除 group_messages 表中指定 group_id 的所有数据"""
+    async with aiosqlite.connect(DB_NAME) as db:
+        try:
+            await execute_with_retry(
+                db,
+                "DELETE FROM group_messages WHERE group_id = ?",
+                (group_id,)
+            )
+            await db.commit()
+            logger.info(f"✅ 已清除 group_id={group_id} 的所有数据")
+        except Exception as e:
+            logger.error(f"❌ 清理 group_id={group_id} 数据时出错: {e}")
