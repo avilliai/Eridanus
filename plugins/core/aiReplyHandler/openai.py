@@ -24,6 +24,7 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
     "temperature": temperature,
     "max_tokens": max_tokens,
   }
+
     if tools is not None:
         data["tools"] = tools
         data["tool_choice"]="auto"
@@ -76,13 +77,48 @@ async def construct_openai_standard_prompt(processed_message,system_instruction,
     history.append(message)
     if system_instruction:
         full_prompt = [
-            {"role": "system", "content": [{"type": "text", "text": system_instruction}]},
+
         ]
+        try:
+            history.index({"role": "system", "content": [{"type": "text", "text": system_instruction}]})
+        except ValueError:
+            full_prompt.append({"role": "system", "content": [{"type": "text", "text": system_instruction}]})
         full_prompt.extend(history)
     else:
         full_prompt = history
     await update_user_history(user_id, full_prompt)  # 更新数据库中的历史记录
     return full_prompt, original_history
+"""
+旧版prompt都是谁在用啊，原来是你啊deepseek
+"""
+async def construct_openai_standard_prompt_old_version(processed_message,system_instruction,user_id,bot=None,func_result=False,event=None):
+    message = await prompt_elements_construct_old_version(processed_message, bot, func_result, event)
+    history = await get_user_history(user_id)
+    original_history = history.copy()  # 备份，出错的时候可以rollback
+    history.append(message)
+    if system_instruction:
+        full_prompt = [
+
+        ]
+        try:
+            history.index({"role": "user", "content": system_instruction})
+        except ValueError:
+            full_prompt.append({"role": "user", "content": system_instruction})
+            full_prompt.append({"role": "assistant", "content": "好的，在接下来的回复中我会扮演好自己的角色"})
+
+        full_prompt.extend(history)
+    else:
+        full_prompt = history
+    await update_user_history(user_id, full_prompt)  # 更新数据库中的历史记录
+    return full_prompt, original_history
+async def prompt_elements_construct_old_version(precessed_message,bot=None,func_result=False,event=None):
+    result = "".join(item.get("text", "") for item in precessed_message)
+    if result:
+        prompt_elements=result
+    else:
+        prompt_elements=str(precessed_message)
+    return {"role": "user", "content": prompt_elements}
+
 async def get_current_openai_prompt(user_id):
     history = await get_user_history(user_id)
     return history

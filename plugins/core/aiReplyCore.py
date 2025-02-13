@@ -15,7 +15,7 @@ from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
-    get_current_openai_prompt, add_openai_standard_prompt
+    get_current_openai_prompt, add_openai_standard_prompt, construct_openai_standard_prompt_old_version
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, clear_all_history, change_folder_chara, read_chara, use_folder_chara
 from plugins.core.tts.tts import tts
@@ -70,7 +70,12 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
         elif config.api["llm"]["model"]=="openai":
             if processed_message:
-                prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
+                if config.api["llm"]["openai"]["使用旧版prompt结构"]:
+                    prompt, original_history = await construct_openai_standard_prompt_old_version(processed_message,
+                                                                                      system_instruction, user_id, bot,
+                                                                                      func_result, event)
+                else:
+                    prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
             else:
                 prompt=await get_current_openai_prompt(user_id)
             if processed_message is None:  #防止二次递归无限循环
@@ -88,7 +93,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             )
             if "content" in response_message:
                 reply_message=response_message["content"]
-                if reply_message is not None:
+                if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
 
@@ -99,6 +104,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
                         if match_rest:
                             reply_message = match_rest.group(1)
+                    else:
+                        if "reasoning_content" in response_message:
+                            await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
+                            response_message.pop("reasoning_content")
             else:
                 reply_message=None
 
@@ -119,8 +128,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             #函数调用
             temp_history=[]
+            func_call = False
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
-                func_call=False
+
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
@@ -156,22 +166,21 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
-                temp_history.insert(0,response_message)
-                for history_part in temp_history:
-                    await prompt_database_updata(user_id, history_part, config)
-                if func_call:
-                    final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
-                                                       system_instruction=system_instruction, func_result=True)
-                    return final_response
-                if generate_voice and reply_message:
-                    try:
-                        bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path = await tts(reply_message, config=config,bot=bot)
-                        await bot.send(event, Record(file=path))
-                    except Exception as e:
-                        bot.logger.error(f"Error occurred when calling tts: {e}")
-                    if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                        await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+
+            await prompt_database_updata(user_id, response_message, config)
+            if func_call:
+                final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
+                                                   system_instruction=system_instruction, func_result=True)
+                return final_response
+            if generate_voice and reply_message:
+                try:
+                    bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
+                    path = await tts(reply_message, config=config,bot=bot)
+                    await bot.send(event, Record(file=path))
+                except Exception as e:
+                    bot.logger.error(f"Error occurred when calling tts: {e}")
+                if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             if processed_message:
@@ -297,6 +306,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
     except Exception as e:
         logger.error(f"Error occurred: {e}")
         traceback.print_exc()
+        logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+        await update_user_history(user_id, original_history)
         if recursion_times<=config.api["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
@@ -305,8 +316,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 await delete_user_history(event.user_id)
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
         else:
-            logger.warning(f"roll back to original history, recursion times: {recursion_times}")
-            await update_user_history(user_id, original_history)
             return "Maximum recursion depth exceeded.Please try again later."
 async def prompt_database_updata(user_id,response_message,config):
     history = await get_user_history(user_id)
