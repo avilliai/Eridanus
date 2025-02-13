@@ -27,7 +27,7 @@ llm:
     temperature: 1.3
     max_tokens: 2048
     CoT: True               #显示思维链
-    使用旧版prompt结构: true  #官网版deepseek-reasoner需要使用旧版prompt结构
+    使用旧版prompt结构: false  #官网版deepseek-reasoner需要使用旧版prompt结构
   gemini:         #https://ai.google.dev/
     api_keys:  #继续像这样添加apikey
       - YOUR_API_KEY_1
