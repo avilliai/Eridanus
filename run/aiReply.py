@@ -4,6 +4,7 @@ import asyncio
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
+from plugins.core.Group_Message_DB import clear_group_messages
 from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
@@ -52,6 +53,9 @@ def main(bot,config):
         elif event.raw_message=="/clear":
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
+        elif event.raw_message=="/clear group":
+            await clear_group_messages(event.group_id)
+            await bot.send(event,"本群消息已清除",True)
         elif event.raw_message=="/clearall" and event.user_id == config.basic_config["master"]["id"]:
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
