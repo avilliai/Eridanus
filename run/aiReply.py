@@ -52,8 +52,10 @@ def main(bot,config):
             await bot.send(event,"那就先不聊啦~")
         elif event.raw_message=="/clear":
             await delete_user_history(event.user_id)
-            await clear_group_messages(event.group_id)
             await bot.send(event,"历史记录已清除",True)
+        elif event.raw_message=="/clear group":
+            await clear_group_messages(event.group_id)
+            await bot.send(event,"本群消息已清除",True)
         elif event.raw_message=="/clearall" and event.user_id == config.basic_config["master"]["id"]:
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
