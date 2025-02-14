@@ -163,7 +163,6 @@ async def nai4(bot, event, config, tag):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 elif p.startswith("审核api"):
-                    turn -= 1
                     bot.logger.info(p)
                     await bot.send(event, p, True)
                 else:
@@ -193,7 +192,6 @@ async def nai3(bot, event, config, tag):
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                     break  # 结束循环，因为没有需要重试的情况
                 elif p.startswith("审核api"):
-                    turn -= 1
                     bot.logger.info(p)
                     await bot.send(event, p, True)
                 else:
@@ -601,7 +599,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def n4reDrawRun(event):
         global n4re
-        global turn
 
         if event.get('image') == None and (
                 str(event.raw_message) == ("n4re") or str(event.raw_message).startswith("n4re ")):
@@ -641,7 +638,6 @@ def main(bot,config):
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
                     elif p.startswith("审核api"):
-                        turn -= 1
                         bot.logger.info(p)
                         await bot.send(event, p, True)
                     else:
@@ -659,7 +655,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def n3reDrawRun(event):
         global n3re
-        global turn
 
         if event.get('image') == None and (
                 str(event.raw_message) == ("n3re") or str(event.raw_message).startswith("n3re ")):
@@ -699,7 +694,6 @@ def main(bot,config):
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
                     elif p.startswith("审核api"):
-                        turn -= 1
                         bot.logger.info(p)
                         await bot.send(event, p, True)
                     else:
