@@ -47,7 +47,8 @@ plugin_modules = [
     ("Link_parsing", "run.streaming_media.Link_parsing"),
     ("engine_search", "run.resource_search.engine_search"),
     ("blue_archive", "run.anime_game_service.blue_archive"),
-    ("character_identify","run.acg_infromation.character_identify")
+    ("character_identify","run.acg_infromation.character_identify"),
+    ("run.petpet.petpet")
 
 ]
 
