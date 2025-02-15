@@ -25,6 +25,8 @@ from urllib.parse import urlparse
 
 
 def main(bot,config):
+    global last_messages
+    last_messages = {}
     global filepath
     filepath = 'data/pictures/wife_you_want_img'
     if not os.path.exists(filepath):
@@ -614,3 +616,38 @@ def main(bot,config):
                     cmList.append(Node(content=[Text(f'{context_target}')]))
 
                     await bot.send(event, cmList)
+
+    @bot.on(GroupMessageEvent)  # 复读程序
+    async def fudu(event: GroupMessageEvent):
+        global last_messages
+        Read_check = ['[', '@', '来点', '随机', '#', '今日', 'gal', '查询', '搜索', '/', '瓶子', '什么', 'minfo', 'id',
+                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表']
+        group1 = f'{event.group_id}_1'
+        group2 = f'{event.group_id}_2'
+        group3 = f'{event.group_id}_3'
+        message = str(event.raw_message)
+        flag = None
+        if group1 not in last_messages:
+            last_messages[group1] = None
+        if group2 not in last_messages:
+            last_messages[group2] = None
+        if group3 not in last_messages:
+            last_messages[group3] = None
+
+        fudu1 = last_messages[group1]
+        fudu2 = last_messages[group2]
+        fudu3 = last_messages[group3]
+        for i in range(len(Read_check)):
+            if str(Read_check[i]) in str(event.raw_message):
+                return
+        fudu1 = message
+        last_messages[group1] = message
+        if fudu1 != fudu3:
+            if fudu1 == fudu2:
+                rnum0 = random.randint(1, 100)
+                if rnum0 < 30:
+                    bot.logger.info(f"复读触发群：{event.group_id}，复读内容：{message}")
+                    await bot.send(event, str(message))
+                    last_messages[group3] = message
+        last_messages[group2] = message
+        # print(last_messages)
