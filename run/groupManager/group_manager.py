@@ -34,9 +34,6 @@ def main(bot,config):
                     name = "有新人"
                 r = await aiReplyCore([{"text": f"{name}加入了群聊，为他发送入群欢迎语"}], event.group_id, config,bot=bot,
                                              tools=None)
-                messages = r.split("<split>")
-                for message in messages:
-                    if message.strip():
-                        await bot.send(event, message.strip())
+                await bot.send(event, str(r))
             else:
                 await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")

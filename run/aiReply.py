@@ -111,10 +111,7 @@ def main(bot,config):
                     if reply_message is not None:
                         if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
                             if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                                messages = reply_message.split("<split>")
-                                for message in messages:
-                                    if message.strip():
-                                        await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                                await bot.send(event, reply_message, config.api["llm"]["Quote"])
                             try:
                                 bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
                                 path=await tts(reply_message,config=config,bot=bot)
@@ -122,16 +119,12 @@ def main(bot,config):
                             except Exception as e:
                                 bot.logger.error(f"Error occurred when calling tts: {e}")
                             if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                                messages = reply_message.split("<split>")
-                                for message in messages:
-                                    if message.strip():
-                                        await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                                await bot.send(event, reply_message, config.api["llm"]["Quote"])
 
                         else:
-                            messages = reply_message.split("<split>")
-                            for message in messages:
-                                if message.strip():
-                                    await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                            await bot.send(event,reply_message,config.api["llm"]["Quote"])
+
+
 
     def prefix_check(message:str,prefix:list):
         for p in prefix:
