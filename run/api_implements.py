@@ -119,7 +119,10 @@ def main(bot,config):
                 else:
                     reply_list=config.settings['api_implements']['nudge']['replylist']
                     r=random.choice(reply_list)
-                await bot.send_group_message(event.group_id, r)
+                messages = r.split("<split>")
+                for message in messages:
+                    if message.strip():
+                        await bot.send_group_message(event.group_id, message.strip())
                 if random.randint(1,100)<config.settings['api_implements']['nudge']['counter_probability']:
                     await bot.group_poke(event.group_id,event.user_id)
             else:
