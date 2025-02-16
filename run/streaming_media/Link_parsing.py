@@ -2,8 +2,10 @@ import asyncio
 import shutil
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image,File,Video
-from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
-from plugins.resource_search_plugin.Link_parsing.Link_parsing import link_prising,download_video_link_prising
+from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
+from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising,download_video_link_prising
+from plugins.streaming_media_service.Link_parsing.music_link_parsing import netease_music_link_parse
+
 
 def main(bot,config):
     botname=config.basic_config["bot"]["name"]
@@ -83,5 +85,19 @@ def main(bot,config):
             if link_prising_json['reason']:
                 #print(link_prising_json)
                 bot.logger.error(str('bili_link_error ') + link_prising_json['reason'])
+
+    @bot.on(GroupMessageEvent)
+    async def Music_Link_Prising_search(event: GroupMessageEvent):
+        proxy = config.api["proxy"]["http_proxy"]
+        url = event.raw_message
+        if "music.163.com" not in url:
+            return
+        link_parsing_json = await netease_music_link_parse(url, filepath='data/pictures/cache/')
+        if link_parsing_json['status']:
+            bot.logger.info('网易云音乐链接解析成功，开始推送~~~')
+            await bot.send(event, Image(file=link_parsing_json['pic_path']))
+        else:
+            if link_parsing_json['reason']:
+                bot.logger.error(f'netease_music_link_error: {link_parsing_json["reason"]}')
 
 
