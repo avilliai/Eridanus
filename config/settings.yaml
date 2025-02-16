@@ -36,6 +36,9 @@ bili_dynamic:     #下面的设置暂不可用，请暂时不要修改
   screen_shot_mode: "mobile" #mobile为移动端截图，pc为PC端截图
   draw_type: 2    #1代表用playwright（需要安装其余组件）；2代表本地Pillow绘图（有可能出错）
   is_QQ_chek: True #是否检测qq小程序里的视频链接
+
+网易云解析:    #绘制网易云歌曲分享卡片
+  enable: false
 ai绘画:
   sd画图: true
   sd默认启动模型: 'miaomiao_1_4.safetensors'
