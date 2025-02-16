@@ -27,7 +27,7 @@ def draw_netease_music_card(data, filepath, song_id):
 
     #设置字体
     font_size = 60
-    font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "fonts", "LXGWWenKai-Regular.ttf"))
+    font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "fort", "LXGWWenKai-Regular.ttf"))
     print(f"字体文件路径: {font_path}")
     try:
         font = ImageFont.truetype(font_path, font_size)
