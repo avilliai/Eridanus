@@ -45,6 +45,7 @@ plugin_modules = [
     ("youtube", "run.streaming_media.youtube"),
     ("bilibili", "run.streaming_media.bilibili"),
     ("Link_parsing", "run.streaming_media.Link_parsing"),
+    ("music_link_parsing", "run.streaming_media.music_link_parsing"),
     ("engine_search", "run.resource_search.engine_search"),
     ("blue_archive", "run.anime_game_service.blue_archive"),
     ("character_identify","run.acg_infromation.character_identify")
