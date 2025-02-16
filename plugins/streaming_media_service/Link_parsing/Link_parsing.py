@@ -18,15 +18,15 @@ from datetime import datetime, timedelta
 import json
 import traceback
 from developTools.utils.logger import get_logger
-from plugins.resource_search_plugin.Link_parsing.core.draw import draw_adaptive_graphic_and_textual
-from plugins.resource_search_plugin.Link_parsing.core.bili import bili_init,av_to_bv,download_b,info_search_bili
-from plugins.resource_search_plugin.Link_parsing.core.weibo import mid2id,WEIBO_SINGLE_INFO
-from plugins.resource_search_plugin.Link_parsing.core.common import download_video,download_img,add_append_img,GENERAL_REQ_LINK,get_file_size_mb
-from plugins.resource_search_plugin.Link_parsing.core.tiktok import generate_x_bogus_url, dou_transfer_other, \
+from plugins.streaming_media_service.Link_parsing.core.draw import draw_adaptive_graphic_and_textual
+from plugins.streaming_media_service.Link_parsing.core.bili import bili_init,av_to_bv,download_b,info_search_bili
+from plugins.streaming_media_service.Link_parsing.core.weibo import mid2id,WEIBO_SINGLE_INFO
+from plugins.streaming_media_service.Link_parsing.core.common import download_video,download_img,add_append_img,GENERAL_REQ_LINK,get_file_size_mb
+from plugins.streaming_media_service.Link_parsing.core.tiktok import generate_x_bogus_url, dou_transfer_other, \
     COMMON_HEADER,DOUYIN_VIDEO,URL_TYPE_CODE_DICT,DY_TOUTIAO_INFO
-from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
-from plugins.resource_search_plugin.Link_parsing.core.acfun import parse_url, download_m3u8_videos, parse_m3u8, merge_ac_file_to_mp4
-from plugins.resource_search_plugin.Link_parsing.core.xhs import XHS_REQ_LINK
+from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
+from plugins.streaming_media_service.Link_parsing.core.acfun import parse_url, download_m3u8_videos, parse_m3u8, merge_ac_file_to_mp4
+from plugins.streaming_media_service.Link_parsing.core.xhs import XHS_REQ_LINK
 import inspect
 
 from bilibili_api import settings

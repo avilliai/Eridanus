@@ -5,8 +5,8 @@ import copy
 import os
 import inspect
 
-from plugins.resource_search_plugin.Link_parsing.core.cloud_music_draw import draw_netease_music_card
-from plugins.resource_search_plugin.Link_parsing.core.netease_music import fetch_song_info, download_image
+from plugins.streaming_media_service.Link_parsing.core.cloud_music_draw import draw_netease_music_card
+from plugins.streaming_media_service.Link_parsing.core.netease_music import fetch_song_info, download_image
 
 json_init = {
     "status": False,

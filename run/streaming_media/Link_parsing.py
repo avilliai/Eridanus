@@ -2,9 +2,9 @@ import asyncio
 import shutil
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image,File,Video
-from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
-from plugins.resource_search_plugin.Link_parsing.Link_parsing import link_prising,download_video_link_prising
-from plugins.resource_search_plugin.Link_parsing.core.music_link_parsing import netease_music_link_parse
+from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
+from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising,download_video_link_prising
+from plugins.streaming_media_service.Link_parsing.music_link_parsing import netease_music_link_parse
 
 
 def main(bot,config):
