@@ -59,9 +59,9 @@ async def call_text2img(bot, event, config, prompt):
             except Exception as e:
                 bot.logger.error(f"Task failed: {e}")
         if r:
-            bot.logger.info("任务完成: success")
+            bot.logger.info("text2img 任务完成: success")
         else:
-            bot.logger.info("任务完成: failed")
+            bot.logger.info("text2img 任务完成: failed")
 
     # 在后台运行任务，不等待完成
     asyncio.create_task(run_tasks())
