@@ -1,4 +1,18 @@
 import httpx
+import ruamel.yaml
+yaml = ruamel.yaml.YAML()
+yaml.preserve_quotes = True
+with open('config/settings.yaml', 'r', encoding='utf-8') as f:
+    controller = yaml.load(f)
+aiDrawController = controller.get("ai绘画")
+tag_model = aiDrawController.get("反推和审核使用模型") if aiDrawController else "wd14-vit-v2-git"
+
+'''
+反推和审核使用模型可选:'wd14-vit-v2-git'，'wd14-convnext-v2-git'，'wd14-swinv2-v2-git'，'wd-vit-v3-git'，'wd14-convnext-v3-git'，
+'wd14-swinv2-v3-git'，'wd14-large-v3-git'，'wd14-eva02-large-v3-git'
+前提是你安装的插件是spawner1145的https://github.com/spawner1145/stable-diffusion-webui-wd14-tagger.git
+否则只能使用'wd14-vit-v2-git'
+'''
 
 async def pic_audit_standalone(
         img_base64,
@@ -21,7 +35,7 @@ async def pic_audit_standalone(
                 #logger.error(f"API失败，错误信息: {e.response.status_code}, {await e.response.text()}")
                 return None
 
-    payload = {"image": img_base64, "model": "wd14-vit-v2-git", "threshold": 0.35}
+    payload = {"image": img_base64, "model": tag_model, "threshold": 0.35}
 
     resp_dict = await get_caption(payload)
 
