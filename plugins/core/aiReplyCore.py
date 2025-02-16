@@ -127,16 +127,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                         if reply_message.strip()=="" or reply_message.strip()=="\n":
                             logger.error("gemini返回了空回复，不发送。")
-                        messages = reply_message.split("<split>")
-                        for message in messages:
-                            if message.strip():
-                                await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                        await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
-                    messages = reply_message.split("<split>")
-                    for message in messages:
-                        if message.strip():
-                            await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             #函数调用
             temp_history=[]
@@ -192,10 +186,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 except Exception as e:
                     bot.logger.error(f"Error occurred when calling tts: {e}")
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                    messages = reply_message.split("<split>")
-                    for message in messages:
-                        if message.strip():
-                            await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
             #print(response_message)
         elif config.api["llm"]["model"]=="gemini":
             if processed_message:
@@ -234,10 +225,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 self_rep=[]
                 for i in text_elements:
                     self_rep.append({"text":i['text'].strip()})
-                    messages = i['text'].split("<split>")
-                    for message in messages:
-                        if message.strip():
-                            await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                    await bot.send(event, i['text'].strip())
                 self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
                 if hasattr(event, "group_id"):
                     await add_to_group(event.group_id, self_message)
@@ -253,17 +241,11 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                        messages = reply_message.split("<split>")
-                        for message in messages:
-                            if message.strip():
-                                await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                        await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
                     generate_voice=True
                 else:
-                    messages = reply_message.split("<split>")
-                    for message in messages:
-                        if message.strip():
-                            await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
 
             #在函数调用之前触发更新上下文。
             await prompt_database_updata(user_id, response_message, config)
@@ -306,10 +288,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 except Exception as e:
                     bot.logger.error(f"Error occurred when calling tts: {e}")
                 if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                    messages = reply_message.split("<split>")
-                    for message in messages:
-                        if message.strip():
-                            await bot.send(event, message.strip(), config.api["llm"]["Quote"])
+                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
         elif config.api["llm"]["model"]=="腾讯元器":
             prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
