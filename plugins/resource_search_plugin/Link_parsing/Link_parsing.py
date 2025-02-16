@@ -97,7 +97,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
 
         if is_opus is False:#若判断为图文则换另一种方法读取
-            logger.info('not opus')
+            #logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
             avatar_json = await info_search_bili(dynamic_info, is_opus,filepath=filepath)
             tags = ''
@@ -154,7 +154,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         if is_opus is True:
             dynamic_info = await dy.get_info()
 
-            logger.info('is opus')
+            #logger.info('is opus')
             orig_check=1        #判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -834,7 +834,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-
+        #traceback.print_exc()
         return json_check
     if link_prising_json:
         if type == 'dynamic_check':
@@ -843,11 +843,11 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
             else:
                 time_check = link_prising_json['time']
             possible_formats = [
-                "%Y年%m月%d日 %H:%M",
-                "%Y/%m/%d %H:%M",
-                "%Y-%m-%d %H:%M",
-                "%d-%m-%Y %H:%M",
-                "%Y.%m.%d %H:%M",
+                "%Y年%m月%d日",
+                "%Y/%m/%d",
+                "%Y-%m-%d",
+                "%d-%m-%Y",
+                "%Y.%m.%d",
             ]
 
             for fmt in possible_formats:
@@ -855,8 +855,10 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                     # 尝试解析日期字符串
                     check_time=datetime.strptime(time_check, fmt)
                     if check_time != datetime.now().date():
+                        #print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
                         link_prising_json['status'] = False
-                        #print(f"时间不匹配，拒绝发送{link_prising_json['time']}")
+                        link_prising_json['check_time']=check_time
+                        #print(f"时间不匹配，拒绝发送{link_prising_json['time']}\ncheck_time:{check_time}")
                     break
                 except ValueError:
                     # 如果解析失败，继续尝试下一个格式
@@ -887,7 +889,7 @@ if __name__ == "__main__":#测试用，不用管
     #url='https://b23.tv/bicqrKN'
     #url='https://b23.tv/t9YeH0m'
     url='【【明日方舟抽卡】王牌！主播在商店花300凭证单抽出了烛煌！黑子说话！】https://www.bilibili.com/video/BV1dYfUYDE96?vd_source=5e640b2c90e55f7151f23234cae319ec'
-    url='https://b23.tv/pTZYuNq'
+    url='https://v.douyin.com/iPhd561x'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
 
