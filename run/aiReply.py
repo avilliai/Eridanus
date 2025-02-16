@@ -133,8 +133,6 @@ def main(bot,config):
                                 if message.strip():
                                     await bot.send(event, message.strip(), config.api["llm"]["Quote"])
 
-
-
     def prefix_check(message:str,prefix:list):
         for p in prefix:
             if message.startswith(p):
