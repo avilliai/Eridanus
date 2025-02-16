@@ -89,7 +89,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Music_Link_Prising_search(event: GroupMessageEvent):
         if config.settings["网易云卡片"]["enable"]:
-            proxy = config.api["proxy"]["http_proxy"]
             url = event.raw_message
             if "music.163.com" not in url:
                 return
