@@ -6,11 +6,36 @@ from plugins.streaming_media_service.Link_parsing.core.login_core import ini_log
 from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising,download_video_link_prising
 from plugins.streaming_media_service.Link_parsing.music_link_parsing import netease_music_link_parse
 
+global teamlist
+teamlist = {}
+async def call_bili_download_video(bot,event: GroupMessageEvent,config):
+    global teamlist
+    if event.group_id in teamlist:
+        json = teamlist[event.group_id]
+        teamlist.pop(event.group_id)
+    else:
+        return {"status": "当前群聊没有已缓存的解析结果。"}
+    if json['soft_type'] not in {'bilibili', 'dy', 'wb', 'xhs', 'x'}:
+        await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
+        return
+    proxy = config.api["proxy"]["http_proxy"]
+    try:
+        video_json = await download_video_link_prising(json, filepath='data/pictures/cache/', proxy=proxy)
+        if 'video' in video_json['type']:
+            if video_json['type'] == 'video_bigger':
+                await bot.send(event, f'视频有些大，请耐心等待喵~~')
+            await bot.send(event, Video(file=video_json['video_path']))
+        elif video_json['type'] == 'file':
+            await bot.send(event, f'好大的视频，小的将发送至群文件喵~')
+            await bot.send(event, File(file=video_json['video_path']))
+        elif video_json['type'] == 'too_big':
+            await bot.send(event, f'太大了，罢工！')
+    except Exception as e:
+        await bot.send(event, f'下载失败\n{e}')
 
 def main(bot,config):
     botname=config.basic_config["bot"]["name"]
-    global teamlist
-    teamlist={}
+
     bili_login_check,douyin_login_check,xhs_login_check=ini_login_Link_Prising(type=0)
     if bili_login_check and douyin_login_check and xhs_login_check:
         bot.logger.info('链接解析功能已上线！')
@@ -41,31 +66,18 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Link_Prising_search(event: GroupMessageEvent):
         global teamlist
-        proxy=config.api["proxy"]["http_proxy"]
+        proxy = config.api["proxy"]["http_proxy"]
         #print(proxy)
         url=event.raw_message
-        if event.sender.user_id == 2684831639:return
-        if event.sender.user_id in teamlist:
-            json=teamlist[event.sender.user_id]
-            teamlist.pop(event.sender.user_id)
+        if event.group_id in teamlist:
+            json=teamlist[event.group_id]
             if url == '下载视频' or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="下载视频"):
                 if json['soft_type'] not in {'bilibili','dy','wb','xhs','x'}:
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
+                    teamlist.pop(event.group_id)
                     return
                 #await bot.send(event, '开始下载，请稍等喵~~~')
-                try:
-                    video_json= await download_video_link_prising(json,filepath='data/pictures/cache/',proxy=proxy)
-                    if 'video' in video_json['type']:
-                        if video_json['type'] == 'video_bigger':
-                            await bot.send(event, f'视频有些大，请耐心等待喵~~')
-                        await bot.send(event, Video(file=video_json['video_path']))
-                    elif video_json['type'] == 'file':
-                        await bot.send(event, f'好大的视频，小的将发送至群文件喵~')
-                        await bot.send(event, File(file=video_json['video_path']))
-                    elif video_json['type'] == 'too_big':
-                        await bot.send(event, f'太大了，罢工！')
-                except Exception as e:
-                    await bot.send(event, f'下载失败\n{e}')
+                await call_bili_download_video(bot,event,config)
             return
 
 
@@ -76,7 +88,7 @@ def main(bot,config):
             bot.logger.info('链接解析成功，开始推送~~')
             if link_prising_json['video_url']:
                 send_context=f'该视频可下载，发送“下载视频”以推送'
-                teamlist[event.sender.user_id]=link_prising_json
+                teamlist[event.group_id]=link_prising_json
                 if "QQ小程序" in url and config.settings["bili_dynamic"]["is_QQ_chek"] is not True:
                     await bot.send(event, [f'{send_context}'])
                     return
