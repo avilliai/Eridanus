@@ -113,7 +113,6 @@ def main(bot,config):
                     try:
                         await bot.send(event, File(file='data/pictures/cache/不允许进行传播、销售等商业活动!!.txt'))
                     except Exception as e:
-                        bot.logger.logger("没有开启解析自带音频下载url，不给你发")
+                        bot.logger.logger(f"{e}\n没有开启解析自带音频下载url，不给你发")
                 os.remove('data/pictures/cache/不允许进行传播、销售等商业活动!!.txt')
             return
-
