@@ -11,8 +11,8 @@ NETEASE_MUSIC_HEADERS = {
     "Referer": "https://music.163.com/",
 }
 
-OFFICIAL_SONG_DETAIL_API = "https://music.163.com/api/song/detail?ids=[{}]"  # 官方 API
-DOWNLOAD_API = "https://www.byfuns.top/api/1/?id={}"  # 下载 API
+OFFICIAL_SONG_DETAIL_API = "https://music.163.com/api/song/detail?ids=[{}]"  #官方API
+DOWNLOAD_API = "https://www.byfuns.top/api/1/?id={}"  #下载API
 
 def format_duration(duration_ms):
     """将毫秒时长格式化为 MM:SS"""
