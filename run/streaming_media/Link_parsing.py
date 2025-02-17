@@ -100,7 +100,6 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def Music_Link_Prising_search(event: GroupMessageEvent):
-        global teamlist
         url = event.raw_message
         if config.settings["网易云卡片"]["enable"]:
             if "music.163.com" not in url:
