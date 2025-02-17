@@ -295,7 +295,7 @@
                         },
                         "mood": {
                             "type": "string",
-                            "enum": ["开心", "中立", "难过", "生气"],
+                            "enum": ["生气_angry", "开心_happy", "中立_neutral", "难过_sad"],
                             "description": "语音的情绪。根据具体句子判断。"
                         }
                     },

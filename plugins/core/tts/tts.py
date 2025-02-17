@@ -1,5 +1,6 @@
 # 语音合成接口
 import asyncio
+import random
 import re
 import threading
 import time
@@ -16,7 +17,9 @@ from plugins.utils.random_str import random_str
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
-GPTSOVITS_SPEAKERS=None
+
+global GPTSOVITS_SPEAKERS
+GPTSOVITS_SPEAKERS={}
 async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
 
@@ -32,7 +35,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
-        return await acgn_ai_tts(config.api["tts"]["acgn_ai"]["token"], config, text, speaker,mood)
+        return await acgn_ai_tts(random.choice(config.api["tts"]["acgn_ai"]["token"]), config, text, speaker,mood)
     elif mode=="napcat_tts":
         if speaker is None:
             speaker=config.api["tts"]["napcat_tts"]["character_name"]
@@ -49,14 +52,15 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
 
 
 def gptVitsSpeakers():
-    url = "https://infer.acgnai.top/infer/spks"
-    try:
-        r=requests.post(url,json={"type":"tts","brand":"gpt-sovits","name":"anime"})
-        global GPTSOVITS_SPEAKERS
-        GPTSOVITS_SPEAKERS=r.json()["spklist"]
-        return GPTSOVITS_SPEAKERS
-    except:
-        print("GPTSOVITS_SPEAKERS获取失败")
+    global GPTSOVITS_SPEAKERS
+    model_url="https://gsv.ai-lab.top/models"
+    models=requests.get(model_url).json()
+    for model in models:
+        url=f"https://gsv.ai-lab.top/spks"
+        response=requests.post(url,json={"model": model}).json()
+        for spk in response["speakers"]:
+            GPTSOVITS_SPEAKERS[spk]=model
+
 
 try:
     if local_config["tts"]["tts_engine"] == "acgn_ai" and local_config["tts"]["acgn_ai"]["token"]!= "":
@@ -68,44 +72,38 @@ async def get_acgn_ai_speaker_list(a=None,b=None,c=None):
     global GPTSOVITS_SPEAKERS
     spks=list(GPTSOVITS_SPEAKERS.keys())
     return spks
-async def acgn_ai_tts(token, config, text, speaker,mood):
+async def acgn_ai_tts(token, config, text, speaker,inclination="中立_neutral"):
+    global GPTSOVITS_SPEAKERS
     if speaker not in GPTSOVITS_SPEAKERS:
         speaker = config.api["tts"]["acgn_ai"]["speaker"]
-    inclination = "中立"
-    if len(GPTSOVITS_SPEAKERS[speaker]) > 1:
-        r=mood
-        for i in GPTSOVITS_SPEAKERS[speaker]:
-            if i==r:
-                inclination = i
-                break
 
-    url = "https://infer.acgnai.top/infer/gen"
+
+    url = "https://gsv.ai-lab.top/infer_single"
     async with httpx.AsyncClient(timeout=100) as client:
         r = await client.post(url, json={
-            "access_token": token,
-            "type": "tts",
-            "brand": "gpt-sovits",
-            "name": "anime",
-            "method": "api",
-            "prarm": {
-                "speaker": speaker,
-                "emotion": inclination,
-                "text": text,
-                "text_language": "多语种混合",
-                "text_split_method": "按标点符号切",
-                "fragment_interval": 0.3,
-                "batch_size": 1,
-                "batch_threshold": 0.75,
-                "parallel_infer": True,
-                "split_bucket": True,
-                "top_k": 10,
-                "top_p": 1.0,
-                "temperature": 1.0,
-                "speed_factor": 1.0
-            }
+          "access_token": token,
+          "model_name": GPTSOVITS_SPEAKERS[speaker],
+          "speaker_name": speaker,
+          "prompt_text_lang": "中文",
+          "emotion": inclination,
+          "text": text,
+          "text_lang": "中文",
+          "top_k": 10,
+          "top_p": 1,
+          "temperature": 1,
+          "text_split_method": "按标点符号切",
+          "batch_size": 1,
+          "batch_threshold": 0.75,
+          "split_bucket": True,
+          "speed_facter": 1,
+          "fragment_interval": 0.3,
+          "media_type": "wav",
+          "parallel_infer": True,
+          "repetition_penalty": 1.35,
+          "seed": -1
         })
     async with httpx.AsyncClient(timeout=100) as client:
-        r = await client.get(r.json()['audio'])
+        r = await client.get(r.json()['audio_url'])
     p = "data/voice/cache/" + random_str() + '.wav'
     with open(p, "wb") as f:
         f.write(r.content)
