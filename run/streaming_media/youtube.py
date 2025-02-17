@@ -58,10 +58,10 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                 video_json = await download_video_link_prising(link_prising_json, filepath='data/pictures/cache/', proxy=proxy)
                 if 'video' in video_json['type']:
                     await bot.send(event, Video(file=video_json['video_path']))
-                    return {"status": True}
+                    return {"status": True, "reason": "下载成功，视频已发送。"}
                 elif video_json['type'] == 'file':
                     await bot.send(event, File(file=video_json['video_path']))
-                    return {"status": True, "reason": "下载成功"}
+                    return {"status": True, "reason": "下载成功，文件已发送。"}
                 elif video_json['type'] == 'too_big':
                     return {"status": False, "reason": "文件过大"}
             except Exception as e:
