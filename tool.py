@@ -114,7 +114,7 @@ async def main():
         except ImportError as e:
             os.system(f"\"{python_path}\" -m pip install PyGObject")
 
-        from plugins.resource_search_plugin.Link_parsing.core.login_core import login_core_select
+        from plugins.streaming_media_service.Link_parsing.core.login_core import login_core_select
         await login_core_select()
 
 

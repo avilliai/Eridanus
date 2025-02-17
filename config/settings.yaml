@@ -36,9 +36,13 @@ bili_dynamic:     #下面的设置暂不可用，请暂时不要修改
   screen_shot_mode: "mobile" #mobile为移动端截图，pc为PC端截图
   draw_type: 2    #1代表用playwright（需要安装其余组件）；2代表本地Pillow绘图（有可能出错）
   is_QQ_chek: True #是否检测qq小程序里的视频链接
+
+网易云卡片:    #绘制网易云歌曲分享卡片
+  enable: false
 ai绘画:
   sd画图: true
   sd默认启动模型: 'miaomiao_1_4.safetensors'
+  反推和审核使用模型: 'wd14-vit-v2-git' # 可填的选项见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB
   sd图片是否保存到生图端: true   #是否将生成的图片保存在webui的outputs里
   novel_ai画图: false
   sd画图默认分辨率: '1024,1536' # 宽,高（别带空格）

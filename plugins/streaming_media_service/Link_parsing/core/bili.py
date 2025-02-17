@@ -14,7 +14,7 @@ import yaml
 import time
 import json
 from io import BytesIO
-from plugins.resource_search_plugin.Link_parsing.core.login_core import ini_login_Link_Prising
+from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
 import traceback
 
 def bili_init():

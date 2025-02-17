@@ -5,9 +5,9 @@ import aiohttp
 import asyncio
 import httpx
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
-from plugins.resource_search_plugin.Link_parsing.Link_parsing import link_prising
+from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising
 from plugins.utils.random_str import random_str
-from plugins.resource_search_plugin.Link_parsing.core.bili import fetch_latest_dynamic_id_api
+from plugins.streaming_media_service.Link_parsing.core.bili import fetch_latest_dynamic_id_api
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 # 添加请求头

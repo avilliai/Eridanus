@@ -147,9 +147,14 @@ async def query_and_insert_gemini(user_id,aim_element,insert_message):
     }:
         return
     history = await get_user_history(user_id)
-    index=history.index(aim_element)
-    history.insert(index+1,insert_message)
-    await update_user_history(user_id, history)
+    try:
+        index=history.index(aim_element)
+        history.insert(index+1,insert_message)
+        await update_user_history(user_id, history)
+    except Exception as e:
+        logger.warning(f"插入gemini prompt失败:{e}\n原始消息:{aim_element} 要插入的消息:{insert_message}")
+        return None
+
 async def get_current_gemini_prompt(user_id):
     history = await get_user_history(user_id)
     return history

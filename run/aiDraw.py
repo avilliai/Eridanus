@@ -40,27 +40,34 @@ no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [
 async def call_text2img(bot, event, config, prompt):
     tag = prompt
 
-    tasks = [
-        asyncio.create_task(func)
-        for func in [
-            call_text2img1(bot, event, config, tag),
-            call_text2img2(bot, event, config, tag),
-            nai4(bot, event, config, tag),  # 两个nai功能建议二选一
-            # nai3(bot, event, config, tag), 
+    async def run_tasks():
+        tasks = [
+            asyncio.create_task(func)
+            for func in [
+                call_text2img1(bot, event, config, tag),
+                call_text2img2(bot, event, config, tag),
+                nai4(bot, event, config, tag),
+                # nai3(bot, event, config, tag),
+            ]
         ]
-    ]
-    r=None
-    for future in asyncio.as_completed(tasks):
-        try:
-            f1=await future
-            if f1:
-                r=f1
-        except Exception as e:
-            bot.logger.error(f"Task failed: {e}")
-    if r:
-        return {"status": "success"}
-    else:
-        return {"status": "failed"}
+        r = None
+        for future in asyncio.as_completed(tasks):
+            try:
+                f1 = await future
+                if f1:
+                    r = f1
+            except Exception as e:
+                bot.logger.error(f"Task failed: {e}")
+        if r:
+            bot.logger.info("text2img 任务完成: success")
+        else:
+            bot.logger.info("text2img 任务完成: failed")
+
+    # 在后台运行任务，不等待完成
+    asyncio.create_task(run_tasks())
+
+    # 立即返回
+    return {"status": "绘制中....请等待结果返回"}
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id, event.sender.nickname)
@@ -163,7 +170,6 @@ async def nai4(bot, event, config, tag):
                     bot.logger.info("色图已屏蔽")
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                 elif p.startswith("审核api"):
-                    turn -= 1
                     bot.logger.info(p)
                     await bot.send(event, p, True)
                 else:
@@ -193,7 +199,6 @@ async def nai3(bot, event, config, tag):
                     await bot.send(event, "杂鱼，色图不给你喵~", True)
                     break  # 结束循环，因为没有需要重试的情况
                 elif p.startswith("审核api"):
-                    turn -= 1
                     bot.logger.info(p)
                     await bot.send(event, p, True)
                 else:
@@ -601,7 +606,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def n4reDrawRun(event):
         global n4re
-        global turn
 
         if event.get('image') == None and (
                 str(event.raw_message) == ("n4re") or str(event.raw_message).startswith("n4re ")):
@@ -641,7 +645,6 @@ def main(bot,config):
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
                     elif p.startswith("审核api"):
-                        turn -= 1
                         bot.logger.info(p)
                         await bot.send(event, p, True)
                     else:
@@ -659,7 +662,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def n3reDrawRun(event):
         global n3re
-        global turn
 
         if event.get('image') == None and (
                 str(event.raw_message) == ("n3re") or str(event.raw_message).startswith("n3re ")):
@@ -699,7 +701,6 @@ def main(bot,config):
                         bot.logger.info("色图已屏蔽")
                         await bot.send(event, "杂鱼，色图不给你喵~", True)
                     elif p.startswith("审核api"):
-                        turn -= 1
                         bot.logger.info(p)
                         await bot.send(event, p, True)
                     else:

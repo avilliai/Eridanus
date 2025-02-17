@@ -1,7 +1,10 @@
 import random
 
+import asyncio
+
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
+from plugins.core.Group_Message_DB import clear_group_messages
 from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
@@ -32,6 +35,9 @@ def main(bot,config):
                     tools
                 ]
                 print(tools)
+
+    locks = {}
+    queues = {}
     '''@bot.on(GroupMessageEvent) #测试异步
     async def aiReplys(event):
         await sleep(10)
@@ -47,6 +53,9 @@ def main(bot,config):
         elif event.raw_message=="/clear":
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
+        elif event.raw_message=="/clear group":
+            await clear_group_messages(event.group_id)
+            await bot.send(event,"本群消息已清除",True)
         elif event.raw_message=="/clearall" and event.user_id == config.basic_config["master"]["id"]:
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
@@ -71,45 +80,52 @@ def main(bot,config):
             chara_file = str(event.raw_message).replace("/查人设", "")
             all_chara = await get_folder_chara()
             await bot.send(event, all_chara)
-        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.raw_message),config.api["llm"]["prefix"]):
+        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.raw_message),config.api["llm"]["prefix"]) or await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event):
             bot.logger.info(f"接受消息{event.processed_message}")
             user_info = await get_user(event.user_id, event.sender.nickname)
             if not user_info[6] >= config.controller["core"]["ai_reply_group"]:
                 await bot.send(event,"你没有足够的权限使用该功能哦~")
                 return
-            reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
-            if reply_message is not None:
-                if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
-                    if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                        await bot.send(event, reply_message, config.api["llm"]["Quote"])
-                    try:
-                        bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path=await tts(reply_message,config=config,bot=bot)
-                        await bot.send(event,Record(file=path))
-                    except Exception as e:
-                        bot.logger.error(f"Error occurred when calling tts: {e}")
-                    if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                        await bot.send(event, reply_message, config.api["llm"]["Quote"])
+            #锁机制
+            if event.user_id not in locks:
+                locks[event.user_id] = asyncio.Lock()
+                queues[event.user_id] = asyncio.Queue()
+            await queues[event.user_id].put(event)
+            if locks[event.user_id].locked():
+                bot.logger.info(f"用户{event.user_id}正在处理消息，放入队列")
+                return
 
-                else:
-                    await bot.send(event,reply_message,config.api["llm"]["Quote"])
-        else:
-            reply_message = await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event)
-            if reply_message is not None:
-                if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
-                    if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                        await bot.send(event, reply_message, config.api["llm"]["Quote"])
-                    try:
-                        bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                        path = await tts(reply_message, config=config,bot=bot)
-                        await bot.send(event, Record(file=path))
-                    except Exception as e:
-                        bot.logger.error(f"Error occurred when calling tts: {e}")
-                    if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                        await bot.send(event, reply_message, config.api["llm"]["Quote"])
+            # 处理队列中的请求
+            async with locks[event.user_id]:  # 只有一个协程能执行
+                while not queues[event.user_id].empty():
+                    current_event = await queues[event.user_id].get()  # 取出排队中的请求
+                    reply_message = await aiReplyCore(
+                        current_event.processed_message,
+                        current_event.user_id,
+                        config,
+                        tools=tools,
+                        bot=bot,
+                        event=current_event,
+                    )
+            #reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
+                    if reply_message is not None:
+                        if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
+                            if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
+                                await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                            try:
+                                bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
+                                path=await tts(reply_message,config=config,bot=bot)
+                                await bot.send(event,Record(file=path))
+                            except Exception as e:
+                                bot.logger.error(f"Error occurred when calling tts: {e}")
+                            if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
+                                await bot.send(event, reply_message, config.api["llm"]["Quote"])
 
-                else:
-                    await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                        else:
+                            await bot.send(event,reply_message,config.api["llm"]["Quote"])
+
+
+
     def prefix_check(message:str,prefix:list):
         for p in prefix:
             if message.startswith(p):
@@ -133,21 +149,38 @@ def main(bot,config):
           if not user_info[6] >= config.controller["core"]["ai_reply_private"]:
               await bot.send(event, "你没有足够的权限使用该功能哦~")
               return
-          reply_message = await aiReplyCore(event.processed_message, event.user_id, config, tools=tools, bot=bot,
-                                            event=event)
-          if reply_message is not None:
-              await add_self_rep(bot,event,config,reply_message)
-              if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
-                  if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                      await bot.send(event, reply_message, config.api["llm"]["Quote"])
-                  try:
-                      bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                      path = await tts(reply_message, config=config,bot=bot)
-                      await bot.send(event, Record(file=path))
-                  except Exception as e:
-                      bot.logger.error(f"Error occurred when calling tts: {e}")
-                  if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                      await bot.send(event, reply_message, config.api["llm"]["Quote"])
+            # 锁机制
+          if event.user_id not in locks:
+              locks[event.user_id] = asyncio.Lock()
+              queues[event.user_id] = asyncio.Queue()
+          await queues[event.user_id].put(event)
+          if locks[event.user_id].locked():
+              bot.logger.info(f"用户{event.user_id}正在处理消息，放入队列")
+              return
+          async with locks[event.user_id]:  # 只有一个协程能执行
+              while not queues[event.user_id].empty():
+                  current_event = await queues[event.user_id].get()  # 取出排队中的请求
+                  reply_message = await aiReplyCore(
+                      current_event.processed_message,
+                      current_event.user_id,
+                      config,
+                      tools=tools,
+                      bot=bot,
+                      event=current_event,
+                  )
+                  # reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
+                  if reply_message is not None:
+                      if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
+                          if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
+                              await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                          try:
+                              bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
+                              path = await tts(reply_message, config=config, bot=bot)
+                              await bot.send(event, Record(file=path))
+                          except Exception as e:
+                              bot.logger.error(f"Error occurred when calling tts: {e}")
+                          if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
+                              await bot.send(event, reply_message, config.api["llm"]["Quote"])
 
-              else:
-                  await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                      else:
+                          await bot.send(event, reply_message, config.api["llm"]["Quote"])
