@@ -184,6 +184,10 @@
                 }
             },
             {
+                "name": "call_bili_download_video",
+                "description": "下载bilibili视频。"
+            },
+            {
                 "name": "call_delete_user_history",
                 "description": "清理当前对话记录"
             },

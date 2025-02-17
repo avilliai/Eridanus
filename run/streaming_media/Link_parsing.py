@@ -71,7 +71,7 @@ def main(bot,config):
         url=event.raw_message
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
-            if url == '下载视频' or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="下载视频"):
+            if event.get("text")[0]=="下载视频":
                 if json['soft_type'] not in {'bilibili','dy','wb','xhs','x'}:
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
                     teamlist.pop(event.group_id)

@@ -28,6 +28,7 @@ dynamic_imports = {
     "run.acg_infromation.bangumi": ["call_bangumi_search"],
     "run.acg_infromation.character_identify": ["call_character_identify"],
     "run.streaming_media.youtube": ["download_youtube"],
+    "run.streaming_media.link_parsing": ["call_bili_download_video"],
     "run.aiDraw": ["call_text2img", "call_aiArtModerate"],
     "run.scheduledTasks": ["operate_group_push_tasks"],
     "run.resource_search.engine_search": ["search_net", "read_html"]
