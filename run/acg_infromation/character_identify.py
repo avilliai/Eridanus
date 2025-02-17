@@ -99,6 +99,8 @@ def main(bot ,config):
             if event.user_id not in image_identify_list:
                 if re.search(r"(?:gal|galgame|游戏)", event.raw_message, re.IGNORECASE):
                     model_name="game_model_kirakira"
+                else:
+                    model_name="game_model_kirakira"
                 await bot.send(event,"未指定识别类型，可能影响识别精度")
             else:
                 model_name = image_identify_list[event.user_id]['model']
