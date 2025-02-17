@@ -126,8 +126,8 @@
                 }
             },
             {
-                "name": "download_youtube",
-                "description": "下载youtube视频或音频。",
+                "name": "download_video",
+                "description": "下载youtube/bilibili的视频或音频。",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -137,10 +137,14 @@
                         "url": {
                             "type": "string",
                             "description": "视频的链接地址"
+                        },
+                        "platform": {
+                            "type": "string", "enum": ["youtube","bilibili"],"description": "视频的来源平台。域名为b23.tv的为bilibili"
                         }
                     },
                     "required": [
-                        "url"
+                        "url",
+                        "platform"
                     ]
                 }
             },
@@ -291,7 +295,7 @@
                         },
                         "mood": {
                             "type": "string",
-                            "enum": ["开心", "中立", "难过", "生气"],
+                            "enum": ["生气_angry", "开心_happy", "中立_neutral", "难过_sad"],
                             "description": "语音的情绪。根据具体句子判断。"
                         }
                     },
