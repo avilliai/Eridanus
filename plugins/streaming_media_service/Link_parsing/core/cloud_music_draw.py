@@ -71,10 +71,10 @@ def draw_netease_music_card(data, filepath, song_id):
         draw.text((text_x, song_name_y), line, font=font_bold, fill=text_color)
         song_name_y += font_size + 10
 
-    # 艺术家名称(加粗, 空格连接, 缩小字体)
+    #歌手名称(加粗, 空格连接, 缩小字体)
     artist_name_text = " ".join(data["artist_name"])
     artist_name_y = song_name_y + 10
-    bbox = draw.textbbox((0, 0), artist_name_text, font=font_small_bold)  # 使用粗体小字体
+    bbox = draw.textbbox((0, 0), artist_name_text, font=font_small_bold)  #使用粗体小字体
     artist_name_width = bbox[2] - bbox[0]
     artist_name_x = (bg_size[0] - artist_name_width) // 2
     draw.text((artist_name_x, artist_name_y), artist_name_text, font=font_small_bold, fill=text_color)
