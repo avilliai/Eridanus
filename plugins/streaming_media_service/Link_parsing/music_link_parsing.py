@@ -14,9 +14,9 @@ json_init = {
     "reason": {},
     "pic_path": {},
     "url": {},
-    "video_url": False,  # 可以保留，或者根据需要改名
+    "video_url": False,  #可以保留，或者根据需要改名
     "soft_type": "",
-    "url_file_path": None,  # 下载链接文件路径
+    "url_file_path": None,  #下载链接文件路径
 }
 filepath_init = (
     f"{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(fetch_song_info))))}/data/cache/"
