@@ -87,14 +87,14 @@ def main(bot ,config):
     @bot.on(GroupMessageEvent)
     async def startYouridentify(event :GroupMessageEvent):
         global image_identify_list
-        if event.raw_message.startswith("识别") or (event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0].startswith("识别")):
+        if event.raw_message=="识别" or (event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0]=="识别"):
             image_identify_list[event.user_id] ={'model' :"anime_model_lovelive"}
             if re.search(r"(?:gal|galgame|游戏)", event.raw_message, re.IGNORECASE):     # 匹配字符串，忽略大小写
                 image_identify_list[event.user_id]['model'] ="game_model_kirakira"
             await bot.send(event, "请发送要识别的图片")
 
 
-        if ("识别" in event.raw_message or (event.user_id in image_identify_list)) and event.get('image') is not None:
+        if ((event.get("text") is not None and event.get("text")[0]=="识别") or (event.user_id in image_identify_list)) and event.get('image') is not None:
 
             if event.user_id not in image_identify_list:
                 if re.search(r"(?:gal|galgame|游戏)", event.raw_message, re.IGNORECASE):
