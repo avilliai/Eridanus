@@ -139,7 +139,7 @@
                             "description": "视频的链接地址"
                         },
                         "platform": {
-                            "type": "string", "enum": ["youtube","bilibili"],"description": "视频的来源平台。"
+                            "type": "string", "enum": ["youtube","bilibili"],"description": "视频的来源平台。域名为b23.tv的为bilibili"
                         }
                     },
                     "required": [
