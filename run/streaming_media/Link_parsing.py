@@ -8,7 +8,7 @@ from plugins.streaming_media_service.Link_parsing.music_link_parsing import nete
 
 global teamlist
 teamlist = {}
-async def call_bili_download_video(bot,event: GroupMessageEvent,config):
+async def call_bili_download_video(bot,event,config):
     global teamlist
     if event.group_id in teamlist:
         json = teamlist[event.group_id]
