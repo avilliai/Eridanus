@@ -40,6 +40,7 @@ async def call_weather_query(bot,event,config,location=None):
     return  {"result": r}
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
+
     if user_info[6] >= config.controller["basic_plugin"]["setu_operate_level"]:
         try:
             r=await anime_setu(tags,num,config.settings["basic_plugin"]["setu"]["r18mode"])
