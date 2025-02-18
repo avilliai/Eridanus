@@ -30,7 +30,7 @@ config = YAMLManager(["config/settings.yaml",
 bot1 = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 if config.basic_config["webui"]:
     bot2 = ExtendBot("ws://127.0.0.1:5008", config,
-                     blocked_loggers=["DEBUG", "INFO_MSG"])
+                     blocked_loggers=["DEBUG", "INFO_MSG","warning"])
 #插件列表
 plugin_modules = [
     ("aiDraw", "run.aiDraw"),

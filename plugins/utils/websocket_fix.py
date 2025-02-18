@@ -93,8 +93,9 @@ class ExtendBot(WebSocketBot):
                 else:
                     self.logger.warning(f"收到未知消息格式，请向开发群913122269反馈。源数据：{data}。")
         except websockets.exceptions.ConnectionClosedError as e:
-            self.logger.warning(f"WebSocket 连接关闭: {e}")
-            self.logger.warning("5秒后尝试重连")
+            if self.id != 1000000:
+                self.logger.warning(f"WebSocket 连接关闭: {e}")
+                self.logger.warning("5秒后尝试重连")
             await asyncio.sleep(5)
             await self._connect_and_run()
         except Exception as e:
