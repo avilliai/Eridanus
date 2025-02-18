@@ -51,3 +51,12 @@ def unescape_cq_value(text: str) -> str:
     text = text.replace("]", "]")
     text = text.replace(",", ",")
     return html.unescape(text)
+def parse_message_2processed_message(message: dict) -> List[Dict[str, Union[str, Dict]]]:
+    result = []
+    for item in message:
+        type = item["type"]
+        if type == "text":
+            result.append({"text": item["data"]["text"]})
+        else:
+            result.append({type: item["data"]})
+    return result

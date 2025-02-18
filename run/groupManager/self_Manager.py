@@ -100,7 +100,7 @@ async def garbage_collection(bot,event,config):
               "data/pictures/galgame",
               "data/video/cache",
               "data/voice/cache",
-              "plugins/resource_search_plugin/Link_parsing/data"
+              "plugins/streaming_media_service/Link_parsing/data"
               ]
     async def safe_delete(folder):
         try:

@@ -13,6 +13,12 @@ def main(bot,config):
     global avatar
     avatar=False
     @bot.on(GroupMessageEvent)
+    async def replyHandler(event: GroupMessageEvent):
+        if event.sender.user_id==111111111:
+            print(event.json)
+            print(event.processed_message)
+            print(event.message)
+    @bot.on(GroupMessageEvent)
     async def sendLike(event: GroupMessageEvent):
         if event.raw_message=="赞我":
             await bot.send_like(event.user_id)

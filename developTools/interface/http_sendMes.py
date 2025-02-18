@@ -16,7 +16,10 @@ class http_mailman:
         self.headers={
         "Authorization": f"Bearer {access_token}"
         }
-        self.info= self.get_login_info()
+        try:
+            self.info= self.get_login_info()
+        except:
+            self.info=None
 
     async def get_status(self):
         """
@@ -95,7 +98,7 @@ class http_mailman:
         try:
 
 
-            if event.message_type == "group":
+            if hasattr(event,"group_id"):
                 data = {
                     "group_id": event.group_id,
                     "message": message.to_dict(),
@@ -105,7 +108,7 @@ class http_mailman:
                     return r
                 else:
                     url=f"{self.http_server}/send_group_msg"
-            elif event.message_type == "private":
+            else:
                 data = {
                     "user_id": event.user_id,
                     "message": message.to_dict(),

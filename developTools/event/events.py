@@ -6,7 +6,7 @@ from pydantic.v1 import root_validator
 
 from developTools.event.base import EventBase
 from developTools.message.message_chain import MessageChain
-from developTools.utils.cq_code_handler import parse_message_with_cq_codes_to_list
+from developTools.utils.cq_code_handler import parse_message_with_cq_codes_to_list, parse_message_2processed_message
 
 
 # Attention!
@@ -94,15 +94,20 @@ class MessageEvent(EventBase):
     @raw_message.setter
     def raw_message(self, value: str):
         self._raw_message = value
-        # 在赋值时调用 parse_message_with_cq_codes_to_list
-        self.processed_message = parse_message_with_cq_codes_to_list(value)
+        if value=="":
+            self.processed_message = parse_message_2processed_message(self.message)
+        else:
+            self.processed_message = parse_message_with_cq_codes_to_list(value)
 
     # 可选的，确保 processed_message 始终跟随 raw_message 更新
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # 如果 raw_message 在初始化时已经赋值，确保 processed_message 被设置
         if hasattr(self, 'raw_message'):
-            self.processed_message = parse_message_with_cq_codes_to_list(self.raw_message)
+            if self.raw_message=="":
+                self.processed_message = parse_message_2processed_message(self.message)
+            else:
+                self.processed_message = parse_message_with_cq_codes_to_list(self.raw_message)
 
     def get(self, message_type: str):
         """
