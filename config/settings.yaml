@@ -38,7 +38,8 @@ bili_dynamic:     #下面的设置暂不可用，请暂时不要修改
   is_QQ_chek: True #是否检测qq小程序里的视频链接
 
 网易云卡片:    #绘制网易云歌曲分享卡片
-  enable: false
+  enable: true
+  解析自带音频下载url: false #涉及付费音乐版权问题，只能以文件形式发送了,不允许进行传播、销售等商业活动!!
 ai绘画:
   sd画图: true
   sd默认启动模型: 'miaomiao_1_4.safetensors'

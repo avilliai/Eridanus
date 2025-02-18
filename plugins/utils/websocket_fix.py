@@ -13,6 +13,7 @@ class ExtendBot(WebSocketBot):
     def __init__(self, uri: str,config, **kwargs):
         super().__init__(uri, **kwargs)
         self.config = config
+        self.id=1000000
     async def _receive(self):
         """
         接收服务端消息并分发处理。
@@ -20,6 +21,7 @@ class ExtendBot(WebSocketBot):
         try:
             async for response in self.websocket:
                 data = json.loads(response)
+                #self.logger.info(f"收到服务端响应: {data}")
                 if 'heartbeat' not in str(data):
                     self.logger.info_msg(f"收到服务端响应: {data}")
                 # 如果是响应消息
