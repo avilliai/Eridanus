@@ -4,7 +4,6 @@ onebot v11标准的多功能bot，大部分功能支持gemini/openai函数调用
 
 [release整合包](https://github.com/avilliai/Eridanus/releases) 附带webui。
 
-[文档](https://eridanus-doc.netlify.app/)
 # 部署
 见[文档](https://eridanus-doc.netlify.app/)
 
