@@ -2,12 +2,16 @@ import asyncio
 import httpx
 
 
-async def anime_setu(tags:list,num:int=1,r18:bool=False):
+async def anime_setu(tags:list,num:int=1,r18:bool=False,proxies=None):
     tags = [tag for tag in tags if tag not in ('涩图', '色图')]
     tags = "AND".join(tags)
     #print(tags)
+    if r18:
+        r18='true'
+    else:
+        r18='false'
     url=f"https://api.hikarinagi.com/random/v2/?tag={tags}&num={num}&r-18={r18}"
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url)
         return response.json()
 async def anime_setu1(tags:list,num:int=1,r18:bool=False):
