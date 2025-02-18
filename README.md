@@ -24,5 +24,6 @@ QQ群：913122269
 <a href="https://github.com/avilliai/Eridanus/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=avilliai/Eridanus" />
 </a>
+
 # 开源协议
 Eridanus使用的AGPL V3协议禁止未经授权的商用行为，任何基于Eridanus修改的项目/二次分发均需依照协议要求公开源码，不得隐瞒项目开源事实。
