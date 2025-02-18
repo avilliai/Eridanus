@@ -1,5 +1,6 @@
 import asyncio
 import shutil
+import os
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image,File,Video
 from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
