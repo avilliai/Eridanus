@@ -3,6 +3,7 @@ import importlib
 import os
 import sys
 import asyncio
+import threading
 import traceback
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +27,7 @@ config = YAMLManager(["config/settings.yaml",
 #from developTools.adapters.http_adapter import HTTPBot
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
-bot = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
+bot1 = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 if config.basic_config["webui"]:
     bot2 = ExtendBot("ws://127.0.0.1:5008", config,
                      blocked_loggers=["DEBUG", "INFO_MSG"])
@@ -54,7 +55,7 @@ plugin_modules = [
 
 ]
 
-def safe_import_and_load(plugin_name, module_path):
+def safe_import_and_load(plugin_name, module_path,bot,config):
     try:
         module = importlib.import_module(module_path)
         if hasattr(module, "main"):
@@ -67,27 +68,36 @@ def safe_import_and_load(plugin_name, module_path):
         traceback.print_exc()
         bot.logger.warning(f"❌ 建议执行一次 更新脚本(windows)/tool.py(linux) 自动补全依赖后重启以尝试修复此问题")
         bot.logger.warning(f"❌ 如仍无法解决，请反馈此问题至 https://github.com/avilliai/Eridanus/issues 或我们的QQ群 913122269")
+def load_plugins(bot,config):
+    # 并行加载插件
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {
+            executor.submit(safe_import_and_load, name, path,bot,config): name for name, path in plugin_modules
+        }
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                bot.logger.warning(f"❌ 插件 {futures[future]} 加载过程中发生异常：{e}")
 
-# 并行加载插件
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    futures = {
-        executor.submit(safe_import_and_load, name, path): name for name, path in plugin_modules
-    }
-    for future in concurrent.futures.as_completed(futures):
-        try:
-            future.result()
-        except Exception as e:
-            bot.logger.warning(f"❌ 插件 {futures[future]} 加载过程中发生异常：{e}")
+    # 奶龙检测（可选功能）
+    try:
+        if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
+            safe_import_and_load("nailong_get", "run.groupManager.nailong_get")
 
-# 奶龙检测（可选功能）
-try:
-    if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
-        safe_import_and_load("nailong_get", "run.groupManager.nailong_get")
+    except Exception as e:
+        bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
+if config.basic_config["webui"]:
+    def run_bot2():
+        """在独立线程运行 bot2"""
+        load_plugins(bot2,config)
+        bot2.run()
 
-except Exception as e:
-    bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
 
-bot.run()
+    bot2_thread = threading.Thread(target=run_bot2, daemon=True)
+    bot2_thread.start()
+load_plugins(bot1,config)
+bot1.run()
 
 
 
