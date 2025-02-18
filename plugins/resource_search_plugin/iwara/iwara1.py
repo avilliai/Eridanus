@@ -74,7 +74,7 @@ async def download_video(client, video_id):
 
 async def fetch_video_info(sort,config):
     url = f"{API_BASE_URL}?rating={RATING}&sort={sort}&limit={DOWNLOAD_LIMIT}"
-    if config.api["proxy"]["http_proxy"] is not None and config.api["proxy"]["https_proxy"]!="" and config.api["proxy"]["https_proxy"] !='':
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
@@ -182,7 +182,7 @@ async def download_thumbnail(client, item):
 
 async def rank_videos(sort,config):
     url = f"{API_BASE_URL}?rating={RATING}&sort={sort}&limit={DOWNLOAD_LIMIT}"
-    if config.api["proxy"]["http_proxy"] is not None and config.api["proxy"]["https_proxy"] != "" and config.api["proxy"]["https_proxy"] != '':
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
@@ -208,8 +208,7 @@ async def rank_videos(sort,config):
             #print(video_info)
 
 async def download_specific_video(videoid,config):
-    if config.api["proxy"]["http_proxy"] is not None and config.api["proxy"]["https_proxy"] != "" and \
-            config.api["proxy"]["https_proxy"] != '':
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
@@ -226,8 +225,7 @@ async def download_specific_video(videoid,config):
 async def search_videos(word,config):
     query = urllib.parse.quote(word)
     url = f"https://api.iwara.tv/search?type=video&page=0&query={query}&limit={DOWNLOAD_LIMIT}"
-    if config.api["proxy"]["http_proxy"] is not None and config.api["proxy"]["https_proxy"] != "" and \
-            config.api["proxy"]["https_proxy"] != '':
+    if config.api["proxy"]["http_proxy"]:
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
