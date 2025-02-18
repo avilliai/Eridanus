@@ -82,11 +82,6 @@ async def call_setu(bot,event,config,tags,num=3):
             await bot.send(event, "没有找到符合条件的涩图呢，换个标签试试吧")
             return
         await bot.send(event, fordMes)
-        for i in fordMes:
-            path=i.content[1].file
-            await sleep(30)
-            os.remove(path.replace("file://",""))
-            bot.logger.info(f"Deleted {path}")
     else:
         await bot.send(event, "权限不够呢.....")
 async def call_image_search(bot,event,config,image_url=None):
