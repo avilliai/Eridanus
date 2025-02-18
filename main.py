@@ -83,7 +83,7 @@ def load_plugins(bot,config):
     # 奶龙检测（可选功能）
     try:
         if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
-            safe_import_and_load("nailong_get", "run.groupManager.nailong_get")
+            safe_import_and_load("nailong_get", "run.groupManager.nailong_get", bot, config)
 
     except Exception as e:
         bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
