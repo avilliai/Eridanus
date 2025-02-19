@@ -13,7 +13,7 @@ from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageSt
 
 
 
-def main(bot, logger):
+def main(bot, config):
     logger=bot.logger
 
 

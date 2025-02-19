@@ -25,6 +25,9 @@ dynamic_imports = {
     "run.resource_search.resource_search": [
         "search_book_info", "call_asmr", "call_download_book"
     ],
+    "run.anime_game_service.func_collection":[
+        "anime_game_service_func_collection"
+    ],
     "run.acg_infromation.bangumi": ["call_bangumi_search"],
     "run.acg_infromation.character_identify": ["call_character_identify"],
     "run.streaming_media.youtube": ["download_video"],

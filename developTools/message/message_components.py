@@ -132,7 +132,7 @@ class Video(MessageComponent):
 class At(MessageComponent):
     comp_type: str = "at"
     qq: int = Field(description="@的 QQ 号，all 表示全体成员")
-    name: Annotated[Optional[str], OnlySend] = Field(description="昵称")
+    name: Annotated[Optional[str], OnlySend] = Field(default="",description="昵称")
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -152,7 +152,7 @@ class Shake(MessageComponent):
 
 class Poke(MessageComponent):
     comp_type: str = "poke"
-    type: int = Field(description="类型，见 Mirai 的 PokeMessage 类")
+    type: int = Field(description="类型")
     id: int = Field(description="ID")
     name: Annotated[Optional[str], OnlyReceive] = Field(description="表情名")
 
@@ -166,8 +166,8 @@ class Anonymous(MessageComponent):
 
 class Share(MessageComponent):
     comp_type: str = "share"
-    url: str = Field(description="URL")
-    title: str = Field(description="标题")
+    url: str = Field(default="", description="URL")
+    title: str = Field(default="",description="标题")
     content: Optional[str] = Field(description="发送时可选，内容描述")
     image: Optional[str] = Field(description="发送时可选，图片 URL")
 

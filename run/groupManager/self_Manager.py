@@ -157,10 +157,8 @@ async def send(bot,event,config,message):
             elif "video" in i:
                 message_list.append(File(file=i["video"]))
     await bot.send(event,message_list)
-async def send_contract(bot,event,config,target_id=None):
-    if target_id is None:
-        target_id=str(config.basic_config["master"]['id'])
-    await bot.send(event,Contact_user(user_id=target_id))
+async def send_contract(bot,event,config):
+    return {"管理员id": config.basic_config["master"]['id']}
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
