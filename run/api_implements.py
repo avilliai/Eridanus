@@ -2,7 +2,7 @@ import random
 
 from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent, GroupRequestEvent,GroupBanNoticeEvent
-from developTools.message.message_components import Record, Node, Text, Image
+from developTools.message.message_components import Record, Node, Text, Image, File, Video
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
 
@@ -12,13 +12,7 @@ def main(bot,config):
 
     global avatar
     avatar=False
-    @bot.on(GroupMessageEvent)
-    async def _(event: GroupMessageEvent):
-        if event.user_id==master:
-            print(event.message_chain)
-            print(event.pure_text)
-            if event.message_chain.has(Image):
-                print(event.message_chain.get(Image)[0].url)
+
 
     @bot.on(GroupMessageEvent)
     async def sendLike(event: GroupMessageEvent):
