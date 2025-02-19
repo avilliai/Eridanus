@@ -159,7 +159,9 @@ def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compr
         #print(new_files)
     elif anti_nsfw == "no_censor":
         for i in file_names:
-            new_files.append(i)
+            original_file = f"data/pictures/benzi/temp{comic_id}/" + i
+            shutil.move(original_file, "data/pictures/cache/")
+            new_files.append("data/pictures/cache/"+i)
     return new_files
 
 
