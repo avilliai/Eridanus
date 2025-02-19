@@ -46,7 +46,7 @@ class MessageChain(list):
         if self._is_all_components(messages):
             super().__init__(messages)
         else:
-            print(f"原始数据: {messages}")
+            #print(f"原始数据: {messages}")
             super().__init__(self._parse_messages(messages))
 
     def _is_all_components(self, messages: List[Any]) -> bool:
