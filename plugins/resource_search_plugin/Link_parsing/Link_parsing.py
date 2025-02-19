@@ -940,7 +940,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-        traceback.print_exc()
+        #traceback.print_exc()
         return json_check
     if link_prising_json:
         if type == 'dynamic_check':
@@ -973,7 +973,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                     break
                 except ValueError:
                     # 如果解析失败，继续尝试下一个格式
-                    traceback.print_exc()
+                    #traceback.print_exc()
                     continue
 
 
