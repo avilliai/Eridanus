@@ -23,7 +23,7 @@ dynamic_imports = {
     ],
     "run.groupManager.nailong_get": ["operate_group_censor"],
     "run.resource_search.resource_search": [
-        "search_book_info", "call_asmr", "call_download_book"
+        "search_book_info", "call_asmr", "call_download_book","call_jm"
     ],
     "run.anime_game_service.func_collection":[
         "anime_game_service_func_collection"

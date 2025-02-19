@@ -40,6 +40,10 @@ class MessageComponent(BaseModel, ABC):
 class File(MessageComponent):
     comp_type: str = "file"
     file: str = Field(description="文件路径")
+    url: Annotated[Optional[str], OnlySend] = Field(default="",description="文件 URL")
+    file_id: Annotated[Optional[str],OnlySend] = Field(default="",description="图片类型")
+    path: Annotated[Optional[str], OnlySend] = Field(default="",description="文件路径")
+    file_size: Annotated[Optional[str], OnlySend] = Field(default="",description="文件大小")
     def __init__(self, **data):
         super().__init__(**data)
         if self.file and not (

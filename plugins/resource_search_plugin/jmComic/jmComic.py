@@ -111,7 +111,7 @@ def JM_search_comic_id():
     return result
 
 
-def downloadComic(comic_id, start=1, end=5):
+def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compress=False):
     with open("config/jmcomic.yml", 'r', encoding='utf-8') as f: #不知道他这个options咋传的，我就修改配置文件得了。
         result = yaml.load(f.read(), Loader=yaml.FullLoader)
     result["dir_rule"]["base_dir"]=f"data/pictures/benzi/temp{comic_id}"
@@ -119,8 +119,7 @@ def downloadComic(comic_id, start=1, end=5):
     with open("config/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
     option = jmcomic.create_option_by_file('config/jmcomic.yml')
-    obfuscation = result.get("download", {}).get("Obfuscation", "gif")
-    gif_compress = result.get("download", {}).get("gifcompress", False)  # 读取gifcompress的值觉得是否压缩gif
+
     if not os.path.exists(f'data/pictures/benzi/temp{comic_id}'):
         os.mkdir(f'data/pictures/benzi/temp{comic_id}')
 
@@ -137,7 +136,7 @@ def downloadComic(comic_id, start=1, end=5):
     file_names = os.listdir(folder_path)
     #print(file_names)
     new_files = []
-    if obfuscation == "gif":
+    if anti_nsfw == "gif":
         asyncio.run(process_folder(input_folder=folder_path,output_folder=folder_path))
         for filename in sorted(os.listdir(folder_path)):
             if filename.lower().endswith('.gif'):
@@ -146,7 +145,7 @@ def downloadComic(comic_id, start=1, end=5):
                 new_files.append(new_filename)
         if gif_compress:  # 根据gifcompress的值决定是否压缩
             asyncio.run(compress_gifs(new_files))
-    elif obfuscation == "black_and_white":
+    elif anti_nsfw == "black_and_white":
         for i in file_names:
             # print(file_names)
             image_raw = Image.open(f"data/pictures/benzi/temp{comic_id}/" + i)
@@ -158,6 +157,9 @@ def downloadComic(comic_id, start=1, end=5):
             image_black_white.save(newPath)
         # png_files = [os.path.join(folder_path, file) for file in file_names if file.lower().endswith('.png')]
         #print(new_files)
+    elif anti_nsfw == "no_censor":
+        for i in file_names:
+            new_files.append(i)
     return new_files
 
 

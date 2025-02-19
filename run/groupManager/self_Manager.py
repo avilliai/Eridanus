@@ -115,10 +115,12 @@ async def garbage_collection(bot,event,config):
     return f"本次清理了 {total_size:.2f} MB 的缓存"
 async def report_to_master(bot,event,config):
     mes_type="bad_content"
+    if hasattr(event,"group_id"):
+        group_id=event.group_id
+    else:
+        group_id=None
     if mes_type=="bad_content":
-
-        r=f"违规内容上报\n发送者id为{event.user_id}"
-
+        r=f"违规内容上报\n发送者id为{event.user_id} 群号为{group_id}"
     elif mes_type=="ideas":
         r = f"反馈意见上报\n发送者id为{event.user_id}"
     node_li=[]

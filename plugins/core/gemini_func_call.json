@@ -1,6 +1,29 @@
 {
         "function_declarations": [
             {
+                "name": "call_jm",
+                "description": "jmcomic漫画查询、预览、下载。“验车”是预览的另一种称呼",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {
+                            "type": "string", "enum": ["preview","download","search"],"description": "预览和下载需要comic_id，搜索需要query_target"
+                        },
+                        "comic_id": {
+                            "type": "integer",
+                            "description": "漫画id。预览和下载时使用"
+                        },
+                        "serach_topic": {
+                            "type": "string",
+                            "description": "搜索关键字"
+                        }
+                    },
+                    "required": [
+                        "mode"
+                    ]
+                }
+            },
+            {
                 "name": "anime_game_service_func_collection",
                 "description": "调用游戏查询服务的功能集合。",
                 "parameters": {

@@ -19,6 +19,10 @@ from plugins.utils.random_str import random_str
 from plugins.utils.utils import download_file, merge_audio_files, download_img
 
 global Z
+
+global operating
+operating = {}  #jm文件共享的维护列表
+
 async def search_book_info(bot,event,config,info):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["resource_search"]["z_library"]["search_operate_level"]:
@@ -95,22 +99,6 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
                 except Exception as e:
                     bot.logger.error(f"asmr file merge and upload error:{e}")
 
-            #youtube实现方式无法使用，改用asmr-100
-            '''loop = asyncio.get_running_loop()
-            with ThreadPoolExecutor() as executor:
-                athor, title, video_id, length = await loop.run_in_executor(executor, ASMR_random)
-
-            imgurl =await get_img(video_id)
-            with ThreadPoolExecutor() as executor:
-                audiopath = await loop.run_in_executor(executor, get_audio, video_id)
-
-
-            bot.logger.info(f"asmr\n标题:{title}\n频道:{athor}\n视频id:{video_id}\n视频时长:{length}\n视频封面:{imgurl}\n音频:{audiopath}")
-            await bot.send(event, [Text(f"随机奥术\n频道: {athor}\n标题: {title}\n时长: {length}"), Image(file=imgurl)])
-            if config.api["youtube_asmr"]["send_type"]=="file":
-                await bot.send(event,File(file=audiopath))
-            elif config.api["youtube_asmr"]["send_type"]=="record":
-                await bot.send(event,Record(file=audiopath))'''
         except Exception as e:
             bot.logger.error(f"asmr error:{e}")
             if try_again==False:
@@ -120,6 +108,7 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
                 await bot.send(event, "失败了！要不再试一次？")
     else:
         await bot.send(event, "你没有权限使用该功能")
+
 async def check_latest_asmr(bot,event,config):
     bot.logger.info_func("开始监测 asmr.one 更新")
     try:
@@ -177,8 +166,116 @@ async def check_latest_asmr(bot,event,config):
             bot.logger.info_func("asmr.one 无更新")
     except Exception as e:
         bot.logger.error(f"check_latest_asmr error:{e}")
+async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=None):
+    async def _call_jm():
+        global operating
+        if mode=="preview":
+            user_info = await get_user(event.user_id, event.sender.nickname)
+            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
+                await bot.send(event, "你没有权限使用该功能")
+                return
+            if hasattr(event, "group_id"):
+                temp_id = event.group_id
+            else:
+                temp_id = event.user_id
+            if comic_id in operating:
+                if event.group_id not in operating[comic_id]:
+                    operating[comic_id].append(event.group_id)
+                    await bot.send(event, "相关文件占用中，请等待...", True)
+                else:
+                    await bot.send(event, "已有相关文件占用，请稍等", True)
+                return
+            event.group_id = temp_id
+            operating[comic_id] = [event.group_id]
+            bot.logger.info(f"JM验车 {comic_id}")
+            await bot.send(event, "下载中...稍等喵", True)
+            try:
+                loop = asyncio.get_running_loop()
+                # 使用线程池执行器
+                with ThreadPoolExecutor() as executor:
+                    # 使用 asyncio.to_thread 调用函数并获取返回结果
+                    png_files = await loop.run_in_executor(executor, downloadComic, comic_id, 1,
+                                                           config.settings["JMComic"]["previewPages"],config.settings["JMComic"]["anti_nsfw"],config.settings["JMComic"]["gif_compress"])
+            except Exception as e:
+                bot.logger.error(e)
+                await bot.send(event, "下载失败", True)
+                operating.pop(comic_id)
+                return
+            cmList = []
+            bot.logger.info(png_files)
+            cmList.append(Node(content=[Text(
+                f"车牌号：{comic_id} \nbot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。预览是黑色是正常的，点进去查看")]))
+            shutil.rmtree(f"data/pictures/benzi/temp{comic_id}")
+            bot.logger.info("移除预览缓存")
+            for path in png_files:
+                cmList.append(Node(content=[Image(file=path)]))
+            for group_id in operating[comic_id]:
+                event.group_id = group_id
+                await bot.send(event, cmList)
+            operating.pop(comic_id)
+            for path in png_files:
+                os.remove(path)
+            bot.logger.info("本子预览缓存已清除.....")
+        elif mode=="download":
 
+            if hasattr(event, "group_id"):
+                temp_id = event.group_id
+            else:
+                temp_id = event.user_id
+            if comic_id in operating:
+                if temp_id not in operating[comic_id]:
+                    operating[comic_id].append(temp_id)
+                    await bot.send(event, "相关文件占用中，请等待...", True)
+                else:
+                    await bot.send(event, "本群已有相关文件占用，请稍等", True)
+                return
+            operating[comic_id] = [temp_id]
+            try:
+                await bot.send(event, "已启用线程,请等待下载完成", True)
+                loop = asyncio.get_running_loop()
+                with ThreadPoolExecutor() as executor:
+                    r = await loop.run_in_executor(executor, downloadALLAndToPdf, comic_id,
+                                                   config.settings["JMComic"]["savePath"])
+                bot.logger.info(f"下载完成，车牌号：{comic_id} \n保存路径：{config.settings['JMComic']['savePath']} {comic_id} ")
+            except Exception as e:
+                bot.logger.error(e)
+                await bot.send(event, "下载失败", True)
+            finally:
+                try:
+                    shutil.rmtree(f"{config.settings['JMComic']['savePath']}/{comic_id}")
+                    for group_id in operating[comic_id]:
+                        event.group_id = group_id  # 修改数据实现切换群聊，懒狗实现
+                        await bot.send(event, File(file=f"{config.settings['JMComic']['savePath']}/{comic_id}.pdf"))
+                        await bot.send(event, "下载完成了( >ρ< ”)。请等待上传完成。", True)
 
+                    bot.logger.info("移除预览缓存")
+                    operating.pop(comic_id)
+                    if config.settings['JMComic']["autoClearPDF"]:
+                        await wait_and_delete_file(bot,file_path=f"{config.settings['JMComic']['savePath']}/{comic_id}.pdf")
+                except Exception as e:
+                    bot.logger.error(e)
+                finally:
+                    if comic_id in operating:
+                        operating.pop(comic_id)
+        elif mode=="search":
+            user_info = await get_user(event.user_id)
+            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
+                await bot.send(event, "你没有权限使用该功能")
+                return
+            bot.logger.info(f"JM搜索: {serach_topic}")
+            try:
+                context = JM_search(serach_topic)
+                if context == "":
+                    await bot.send(event, "好像没有找到你说的本子呢~~~")
+                    return {"status": "failed", "message": "没有找到相关本子"}
+                r = Node(content=[Text(context)])
+                await bot.send(event, r)
+            except Exception as e:
+                bot.logger.error(e)
+                await bot.send(event, "搜索失败", True)
+
+    asyncio.create_task(_call_jm())
+    return {"status": "running", "message": "任务已在后台启动，请耐心等待结果"}
 def main(bot,config):
     proxy = config.api["proxy"]["http_proxy"]
     if proxy!= "":
@@ -197,8 +294,7 @@ def main(bot,config):
             bot.logger.error(f"❌ z_library login error:{e}")
             return
     logger = bot.logger
-    global operating
-    operating = {}
+
 
     @bot.on(GroupMessageEvent)
     async def book_resource_search(event):
@@ -243,6 +339,10 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def querycomic(event: GroupMessageEvent):
         if event.pure_text.startswith("jm搜") or event.pure_text.startswith("JM搜"):
+            user_info = await get_user(event.user_id, event.sender.nickname)
+            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
+                await bot.send(event, "你没有权限使用该功能")
+                return
             keyword = event.pure_text
             index = keyword.find("搜")
             if index != -1:
@@ -254,10 +354,7 @@ def main(bot,config):
                 await bot.send(event, "指令格式错误，请使用“jm搜{关键字}”")
                 return
             aim = context
-            user_info = await get_user(event.user_id, event.sender.nickname)
-            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
-                await bot.send(event, "你没有权限使用该功能")
-                return
+
             logger.info(f"JM搜索: {aim}")
             try:
                 if context == "":
@@ -270,7 +367,7 @@ def main(bot,config):
                 await bot.send(event, "寄了喵", True)
 
     @bot.on(GroupMessageEvent)
-    async def download(event: GroupMessageEvent):
+    async def randomcomic(event: GroupMessageEvent):
         if '本周jm' == event.pure_text or '本周JM' == event.pure_text or '今日jm' == event.pure_text or '今日JM' == event.pure_text:
             context = JM_search_week()
             cmList = []
@@ -282,11 +379,6 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def download(event: GroupMessageEvent):
         if event.pure_text.startswith("验车") or event.pure_text == "随机本子":
-            global operating
-            user_info = await get_user(event.user_id, event.sender.nickname)
-            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
-                await bot.send(event, "你没有权限使用该功能")
-                return
             try:
                 if event.pure_text.startswith("验车"):
                     comic_id = int(event.pure_text.replace("验车", ""))
@@ -300,49 +392,12 @@ def main(bot,config):
                 logger.error(e)
                 await bot.send(event, "无效输入 int，指令格式如下\n验车【车牌号】\n如：验车604142", True)
                 return
-            temp_id = event.group_id
-            if comic_id in operating:
-                if event.group_id not in operating[comic_id]:
-                    operating[comic_id].append(event.group_id)
-                    await bot.send(event, "相关文件占用中，已将您加入分享队列，请等待...", True)
-                else:
-                    await bot.send(event, "本群已有相关文件占用，请稍等", True)
-                return
-            event.group_id = temp_id
-            operating[comic_id]=[event.group_id]
-            logger.info(f"JM验车 {comic_id}")
-            await bot.send(event, "下载中...稍等喵", True)
-            try:
-                loop = asyncio.get_running_loop()
-                # 使用线程池执行器
-                with ThreadPoolExecutor() as executor:
-                    # 使用 asyncio.to_thread 调用函数并获取返回结果
-                    png_files = await loop.run_in_executor(executor, downloadComic, comic_id, 1,
-                                                           config.settings["JMComic"]["previewPages"])
-            except Exception as e:
-                logger.error(e)
-                await bot.send(event, "下载失败", True)
-                operating.pop(comic_id)
-                return
-            cmList = []
-            logger.info(png_files)
-            cmList.append(Node(content=[Text(f"车牌号：{comic_id} \n腾子吞图严重，bot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。预览是黑色是正常的，点进去查看")]))
-            shutil.rmtree(f"data/pictures/benzi/temp{comic_id}")
-            logger.info("移除预览缓存")
-            for path in png_files:
-                cmList.append(Node(content=[Image(file=path)]))
-            for group_id in operating[comic_id]:
-                event.group_id = group_id   #修改数据实现切换群聊，懒狗实现
-                await bot.send(event, cmList)
-            operating.pop(comic_id)
-            for path in png_files:
-                os.remove(path)
-            logger.info("本子预览缓存已清除.....")
+            await call_jm(bot,event,config,mode="preview",comic_id=comic_id)
 
     @bot.on(GroupMessageEvent)
     async def downloadAndToPdf(event: GroupMessageEvent):
         if event.pure_text.startswith("JM下载"):
-            global operating
+
             user_info = await get_user(event.user_id, event.sender.nickname)
             if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_download_level"]:
                 await bot.send(event, "你没有权限使用该功能")
@@ -353,58 +408,24 @@ def main(bot,config):
             except:
                 await bot.send(event, "非法参数，指令示例 JM下载601279")
                 return
-            if comic_id in operating:
-                if event.group_id not in operating[comic_id]:
-                    operating[comic_id].append(event.group_id)
-                    await bot.send(event, "相关文件占用中，已将您加入分享队列，请等待...", True)
-                else:
-                    await bot.send(event, "本群已有相关文件占用，请稍等", True)
-                return
-            operating[comic_id] = [event.group_id]
-            try:
-                await bot.send(event, "已启用线程,请等待下载完成", True)
-                loop = asyncio.get_running_loop()
-                with ThreadPoolExecutor() as executor:
-                    r = await loop.run_in_executor(executor, downloadALLAndToPdf, comic_id,
-                                                   config.settings["JMComic"]["savePath"])
-                logger.info(f"下载完成，车牌号：{comic_id} \n保存路径：{config.settings['JMComic']['savePath']} {comic_id} ")
-            except Exception as e:
-                logger.error(e)
-                await bot.send(event, "下载失败", True)
-            finally:
-                try:
-                    shutil.rmtree(f"{config.settings['JMComic']['savePath']}/{comic_id}")
-                    temp_id=event.group_id
-                    for group_id in operating[comic_id]:
-                        event.group_id = group_id  # 修改数据实现切换群聊，懒狗实现
-                        await bot.send(event, File(file=f"{config.settings['JMComic']['savePath']}/{comic_id}.pdf"))
-                        await bot.send(event, "下载完成了( >ρ< ”)", True)
-                    event.group_id=temp_id
-                    logger.info("移除预览缓存")
-                    operating.pop(comic_id)
-                    if config.settings['JMComic']["autoClearPDF"]:
-                        await wait_and_delete_file(f"{config.settings['JMComic']['savePath']}/{comic_id}.pdf")
-                except Exception as e:
-                    logger.error(e)
-                finally:
-                    if comic_id in operating:
-                        operating.pop(comic_id)
+            await call_jm(bot,event,config,mode="download",comic_id=comic_id)
 
 
-    async def wait_and_delete_file(file_path, interval=60):
-        await asyncio.sleep(1800) #30min后自动删除
-        for _ in range(10):
-            try:
-                shutil.os.remove(file_path)
-                logger.info(f"文件 {file_path} 已成功删除")
-                return
-            except PermissionError:
-                logger.warning(f"文件 {file_path} 被占用，等待重试...")
-                await asyncio.sleep(interval)
-            except FileNotFoundError:
-                logger.warning(f"文件 {file_path} 已不存在")
-                return
-            except Exception as e:
-                logger.error(f"删除文件时出现错误: {e}")
-                return
+
+async def wait_and_delete_file(bot,file_path, interval=60):
+    await asyncio.sleep(1800) #30min后自动删除
+    for _ in range(10):
+        try:
+            shutil.os.remove(file_path)
+            bot.logger.info(f"文件 {file_path} 已成功删除")
+            return
+        except PermissionError:
+            bot.logger.warning(f"文件 {file_path} 被占用，等待重试...")
+            await asyncio.sleep(interval)
+        except FileNotFoundError:
+            bot.logger.warning(f"文件 {file_path} 已不存在")
+            return
+        except Exception as e:
+            bot.logger.error(f"删除文件时出现错误: {e}")
+            return
 
