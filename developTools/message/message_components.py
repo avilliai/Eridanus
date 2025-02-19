@@ -84,7 +84,13 @@ class Image(MessageComponent):
             abs_path = os.path.abspath(self.file).replace("\\", "/")
             self.file = f"file://{abs_path}"
 
-
+class Mface(MessageComponent):
+    comp_type: str = "mface"
+    summary: Annotated[str, OnlySend] = Field(description="表情包描述")
+    url: Annotated[str, OnlySend] = Field(description="表情包 URL")
+    emoji_id : Annotated[str, OnlySend] = Field(description="表情包 ID")
+    emoji_package_id: Annotated[int, OnlySend] = Field(description="表情包包 ID")
+    key: Annotated[str, OnlySend] = Field(description="表情包 Key")
 
 class Record(MessageComponent):
     comp_type: str = "record"

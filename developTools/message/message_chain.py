@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Type, Union
 from developTools.message.message_components import (
     MessageComponent, Text, Face, Image, Record, Video, At, Rps, Dice,
     Shake, Poke, Anonymous, Share, Contact, Location, Music, Reply,
-    Forward, Node, Xml, Json, Contact_user, Contact_group
+    Forward, Node, Xml, Json, Contact_user, Contact_group, Mface
 )
 
 class MessageChain(list):
@@ -32,6 +32,7 @@ class MessageChain(list):
         "json": Json,
         "contact_user": Contact_user,
         "contact_group": Contact_group,
+        "mface": Mface,
     }
 
     def __init__(self, messages: List[Union[MessageComponent, Dict[str, Any], str]]):
@@ -45,7 +46,7 @@ class MessageChain(list):
         if self._is_all_components(messages):
             super().__init__(messages)
         else:
-            #print(f"原始数据: {messages}")
+            print(f"原始数据: {messages}")
             super().__init__(self._parse_messages(messages))
 
     def _is_all_components(self, messages: List[Any]) -> bool:
@@ -72,6 +73,7 @@ class MessageChain(list):
                 component_class = cls._type_map.get(msg_type)
                 if component_class:
                     #print(f"解析消息: {msg_type}, 原始数据: {msg_data}")
+                    #print(str(msg_data))
                     parsed_messages.append(component_class(**msg_data))
                 else:
                     print(f"未知消息类型: {msg_type}, 原始数据: {msg}")  # 记录未识别的消息
