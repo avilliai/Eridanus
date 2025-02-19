@@ -206,16 +206,14 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
             cmList.append(Node(content=[Text(
                 f"车牌号：{comic_id} \nbot仅提供本子部分页面预览。\n图片已经过处理，但不保证百分百不被吞。预览是黑色是正常的，点进去查看")]))
             shutil.rmtree(f"data/pictures/benzi/temp{comic_id}")
-            bot.logger.info("移除预览缓存")
+
             for path in png_files:
                 cmList.append(Node(content=[Image(file=path)]))
             for group_id in operating[comic_id]:
                 event.group_id = group_id
                 await bot.send(event, cmList)
             operating.pop(comic_id)
-            for path in png_files:
-                os.remove(path)
-            bot.logger.info("本子预览缓存已清除.....")
+
         elif mode=="download":
 
             if hasattr(event, "group_id"):
