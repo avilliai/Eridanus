@@ -843,6 +843,11 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
             else:
                 time_check = link_prising_json['time']
             possible_formats = [
+                "%Y年%m月%d日 %H:%M",
+                "%Y/%m/%d %H:%M",
+                "%Y-%m-%d %H:%M",
+                "%d-%m-%Y %H:%M",
+                "%Y.%m.%d %H:%M",
                 "%Y年%m月%d日",
                 "%Y/%m/%d",
                 "%Y-%m-%d",
@@ -853,15 +858,16 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
             for fmt in possible_formats:
                 try:
                     # 尝试解析日期字符串
-                    check_time=datetime.strptime(time_check, fmt)
+                    check_time=datetime.strptime(time_check, fmt).strftime("%Y-%m-%d")
+                    print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
                     if check_time != datetime.now().date():
-                        #print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
                         link_prising_json['status'] = False
                         link_prising_json['check_time']=check_time
-                        #print(f"时间不匹配，拒绝发送{link_prising_json['time']}\ncheck_time:{check_time}")
+                        print(f"时间不匹配，拒绝发送 {link_prising_json['time']}\ncheck_time:{check_time}\ndatetime:{datetime.now().date()}")
                     break
                 except ValueError:
                     # 如果解析失败，继续尝试下一个格式
+                    traceback.print_exc()
                     continue
 
 

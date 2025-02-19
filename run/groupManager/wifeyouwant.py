@@ -621,7 +621,7 @@ def main(bot,config):
     async def fudu(event: GroupMessageEvent):
         global last_messages
         Read_check = ['[', '@', '来点', '随机', '#', '今日', 'gal', '查询', '搜索', '/', '瓶子', '什么', 'minfo', 'id',
-                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表']
+                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表','完成表']
         group1 = f'{event.group_id}_1'
         group2 = f'{event.group_id}_2'
         group3 = f'{event.group_id}_3'
