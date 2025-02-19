@@ -39,10 +39,10 @@ filepath_init=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile
 GLOBAL_NICKNAME='Bot'
 if not os.path.exists(filepath_init):  # 初始化检测文件夹
     os.makedirs(filepath_init)
-
+from plugins.resource_search_plugin.engine_search import html_read
 logger=get_logger()
 
-
+name_qq_list={'漫朔':1270858640,'枫与岚':2319804644,'Lemony':2424378897}
 
 async def bilibili(url,filepath=None,is_twice=None):
     """
@@ -785,6 +785,109 @@ async def twitter(url,filepath=None,proxy=None):
         return json_check
         #res = await download_video(x_url_res, proxy)
 
+
+async def Galgame_manshuo(url,filepath=None):
+    contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'manshuo_gal'
+    json_check['status'] = True
+    json_check['video_url'] = False
+    if filepath is None: filepath = filepath_init
+    link = (re.findall(r"https?://[^\s\]\)]+", url))[0]
+    #print(f'{link}')
+    context = await html_read(link)
+    context = context.split("\n")
+    context_check_middle=''
+    avatar_name='世伊Galgame论坛'
+    Title=''
+    avatar_name_flag=0
+    time_flag=0
+    desc_flag=0
+    desc=''
+    desc_number=0
+    links_url=None
+    for context_check in context:
+        #print(context_check)
+        if time_flag ==1:
+            time_flag=2
+            time_gal=context_check.replace(" ", "")
+        if context_check_middle !='':
+            if '发表于' in context_check:
+                Title=context_check_middle.replace(" ", "")
+                time_flag=1
+        context_check_middle=context_check
+
+        if '作者:' in context_check:
+            avatar_name_flag=1
+        elif avatar_name_flag==1:
+            avatar_name_flag=0
+            match = re.search(r"\[(.*?)\]", context_check)
+            if match:
+                avatar_name=match.group(1).replace(" ", "")
+        if '故事介绍' in context_check:
+            desc_flag=1
+        elif '[关于](' in context_check and time_flag==2:
+            desc_flag=3
+        elif 'Staff' in context_check:
+            desc_flag=0
+        elif desc_flag==1:
+            context_check=context_check.replace(" ", "")
+            if 'https:'in context_check:continue
+            for i in context_check:
+                desc_number+=1
+            if desc_number > 200:
+                desc_flag = 0
+                desc +=f'{context_check}…\n'
+            else:
+                desc += f'{context_check}\n'
+        elif desc_flag != 1:
+            desc_flag-=1
+        flag = 0
+
+        if 'https://gal.manshuo.ink/usr/uploads/galgame/' in context_check:
+            #print(context_check)
+            for name_check in {'chara', 'title_page', '图片'}:
+                if f'{name_check}' in context_check: flag = 1
+            if flag == 1: continue
+            links = re.findall(r"https?://[^\s\]\)]+", context_check)
+            links_url=links[0]
+
+    if links_url is None:
+        try:
+            for context_check in context:
+                if 'https://gal.manshuo.ink/usr/uploads/' in context_check:
+                    for name_check in {'chara', 'title_page', '图片'}:
+                        if f'{name_check}' in context_check: flag = 1
+                    if flag == 1: continue
+                    links = re.findall(r"https?://[^\s\]\)]+", context_check)
+                    links_url = links[0]
+                    break
+        except:
+            links_url='https://gal.manshuo.ink/usr/uploads/galgame/zatan.png'
+    contents.append(f"title:{Title}")
+    contents.append(desc)
+    contents = await add_append_img(contents, await asyncio.gather(
+        *[asyncio.create_task(download_img(links_url, f'{filepath}'))]))
+
+    if avatar_name in name_qq_list:
+        for name_check in name_qq_list:
+            if avatar_name in name_check:
+                qq_number=name_qq_list[name_check]
+        avatar_path_url=f"https://q1.qlogo.cn/g?b=qq&nk={qq_number}&s=640"
+    else:
+        avatar_path_url='https://gal.manshuo.ink/usr/uploads/galgame/img_master.jpg'
+    avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(avatar_path_url, f'{filepath}'))]))[0]
+
+    #print(f'avatar_name:{avatar_name} time_gal:{time_gal}  Title:{Title}\ndesc:{desc}')
+    #print(contents)
+    out_path = draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=avatar_name,
+                                                 Time=f'{time_gal}', type=11,
+                                                 filepath=filepath, type_software='世伊Galgame论坛',
+                                                 color_software=(251, 114, 153, 80), output_path_name=f'{int(time.time())}',)
+    json_check['pic_path'] = out_path
+    return json_check
+
+
 async def download_video_link_prising(json,filepath=None,proxy=None):
     if filepath is None:filepath = filepath_init
     video_json={}
@@ -831,10 +934,13 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
             link_prising_json=await xiaohongshu(url, filepath=filepath)
         elif 'x.com' in url:
             link_prising_json=await twitter(url, filepath=filepath, proxy=proxy)
+        elif 'gal.manshuo.ink' in url:
+            link_prising_json = await Galgame_manshuo(url, filepath=filepath)
+
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-        #traceback.print_exc()
+        traceback.print_exc()
         return json_check
     if link_prising_json:
         if type == 'dynamic_check':
@@ -860,7 +966,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                     # 尝试解析日期字符串
                     check_time=datetime.strptime(time_check, fmt).strftime("%Y-%m-%d")
                     print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
-                    if check_time != datetime.now().date():
+                    if str(check_time) != str(datetime.now().date()):
                         link_prising_json['status'] = False
                         link_prising_json['check_time']=check_time
                         print(f"时间不匹配，拒绝发送 {link_prising_json['time']}\ncheck_time:{check_time}\ndatetime:{datetime.now().date()}")
@@ -896,6 +1002,7 @@ if __name__ == "__main__":#测试用，不用管
     #url='https://b23.tv/t9YeH0m'
     url='【【明日方舟抽卡】王牌！主播在商店花300凭证单抽出了烛煌！黑子说话！】https://www.bilibili.com/video/BV1dYfUYDE96?vd_source=5e640b2c90e55f7151f23234cae319ec'
     url='https://v.douyin.com/iPhd561x'
+    url='https://gal.manshuo.ink/archives/268/'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
 
