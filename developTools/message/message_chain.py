@@ -101,7 +101,7 @@ class MessageChain(list):
         """
         return [component for component in self if isinstance(component, component_type)]
     def fetch_text(self) -> str:
-        if self.has(Text):
+        if self.has(Text) and not self.has(At):
             return self.get(Text)[0].text.strip()
         else:
             return ""

@@ -15,7 +15,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def _(event: GroupMessageEvent):
         if event.user_id==master:
-
+            print(event.message_chain)
             print(event.pure_text)
             if event.message_chain.has(Image):
                 print(event.message_chain.get(Image)[0].url)
