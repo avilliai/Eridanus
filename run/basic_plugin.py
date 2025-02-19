@@ -7,8 +7,7 @@ from asyncio import sleep
 import asyncio
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
-
-from developTools.message.message_components import Record, Node, Text, Image,Music
+from developTools.message.message_components import Record, Node, Text, Image, Music
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.cloudMusic import cccdddm
 from plugins.basic_plugin.divination import tarotChoice
@@ -256,16 +255,16 @@ def main(bot,config):
     avatar=False
     @bot.on(GroupMessageEvent)
     async def weather_query(event: GroupMessageEvent):
-        if event.raw_message.startswith("查天气"):
+        if event.pure_text.startswith("查天气"):
             #await bot.send(event, "已修改")
-            remark = event.raw_message.split("查天气")[1].strip()
+            remark = event.pure_text.split("查天气")[1].strip()
             r=await call_weather_query(bot,event,config,remark)
-            await bot.send(event,r.get("result"))
+            await bot.send(event,str(r.get("result")))
             #await bot.set_friend_remark(event.user_id, remark)
     @bot.on(GroupMessageEvent)
     async def weather(event: GroupMessageEvent):
-        if event.raw_message.startswith("/setu"):
-            tags=event.raw_message.replace("/setu","").split(" ")
+        if event.pure_text.startswith("/setu"):
+            tags=event.pure_text.replace("/setu","").split(" ")
             try:
                 await call_setu(bot,event,config,tags[2:],int(tags[1]))
             except Exception as e:
@@ -274,10 +273,10 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def search_image(event):
-        if str(event.raw_message) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
+        if str(event.pure_text) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
             await bot.send(event, "请发送要搜索的图片")
             image_search[event.sender.user_id] = []
-        if ("搜图" in str(event.raw_message) or event.sender.user_id in image_search) and event.get('image'):
+        if ("搜图" in str(event.pure_text) or event.sender.user_id in image_search) and event.get('image'):
             try:
                 image_search.pop(event.sender.user_id)
             except:
@@ -291,12 +290,12 @@ def main(bot,config):
                     pass
     @bot.on(GroupMessageEvent)
     async def tts(event: GroupMessageEvent):
-        if "说" in event.raw_message and event.raw_message.startswith("/"):
-            speaker=event.raw_message.split("说")[0].replace("/","").strip()
-            text=event.raw_message.split("说")[1].strip()
+        if "说" in event.pure_text and event.pure_text.startswith("/"):
+            speaker=event.pure_text.split("说")[0].replace("/","").strip()
+            text=event.pure_text.split("说")[1].strip()
             r=await call_tts(bot,event,config,text,speaker)
             await bot.send(event, Record(file=r.get("audio")))
-        elif event.raw_message=="可用角色":
+        elif event.pure_text=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             all_speakers = await call_all_speakers(bot, event, config)
             all_speakers = all_speakers["speakers"]
@@ -313,25 +312,25 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
-        if event.raw_message=="今日塔罗":
+        if event.pure_text=="今日塔罗":
             txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
-        elif event.raw_message=="抽象塔罗":
+        elif event.pure_text=="抽象塔罗":
             txt, img = tarotChoice('AbstractImages')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
-        elif event.raw_message=="ba塔罗":
+        elif event.pure_text=="ba塔罗":
             txt, img = tarotChoice('blueArchive')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
-        elif event.raw_message=="bili塔罗" or event.raw_message=="2233塔罗":
+        elif event.pure_text=="bili塔罗" or event.pure_text=="2233塔罗":
             txt, img = tarotChoice('bilibili')
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
-        elif event.raw_message=="运势":
+        elif event.pure_text=="运势":
             await call_fortune(bot,event,config)
             
     @bot.on(GroupMessageEvent)
     async def pick_music(event: GroupMessageEvent):
-        if event.raw_message.startswith("点歌 "):
-            song_name = event.raw_message.split("点歌 ")[1]
+        if event.pure_text.startswith("点歌 "):
+            song_name = event.pure_text.split("点歌 ")[1]
             await call_pick_music(bot, event, config, song_name)
 
 

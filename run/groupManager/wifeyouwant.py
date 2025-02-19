@@ -43,15 +43,15 @@ def main(bot,config):
     async def today_wife(event: GroupMessageEvent):
         async with httpx.AsyncClient() as client:
             global num_check, today_api
-            if not event.raw_message.startswith("今"):
+            if not event.pure_text.startswith("今"):
                 return
-            if ('今日' in str(event.raw_message) or '今天' in str(event.raw_message) or '今日' in str(
-                    event.raw_message)) and '老婆' in str(event.raw_message):
+            if ('今日' in str(event.pure_text) or '今天' in str(event.pure_text) or '今日' in str(
+                    event.pure_text)) and '老婆' in str(event.pure_text):
                 bot.logger.info("今日老婆开启！")
-                if '张' in str(event.raw_message) or '个' in str(event.raw_message) or '位' in str(
-                        event.raw_message):
+                if '张' in str(event.pure_text) or '个' in str(event.pure_text) or '位' in str(
+                        event.pure_text):
                     cmList = []
-                    context = str(event.raw_message)
+                    context = str(event.pure_text)
                     name_id_number = re.search(r'\d+', context)
                     if name_id_number:
                         number = int(name_id_number.group())
@@ -78,9 +78,9 @@ def main(bot,config):
     async def today_husband(event: GroupMessageEvent):
         async with httpx.AsyncClient() as client:
             global filepath
-            if str(event.raw_message).startswith("今"):
-                if ('今日' in str(event.raw_message) or '今天' in str(event.raw_message) or '今日' in str(
-                        event.raw_message)) and '老公' in str(event.raw_message):
+            if str(event.pure_text).startswith("今"):
+                if ('今日' in str(event.pure_text) or '今天' in str(event.pure_text) or '今日' in str(
+                        event.pure_text)) and '老公' in str(event.pure_text):
                     bot.logger.info("今日老公开启！")
                     params = {
                         "format": "json",
@@ -106,21 +106,21 @@ def main(bot,config):
     async def api_collect(event: GroupMessageEvent):
         async with httpx.AsyncClient() as client:
             flag = 0
-            if '今日一言' == str(event.raw_message) or '答案之书' == str(event.raw_message) or '每日一言' == str(
-                    event.raw_message):
+            if '今日一言' == str(event.pure_text) or '答案之书' == str(event.pure_text) or '每日一言' == str(
+                    event.pure_text):
                 url = 'https://api.dwo.cc/api/yi?api=yan'
                 flag = 1
                 bot.logger.info("今日一言")
-            elif 'emo时刻' == str(event.raw_message) or 'emo了' == str(event.raw_message) or '网抑云' == str(
-                    event.raw_message):
+            elif 'emo时刻' == str(event.pure_text) or 'emo了' == str(event.pure_text) or '网抑云' == str(
+                    event.pure_text):
                 url = 'https://api.dwo.cc/api/yi?api=emo'
                 flag = 1
                 bot.logger.info("emo时刻")
-            elif 'wyy评论' == str(event.raw_message) or '网易云评论' == str(event.raw_message):
+            elif 'wyy评论' == str(event.pure_text) or '网易云评论' == str(event.pure_text):
                 url = 'https://api.dwo.cc/api/yi?api=wyy'
                 flag = 1
                 bot.logger.info("网易云评论")
-            elif '舔狗日记' == str(event.raw_message):
+            elif '舔狗日记' == str(event.pure_text):
                 url = 'https://api.dwo.cc/api/dog'
                 flag = 1
                 bot.logger.info("舔狗日记")
@@ -146,9 +146,9 @@ def main(bot,config):
         global membercheck
 
         membercheck_id = int(event.sender.user_id)
-        if str(event.raw_message).startswith('🦌') or str(event.raw_message) in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
+        if str(event.pure_text).startswith('🦌') or str(event.pure_text) in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
             if membercheck_id in membercheck:
-                if str(event.raw_message) in {'补🦌'}:
+                if str(event.pure_text) in {'补🦌'}:
                     membercheck.pop(membercheck_id)
                 else:
                     await bot.send(event,'技能冷却ing')
@@ -159,14 +159,14 @@ def main(bot,config):
         else:return
         lu_recall = ['不！给！你！🦌！！！','我靠你怎么这么坏！','再🦌都🦌出火星子了！！','让我来帮你吧~','好恶心啊~~','有变态！！','你这种人渣我才不会喜欢你呢！',
                         '令人害怕的坏叔叔','才不给你计数呢！（哼']
-        if str(event.raw_message).startswith('🦌'):
+        if str(event.pure_text).startswith('🦌'):
             target_id = int(event.sender.user_id)
             times_add=0
-            match = re.search(r"qq=(\d+)", event.raw_message)
+            match = re.search(r"qq=(\d+)", event.pure_text)
             if match:
                 target_id = match.group(1)
             else:
-                for context in str(event.raw_message):
+                for context in str(event.pure_text):
                     if context != '🦌':
                         membercheck.pop(membercheck_id)
                         return
@@ -182,7 +182,7 @@ def main(bot,config):
                 membercheck.pop(membercheck_id)
                 return
 
-            for context in str(event.raw_message):
+            for context in str(event.pure_text):
                 if context =='🦌':
                     times_add +=1
 
@@ -206,7 +206,7 @@ def main(bot,config):
                     await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+times_add}次！',
                                            Image(file='data/pictures/wife_you_want_img/lulululu.png')])
 
-        elif '戒🦌' == str(event.raw_message):
+        elif '戒🦌' == str(event.pure_text):
             bot.logger.info('No! 戒🦌!!!!')
             target_id = int(event.sender.user_id)
             current_date = datetime.now()
@@ -222,7 +222,7 @@ def main(bot,config):
                 bot.logger.info('制作成功，开始发送~~')
                 await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
 
-        elif '补🦌' == str(event.raw_message):
+        elif '补🦌' == str(event.pure_text):
             bot.logger.info('yes! 补🦌!!!!')
             target_id = int(event.sender.user_id)
             current_date = datetime.now()
@@ -249,12 +249,12 @@ def main(bot,config):
             except Exception as e:
                 await bot.send(event, [At(qq=target_id), f' 补🦌失败了喵~'])
 
-        elif '开启贞操锁' == str(event.raw_message):
+        elif '开启贞操锁' == str(event.pure_text):
             target_id = int(event.sender.user_id)
             await manage_group_status('lu_limit', f'lu_others', target_id,1)
             membercheck.pop(membercheck_id)
             await bot.send(event,'您已开启贞操锁~')
-        elif '关闭贞操锁' == str(event.raw_message):
+        elif '关闭贞操锁' == str(event.pure_text):
             target_id = int(event.sender.user_id)
             await manage_group_status('lu_limit', f'lu_others', target_id,0)
             membercheck.pop(membercheck_id)
@@ -272,20 +272,20 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 今日腿子
     async def today_husband(event: GroupMessageEvent):
         async with httpx.AsyncClient() as client:
-            if str(event.raw_message).startswith("今"):
-                if '今日' in str(event.raw_message) or '今天' in str(event.raw_message) or '今日' in str(event.raw_message):
+            if str(event.pure_text).startswith("今"):
+                if '今日' in str(event.pure_text) or '今天' in str(event.pure_text) or '今日' in str(event.pure_text):
                     global filepath
                     url=None
-                    if '腿' in str(event.raw_message):
+                    if '腿' in str(event.pure_text):
                         bot.logger.info("今日腿子开启！")
                         url='https://api.dwo.cc/api/meizi'
-                    elif '黑' in str(event.raw_message):
+                    elif '黑' in str(event.pure_text):
                         bot.logger.info("今日黑丝开启！")
                         url='https://api.dwo.cc/api/hs_img'
-                    elif '白' in str(event.raw_message):
+                    elif '白' in str(event.pure_text):
                         bot.logger.info("今日白丝开启！")
                         url='https://api.dwo.cc/api/bs_img'
-                    elif '头像' in str(event.raw_message):
+                    elif '头像' in str(event.pure_text):
                         bot.logger.info("今日头像开启！")
                         url='https://api.dwo.cc/api/dmtou'
                     if url is None:return
@@ -301,7 +301,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def today_group_owner(event: GroupMessageEvent):
         flag_aim = 0
-        if ('今日群主' == str(event.raw_message)):
+        if ('今日群主' == str(event.pure_text)):
             flag_persona = 1
             check = 'owner'
         else:
@@ -342,23 +342,23 @@ def main(bot,config):
         async with (aiosqlite.connect("data/dataBase/wifeyouwant.db") as db):
             global filepath
             wifePrefix=config.api["today_wife"]["wifePrefix"]
-            if (f'{wifePrefix}' in str(event.raw_message)):  # 前置触发词
+            if (f'{wifePrefix}' in str(event.pure_text)):  # 前置触发词
                 target_id_aim = None
                 flag_persona = 0
                 flag_aim = 0
                 target_name=None
                 from_id = int(event.sender.user_id)
                 target_group = int(event.group_id)
-                if ('透群主' in str(event.raw_message)):
+                if ('透群主' in str(event.pure_text)):
                     flag_persona = 1
                     check = 'owner'
-                elif ('透管理' in str(event.raw_message)):
+                elif ('透管理' in str(event.pure_text)):
                     flag_persona = 2
                     check = 'admin'
-                elif ('透群友' in str(event.raw_message)):
+                elif ('透群友' in str(event.pure_text)):
                     flag_persona = 3
                     pass
-                elif ('娶群友' in str(event.raw_message)):
+                elif ('娶群友' in str(event.pure_text)):
                     flag_persona = 4
                     if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
                         target_id_aim = await manage_group_status(from_id,target_group,'wife_you_get')
@@ -366,32 +366,32 @@ def main(bot,config):
                     else:
                         flag_aim = 0
                     pass
-                elif ('离婚' in str(event.raw_message)):
+                elif ('离婚' in str(event.pure_text)):
                     if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
                         await manage_group_status(from_id, target_group, 'wife_you_get',0)
                         await bot.send(event, '离婚啦，您现在是单身贵族咯~')
-                elif ('/今日群主' == str(event.raw_message)):
+                elif ('/今日群主' == str(event.pure_text)):
                     flag_persona = 5
                     check = 'owner'
                     #print('test')
                 else:
                     flag_persona = 0
 
-                if flag_persona == 3 or flag_persona == 4 or "透" in str(event.raw_message) or "娶" in str(event.raw_message):
-                    context = str(event.raw_message)
-                    if not ("管理" in str(event.raw_message) or "群主" in str(event.raw_message)):
+                if flag_persona == 3 or flag_persona == 4 or "透" in str(event.pure_text) or "娶" in str(event.pure_text):
+                    context = str(event.pure_text)
+                    if not ("管理" in str(event.pure_text) or "群主" in str(event.pure_text)):
                         name_id_number=None
                         name_id_number_1=None
                         name_id_number_2 = None
                         name_id_number = re.search(r'\d+', context)
                         if name_id_number is not None:
                             name_id_number_2=0
-                        if "群友" not in str(event.raw_message):
-                            if "透" in str(event.raw_message) :
+                        if "群友" not in str(event.pure_text):
+                            if "透" in str(event.pure_text) :
                                 index = context.find("透")
                                 if index != -1:
                                     context_check = context[index + len("透"):]
-                            elif "娶" in str(event.raw_message):
+                            elif "娶" in str(event.pure_text):
                                 index = context.find("娶")
                                 if index != -1:
                                     context_check = context[index + len("娶"):]
@@ -403,9 +403,9 @@ def main(bot,config):
                                     #print(friend)
                                     name_id_number_1=friend['user_id']
                                     name_id_number_2=0
-                                    if "透" in str(event.raw_message):
+                                    if "透" in str(event.pure_text):
                                         flag_persona = 3
-                                    elif "娶" in str(event.raw_message):
+                                    elif "娶" in str(event.pure_text):
                                         flag_persona = 4
                                     break
 
@@ -563,20 +563,20 @@ def main(bot,config):
                 if flag_persona != 0 and target_name is not None:
                     await manage_group_add(from_id, target_id, target_group)
 
-                if '记录' in str(event.raw_message) and (
-                        '色色' in str(event.raw_message) or '瑟瑟' in str(event.raw_message) or '涩涩' in str(
-                    event.raw_message)):
+                if '记录' in str(event.pure_text) and (
+                        '色色' in str(event.pure_text) or '瑟瑟' in str(event.pure_text) or '涩涩' in str(
+                    event.pure_text)):
                     bot.logger.info(f'色色记录启动！')
                     cmList = []
-                    if '本周' in str(event.raw_message) or '每周' in str(event.raw_message) or '星期' in str(
-                            event.raw_message):
+                    if '本周' in str(event.pure_text) or '每周' in str(event.pure_text) or '星期' in str(
+                            event.pure_text):
                         type_context = '以下是本周色色记录：'
                         type='week'
-                    elif '本月' in str(event.raw_message) or '月份' in str(event.raw_message) or '月' in str(
-                            event.raw_message):
+                    elif '本月' in str(event.pure_text) or '月份' in str(event.pure_text) or '月' in str(
+                            event.pure_text):
                         type = 'month'
                         type_context = '以下是本月色色记录：'
-                    elif '年' in str(event.raw_message) :
+                    elif '年' in str(event.pure_text) :
                         type = 'Year'
                         type_context = '以下是年度色色记录：'
                     else:
@@ -625,7 +625,7 @@ def main(bot,config):
         group1 = f'{event.group_id}_1'
         group2 = f'{event.group_id}_2'
         group3 = f'{event.group_id}_3'
-        message = str(event.raw_message)
+        message = str(event.pure_text)
         flag = None
         if group1 not in last_messages:
             last_messages[group1] = None
@@ -638,7 +638,7 @@ def main(bot,config):
         fudu2 = last_messages[group2]
         fudu3 = last_messages[group3]
         for i in range(len(Read_check)):
-            if str(Read_check[i]) in str(event.raw_message):
+            if str(Read_check[i]) in str(event.pure_text):
                 return
         fudu1 = message
         last_messages[group1] = message

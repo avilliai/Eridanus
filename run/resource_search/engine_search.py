@@ -34,8 +34,8 @@ async def search_net(bot,event,config,query):
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def search111(event):
-        if str(event.raw_message).startswith("#搜索 "):
-            query = str(event.raw_message).replace("#搜索 ", "")
+        if str(event.pure_text).startswith("#搜索 "):
+            query = str(event.pure_text).replace("#搜索 ", "")
             functions = [
                 baidu_search(query),
                 searx_search(query)

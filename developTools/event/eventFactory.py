@@ -69,5 +69,5 @@ class EventFactory:
             print(f"子类型未匹配，未知事件: {data}")
             return None
 
-        # 动态实例化事件对象
+
         return event_class(**data)

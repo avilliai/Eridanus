@@ -8,8 +8,8 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def search_image(event):
         user_info = await get_user(event.user_id, event.sender.nickname)
-        if str(event.raw_message).startswith("iwara下载") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_download_level"]:
-            videoid = str(event.raw_message).replace("iwara下载", "")
+        if str(event.pure_text).startswith("iwara下载") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_download_level"]:
+            videoid = str(event.pure_text).replace("iwara下载", "")
             await bot.send(event, Text(f"正在下载iwara视频{videoid}"))
             try:
                 list = await download_specific_video(videoid,config)
@@ -17,8 +17,8 @@ def main(bot,config):
                 await bot.send(event, msg)
             except Exception as e:
                 await bot.send(event, Text(f"iwara视频{videoid}下载失败：{e}"))
-        elif str(event.raw_message).startswith("iwara搜") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
-            word = str(event.raw_message).replace("iwara搜", "")
+        elif str(event.pure_text).startswith("iwara搜") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
+            word = str(event.pure_text).replace("iwara搜", "")
             await bot.send(event, Text(f"正在iwara搜索{word}"))
             try:
                 list = await search_videos(word,config)
@@ -32,7 +32,7 @@ def main(bot,config):
                 await bot.send(event, node_list)
             except Exception as e:
                 await bot.send(event, Text(f"iwara搜索{word}失败：{e}"))
-        elif str(event.raw_message).startswith("iwara最新") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
+        elif str(event.pure_text).startswith("iwara最新") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
             await bot.send(event, Text(f"正在获取iwara最新视频"))
             try:
                 list = await fetch_video_info('date',config)
@@ -46,7 +46,7 @@ def main(bot,config):
                 await bot.send(event, node_list)
             except Exception as e:
                 await bot.send(event, Text(f"iwara最新获取失败：{e}"))
-        elif str(event.raw_message).startswith("iwara趋势") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
+        elif str(event.pure_text).startswith("iwara趋势") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
             await bot.send(event, Text(f"正在获取iwara趋势视频"))
             try:
                 list = await fetch_video_info('trending',config)
@@ -60,7 +60,7 @@ def main(bot,config):
                 await bot.send(event, node_list)
             except Exception as e:
                 await bot.send(event, Text(f"iwara趋势获取失败：{e}"))
-        elif str(event.raw_message).startswith("iwara热门") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
+        elif str(event.pure_text).startswith("iwara热门") and user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_search_level"]:
             await bot.send(event, Text(f"正在获取iwara热门视频"))
             try:
                 list = await fetch_video_info('popularity',config)
@@ -74,5 +74,5 @@ def main(bot,config):
                 await bot.send(event, node_list)
             except Exception as e:
                 await bot.send(event, Text(f"iwara热门获取失败：{e}"))
-        elif str(event.raw_message).startswith("iwara"):
+        elif str(event.pure_text).startswith("iwara"):
             await bot.send(event, "无权限或指令无效")

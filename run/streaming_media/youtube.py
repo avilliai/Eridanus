@@ -74,9 +74,9 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def dl_youtube_audio(event):
-        if event.raw_message.startswith("/yt音频"):
-            url = event.raw_message.split("/yt音频")[1]
+        if event.pure_text.startswith("/yt音频"):
+            url = event.pure_text.split("/yt音频")[1]
             await download_video(bot,event,config,url)
-        elif event.raw_message.startswith("/yt视频"):
-            url = event.raw_message.split("/yt视频")[1]
+        elif event.pure_text.startswith("/yt视频"):
+            url = event.pure_text.split("/yt视频")[1]
             await download_video(bot,event,config,url,type="video")

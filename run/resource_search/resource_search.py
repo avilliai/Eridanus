@@ -203,26 +203,26 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def book_resource_search(event):
 
-        if str(event.raw_message).startswith("搜书"):
-            book_name = str(event.raw_message).split("搜书")[1]
+        if str(event.pure_text).startswith("搜书"):
+            book_name = str(event.pure_text).split("搜书")[1]
             await search_book_info(bot,event,config,book_name)
 
     @bot.on(GroupMessageEvent)
     async def book_resource_download(event):
-        if str(event.raw_message).startswith("下载书"):
+        if str(event.pure_text).startswith("下载书"):
             try:
-                book_id = str(event.raw_message).split("下载书")[1].split(" ")[0]
-                hash = str(event.raw_message).split("下载书")[1].split(" ")[1]
+                book_id = str(event.pure_text).split("下载书")[1].split(" ")[0]
+                hash = str(event.pure_text).split("下载书")[1].split(" ")[1]
                 await call_download_book(bot,event,config,book_id,hash)
             except Exception as e:
                 bot.logger.error(f"book_resource_download error:{e}")
                 await bot.send(event, "指令格式错误，请使用“下载书{book_id} {hash}”")
-        elif event.raw_message=="随机奥术" or event.raw_message=="随机asmr" or event.raw_message=="随机奥数":
+        elif event.pure_text=="随机奥术" or event.pure_text=="随机asmr" or event.pure_text=="随机奥数":
 
             await call_asmr(bot,event,config)
-        elif event.raw_message=="最新asmr" or event.raw_message=="最新奥术" or event.raw_message=="最新奥数":
+        elif event.pure_text=="最新asmr" or event.pure_text=="最新奥术" or event.pure_text=="最新奥数":
             await call_asmr(bot,event,config,mode="latest")
-        elif event.raw_message=="最热asmr" or event.raw_message=="最热奥术" or event.raw_message=="热门asmr":
+        elif event.pure_text=="最热asmr" or event.pure_text=="最热奥术" or event.pure_text=="热门asmr":
             await call_asmr(bot,event,config,mode="hotest")
 
     @bot.on(LifecycleMetaEvent)
@@ -242,8 +242,8 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def querycomic(event: GroupMessageEvent):
-        if event.raw_message.startswith("jm搜") or event.raw_message.startswith("JM搜"):
-            keyword = event.raw_message
+        if event.pure_text.startswith("jm搜") or event.pure_text.startswith("JM搜"):
+            keyword = event.pure_text
             index = keyword.find("搜")
             if index != -1:
                 keyword = keyword[index + len("查询"):]
@@ -271,7 +271,7 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def download(event: GroupMessageEvent):
-        if '本周jm' == event.raw_message or '本周JM' == event.raw_message or '今日jm' == event.raw_message or '今日JM' == event.raw_message:
+        if '本周jm' == event.pure_text or '本周JM' == event.pure_text or '今日jm' == event.pure_text or '今日JM' == event.pure_text:
             context = JM_search_week()
             cmList = []
 
@@ -281,15 +281,15 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def download(event: GroupMessageEvent):
-        if event.raw_message.startswith("验车") or event.raw_message == "随机本子":
+        if event.pure_text.startswith("验车") or event.pure_text == "随机本子":
             global operating
             user_info = await get_user(event.user_id, event.sender.nickname)
             if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
                 await bot.send(event, "你没有权限使用该功能")
                 return
             try:
-                if event.raw_message.startswith("验车"):
-                    comic_id = int(event.raw_message.replace("验车", ""))
+                if event.pure_text.startswith("验车"):
+                    comic_id = int(event.pure_text.replace("验车", ""))
                 else:
                     context = ['正在随机ing，请稍等喵~~', '正在翻找好看的本子喵~', '嘿嘿，JM，启动！！！！', '正在翻找JM.jpg',
                                '有色色！我来了', 'hero来了喵~~', '了解~', '全力色色ing~']
@@ -341,14 +341,14 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def downloadAndToPdf(event: GroupMessageEvent):
-        if event.raw_message.startswith("JM下载"):
+        if event.pure_text.startswith("JM下载"):
             global operating
             user_info = await get_user(event.user_id, event.sender.nickname)
             if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_download_level"]:
                 await bot.send(event, "你没有权限使用该功能")
                 return
             try:
-                comic_id = int(event.raw_message.replace("JM下载", ""))
+                comic_id = int(event.pure_text.replace("JM下载", ""))
                 logger.info(f"JM下载启动 aim: {comic_id}")
             except:
                 await bot.send(event, "非法参数，指令示例 JM下载601279")

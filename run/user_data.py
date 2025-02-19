@@ -79,23 +79,23 @@ def main(bot,config):
             bot.logger.error(f"Error in creating users!: {e}")
             return
         #print(user_info)
-        if event.raw_message == "注册":
+        if event.pure_text == "注册":
             await call_user_data_register(bot,event,config)
-        elif event.raw_message =="我的信息":
+        elif event.pure_text =="我的信息":
             await call_user_data_query(bot,event,config)
-        elif event.raw_message == "签到":
+        elif event.pure_text == "签到":
             await call_user_data_sign(bot,event,config)
-        elif event.raw_message.startswith("修改城市"):
-            city=event.raw_message.split("修改城市")[1]
+        elif event.pure_text.startswith("修改城市"):
+            city=event.pure_text.split("修改城市")[1]
             await call_change_city(bot,event,config,city)
-        elif event.raw_message.startswith("叫我") and user_info[6]>=config.controller["user_data"]["change_info_operate_level"]:
-            nickname=event.raw_message.split("叫我")[1]
+        elif event.pure_text.startswith("叫我") and user_info[6]>=config.controller["user_data"]["change_info_operate_level"]:
+            nickname=event.pure_text.split("叫我")[1]
             await call_change_name(bot,event,config,nickname)
 
-        if event.raw_message.startswith("授权#"):
+        if event.pure_text.startswith("授权#"):
             try:
-                permission=int(event.raw_message.split("#")[2])
-                target_qq=int(event.raw_message.split("#")[1])
+                permission=int(event.pure_text.split("#")[2])
+                target_qq=int(event.pure_text.split("#")[1])
                 await call_permit(bot,event,config,target_qq,permission)
             except:
                 await bot.send(event, "请输入正确的权限值。\n指令为\n授权#{target_qq}#{level}\n如授权#1223434343#1")

@@ -179,7 +179,7 @@ def main(bot,config):
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
     @bot.on(GroupMessageEvent)
     async def _(event):
-        if event.raw_message=="/gc":
+        if event.pure_text=="/gc":
             user_info = await get_user(event.user_id, event.sender.nickname)
             if user_info[6] >= 3:
                 r=await garbage_collection(bot,event,config)
@@ -231,57 +231,57 @@ def main(bot,config):
     async def black_and_white_handler(event):
         await _handler(event)
     async def _handler(event):
-        if event.raw_message.startswith("/bl add "):
+        if event.pure_text.startswith("/bl add "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
             await call_operate_user_blacklist(bot,event,config,target_user_id,True)
-        elif event.raw_message.startswith("/bl remove "):
+        elif event.pure_text.startswith("/bl remove "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
             await call_operate_user_blacklist(bot,event,config,target_user_id,False)
-        elif event.raw_message.startswith("/blgroup add "):
+        elif event.pure_text.startswith("/blgroup add "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的群号")
                 return
             await call_operate_group_blacklist(bot,event,config,target_group_id,True)
-        elif event.raw_message.startswith("/blgroup remove "):
+        elif event.pure_text.startswith("/blgroup remove "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的群号")
                 return
             await call_operate_group_blacklist(bot,event,config,target_group_id,False)
-        elif event.raw_message.startswith("/wl add "):
+        elif event.pure_text.startswith("/wl add "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
                 await call_operate_user_whitelist(bot,event,config,target_user_id,True)
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
-        elif event.raw_message.startswith("/wl remove "):
+        elif event.pure_text.startswith("/wl remove "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
                 await call_operate_user_whitelist(bot,event,config,target_user_id,False)
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
-        elif event.raw_message.startswith("/wlgroup add "):
+        elif event.pure_text.startswith("/wlgroup add "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
                 await call_operate_group_whitelist(bot,event,config,target_group_id,True)
             except:
                 await bot.send(event, f"请输入正确的群号")
-        elif event.raw_message.startswith("/wlgroup remove "):
+        elif event.pure_text.startswith("/wlgroup remove "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
                 await call_operate_group_whitelist(bot,event,config,target_group_id,False)
             except:
                 await bot.send(event, f"请输入正确的群号")

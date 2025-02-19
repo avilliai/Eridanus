@@ -74,17 +74,17 @@ def main(bot, config):
     doro_groups = config.doro['whitelist']
     @bot.on(GroupMessageEvent)
     async def _(event):
-        if event.raw_message.startswith("/开启奶龙审核 "):
-            target_id = event.raw_message.split(" ")[1]
+        if event.pure_text.startswith("/开启奶龙审核 "):
+            target_id = event.pure_text.split(" ")[1]
             await operate_group_censor(bot,event,config,target_id,"开启奶龙审核")
-        elif event.raw_message.startswith("/关闭奶龙审核 "):
-            target_id = event.raw_message.split(" ")[1]
+        elif event.pure_text.startswith("/关闭奶龙审核 "):
+            target_id = event.pure_text.split(" ")[1]
             await operate_group_censor(bot,event,config,target_id,"关闭奶龙审核")
-        elif event.raw_message.startswith("/开启doro审核 "):
-            target_id = event.raw_message.split(" ")[1]
+        elif event.pure_text.startswith("/开启doro审核 "):
+            target_id = event.pure_text.split(" ")[1]
             await operate_group_censor(bot,event,config,target_id,"开启doro审核")
-        elif event.raw_message.startswith("/关闭doro审核 "):
-            target_id = event.raw_message.split(" ")[1]
+        elif event.pure_text.startswith("/关闭doro审核 "):
+            target_id = event.pure_text.split(" ")[1]
             await operate_group_censor(bot,event,config,target_id,"关闭doro审核")
     async def get_group_member_info(group_id: int, user_id: int):
         url = "http://localhost:3000/get_group_member_info"

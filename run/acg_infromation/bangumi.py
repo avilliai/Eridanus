@@ -24,7 +24,7 @@ async def call_bangumi_search(bot,event,config,keywords,cat):
         subjectlist = resu[1]
         crtlist = resu[2]
         order = 1
-        if str(event.raw_message).startswith("0") and order <= len(crtlist):
+        if str(event.pure_text).startswith("0") and order <= len(crtlist):
             crt = crtlist[order - 1].find("a")["href"]
             url = "https://bgm.tv" + crt
             bot.logger.info("正在获取" + crt + "详情")
@@ -66,33 +66,33 @@ def main(bot,config):
     scheduler.start()
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
-        if ("新番排行" in str(event.raw_message)) or ("新番top" in str(event.raw_message)) or (
-                "本月新番" in str(event.raw_message)):
+        if ("新番排行" in str(event.pure_text)) or ("新番top" in str(event.pure_text)) or (
+                "本月新番" in str(event.pure_text)):
             year = datetime.datetime.now().strftime("%Y")  # 默认当前年份，修一个问题
             month = datetime.datetime.now().strftime("%m")  # 默认当前月份
-        elif ("番剧排行" in str(event.raw_message)) or ("番剧top" in str(event.raw_message)) \
-                or ("动画排行" in str(event.raw_message)) or ("动画top" in str(event.raw_message)):
+        elif ("番剧排行" in str(event.pure_text)) or ("番剧top" in str(event.pure_text)) \
+                or ("动画排行" in str(event.pure_text)) or ("动画top" in str(event.pure_text)):
             year = ""  # 默认空值,表示全部
             month = ""  # 默认空值,表示全部
         else:
             return
-        if "年" in str(event.raw_message):
-            year = str(event.raw_message).split("年")[0]  # 获取年份参数
+        if "年" in str(event.pure_text):
+            year = str(event.pure_text).split("年")[0]  # 获取年份参数
             year = re.sub(r'[^\d]', '', year)[-4::]
-        if "月" in str(event.raw_message):  # 获取月份参数
+        if "月" in str(event.pure_text):  # 获取月份参数
             try:
-                month = str(event.raw_message).split("年")[1].split("月")[0]
+                month = str(event.pure_text).split("年")[1].split("月")[0]
             except:
-                month = str(event.raw_message).split("月")[0]
+                month = str(event.pure_text).split("月")[0]
             if len(month) < 2:
                 month = "0" + month
         try:
-            if "top" in str(event.raw_message):
-                top = int(str(event.raw_message).split("top")[1])  # 获取top参数
-            elif "排行" in str(event.raw_message):
-                top = int(str(event.raw_message).split("排行")[1])
+            if "top" in str(event.pure_text):
+                top = int(str(event.pure_text).split("top")[1])  # 获取top参数
+            elif "排行" in str(event.pure_text):
+                top = int(str(event.pure_text).split("排行")[1])
 
-            elif "本月新番" in str(event.raw_message):
+            elif "本月新番" in str(event.pure_text):
                 top = 10
                 month = datetime.datetime.now().strftime("%m")
 
@@ -142,27 +142,27 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
-        if not event.raw_message.startswith(config.settings["acg_information"]["bangumi_query_prefix"]):
+        if not event.pure_text.startswith(config.settings["acg_information"]["bangumi_query_prefix"]):
             return
-        if "bangumi查询" in str(event.raw_message) or "番剧查询" in str(event.raw_message):
+        if "bangumi查询" in str(event.pure_text) or "番剧查询" in str(event.pure_text):
                 #url="https://api.bgm.tv/search/subject/"+str(event.message_chain).split(" ")[1]
                 cat="all"
-                keywords = str(event.raw_message).replace(" ", "").split("查询")[1]
-        elif "查询动画" in str(event.raw_message) or "查询番剧" in str(event.raw_message):
+                keywords = str(event.pure_text).replace(" ", "").split("查询")[1]
+        elif "查询动画" in str(event.pure_text) or "查询番剧" in str(event.pure_text):
                 cat=2
-                keywords = str(event.raw_message).replace(" ", "").split("动画")[1]
-        elif "查询书籍" in str(event.raw_message):
+                keywords = str(event.pure_text).replace(" ", "").split("动画")[1]
+        elif "查询书籍" in str(event.pure_text):
                 cat=1
-                keywords = str(event.raw_message).replace(" ", "").split("书籍")[1]
-        elif "查询游戏" in str(event.raw_message):
+                keywords = str(event.pure_text).replace(" ", "").split("书籍")[1]
+        elif "查询游戏" in str(event.pure_text):
                 cat=4
-                keywords = str(event.raw_message).replace(" ", "").split("游戏")[1]
-        elif "查询音乐" in str(event.raw_message):
+                keywords = str(event.pure_text).replace(" ", "").split("游戏")[1]
+        elif "查询音乐" in str(event.pure_text):
                 cat=3
-                keywords = str(event.raw_message).replace(" ", "").split("音乐")[1]
-        elif "查询三次元" in str(event.raw_message):
+                keywords = str(event.pure_text).replace(" ", "").split("音乐")[1]
+        elif "查询三次元" in str(event.pure_text):
                 cat=6
-                keywords = str(event.raw_message).replace(" ", "").split("三次元")[1]
+                keywords = str(event.pure_text).replace(" ", "").split("三次元")[1]
         else:
             return
         bot.logger.info("正在查询：" + keywords)
@@ -192,7 +192,7 @@ def main(bot,config):
         global searchtask, recall_id
         if event.sender.user_id in searchtask:
             try:
-                if str(event.raw_message) == "退出":
+                if str(event.pure_text) == "退出":
                     searchtask.pop(event.sender.user_id)
                     await bot.recall(recall_id['data']['message_id'])
                     await bot.send(event, "已退出查询")
@@ -202,11 +202,11 @@ def main(bot,config):
                 resu = await bangumisearch(url)
                 subjectlist = resu[1]
                 crtlist = resu[2]
-                order = int(str(event.raw_message))
+                order = int(str(event.pure_text))
                 searchtask.pop(event.sender.user_id)
                 await bot.recall(recall_id['data']['message_id'])
                 recall_id = await bot.send(event, "正在获取，请稍后~~~")
-                if str(event.raw_message).startswith("0") and order <= len(crtlist):
+                if str(event.pure_text).startswith("0") and order <= len(crtlist):
                     crt = crtlist[order - 1].find("a")["href"]
                     url = "https://bgm.tv" + crt
                     bot.logger.info("正在获取" + crt + "详情")
@@ -256,7 +256,7 @@ def main(bot,config):
     async def Bilibili_today_hot(event: GroupMessageEvent):
         file_path = 'data/pictures/wife_you_want_img/'
         output_path = f'{file_path}bili_today_hot_back_out.png'
-        if '今日热门'==event.raw_message:
+        if '今日热门'==event.pure_text:
             if not os.path.isfile(output_path):
                 await daily_task()
             bot.logger.info('今日热门开启！！！')

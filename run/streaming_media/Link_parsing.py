@@ -68,7 +68,7 @@ def main(bot,config):
         global teamlist
         proxy = config.api["proxy"]["http_proxy"]
         #print(proxy)
-        url=event.raw_message
+        url=event.pure_text
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
             if event.get("text") is not None and event.get("text")[0]=="下载视频":
@@ -100,7 +100,7 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def Music_Link_Prising_search(event: GroupMessageEvent):
-        url = event.raw_message
+        url = event.pure_text
         if config.settings["网易云卡片"]["enable"]:
             if "music.163.com" not in url:
                 return

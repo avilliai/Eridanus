@@ -34,20 +34,20 @@ def main(bot,config):
 
         flag =0
         flag_check_test=0
-        keyword=str(event.raw_message)
+        keyword=str(event.pure_text)
         filepath = 'data/pictures/galgame'
         cmList = []
         forMeslist = []
 
-        if "gal" in str(event.raw_message) or "Gal" in str(event.raw_message):
+        if "gal" in str(event.pure_text) or "Gal" in str(event.pure_text):
             #print('text')
             try:
                 access_token = await Get_Access_Token()
             except Exception as e:
                 bot.logger.error(f"access_token failed: {e}")
                 return
-            if "查询" in str(event.raw_message):
-                keyword = str(event.raw_message)
+            if "查询" in str(event.pure_text):
+                keyword = str(event.pure_text)
                 index = keyword.find("查询")
                 if index != -1:
                     keyword = keyword[index + len("查询") :]
@@ -55,42 +55,42 @@ def main(bot,config):
                         keyword = keyword[+1:]
                         pass
                 flag = 2
-                if "精确" in str(event.raw_message):
+                if "精确" in str(event.pure_text):
                     flag = 1
-                if "机构" in str(event.raw_message):
+                if "机构" in str(event.pure_text):
                     flag = 4
-                    if "游戏" in str(event.raw_message):
+                    if "游戏" in str(event.pure_text):
                         flag = 6
                         flag_check_test = 3
-                elif "id" in str(event.raw_message):
+                elif "id" in str(event.pure_text):
                     flag = 3
-                if "角色" in str(event.raw_message):
+                if "角色" in str(event.pure_text):
                     flag = 5
                 bot.logger.info(f'access_token：{access_token}，flag:{flag}，gal查询目标：{keyword}')
 
-        if "新作" in str(event.raw_message) and event.get("at") and event.get("at")[0]["qq"]==str(bot.id):
+        if "新作" in str(event.pure_text) and event.get("at") and event.get("at")[0]["qq"]==str(bot.id):
             now = datetime.datetime.now().date()
             flag=7
             month = datetime.datetime.now().date().month
             year = datetime.datetime.now().date().year
             day = datetime.datetime.now().date().day
-            if "本日" in str(event.raw_message) or "今日" in str(event.raw_message) or "今天" in str(event.raw_message):
+            if "本日" in str(event.pure_text) or "今日" in str(event.pure_text) or "今天" in str(event.pure_text):
                 flag_check_test=3
                 date = datetime.date(year, month, day)
                 bot.logger.info(f'本日新作查询')
-            elif "昨日" in str(event.raw_message):
+            elif "昨日" in str(event.pure_text):
                 flag_check_test=3
                 date = datetime.date(year, month, day - 1)
                 bot.logger.info(f'昨日新作查询')
-            elif "本月" in str(event.raw_message):
+            elif "本月" in str(event.pure_text):
                 date = datetime.date(year, month - 1, day)
                 flag_check_test = 3
                 bot.logger.info(f'本月新作查询')
             else:
                 return
 
-        if ("galgame推荐" == str(event.raw_message) or "Galgame推荐" == str(event.raw_message) or "gal推荐" == str(event.raw_message)or "Gal推荐" == str(event.raw_message)
-                or ("随机" in str(event.raw_message) and ("gal" in str(event.raw_message) or "Gal" in str(event.raw_message)))):
+        if ("galgame推荐" == str(event.pure_text) or "Galgame推荐" == str(event.pure_text) or "gal推荐" == str(event.pure_text)or "Gal推荐" == str(event.pure_text)
+                or ("随机" in str(event.pure_text) and ("gal" in str(event.pure_text) or "Gal" in str(event.pure_text)))):
             flag = 8
             flag_check_test = 3
             bot.logger.info(f'有玩gal的下头男，galgame推荐开启，张数：1')

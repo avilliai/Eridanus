@@ -215,39 +215,39 @@ def main(bot,config):
     ai_img_recognize = {}
     @bot.on(GroupMessageEvent)
     async def search_image(event):
-        if str(event.raw_message) == "ai图检测" or (
+        if str(event.pure_text) == "ai图检测" or (
                 event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0] == "ai图检测"):
             await bot.send(event, "请发送要检测的图片")
             ai_img_recognize[event.sender.user_id] = []
-        if ("ai图检测" in str(event.raw_message) or event.sender.user_id in ai_img_recognize) and event.get('image'):
+        if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize) and event.get('image'):
             img_url = event.get("image")[0]["url"]
             await call_aiArtModerate(bot, event, config, img_url)
             ai_img_recognize.pop(event.sender.user_id)
 
     @bot.on(GroupMessageEvent)
     async def bing_dalle3_draw(event):  #无需配置的ai绘图接口
-        if str(event.raw_message).startswith("画 "):
-            prompt = str(event.raw_message).split("画 ")[1]
+        if str(event.pure_text).startswith("画 "):
+            prompt = str(event.pure_text).split("画 ")[1]
             await call_text2img2(bot, event, config, prompt)
     
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
-        if str(event.raw_message).startswith("n4 ") and config.settings["ai绘画"]["novel_ai画图"]:
-            tag = str(event.raw_message).replace("n4 ", "")
+        if str(event.pure_text).startswith("n4 ") and config.settings["ai绘画"]["novel_ai画图"]:
+            tag = str(event.pure_text).replace("n4 ", "")
             await bot.send(event, '正在进行nai4画图', True)
             await nai4(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
     async def naiDraw3(event):
-        if str(event.raw_message).startswith("n3 ") and config.settings["ai绘画"]["novel_ai画图"]:
-            tag = str(event.raw_message).replace("n3 ", "")
+        if str(event.pure_text).startswith("n3 ") and config.settings["ai绘画"]["novel_ai画图"]:
+            tag = str(event.pure_text).replace("n3 ", "")
             await bot.send(event, '正在进行nai3画图', True)
             await nai3(bot,event,config,tag)
 
     @bot.on(GroupMessageEvent)
     async def db(event):
-        if str(event.raw_message).startswith("dan "):
-            tag = str(event.raw_message).replace("dan ", "")
+        if str(event.pure_text).startswith("dan "):
+            tag = str(event.pure_text).replace("dan ", "")
             bot.logger.info(f"收到来自群{event.group_id}的请求，prompt:{tag}")
             await bot.send(event, f'正在搜索词条{tag}')
             limit = 5
@@ -392,7 +392,7 @@ def main(bot,config):
         global tag_user
 
         if event.get('image') == None and (
-                str(event.raw_message) == ("tag") or str(event.raw_message).startswith("tag ")):
+                str(event.pure_text) == ("tag") or str(event.pure_text).startswith("tag ")):
             if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
                 await bot.send(event, "未配置审核和反推api")
                 return
@@ -400,11 +400,11 @@ def main(bot,config):
             await bot.send(event, "请发送要识别的图片")
 
         # 处理图片和重绘命令
-        if (str(event.raw_message).startswith("tag") or event.sender.user_id in tag_user) and event.get('image'):
+        if (str(event.pure_text).startswith("tag") or event.sender.user_id in tag_user) and event.get('image'):
             if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
                 await bot.send(event, "未配置审核和反推api")
                 return
-            if (str(event.raw_message).startswith("tag")) and event.get('image'):
+            if (str(event.pure_text).startswith("tag")) and event.get('image'):
                 tag_user[event.sender.user_id] = []
 
             # 日志记录
@@ -429,10 +429,10 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def sdsettings(event):
-        if str(event.raw_message).startswith("setsd "):
+        if str(event.pure_text).startswith("setsd "):
             global sd_user_args
             sd_user_args.setdefault(event.sender.user_id, {})
-            command = str(event.raw_message).replace("setsd ", "")
+            command = str(event.pure_text).replace("setsd ", "")
             if command == "0":
                 sd_user_args[event.sender.user_id] = {}
                 await bot.send(event, f"当前绘画参数已重置", True)
@@ -443,10 +443,10 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def sdresettings(event):
-        if str(event.raw_message).startswith("setre "):
+        if str(event.pure_text).startswith("setre "):
             global sd_re_args
             sd_re_args.setdefault(event.sender.user_id, {})
-            command = str(event.raw_message).replace("setre ", "")
+            command = str(event.pure_text).replace("setre ", "")
             if command == "0":
                 sd_re_args[event.sender.user_id] = {}
                 await bot.send(event, f"当前重绘参数已重置", True)
@@ -461,15 +461,15 @@ def main(bot,config):
         global turn
 
         if event.get('image') == None and (
-                str(event.raw_message) == ("重绘") or str(event.raw_message).startswith("重绘 ")):
-            prompt = str(event.raw_message).replace("重绘", "").strip()
+                str(event.pure_text) == ("重绘") or str(event.pure_text).startswith("重绘 ")):
+            prompt = str(event.pure_text).replace("重绘", "").strip()
             UserGet[event.sender.user_id] = [prompt]
             await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.raw_message).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
-            if (str(event.raw_message).startswith("重绘")) and event.get('image'):
-                prompt = str(event.raw_message).replace("重绘", "").strip()
+        if (str(event.pure_text).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
+            if (str(event.pure_text).startswith("重绘")) and event.get('image'):
+                prompt = str(event.pure_text).replace("重绘", "").strip()
                 UserGet[event.sender.user_id] = [prompt]
 
             # 日志记录
@@ -514,10 +514,10 @@ def main(bot,config):
     async def AiSdDraw(event):
         global turn
         global sd_user_args
-        if str(event.raw_message).startswith("画 ") and config.settings["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
-            tag = str(event.raw_message).replace("画 ", "")
+        if str(event.pure_text).startswith("画 ") and config.settings["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
+            tag = str(event.pure_text).replace("画 ", "")
             await call_text2img1(bot,event,config,tag)
-        if str(event.raw_message) == "lora" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
+        if str(event.pure_text) == "lora" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询loras中...')
             try:
                 p = await getloras(config)
@@ -527,7 +527,7 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
 
-        if str(event.raw_message) == "ckpt" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
+        if str(event.pure_text) == "ckpt" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询checkpoints中...')
             try:
                 p = await getcheckpoints(config)
@@ -537,8 +537,8 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
 
-        if str(event.raw_message).startswith("ckpt2 ") and config.settings["ai绘画"]["sd画图"]:
-            tag = str(event.raw_message).replace("ckpt2 ", "")
+        if str(event.pure_text).startswith("ckpt2 ") and config.settings["ai绘画"]["sd画图"]:
+            tag = str(event.pure_text).replace("ckpt2 ", "")
             bot.logger.info('切换ckpt中')
             if event.user_id == config.basic_config["master"]["id"]:
                 try:
@@ -551,7 +551,7 @@ def main(bot,config):
             else:
                 await bot.send(event, "仅master可执行此操作", True)
                 
-        if str(event.raw_message) == "sampler" and config.settings["ai绘画"]["sd画图"]:
+        if str(event.pure_text) == "sampler" and config.settings["ai绘画"]["sd画图"]:
             bot.logger.info('查询sampler中...')
             try:
                 p = await getsampler(config)
@@ -561,7 +561,7 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
         
-        if str(event.raw_message) == "scheduler" and config.settings["ai绘画"]["sd画图"]:
+        if str(event.pure_text) == "scheduler" and config.settings["ai绘画"]["sd画图"]:
             bot.logger.info('查询scheduler中...')
             try:
                 p = await getscheduler(config)
@@ -571,7 +571,7 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
                 
-        if str(event.raw_message) == "interrupt" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+        if str(event.pure_text) == "interrupt" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
             global turn
             try:
                 await interrupt(config)
@@ -580,7 +580,7 @@ def main(bot,config):
                 bot.logger.error(e)
                 await bot.send(event, f"中断任务失败: {e}")
                 
-        if str(event.raw_message) == "skip" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+        if str(event.pure_text) == "skip" and config.settings["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
             global turn
             try:
                 await skipsd(config)
@@ -591,7 +591,7 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def wdcard(event):
-        message = str(event.raw_message)
+        message = str(event.pure_text)
         if message == 'getwd':
             r = await get_available_wildcards()
             await bot.send(event, r, True)
@@ -608,15 +608,15 @@ def main(bot,config):
         global n4re
 
         if event.get('image') == None and (
-                str(event.raw_message) == ("n4re") or str(event.raw_message).startswith("n4re ")):
-            prompt = str(event.raw_message).replace("n4re", "").strip()
+                str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ")):
+            prompt = str(event.pure_text).replace("n4re", "").strip()
             n4re[event.sender.user_id] = [prompt]
             await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.raw_message).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
-            if (str(event.raw_message).startswith("n4re")) and event.get('image'):
-                prompt = str(event.raw_message).replace("n4re", "").strip()
+        if (str(event.pure_text).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
+            if (str(event.pure_text).startswith("n4re")) and event.get('image'):
+                prompt = str(event.pure_text).replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
 
             # 日志记录
@@ -664,15 +664,15 @@ def main(bot,config):
         global n3re
 
         if event.get('image') == None and (
-                str(event.raw_message) == ("n3re") or str(event.raw_message).startswith("n3re ")):
-            prompt = str(event.raw_message).replace("n3re", "").strip()
+                str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ")):
+            prompt = str(event.pure_text).replace("n3re", "").strip()
             n3re[event.sender.user_id] = [prompt]
             await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.raw_message).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
-            if (str(event.raw_message).startswith("n3re")) and event.get('image'):
-                prompt = str(event.raw_message).replace("n3re", "").strip()
+        if (str(event.pure_text).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
+            if (str(event.pure_text).startswith("n3re")) and event.get('image'):
+                prompt = str(event.pure_text).replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
 
             # 日志记录
@@ -722,8 +722,8 @@ def main(bot,config):
         global mask
 
         if event.get('image') == None and (
-                str(event.raw_message) == ("局部重绘") or str(event.raw_message).startswith("局部重绘 ")):
-            prompt = str(event.raw_message).replace("局部重绘 ", "").strip()
+                str(event.pure_text) == ("局部重绘") or str(event.pure_text).startswith("局部重绘 ")):
+            prompt = str(event.pure_text).replace("局部重绘 ", "").strip()
             UserGetm[event.sender.user_id] = prompt  # 直接将值设置为字符串
             await bot.send(event, "请发送要局部重绘的图片")
 
@@ -762,9 +762,9 @@ def main(bot,config):
                 await bot.send(event, f"sd api局部重绘失败。{e}", True)
             return
 
-        if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘 ")) and event.get('image'):
-                prompts = str(event.raw_message).replace("局部重绘 ", "").strip()
+        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
+            if (str(event.pure_text).startswith("局部重绘 ")) and event.get('image'):
+                prompts = str(event.pure_text).replace("局部重绘 ", "").strip()
                 UserGetm[event.sender.user_id] = prompts
 
             prompts = UserGetm[event.sender.user_id]
@@ -781,9 +781,9 @@ def main(bot,config):
             return
 
 
-        if (str(event.raw_message).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.raw_message).startswith("局部重绘")) and event.get('image'):
-                prompt = str(event.raw_message).replace("局部重绘", "").strip()
+        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
+            if (str(event.pure_text).startswith("局部重绘")) and event.get('image'):
+                prompt = str(event.pure_text).replace("局部重绘", "").strip()
 
             # 日志记录
             prompts = ', '.join(UserGetm[event.sender.user_id])
@@ -799,7 +799,7 @@ def main(bot,config):
                 
     @bot.on(GroupMessageEvent)
     async def end_re(event):
-        if str(event.raw_message) == ("/clearre"):
+        if str(event.pure_text) == ("/clearre"):
             global UserGet
             global tag_user
             global UserGet1
