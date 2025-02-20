@@ -1010,11 +1010,11 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                 try:
                     # 尝试解析日期字符串
                     check_time=datetime.strptime(time_check, fmt).strftime("%Y-%m-%d")
-                    print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
+                    #print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
                     if str(check_time) != str(datetime.now().date()):
                         link_prising_json['status'] = False
                         link_prising_json['check_time']=check_time
-                        print(f"时间不匹配，拒绝发送 {link_prising_json['time']}\ncheck_time:{check_time}\ndatetime:{datetime.now().date()}")
+                        #print(f"时间不匹配，拒绝发送 {link_prising_json['time']}\ncheck_time:{check_time}\ndatetime:{datetime.now().date()}")
                     break
                 except ValueError:
                     # 如果解析失败，继续尝试下一个格式
