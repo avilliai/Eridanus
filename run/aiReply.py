@@ -44,13 +44,15 @@ def main(bot,config):
         await bot.send(event,"async task over")'''
     @bot.on(GroupMessageEvent)
     async def aiReply(event: GroupMessageEvent):
+        if event.message_chain.has(Text):
+            t=event.message_chain.get(Text)[0].text
         #print(event.processed_message)
         #print(event.message_id,type(event.message_id))
         user_info = await get_user(event.user_id, event.sender.nickname)
         if event.pure_text=="退出":
             await end_chat(event.user_id)
             await bot.send(event,"那就先不聊啦~")
-        elif event.pure_text=="/clear":
+        elif event.pure_text=="/clear" or t=="/clear":
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
         elif event.pure_text=="/clear group":
