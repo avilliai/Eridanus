@@ -175,14 +175,14 @@
                     "type": "object",
                     "properties": {
                         "type": {
-                            "type": "string", "enum": ["video","audio"],"description": "下载类型"
+                            "type": "string", "enum": ["video","audio"],"description": "下载类型。asmr100平台只能下载audio"
                         },
                         "url": {
                             "type": "string",
-                            "description": "视频的链接地址"
+                            "description": "视频/音频的链接地址"
                         },
                         "platform": {
-                            "type": "string", "enum": ["youtube","bilibili"],"description": "视频的来源平台。域名为b23.tv的为bilibili"
+                            "type": "string", "enum": ["youtube","bilibili","asmr100"],"description": "视频的来源平台。域名为b23.tv的为bilibili"
                         }
                     },
                     "required": [

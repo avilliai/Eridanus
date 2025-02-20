@@ -79,7 +79,13 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
                 await bot.send(event,[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"), Image(file=img)])
             file_paths=[]
             main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
+
+            metype = r['media_urls'][0][1].split('.')[-1]
+
             for i in r['media_urls']:
+                if i[1].split('.')[-1] != metype or len(file_paths) >= config.settings["asmr"]["max_merge_file_num"]:
+                    bot.logger.error(f"audio type change:{i[1]}")
+                    break
                 if config.settings["asmr"]["with_file"]:
                     path=f"data/voice/cache/{i[1]}"
                     file=await download_file(i[0],path,config.api["proxy"]["http_proxy"])
@@ -91,11 +97,11 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
             if config.settings["asmr"]["with_file"]:
                 loop = asyncio.get_running_loop()
                 try:
+                    await bot.send(event, "正在合并音频文件，请等待完成...")
                     bot.logger.info(f"asmr file merge and upload start: path:{main_path},merge_files:{file_paths}")
                     with ThreadPoolExecutor() as executor:
                         path = await loop.run_in_executor(executor, merge_audio_files, file_paths, main_path)
                     await bot.send(event, File(file=path))
-                    await bot.send(event, "完整音频文件已上传", True)
                 except Exception as e:
                     bot.logger.error(f"asmr file merge and upload error:{e}")
 

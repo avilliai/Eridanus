@@ -2,14 +2,23 @@ import asyncio
 import random
 
 import httpx
-async def get_info(data,proxies=None,mode="default"):
-    if mode=="random":
-        id=random.choice(data["works"])['id']
-        source_id=random.choice(data["works"])['source_id']
-        title=random.choice(data["works"])['title']
-        nsfw=random.choice(data["works"])['nsfw']
-        mainCoverUrl=random.choice(data["works"])['mainCoverUrl']
-        new_url=f"https://api.asmr-200.com/api/tracks/{id}?v=1"
+
+
+async def get_info(data, proxies=None, mode="default"):
+    if mode == "random":
+        id = random.choice(data["works"])['id']
+        source_id = random.choice(data["works"])['source_id']
+        title = random.choice(data["works"])['title']
+        nsfw = random.choice(data["works"])['nsfw']
+        mainCoverUrl = random.choice(data["works"])['mainCoverUrl']
+        new_url = f"https://api.asmr-200.com/api/tracks/{id}?v=1"
+    elif mode == "download":
+        id = data["id"]
+        source_id = data["source_id"]
+        title = data["title"]
+        nsfw = data["nsfw"]
+        mainCoverUrl = data["mainCoverUrl"]
+        new_url = f"https://api.asmr-200.com/api/tracks/{id}?v=1"
     else:
         id = data["works"][0]['id']
         source_id = data["works"][0]['source_id']
@@ -21,9 +30,12 @@ async def get_info(data,proxies=None,mode="default"):
         response = await client.get(new_url)
         data = response.json()
     media_urls = []
+
     def get_file_extension(url):
-        if url.endswith('.mp3') or url.endswith('.m4a') or url.endswith('.webm') or url.endswith('.ogg') or url.endswith('.flac') or url.endswith('.wav'):
+        if url.endswith('.mp3') or url.endswith('.m4a') or url.endswith('.webm') or url.endswith(
+                '.ogg') or url.endswith('.flac') or url.endswith('.wav'):
             return True
+
     if isinstance(data, list):
         if "children" in data[0]:
             for i in data[0]['children']:
@@ -56,48 +68,71 @@ async def get_info(data,proxies=None,mode="default"):
                   "mainCoverUrl": mainCoverUrl, "media_urls": media_urls}
     return final_data
 
+
 async def random_asmr_100(proxy=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
+    if proxy is not None and proxy != "":
+        proxies = {"http://": proxy, "https://": proxy}
     else:
-        proxies=None
-    url='https://api.asmr-200.com/api/works?order=betterRandom'
+        proxies = None
+    url = 'https://api.asmr-200.com/api/works?order=betterRandom'
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url)
         data = response.json()
-        #print(data)
-        return await get_info(data,proxies)
+        # print(data)
+        return await get_info(data, proxies)
+
 
 async def latest_asmr_100(proxy=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
+    if proxy is not None and proxy != "":
+        proxies = {"http://": proxy, "https://": proxy}
     else:
-        proxies=None
-    url='https://api.asmr-200.com/api/works?order=create_date&sort=desc&page=1&subtitle=0'
-    async with httpx.AsyncClient(proxies=proxies) as client:
-        response = await client.get(url)
-        data = response.json()
-        #print(data)
-    return await get_info(data,proxies)
-async def choose_from_latest_asmr_100(proxy=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
-    else:
-        proxies=None
+        proxies = None
     url = 'https://api.asmr-200.com/api/works?order=create_date&sort=desc&page=1&subtitle=0'
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url)
         data = response.json()
-        #print(data)
-    return await get_info(data, proxies, "random")
-async def choose_from_hotest_asmr_100(proxy=None):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
+        # print(data)
+    return await get_info(data, proxies)
+
+
+async def choose_from_latest_asmr_100(proxy=None):
+    if proxy is not None and proxy != "":
+        proxies = {"http://": proxy, "https://": proxy}
     else:
-        proxies=None
-    url="https://api.asmr-200.com/api/recommender/popular"
-    payload={"keyword":" ","page":1,"subtitle":0,"localSubtitledWorks":[],"withPlaylistStatus":[]}
+        proxies = None
+    url = 'https://api.asmr-200.com/api/works?order=create_date&sort=desc&page=1&subtitle=0'
     async with httpx.AsyncClient(proxies=proxies) as client:
-        response = await client.post(url,json=payload)
+        response = await client.get(url)
+        data = response.json()
+        # print(data)
+    return await get_info(data, proxies, "random")
+
+
+async def choose_from_hotest_asmr_100(proxy=None):
+    if proxy is not None and proxy != "":
+        proxies = {"http://": proxy, "https://": proxy}
+    else:
+        proxies = None
+    url = "https://api.asmr-200.com/api/recommender/popular"
+    payload = {"keyword": " ", "page": 1, "subtitle": 0, "localSubtitledWorks": [], "withPlaylistStatus": []}
+    async with httpx.AsyncClient(proxies=proxies) as client:
+        response = await client.post(url, json=payload)
         data = response.json()
         return await get_info(data, proxies, "random")
+
+
+async def parse_from_asmr_id(id, proxy=None):
+    """
+    解析指定url中的asmr资源
+    :param url:
+    :param proxy:
+    :return:
+    """
+    url = f"https://api.asmr-200.com/api/workInfo/{id}"
+    if proxy is not None and proxy != "":
+        proxies = {"http://": proxy, "https://": proxy}
+    else:
+        proxies = None
+    async with httpx.AsyncClient(proxies=proxies) as client:
+        response = await client.get(url)
+        return await get_info(response.json(), proxies, "download")

@@ -85,7 +85,7 @@ async def download_file(url,path,proxy=None):
         proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
-    async with httpx.AsyncClient(proxies=proxies) as client:
+    async with httpx.AsyncClient(proxies=proxies,timeout=None) as client:
         response = await client.get(url)
         with open(path, 'wb') as f:
             f.write(response.content)
