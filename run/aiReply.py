@@ -45,7 +45,9 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def aiReply(event: GroupMessageEvent):
         if event.message_chain.has(Text):
-            t=event.message_chain.get(Text)[0].text
+            t=event.message_chain.get(Text)[0].text.strip()
+        else:
+            t=""
         #print(event.processed_message)
         #print(event.message_id,type(event.message_id))
         user_info = await get_user(event.user_id, event.sender.nickname)
