@@ -369,7 +369,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
             check_text=1
             check_img = 0
             if content[0][0].startswith("title:"):
-                line_height = font.getbbox("A")[3]
+                line_height = font_tx_pil.getbbox("A")[3]
             else:
                 line_height = font.getbbox("A")[3]
             total_height += len(content) * line_height + padding + padding * (len(content) - 1) * 0.8
@@ -465,9 +465,9 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 if avatar_json['card_path']:
                     if layer == 2:padding_right=400
                     else:padding_right=450
-                    card_size = avatar_size*5
+                    card_size = avatar_size
                     card = Image.open(avatar_json['card_path']).convert("RGBA")
-                    card.thumbnail((card_size, card_size))
+                    card.thumbnail((card_size*5, card_size*1.32))
                     width, height = card.size
                     canvas.paste(card, (int(padding_x_tx + padding_right + int(438- width)), int(current_y-15)), card)
                     if avatar_json['card_is_fan']:
