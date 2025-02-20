@@ -1,3 +1,5 @@
+import re
+
 import httpx
 import base64
 import io
@@ -7,7 +9,7 @@ from PIL import Image
 
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.utils.random_str import random_str
-
+BASE64_PATTERN = re.compile(r"^data:([a-zA-Z0-9]+/[a-zA-Z0-9-.+]+);base64,([A-Za-z0-9+/=]+)$")
 async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=1.3,max_tokens=2560):
     if proxy is not None and proxy !="":
         proxies={"http://": proxy, "https://": proxy}
@@ -48,6 +50,14 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 url = i["mface"]["url"]
             else:
                 url = i["image"]["url"]
+            base64_match = BASE64_PATTERN.match(url)
+            if base64_match:
+                img_base64 = base64_match.group(2)
+                prompt_elements.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}
+                })
+                continue
             prompt_elements.append({"type":"text","text": f"system提示: 当前图片的url为{url}"})
             # 下载图片转base64
             async with httpx.AsyncClient(timeout=60) as client:

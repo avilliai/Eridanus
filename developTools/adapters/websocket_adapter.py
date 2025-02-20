@@ -115,7 +115,7 @@ class WebSocketBot:
 
     async def _connect(self):
         try:
-            self.websocket = await websockets.connect(self.uri)
+            self.websocket = await websockets.connect(self.uri,max_size=None)
             self.logger.info_msg("WebSocket 连接已建立")
         except Exception as e:
             self.logger.error(f"WebSocket 连接出现错误: {e}")
