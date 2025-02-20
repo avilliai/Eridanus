@@ -68,7 +68,7 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
 
             await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
             try:
-                img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",True,proxy=config.api["proxy"]["http_proxy"])
+                img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",config.settings["asmr"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
             except Exception as e:
                 bot.logger.error(f"download_img error:{e}")
                 img=r['mainCoverUrl']
@@ -121,7 +121,7 @@ async def check_latest_asmr(bot,event,config):
                     i = random.choice(r['media_urls'])
                     await bot.send_group_message(group_id, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
                     try:
-                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png", True,
+                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png", config.settings["asmr"]["gray_layer"],
                                                  proxy=config.api["proxy"]["http_proxy"])
                     except Exception as e:
                         bot.logger.error(f"download_img error:{e}")
