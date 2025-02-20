@@ -8,6 +8,7 @@ from plugins.utils.utils import download_img
 
 async def call_send_mface(bot,event,config,summary):
     await bot.send(event,Image(file=f"data/pictures/Mface/{summary}"))
+    return {"status": "successfully sent mface"}
 def main(bot,config):
 
     @bot.on(GroupMessageEvent)
