@@ -33,7 +33,8 @@ dynamic_imports = {
     "run.streaming_media.youtube": ["download_video"],
     "run.aiDraw": ["call_text2img", "call_aiArtModerate"],
     "run.scheduledTasks": ["operate_group_push_tasks"],
-    "run.resource_search.engine_search": ["search_net", "read_html"]
+    "run.resource_search.engine_search": ["search_net", "read_html"],
+    "run.system_plugin.Mface_Record": ["call_send_mface"]
 }
 
 # 存储成功加载的函数

@@ -1,3 +1,4 @@
+import os
 import random
 
 import asyncio
@@ -14,12 +15,14 @@ from developTools.message.message_components import Record, Text, Node, At
 
 
 def main(bot,config):
+
       # 持续注意用户发言
     if config.api["llm"]["func_calling"]:
         if config.api["llm"]["model"] == "gemini":
             tools = gemini_func_map()
         else:
             tools = openai_func_map()
+
     else:
         tools = None
     if config.api["llm"]["联网搜索"]:
@@ -35,6 +38,7 @@ def main(bot,config):
                     tools
                 ]
                 print(tools)
+
 
     locks = {}
     queues = {}

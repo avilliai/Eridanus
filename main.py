@@ -40,6 +40,7 @@ plugin_modules = [
 
     ("user_data", "run.user_data"),
     ("api_implements", "run.api_implements"),
+    ("Mface_Record","run.system_plugin.Mface_Record"),
     #群管/自管
     ("self_Manager", "run.groupManager.self_Manager"),
     ("group_manager", "run.groupManager.group_manager"),
