@@ -33,25 +33,35 @@ if config.basic_config["webui"]:
                      blocked_loggers=["DEBUG", "INFO_MSG","warning"])
 #插件列表
 plugin_modules = [
+    #基础功能？
     ("aiDraw", "run.aiDraw"),
-    ("basic_plugin", "run.basic_plugin"),
-    ("resource_search", "run.resource_search.resource_search"),
     ("aiReply", "run.aiReply"),
+    ("basic_plugin", "run.basic_plugin"),
+
     ("user_data", "run.user_data"),
     ("api_implements", "run.api_implements"),
+    ("Mface_Record","run.system_plugin.Mface_Record"),
+    #群管/自管
     ("self_Manager", "run.groupManager.self_Manager"),
     ("group_manager", "run.groupManager.group_manager"),
     ("word_cloud", "run.groupManager.word_cloud"),
     ("wifeyouwant", "run.groupManager.wifeyouwant"),
+    #acg信息
     ("galgame", "run.acg_infromation.galgame"),
     ("bangumi", "run.acg_infromation.bangumi"),
-    ("iwara", "run.resource_search.iwara"),
+    ("character_identify", "run.acg_infromation.character_identify"),
+    #流媒体相关
     ("youtube", "run.streaming_media.youtube"),
     ("bilibili", "run.streaming_media.bilibili"),
     ("Link_parsing", "run.streaming_media.Link_parsing"),
+    ("iwara", "run.streaming_media.iwara"),
+    #资源搜索
+    ("resource_search", "run.resource_search.resource_search"),
     ("engine_search", "run.resource_search.engine_search"),
+    #游戏服务
     ("blue_archive", "run.anime_game_service.blue_archive"),
-    ("character_identify","run.acg_infromation.character_identify")
+    ("steam_service", "run.anime_game_service.steam_service"),
+
 
 ]
 

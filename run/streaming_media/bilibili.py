@@ -87,8 +87,8 @@ def bili_main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def _(event):
-        if event.raw_message.startswith("看看动态"):
-            target_id = event.raw_message.split("看看动态")[1]
+        if event.pure_text.startswith("看看动态"):
+            target_id = event.pure_text.split("看看动态")[1]
             bot.logger.info(f"Fetching dynamic id of {target_id}")
             dynamic_id1,dynamic_id2=await fetch_latest_dynamic_id(target_id)
             bot.logger.info(f"Dynamic id of {target_id} is {dynamic_id1} {dynamic_id2}")
@@ -98,8 +98,8 @@ def bili_main(bot,config):
             await bot.send(event,Image(file=p))
     @bot.on(GroupMessageEvent)
     async def _(event):
-        if event.raw_message.startswith("/bili add "):
-            target_id = event.raw_message.split("/bili add ")[1] #注意是str
+        if event.pure_text.startswith("/bili add "):
+            target_id = event.pure_text.split("/bili add ")[1] #注意是str
             try:
                 target_id = int(target_id)
             except ValueError:
@@ -107,8 +107,8 @@ def bili_main(bot,config):
                 return
             bot.logger.info_func(f"添加动态关注 群号：{event.group_id} 关注id: {target_id}")
             await operate_group_push_tasks(bot,event,config,task_type="bilibili",operation=True,target_uid=int(target_id))
-        elif event.raw_message.startswith("/bili remove "):
-            target_id = event.raw_message.split("/bili remove ")[1] #注意是str
+        elif event.pure_text.startswith("/bili remove "):
+            target_id = event.pure_text.split("/bili remove ")[1] #注意是str
             try:
                 target_id = int(target_id)
             except ValueError:

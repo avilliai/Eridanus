@@ -48,6 +48,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
+    if tools is not None and config.api["llm"]["表情包发送"]:
+        tools=await add_send_mface(tools,config)
     if not system_instruction:
         if config.api["llm"]["system"]:
             system_instruction = await read_chara(user_id, config.api["llm"]["system"])
@@ -377,6 +379,47 @@ async def add_self_rep(bot,event,config,reply_message):
         logger.error(f"Error occurred when adding self-reply: {e}")
 
 
+async def add_send_mface(tools,config):
+    mface_list = os.listdir("data/pictures/Mface")
+    if config.api["llm"]["model"] == "gemini":
 
+        tools["function_declarations"].append({
+            "name": "call_send_mface",
+            "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得直接加入回复消息中。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "type": "string",
+                        "description": f"表情包。可选{mface_list}"
+                    }
+                },
+                "required": [
+                    "summary"
+                ]
+            }
+        }, )
+    else:
+        tools.append({
+            "type": "function",
+            "function": {
+                "name": "call_send_mface",
+                "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得直接加入回复消息中。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "summary": {
+                            "type": "string",
+                            "description": f"表情包。可选{mface_list}"
+                        }
+                    },
+                    "required": [
+                        "summary"
+                    ],
+                    "additionalProperties": False
+                }
+            }
+        })
+    return tools
 
 #asyncio.run(openaiRequest("1"))

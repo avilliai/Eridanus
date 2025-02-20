@@ -23,14 +23,18 @@ dynamic_imports = {
     ],
     "run.groupManager.nailong_get": ["operate_group_censor"],
     "run.resource_search.resource_search": [
-        "search_book_info", "call_asmr", "call_download_book"
+        "search_book_info", "call_asmr", "call_download_book","call_jm"
+    ],
+    "run.anime_game_service.func_collection":[
+        "anime_game_service_func_collection"
     ],
     "run.acg_infromation.bangumi": ["call_bangumi_search"],
     "run.acg_infromation.character_identify": ["call_character_identify"],
     "run.streaming_media.youtube": ["download_video"],
     "run.aiDraw": ["call_text2img", "call_aiArtModerate"],
     "run.scheduledTasks": ["operate_group_push_tasks"],
-    "run.resource_search.engine_search": ["search_net", "read_html"]
+    "run.resource_search.engine_search": ["search_net", "read_html"],
+    "run.system_plugin.Mface_Record": ["call_send_mface"]
 }
 
 # 存储成功加载的函数

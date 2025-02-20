@@ -27,3 +27,5 @@ basic_plugin:
   youtube:
     download_audio_level: 0  #下载音频所需权限等级
     download_video_level: 30  #下载视频所需权限等级
+  asmr:
+    download_audio_level: 0  #下载音频所需权限等级

@@ -1,3 +1,4 @@
+import os
 import random
 
 import asyncio
@@ -14,12 +15,14 @@ from developTools.message.message_components import Record, Text, Node, At
 
 
 def main(bot,config):
+
       # 持续注意用户发言
     if config.api["llm"]["func_calling"]:
         if config.api["llm"]["model"] == "gemini":
             tools = gemini_func_map()
         else:
             tools = openai_func_map()
+
     else:
         tools = None
     if config.api["llm"]["联网搜索"]:
@@ -36,6 +39,7 @@ def main(bot,config):
                 ]
                 print(tools)
 
+
     locks = {}
     queues = {}
     '''@bot.on(GroupMessageEvent) #测试异步
@@ -44,43 +48,47 @@ def main(bot,config):
         await bot.send(event,"async task over")'''
     @bot.on(GroupMessageEvent)
     async def aiReply(event: GroupMessageEvent):
+        if event.message_chain.has(Text):
+            t=event.message_chain.get(Text)[0].text.strip()
+        else:
+            t=""
         #print(event.processed_message)
         #print(event.message_id,type(event.message_id))
         user_info = await get_user(event.user_id, event.sender.nickname)
-        if event.raw_message=="退出":
+        if event.pure_text=="退出":
             await end_chat(event.user_id)
             await bot.send(event,"那就先不聊啦~")
-        elif event.raw_message=="/clear":
+        elif event.pure_text=="/clear" or t=="/clear":
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
-        elif event.raw_message=="/clear group":
+        elif event.pure_text=="/clear group":
             await clear_group_messages(event.group_id)
             await bot.send(event,"本群消息已清除",True)
-        elif event.raw_message=="/clearall" and event.user_id == config.basic_config["master"]["id"]:
+        elif event.pure_text=="/clearall" and event.user_id == config.basic_config["master"]["id"]:
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
-        elif event.raw_message.startswith("/clear") and event.user_id == config.basic_config["master"]["id"] and event.get("at"):
+        elif event.pure_text.startswith("/clear") and event.user_id == config.basic_config["master"]["id"] and event.get("at"):
             await delete_user_history(event.get("at")[0]["qq"])
             await bot.send(event, [Text("已清理"),At(event.get('at')[0]['qq']),Text(" 的对话记录")])
-        elif event.raw_message.startswith("/切人设 ") and user_info[6] >= config.controller["core"]["ai_change_character"]:
-            chara_file = str(event.raw_message).replace("/切人设 ", "")
+        elif event.pure_text.startswith("/切人设 ") and user_info[6] >= config.controller["core"]["ai_change_character"]:
+            chara_file = str(event.pure_text).replace("/切人设 ", "")
             if chara_file == "0":
                 reply = await clear_user_chara(event.user_id)
             else:
                 reply = await change_folder_chara(chara_file, event.user_id)
             await bot.send(event, reply, True)
-        elif event.raw_message.startswith("/全切人设 ") and event.user_id == config.basic_config["master"]["id"]:
-            chara_file = str(event.raw_message).replace("/全切人设 ", "")
+        elif event.pure_text.startswith("/全切人设 ") and event.user_id == config.basic_config["master"]["id"]:
+            chara_file = str(event.pure_text).replace("/全切人设 ", "")
             if chara_file == "0":
                 reply = await clear_all_users_chara()
             else:
                 reply = await set_all_users_chara(chara_file)
             await bot.send(event, reply, True)
-        elif event.raw_message=="/查人设":
-            chara_file = str(event.raw_message).replace("/查人设", "")
+        elif event.pure_text=="/查人设":
+            chara_file = str(event.pure_text).replace("/查人设", "")
             all_chara = await get_folder_chara()
             await bot.send(event, all_chara)
-        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.raw_message),config.api["llm"]["prefix"]) or await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event):
+        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.pure_text),config.api["llm"]["prefix"]) or await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event):
             bot.logger.info(f"接受消息{event.processed_message}")
             user_info = await get_user(event.user_id, event.sender.nickname)
             if not user_info[6] >= config.controller["core"]["ai_reply_group"]:
@@ -137,10 +145,10 @@ def main(bot,config):
     async def aiReply(event):
       # print(event.processed_message)
       # print(event.message_id,type(event.message_id))
-      if event.raw_message == "/clear":
+      if event.pure_text == "/clear":
           await delete_user_history(event.user_id)
           await bot.send(event, "历史记录已清除", True)
-      elif event.raw_message == "/clearall" and event.user_id == config.basic_config["master"]["id"]:
+      elif event.pure_text == "/clearall" and event.user_id == config.basic_config["master"]["id"]:
           await clear_all_history()
           await bot.send(event, "已清理所有用户的对话记录")
       else:

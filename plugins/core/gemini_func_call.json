@@ -1,6 +1,49 @@
 {
         "function_declarations": [
             {
+                "name": "call_jm",
+                "description": "jmcomic漫画查询、预览、下载。“验车”是预览的另一种称呼",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {
+                            "type": "string", "enum": ["preview","download","search"],"description": "预览和下载需要comic_id，搜索需要query_target"
+                        },
+                        "comic_id": {
+                            "type": "integer",
+                            "description": "漫画id。预览和下载时使用"
+                        },
+                        "serach_topic": {
+                            "type": "string",
+                            "description": "搜索关键字"
+                        }
+                    },
+                    "required": [
+                        "mode"
+                    ]
+                }
+            },
+            {
+                "name": "anime_game_service_func_collection",
+                "description": "调用游戏查询服务的功能集合。",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "m_type": {
+                            "type": "string", "enum": ["blue_archive","steam"],"description": "blue_archive：碧蓝档案游戏攻略查询(角色、关卡) ；steam：Steam游戏查询"
+                        },
+                        "query_target": {
+                            "type": "string",
+                            "description": "查询目标，如游戏名称、游戏角色名称等"
+                        }
+                    },
+                    "required": [
+                        "m_type",
+                        "query_target"
+                    ]
+                }
+            },
+            {
                 "name": "send_contract",
                 "description": "发送管理员的联系方式"
             },
@@ -132,14 +175,14 @@
                     "type": "object",
                     "properties": {
                         "type": {
-                            "type": "string", "enum": ["video","audio"],"description": "下载类型"
+                            "type": "string", "enum": ["video","audio"],"description": "下载类型。asmr100平台只能下载audio"
                         },
                         "url": {
                             "type": "string",
-                            "description": "视频的链接地址"
+                            "description": "视频/音频的链接地址"
                         },
                         "platform": {
-                            "type": "string", "enum": ["youtube","bilibili"],"description": "视频的来源平台。域名为b23.tv的为bilibili"
+                            "type": "string", "enum": ["youtube","bilibili","asmr100"],"description": "视频的来源平台。域名为b23.tv的为bilibili"
                         }
                     },
                     "required": [

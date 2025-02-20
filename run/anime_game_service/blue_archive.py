@@ -13,17 +13,17 @@ from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageSt
 
 
 
-def main(bot, logger):
+def main(bot, config):
     logger=bot.logger
 
 
 
     @bot.on(GroupMessageEvent)
     async def selectMission(event: GroupMessageEvent):
-        if str(event.raw_message).startswith("/攻略 "):
-            url = event.raw_message.replace("/攻略 ", "")
-        elif event.raw_message.startswith("/arona "):
-            url = event.raw_message.replace("/arona ", "")
+        if str(event.pure_text).startswith("/攻略 "):
+            url = event.pure_text.replace("/攻略 ", "")
+        elif event.pure_text.startswith("/arona "):
+            url = event.pure_text.replace("/arona ", "")
         else:
             return
         logger.info_func("查询攻略：" + url)
@@ -72,14 +72,14 @@ def main(bot, logger):
 
     @bot.on(GroupMessageEvent)
     async def addSUBgroup(event: GroupMessageEvent):
-        if event.raw_message == "/订阅日服":
+        if event.pure_text == "/订阅日服":
             a = "日服"
-        elif event.raw_message == "/订阅国际服":
+        elif event.pure_text == "/订阅国际服":
             a = "国际服"
-        elif event.raw_message == "/订阅国服":
+        elif event.pure_text == "/订阅国服":
             a = "国服"
         else:
-            if event.raw_message.startswith("/订阅"):
+            if event.pure_text.startswith("/订阅"):
                 await bot.send(event, "无效的服务器")
                 return
             else:
@@ -104,7 +104,7 @@ def main(bot, logger):
 
     @bot.on(GroupMessageEvent)
     async def aronad(event):
-        if event.raw_message == "/arona" or event.raw_message == "/攻略":
+        if event.pure_text == "/arona" or event.pure_text == "/攻略":
             url = "杂图"
             logger.info_func("查询攻略：" + url)
             try:

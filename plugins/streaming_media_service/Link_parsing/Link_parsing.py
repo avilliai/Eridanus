@@ -33,16 +33,18 @@ from bilibili_api import settings
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 settings.http_client = settings.HTTPClient.HTTPX
+import random
 
 json_init={'status':False,'content':{},'reason':{},'pic_path':{},'url':{},'video_url':False,'soft_type':False}
 filepath_init=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(bili_init))))}/data/cache/'
 GLOBAL_NICKNAME='Bot'
 if not os.path.exists(filepath_init):  # 初始化检测文件夹
     os.makedirs(filepath_init)
-
+from plugins.resource_search_plugin.engine_search import html_read
 logger=get_logger()
 
-
+name_qq_list={'漫朔':1270858640,'枫与岚':2319804644,'Lemony':2424378897}
+card_url_list=['https://gal.manshuo.ink/usr/uploads/galgame/img/zhenhong.png']
 
 async def bilibili(url,filepath=None,is_twice=None):
     """
@@ -97,7 +99,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
 
         if is_opus is False:#若判断为图文则换另一种方法读取
-            logger.info('not opus')
+            #logger.info('not opus')
             dynamic_info = await Opus(dynamic_id, credential).get_info()
             avatar_json = await info_search_bili(dynamic_info, is_opus,filepath=filepath)
             tags = ''
@@ -154,7 +156,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         if is_opus is True:
             dynamic_info = await dy.get_info()
 
-            logger.info('is opus')
+            #logger.info('is opus')
             orig_check=1        #判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -785,6 +787,152 @@ async def twitter(url,filepath=None,proxy=None):
         return json_check
         #res = await download_video(x_url_res, proxy)
 
+
+async def Galgame_manshuo(url,filepath=None):
+    contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['status'] = True
+    json_check['video_url'] = False
+    if filepath is None: filepath = filepath_init
+    link = (re.findall(r"https?://[^\s\]\)]+", url))[0]
+    #print(f'{link}')
+    context = await html_read(link)
+    context = context.split("\n")
+    context_check_middle=''
+
+    if 'gal.manshuo.ink' in url:
+        type_software='世伊Galgame论坛'
+        type_color=(251, 114, 153, 80)
+        avatar_name = '世伊Galgame论坛'
+        json_check['soft_type'] = '世伊Galgame论坛'
+    elif'www.hikarinagi.com' in url:
+        type_software = 'Hikarinagi论坛'
+        type_color = (102, 204, 255, 80)
+        avatar_name = 'Hikarinagi社区'
+        json_check['soft_type'] = 'Hikarinagi论坛'
+    elif 'www.mysqil.com' in url:
+        type_software = '有希日记'
+        type_color = (241, 87, 178, 80)
+        avatar_name = '有希日记 - 读书可以改变人生！'
+        json_check['soft_type'] = '有希日记'
+    Title=''
+    avatar_name_flag=0
+    time_flag=0
+    desc_flag=0
+    desc=''
+    desc_number=0
+    hikarinagi_flag=0
+    time_gal='未知'
+    links_url=None
+    for context_check in context:
+        #print(context_check)
+        if time_flag ==1:
+            time_flag=2
+            time_gal=context_check.replace(" ", "")
+            if '[' in context_check:
+                time_flag = 1
+        if context_check_middle !='':
+            if '发表于' in context_check :
+                Title=context_check_middle.replace(" ", "")
+                time_flag=1
+            elif ('[avatar]' in context_check) and time_flag==0:
+                Title=context_check_middle.replace(" ", "")
+                time_flag=1
+        context_check_middle=context_check
+
+        if '作者:' in context_check or '[avatar]' in context_check:
+            avatar_name_flag=1
+        elif avatar_name_flag==1:
+            avatar_name_flag=0
+            match = re.search(r"\[(.*?)\]", context_check)
+            if match:
+                avatar_name=match.group(1).replace(" ", "")
+        if '故事介绍' in context_check or '<img src="https://img-static.hikarinagi.com/uploads/2024/08/aca2d187ca20240827180105.jpg"' in context_check:
+            desc_flag=1
+        elif '[关于](' in context_check and time_flag==2:
+            desc_flag=3
+        elif 'Hello！欢迎来到有希日记！' in context_check:
+            desc_flag= 9
+        elif 'Staff' in context_check:
+            desc_flag=0
+        elif desc_flag==1:
+            context_check=context_check.replace(" ", "")
+            if not ('https:'in context_check or 'data:image/svg+xml' in context_check or '插画欣赏' in context_check):
+                for i in context_check:
+                    desc_number+=1
+                if desc_number > 200:
+                    desc_flag = 0
+                    desc +=f'{context_check}…\n'
+                else:
+                    desc += f'{context_check}\n'
+        elif desc_flag != 1:
+            desc_flag-=1
+        flag = 0
+
+        if 'https://gal.manshuo.ink/usr/uploads/galgame/' in context_check:
+            #print(context_check)
+            for name_check in {'chara', 'title_page', '图片'}:
+                if f'{name_check}' in context_check: flag = 1
+            if flag == 1: continue
+            links = re.findall(r"https?://[^\s\]\)]+", context_check)
+            links_url=links[0]
+        elif 'https://img-static.hikarinagi.com/uploads/' in context_check:
+            if hikarinagi_flag == 0:
+                links_url = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
+                Title = context_check.replace(" ", "").replace(f"{links_url}", "").replace("[", "").replace("]", "").replace(" - Hikarinagi", "").replace("(", "").replace(")", "")
+                hikarinagi_flag=1
+        elif 'https://www.mysqil.com/wp-content/uploads/' in context_check:
+            if hikarinagi_flag == 0:
+                links_url = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
+                hikarinagi_flag=1
+
+    #print(links_url)
+    if links_url is None:
+        try:
+            for context_check in context:
+                if 'https://gal.manshuo.ink/usr/uploads/' in context_check:
+                    for name_check in {'chara', 'title_page', '图片'}:
+                        if f'{name_check}' in context_check: flag = 1
+                    if flag == 1: continue
+                    links = re.findall(r"https?://[^\s\]\)]+", context_check)
+                    links_url = links[0]
+                    break
+        except:
+            pass
+        finally:
+            if links_url is None:
+                links_url='https://gal.manshuo.ink/usr/uploads/galgame/zatan.png'
+    contents.append(f"title:{Title}")
+    contents.append(desc)
+    contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(links_url, f'{filepath}'))]))
+
+    if avatar_name in name_qq_list:
+        for name_check in name_qq_list:
+            if avatar_name in name_check:
+                qq_number=name_qq_list[name_check]
+        avatar_path_url=f"https://q1.qlogo.cn/g?b=qq&nk={qq_number}&s=640"
+    elif 'www.mysqil.com' in url:
+        avatar_path_url = f"https://q1.qlogo.cn/g?b=qq&nk=3231515355&s=640"
+    else:
+        avatar_path_url='https://gal.manshuo.ink/usr/uploads/galgame/img_master.jpg'
+
+
+    avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(avatar_path_url, f'{filepath}'))]))[0]
+
+
+    json_dy = {'status': False, 'pendant_path': False, 'card_path': False, 'card_number': False, 'card_color': False,
+               'card_is_fan': False}
+
+    card_url=card_url_list[random.randint(0,len(card_url_list)-1)]
+    json_dy['card_path']=(await asyncio.gather(*[asyncio.create_task(download_img(card_url, f'{filepath}'))]))[0]
+    out_path = draw_adaptive_graphic_and_textual(contents, avatar_path=avatar_path, name=avatar_name,
+                                                 Time=f'{time_gal}', type=11,
+                                                 filepath=filepath, type_software=type_software,avatar_json=json_dy,
+                                                 color_software=type_color, output_path_name=f'{int(time.time())}',)
+    json_check['pic_path'] = out_path
+    return json_check
+
+
 async def download_video_link_prising(json,filepath=None,proxy=None):
     if filepath is None:filepath = filepath_init
     video_json={}
@@ -831,10 +979,13 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
             link_prising_json=await xiaohongshu(url, filepath=filepath)
         elif 'x.com' in url:
             link_prising_json=await twitter(url, filepath=filepath, proxy=proxy)
+        elif 'gal.manshuo.ink' in url or 'www.hikarinagi.com' in url or 'www.mysqil.com' in url:
+            link_prising_json = await Galgame_manshuo(url, filepath=filepath)
+
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-
+        traceback.print_exc()
         return json_check
     if link_prising_json:
         if type == 'dynamic_check':
@@ -848,18 +999,26 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                 "%Y-%m-%d %H:%M",
                 "%d-%m-%Y %H:%M",
                 "%Y.%m.%d %H:%M",
+                "%Y年%m月%d日",
+                "%Y/%m/%d",
+                "%Y-%m-%d",
+                "%d-%m-%Y",
+                "%Y.%m.%d",
             ]
 
             for fmt in possible_formats:
                 try:
                     # 尝试解析日期字符串
-                    check_time=datetime.strptime(time_check, fmt)
-                    if check_time != datetime.now().date():
+                    check_time=datetime.strptime(time_check, fmt).strftime("%Y-%m-%d")
+                    #print(f"check_time:{check_time}\nnow:{datetime.now().date()}")
+                    if str(check_time) != str(datetime.now().date()):
                         link_prising_json['status'] = False
-                        #print(f"时间不匹配，拒绝发送{link_prising_json['time']}")
+                        link_prising_json['check_time']=check_time
+                        #print(f"时间不匹配，拒绝发送 {link_prising_json['time']}\ncheck_time:{check_time}\ndatetime:{datetime.now().date()}")
                     break
                 except ValueError:
                     # 如果解析失败，继续尝试下一个格式
+                    #traceback.print_exc()
                     continue
 
 
@@ -887,7 +1046,11 @@ if __name__ == "__main__":#测试用，不用管
     #url='https://b23.tv/bicqrKN'
     #url='https://b23.tv/t9YeH0m'
     url='【【明日方舟抽卡】王牌！主播在商店花300凭证单抽出了烛煌！黑子说话！】https://www.bilibili.com/video/BV1dYfUYDE96?vd_source=5e640b2c90e55f7151f23234cae319ec'
-    url='https://b23.tv/pTZYuNq'
+    url='https://v.douyin.com/iPhd561x'
+    url='https://gal.manshuo.ink/archives/297/'
+    url = 'https://www.hikarinagi.com/p/21338'
+    url='https://www.mysqil.com/4605.html'
+    #url='https://t.bilibili.com/1020450668700237844?share_source=pc_native'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
 

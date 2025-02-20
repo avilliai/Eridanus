@@ -10,6 +10,7 @@ import aiohttp
 import httpx
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
+import requests
 
 import sys
 import asyncio
@@ -92,6 +93,8 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
     :param proxy: 可选，下载图片时使用的代理服务器的URL。
     :return: 保存图片的路径。
     """
+    if headers is None:
+        headers = COMMON_HEADER
     def crop_center_square(image):
         width, height = image.size
         min_edge = min(width, height)
@@ -117,6 +120,11 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
             response = await client.get(url)
             if response.status_code  == 200:
+                with open(path, 'wb') as f:
+                    f.write(response.content)
+                return path
+            else:
+                response = requests.get(url)
                 with open(path, 'wb') as f:
                     f.write(response.content)
                 return path

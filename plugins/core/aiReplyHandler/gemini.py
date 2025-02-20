@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+import re
 
 import httpx
 from PIL import Image
@@ -51,6 +52,7 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
 """
 gemini标准prompt构建
 """
+BASE64_PATTERN = re.compile(r"^data:([a-zA-Z0-9]+/[a-zA-Z0-9-.+]+);base64,([A-Za-z0-9+/=]+)$")
 async def gemini_prompt_elements_construct(precessed_message,bot=None,func_result=False,event=None):
     prompt_elements=[]
 
@@ -64,6 +66,11 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                     url=i["mface"]["url"]
                 else:
                     url=i["image"]["url"]
+                base64_match = BASE64_PATTERN.match(url)
+                if base64_match:
+                    img_base64 = base64_match.group(2)
+                    prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
+                    continue
                 prompt_elements.append({"text": f"system提示: 当前图片的url为{url}"})
                 # 下载图片转base64
                 async with httpx.AsyncClient(timeout=60) as client:
@@ -89,8 +96,14 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
 
         elif "record" in i:
             origin_voice_url=i["record"]["file"]
+            base64_match = BASE64_PATTERN.match(origin_voice_url)
+            if base64_match:
+                mime_type = base64_match.group(1)
+                img_base64 = base64_match.group(2)
+                prompt_elements.append({"inline_data": {"mime_type": "audio/mp3", "data": img_base64}})
+                continue
             r=await bot.get_record(origin_voice_url)
-            print(r)
+
             mp3_filepath=r["data"]["file"]
             with open(mp3_filepath, "rb") as mp3_file:
                 mp3_data = mp3_file.read()
@@ -100,6 +113,12 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
             #prompt_elements.append({"type":"voice","voice":i["voice"]})
         elif "video" in i:
             video_url=i["video"]["url"]
+            base64_match = BASE64_PATTERN.match(video_url)
+            if base64_match:
+                mime_type = base64_match.group(1)
+                img_base64 = base64_match.group(2)
+                prompt_elements.append({"inline_data": {"mime_type": "video/mp4", "data": img_base64}})
+                continue
             try:
                 video=await bot.get_video(video_url,f"data/pictures/cache/{random_str()}.mp4")
 

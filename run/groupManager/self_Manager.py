@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
@@ -115,10 +116,12 @@ async def garbage_collection(bot,event,config):
     return f"本次清理了 {total_size:.2f} MB 的缓存"
 async def report_to_master(bot,event,config):
     mes_type="bad_content"
+    if hasattr(event,"group_id"):
+        group_id=event.group_id
+    else:
+        group_id=None
     if mes_type=="bad_content":
-
-        r=f"违规内容上报\n发送者id为{event.user_id}"
-
+        r=f"违规内容上报\n发送者id为{event.user_id} 群号为{group_id}"
     elif mes_type=="ideas":
         r = f"反馈意见上报\n发送者id为{event.user_id}"
     node_li=[]
@@ -157,10 +160,8 @@ async def send(bot,event,config,message):
             elif "video" in i:
                 message_list.append(File(file=i["video"]))
     await bot.send(event,message_list)
-async def send_contract(bot,event,config,target_id=None):
-    if target_id is None:
-        target_id=str(config.basic_config["master"]['id'])
-    await bot.send(event,Contact_user(user_id=target_id))
+async def send_contract(bot,event,config):
+    return {"管理员id": config.basic_config["master"]['id']}
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
@@ -168,18 +169,29 @@ def main(bot,config):
         group_list = group_list["data"]
         friend_list = await bot.get_friend_list()
         friend_list = friend_list["data"]
-        bot.logger.info(f"读取群列表数量: {len(group_list)}")
-        bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
-        await bot.send_friend_message(config.basic_config["master"]['id'], f"启动成功\n当前群数量: {len(group_list)}\n好友数量: {len(friend_list)}")
-        if random.randint(1, 100)<30:
-            await bot.send_friend_message(config.basic_config["master"]['id'], Record(file="data/system/win xp.mp3"))
-        await bot.send_friend_message(config.basic_config["master"]['id'], f"项目地址与文档\nhttps://eridanus-doc.netlify.app/\n本项目源码及一键包完全免费，如您通过付费渠道获得，恭喜你被骗了。")
+        encoded_strings = ['c2FsdF/or7vlj5bnvqTliJfooajmlbDph486IF9zYWx0',
+                           'c2FsdF/or7vlj5blpb3lj4vliJfooajmlbDph486IF9zYWx0',
+                           'c2FsdF/lkK/liqjmiJDlip8K5b2T5YmN576k5pWw6YePOiBfc2FsdA==',
+                           'c2FsdF/lpb3lj4vmlbDph486IF9zYWx0',
+                           'c2FsdF/pobnnm67lnLDlnYDkuI7mlofmoaMKaHR0cHM6Ly9lcmlkYW51cy1kb2MubmV0bGlmeS5hcHAvCuacrOmhueebrua6kOeggeWPiuS4gOmUruWMheWujOWFqOWFjei0ue+8jOWmguaCqOmAmui/h+S7mOi0uea4oOmBk+iOt+W+l++8jOaBreWWnOS9oOiiq+mql+S6huOAgl9zYWx0',
+                           'c2FsdF9kYXRhL3N5c3RlbS93aW4geHAubXAzX3NhbHQ=']
+        def decode_string(s):
+            decoded_bytes = base64.b64decode(s)
+            decoded_string = decoded_bytes.decode('utf-8')
+            return decoded_string[5:-5]
+
+        bot.logger.info(f"{decode_string(encoded_strings[0])}: {len(group_list)}")
+        bot.logger.info(f"{decode_string(encoded_strings[1])} {len(friend_list)}")
+        await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
+        if random.randint(1, 100)<20:
+            await bot.send_friend_message(config.basic_config["master"]['id'], Record(file=f"{decode_string(encoded_strings[5])}"))
+        await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
         while True:
             await garbage_collection(bot,event,config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
     @bot.on(GroupMessageEvent)
     async def _(event):
-        if event.raw_message=="/gc":
+        if event.pure_text=="/gc":
             user_info = await get_user(event.user_id, event.sender.nickname)
             if user_info[6] >= 3:
                 r=await garbage_collection(bot,event,config)
@@ -231,57 +243,57 @@ def main(bot,config):
     async def black_and_white_handler(event):
         await _handler(event)
     async def _handler(event):
-        if event.raw_message.startswith("/bl add "):
+        if event.pure_text.startswith("/bl add "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
             await call_operate_user_blacklist(bot,event,config,target_user_id,True)
-        elif event.raw_message.startswith("/bl remove "):
+        elif event.pure_text.startswith("/bl remove "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
             await call_operate_user_blacklist(bot,event,config,target_user_id,False)
-        elif event.raw_message.startswith("/blgroup add "):
+        elif event.pure_text.startswith("/blgroup add "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的群号")
                 return
             await call_operate_group_blacklist(bot,event,config,target_group_id,True)
-        elif event.raw_message.startswith("/blgroup remove "):
+        elif event.pure_text.startswith("/blgroup remove "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
             except:
                 await bot.send(event, f"请输入正确的群号")
                 return
             await call_operate_group_blacklist(bot,event,config,target_group_id,False)
-        elif event.raw_message.startswith("/wl add "):
+        elif event.pure_text.startswith("/wl add "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
                 await call_operate_user_whitelist(bot,event,config,target_user_id,True)
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
-        elif event.raw_message.startswith("/wl remove "):
+        elif event.pure_text.startswith("/wl remove "):
             try:
-                target_user_id = int(event.raw_message.split(" ")[2])
+                target_user_id = int(event.pure_text.split(" ")[2])
                 await call_operate_user_whitelist(bot,event,config,target_user_id,False)
             except:
                 await bot.send(event, f"请输入正确的用户id")
                 return
-        elif event.raw_message.startswith("/wlgroup add "):
+        elif event.pure_text.startswith("/wlgroup add "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
                 await call_operate_group_whitelist(bot,event,config,target_group_id,True)
             except:
                 await bot.send(event, f"请输入正确的群号")
-        elif event.raw_message.startswith("/wlgroup remove "):
+        elif event.pure_text.startswith("/wlgroup remove "):
             try:
-                target_group_id = int(event.raw_message.split(" ")[2])
+                target_group_id = int(event.pure_text.split(" ")[2])
                 await call_operate_group_whitelist(bot,event,config,target_group_id,False)
             except:
                 await bot.send(event, f"请输入正确的群号")

@@ -1,8 +1,8 @@
 # pyright: reportIncompatibleVariableOverride=false
-from typing import Literal, Optional, Dict, Union, List
+from typing import Literal, Optional, Dict, Union, List, Any
 
 from pydantic import BaseModel, ConfigDict
-from pydantic.v1 import root_validator
+from pydantic.v1 import root_validator, validator
 
 from developTools.event.base import EventBase
 from developTools.message.message_chain import MessageChain
@@ -34,9 +34,15 @@ class Reply(BaseModel):
     message_id: int
     real_id: int
     sender: Sender
-    message: MessageChain
+    message: List[Dict[str, Any]]  # Change the type hint here
 
     model_config = ConfigDict(extra="allow")
+
+    @validator("message", pre=True, always=True)
+    def ensure_message_chain(cls, value):
+        """确保 message 是 MessageChain 实例"""
+        # No change needed here, as value is already a list of dicts
+        return MessageChain(value)
 
 
 class Anonymous(BaseModel):
@@ -69,7 +75,7 @@ class LifecycleMetaEvent(BaseModel):
     meta_event_type: str
     sub_type: str
 # Message Events
-class MessageEvent(EventBase):
+class MessageEvent(BaseModel):
     """消息事件"""
 
     post_type: Literal["message"]
@@ -77,8 +83,8 @@ class MessageEvent(EventBase):
     user_id: int
     message_type: str
     message_id: int
-    message: MessageChain
-    original_message: Optional[MessageChain] = None
+    message: List[Dict[str, Any]]  # Change the type hint here
+    original_message: Optional[list] = None
     _raw_message: str
     font: int
     sender: Sender
@@ -87,6 +93,12 @@ class MessageEvent(EventBase):
 
     processed_message: List[Dict[str, Union[str, Dict]]] = []
 
+    message_chain: MessageChain=[]
+    pure_text: str = ""
+
+    model_config = ConfigDict(extra="allow",arbitrary_types_allowed=True)
+
+
     @property
     def raw_message(self):
         return self._raw_message
@@ -94,7 +106,7 @@ class MessageEvent(EventBase):
     @raw_message.setter
     def raw_message(self, value: str):
         self._raw_message = value
-        if value=="":
+        if value == "":
             self.processed_message = parse_message_2processed_message(self.message)
         else:
             self.processed_message = parse_message_with_cq_codes_to_list(value)
@@ -104,11 +116,12 @@ class MessageEvent(EventBase):
         super().__init__(**kwargs)
         # 如果 raw_message 在初始化时已经赋值，确保 processed_message 被设置
         if hasattr(self, 'raw_message'):
-            if self.raw_message=="":
+            if self.raw_message == "":
                 self.processed_message = parse_message_2processed_message(self.message)
             else:
                 self.processed_message = parse_message_with_cq_codes_to_list(self.raw_message)
-
+        self.message_chain=MessageChain(self.message)
+        self.pure_text=self.message_chain.fetch_text()
     def get(self, message_type: str):
         """
         按指定类型获取 processed_message 中的消息。
