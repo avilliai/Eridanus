@@ -7,8 +7,10 @@ import io
 import httpx
 from PIL import Image
 
+from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
 from plugins.utils.random_str import random_str
+logger=get_logger()
 BASE64_PATTERN = re.compile(r"^data:([a-zA-Z0-9]+/[a-zA-Z0-9-.+]+);base64,([A-Za-z0-9+/=]+)$")
 async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=1.3,max_tokens=2560):
     if proxy is not None and proxy !="":
@@ -74,7 +76,7 @@ async def prompt_elements_construct(precessed_message,bot=None,func_result=False
                 message = await prompt_elements_construct(event_obj.processed_message,bot)
                 prompt_elements.extend(message["content"])
             except Exception as e:
-                bot.logger.warning(f"引用消息解析失败:{e}")
+                logger.warning(f"引用消息解析失败:{e}")
         else:
             prompt_elements.append({"type":"text", "text":str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:

@@ -13,7 +13,6 @@ def main(bot,config):
     global avatar
     avatar=False
 
-
     @bot.on(GroupMessageEvent)
     async def sendLike(event: GroupMessageEvent):
         if event.pure_text=="赞我":

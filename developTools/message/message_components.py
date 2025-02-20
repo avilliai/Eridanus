@@ -3,8 +3,7 @@ from abc import ABC
 from typing import (TYPE_CHECKING, Annotated, Any, ClassVar, Literal, Optional,
                     TypeVar, Union)
 
-from pydantic import BaseModel, Field, TypeAdapter, model_serializer
-
+from pydantic import BaseModel, Field, TypeAdapter, model_serializer, field_validator
 
 OnlyReceive = TypeVar("OnlyReceive", bound=Any)
 OnlySend = TypeVar("OnlySend", bound=Any)
@@ -135,11 +134,12 @@ class Video(MessageComponent):
 
 class At(MessageComponent):
     comp_type: str = "at"
-    qq: int = Field(description="@的 QQ 号，all 表示全体成员")
+    qq: int = Field(default=0,description="@的 QQ 号，all 表示全体成员")
     name: Annotated[Optional[str], OnlySend] = Field(default="",description="昵称")
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    @field_validator("qq", mode="before")
+    def convert_all_to_zero(cls, value):
+        return 0 if value == "all" else value
 
 
 class Rps(MessageComponent):

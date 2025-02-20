@@ -75,7 +75,10 @@ class MessageChain(list):
                 if component_class:
                     #print(f"解析消息: {msg_type}, 原始数据: {msg_data}")
                     #print(str(msg_data))
-                    parsed_messages.append(component_class(**msg_data))
+                    try:
+                        parsed_messages.append(component_class(**msg_data))
+                    except Exception as e:
+                        print(f"解析消息失败: {msg_type}, 原始数据: {msg_data}, 错误信息: {e}")
                 else:
                     print(f"未知消息类型: {msg_type}, 原始数据: {msg}")  # 记录未识别的消息
                     parsed_messages.append(Text(str(msg)))
