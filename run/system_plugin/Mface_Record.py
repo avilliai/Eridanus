@@ -29,5 +29,5 @@ def main(bot,config):
         if event.message_chain.has(At) and event.message_chain.get(At)[0].qq==bot.id:
             pass
             """
-            弄成概率插嘴？？？
+            弄成概率插嘴
             """
