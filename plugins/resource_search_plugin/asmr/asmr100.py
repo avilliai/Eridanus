@@ -5,12 +5,14 @@ import httpx
 
 
 async def get_info(data, proxies=None, mode="default"):
+    print(f"原始数据：{data}")
     if mode == "random":
-        id = random.choice(data["works"])['id']
-        source_id = random.choice(data["works"])['source_id']
-        title = random.choice(data["works"])['title']
-        nsfw = random.choice(data["works"])['nsfw']
-        mainCoverUrl = random.choice(data["works"])['mainCoverUrl']
+        index = random.randint(0, len(data["works"]) - 1)
+        id = data["works"][index]['id']
+        source_id = data["works"][index]['source_id']
+        title = data["works"][index]['title']
+        nsfw = data["works"][index]['nsfw']
+        mainCoverUrl = data["works"][index]['mainCoverUrl']
         new_url = f"https://api.asmr-200.com/api/tracks/{id}?v=1"
     elif mode == "download":
         id = data["id"]
@@ -66,6 +68,7 @@ async def get_info(data, proxies=None, mode="default"):
                 media_urls.append([media_url, son_title])
     final_data = {"id": id, "title": title, "source_url": f"https://asmr.one/work/{source_id}", "nsfw": nsfw,
                   "mainCoverUrl": mainCoverUrl, "media_urls": media_urls}
+    print(f"最终数据：{final_data}")
     return final_data
 
 
