@@ -93,6 +93,8 @@ async def yandex_async(proxies,url):
 
 logger=get_logger()
 async def fetch_results(proxies, url: str,sauceno_api:str) -> Dict[str, Optional[List[Any]]]:
+    if proxies=="":
+        proxies=None
 
     async def _safe_call(func, *args, **kwargs) -> Tuple[str, Optional[List[Any]]]:
         try:
