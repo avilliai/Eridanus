@@ -29,7 +29,7 @@ JMComic:            #禁漫相关功能设置
   autoClearPDF: True #下载后自动清除pdf
   savePath: "data/pictures/benzi"  #下载为pdf的默认保存路径
 asmr:
-  with_url: false  #是否附带原始音频url
+  with_url: false  #是否附带同作品集其他作品的url
   with_file: false #是否合并并发送音频文件
 
 bili_dynamic:     #下面的设置暂不可用，请暂时不要修改

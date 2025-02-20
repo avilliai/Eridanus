@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
@@ -168,12 +169,23 @@ def main(bot,config):
         group_list = group_list["data"]
         friend_list = await bot.get_friend_list()
         friend_list = friend_list["data"]
-        bot.logger.info(f"读取群列表数量: {len(group_list)}")
-        bot.logger.info(f"读取好友列表数量: {len(friend_list)}")
-        await bot.send_friend_message(config.basic_config["master"]['id'], f"启动成功\n当前群数量: {len(group_list)}\n好友数量: {len(friend_list)}")
-        if random.randint(1, 100)<30:
-            await bot.send_friend_message(config.basic_config["master"]['id'], Record(file="data/system/win xp.mp3"))
-        await bot.send_friend_message(config.basic_config["master"]['id'], f"项目地址与文档\nhttps://eridanus-doc.netlify.app/\n本项目源码及一键包完全免费，如您通过付费渠道获得，恭喜你被骗了。")
+        encoded_strings = ['c2FsdF/or7vlj5bnvqTliJfooajmlbDph486IF9zYWx0',
+                           'c2FsdF/or7vlj5blpb3lj4vliJfooajmlbDph486IF9zYWx0',
+                           'c2FsdF/lkK/liqjmiJDlip8K5b2T5YmN576k5pWw6YePOiBfc2FsdA==',
+                           'c2FsdF/lpb3lj4vmlbDph486IF9zYWx0',
+                           'c2FsdF/pobnnm67lnLDlnYDkuI7mlofmoaMKaHR0cHM6Ly9lcmlkYW51cy1kb2MubmV0bGlmeS5hcHAvCuacrOmhueebrua6kOeggeWPiuS4gOmUruWMheWujOWFqOWFjei0ue+8jOWmguaCqOmAmui/h+S7mOi0uea4oOmBk+iOt+W+l++8jOaBreWWnOS9oOiiq+mql+S6huOAgl9zYWx0',
+                           'c2FsdF9kYXRhL3N5c3RlbS93aW4geHAubXAzX3NhbHQ=']
+        def decode_string(s):
+            decoded_bytes = base64.b64decode(s)
+            decoded_string = decoded_bytes.decode('utf-8')
+            return decoded_string[5:-5]
+
+        bot.logger.info(f"{decode_string(encoded_strings[0])}: {len(group_list)}")
+        bot.logger.info(f"{decode_string(encoded_strings[1])} {len(friend_list)}")
+        await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
+        if random.randint(1, 100)<20:
+            await bot.send_friend_message(config.basic_config["master"]['id'], Record(file=f"{decode_string(encoded_strings[5])}"))
+        await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
         while True:
             await garbage_collection(bot,event,config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
