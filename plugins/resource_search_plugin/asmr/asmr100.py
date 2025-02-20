@@ -21,7 +21,9 @@ async def get_info(data,proxies=None,mode="default"):
         response = await client.get(new_url)
         data = response.json()
     media_urls = []
-
+    def get_file_extension(url):
+        if url.endswith('.mp3') or url.endswith('.m4a') or url.endswith('.webm') or url.endswith('.ogg') or url.endswith('.flac') or url.endswith('.wav'):
+            return True
     if isinstance(data, list):
         if "children" in data[0]:
             for i in data[0]['children']:
@@ -32,20 +34,24 @@ async def get_info(data,proxies=None,mode="default"):
                     for j in i['children']:
                         media_url = j['mediaStreamUrl']
                         son_title = j['title']
-                        media_urls.append([media_url, son_title])
+                        if get_file_extension(media_url):
+                            media_urls.append([media_url, son_title])
                 else:
                     media_url = i['mediaStreamUrl']
                     son_title = i['title']
-                    media_urls.append([media_url, son_title])
+                    if get_file_extension(media_url):
+                        media_urls.append([media_url, son_title])
         else:
             media_url = data[0]['mediaStreamUrl']
             son_title = data[0]['title']
-            media_urls.append([media_url, son_title])
+            if get_file_extension(media_url):
+                media_urls.append([media_url, son_title])
     else:
         for i in data['children']:
             media_url = i['mediaStreamUrl']
             son_title = i['title']
-            media_urls.append([media_url, son_title])
+            if get_file_extension(media_url):
+                media_urls.append([media_url, son_title])
     final_data = {"id": id, "title": title, "source_url": f"https://asmr.one/work/{source_id}", "nsfw": nsfw,
                   "mainCoverUrl": mainCoverUrl, "media_urls": media_urls}
     return final_data
