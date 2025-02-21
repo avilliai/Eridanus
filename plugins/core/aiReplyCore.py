@@ -278,6 +278,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if mface_files!=[]:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
+                mface_files=[]
 
             #在函数调用之前触发更新上下文。
             await prompt_database_updata(user_id, response_message, config)
