@@ -417,26 +417,43 @@ async def add_self_rep(bot,event,config,reply_message):
         logger.error(f"Error occurred when adding self-reply: {e}")
 
 
-def remove_mface_filenames(reply_message,directory="data/pictures/Mface"):
+def remove_mface_filenames(reply_message, directory="data/pictures/Mface"):
     """
-    去除文本中的表情包文件名
-    :param text:
-    :param directory:
-    :return:
+    去除文本中的表情包文件名，并允许用户输入 () {} <> 的括号，最终匹配 [] 格式。
+    现在支持 .gif 和 .png 文件。
+
+    :param reply_message: 输入文本
+    :param directory: 表情包目录
+    :return: 处理后的文本和匹配的文件名列表（始终使用[]格式）
     """
     mface_list = os.listdir(directory)
 
-    pattern = r"|".join(map(re.escape, mface_list))
-    matched_files = re.findall(pattern, reply_message)
+    # 仅保留 [xxx].gif 或 [xxx].png 格式的文件名
+    mface_dict = {}
+    for filename in mface_list:
+        if filename.startswith("[") and (filename.endswith("].gif") or filename.endswith("].png") or filename.endswith("].jpg")):
+            core_name = filename[1:-5]
+            mface_dict[core_name] = filename
 
-    # 如果匹配到表情包文件名，则打印它们
+    core_names = map(re.escape, mface_dict.keys())
+    core_pattern = r"|".join(core_names)
+
+    pattern = rf"[\(\[\{{\<]({core_pattern})[\)\]\}}\>]\.(gif|png|jpg)"
+
+    matched_files = []
+    matches = re.findall(pattern, reply_message)
+    for match in matches:
+        core_name = match[0]
+        if core_name in mface_dict:
+            matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
+
     if matched_files:
-        matched_files = [os.path.normpath(os.path.join(directory, filename)).replace("\\", "/") for filename in matched_files]
-        logger.info(f"mface 匹配到的文件名:{matched_files}")
+        logger.info(f"mface 匹配到的文件名: {matched_files}")
 
-    cleaned_text = re.sub(rf"(^|\s+)({pattern})(\s+|$)", " ", reply_message).strip()
+    cleaned_text = re.sub(rf"(^|\s+){pattern}(\s+|$)", " ", reply_message).strip()
 
-    return cleaned_text,matched_files
+    return cleaned_text, matched_files
+
 
 
 
