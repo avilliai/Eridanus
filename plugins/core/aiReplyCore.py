@@ -449,11 +449,12 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
             matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
 
     if matched_files:
-        print(f"mface 匹配到的文件名: {matched_files}")
+        logger.info(f"mface 匹配到的文件名: {matched_files}")
 
     cleaned_text = re.sub(pattern, "", reply_message).strip()
     if matched_files:
         matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
+    logger.info(f"mface 处理后的文本: {cleaned_text}")
     return cleaned_text, matched_files
 
 
