@@ -431,7 +431,8 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
     # 仅保留 [xxx].gif 或 [xxx].png 格式的文件名
     mface_dict = {}
     for filename in mface_list:
-        if filename.startswith("[") and (filename.endswith("].gif") or filename.endswith("].png") or filename.endswith("].jpg")):
+        if filename.startswith("[") and (
+                filename.endswith("].gif") or filename.endswith("].png") or filename.endswith("].jpg")):
             core_name = filename[1:-5]
             mface_dict[core_name] = filename
 
@@ -448,9 +449,9 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
             matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
 
     if matched_files:
-        logger.info(f"mface 匹配到的文件名: {matched_files}")
+        print(f"mface 匹配到的文件名: {matched_files}")
 
-    cleaned_text = re.sub(rf"(^|\s+){pattern}(\s+|$)", " ", reply_message).strip()
+    cleaned_text = re.sub(pattern, "", reply_message).strip()
     if matched_files:
         matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
     return cleaned_text, matched_files
