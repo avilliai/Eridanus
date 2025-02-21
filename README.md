@@ -24,3 +24,5 @@ Eridanus使用的AGPL V3协议禁止未经授权的商用行为，任何基于Er
 <a href="https://github.com/avilliai/Eridanus/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=avilliai/Eridanus" />
 </a>
+
+![Alt](https://repobeats.axiom.co/api/embed/2e669d8cf896cdd4259d7810df2f07fbfa5fe0df.svg "Repobeats analytics image")
