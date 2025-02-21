@@ -452,7 +452,7 @@ async def add_send_mface(tools,config):
                 "properties": {
                     "summary": {
                         "type": "string",
-                        "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
+                        "description": f"表情包。可选{mface_list}，将选择的结果输入此函数以记录并发送。"
                     }
                 },
                 "required": [
@@ -471,7 +471,7 @@ async def add_send_mface(tools,config):
                     "properties": {
                         "summary": {
                             "type": "string",
-                            "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
+                            "description": f"表情包。可选{mface_list}，将选择的结果输入此函数以记录并发送。"
                         }
                     },
                     "required": [
