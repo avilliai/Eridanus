@@ -44,13 +44,13 @@ def main(bot,config):
         if not bili_login_check:
             bot.logger.warning('⚠️ B站session未能成功获取')
         else:
-            bot.logger.warning('⚠️ B站session成功获取')
+            bot.logger.warning('✅ B站session成功获取')
         if not douyin_login_check:
             bot.logger.warning('⚠️ 未能获取到设置抖音的ck')
         else:
             bot.logger.info('✅ 抖音的ck成功获取！')
         if not xhs_login_check:
-            bot.logger.warning('✅ 未能获取到设置小红书的ck')
+            bot.logger.warning('⚠️ 未能获取到设置小红书的ck')
         else:
             bot.logger.info('✅ 小红书的ck成功获取！')
 
