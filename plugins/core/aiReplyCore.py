@@ -101,6 +101,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             )
             if "content" in response_message:
                 reply_message=response_message["content"]
+                reply_message=remove_mface_filenames(reply_message)   #去除表情包文件名
                 if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
@@ -217,6 +218,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #print(response_message)
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
+                reply_message = remove_mface_filenames(reply_message)  # 去除表情包文件名
             except:
                 reply_message=None
             if reply_message is not None:
@@ -377,6 +379,21 @@ async def add_self_rep(bot,event,config,reply_message):
             await add_to_group(event.group_id, message)
     except Exception as e:
         logger.error(f"Error occurred when adding self-reply: {e}")
+
+
+def remove_mface_filenames(text, directory="data/pictures/Mface"):
+    """
+    去除文本中的表情包文件名
+    :param text:
+    :param directory:
+    :return:
+    """
+
+    mface_list = os.listdir(directory)
+    pattern = r"|".join(map(re.escape, mface_list))
+    cleaned_text = re.sub(pattern, "", text)
+    return cleaned_text
+
 
 
 async def add_send_mface(tools,config):
