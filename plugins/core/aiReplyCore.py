@@ -103,7 +103,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if "content" in response_message:
                 reply_message=response_message["content"]
                 if reply_message is not None:
-                    reply_message, mface_files = remove_mface_filenames(reply_message)  # 去除表情包文件名
+                    reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
                 if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
@@ -233,7 +233,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #print(response_message)
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
-                reply_message, mface_files = remove_mface_filenames(reply_message)  # 去除表情包文件名
+                reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
             except:
                 reply_message=None
             if reply_message is not None:
@@ -247,7 +247,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 self_rep=[]
                 for i in text_elements:
                     if i["text"]!="\n" and i["text"]!="":
-                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip())  # 去除表情包文件名
+                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(),config)  # 去除表情包文件名
                         self_rep.append({"text":tep_rep_message})
                         await bot.send(event, tep_rep_message)
                         if mface_files!=[]:
@@ -417,7 +417,7 @@ async def add_self_rep(bot,event,config,reply_message):
         logger.error(f"Error occurred when adding self-reply: {e}")
 
 
-def remove_mface_filenames(reply_message, directory="data/pictures/Mface"):
+def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"):
     """
     去除文本中的表情包文件名，并允许用户输入 () {} <> 的括号，最终匹配 [] 格式。
     现在支持 .gif 和 .png 文件。
@@ -451,7 +451,8 @@ def remove_mface_filenames(reply_message, directory="data/pictures/Mface"):
         logger.info(f"mface 匹配到的文件名: {matched_files}")
 
     cleaned_text = re.sub(rf"(^|\s+){pattern}(\s+|$)", " ", reply_message).strip()
-
+    if matched_files:
+        matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
     return cleaned_text, matched_files
 
 
