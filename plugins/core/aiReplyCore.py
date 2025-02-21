@@ -385,13 +385,13 @@ async def add_send_mface(tools,config):
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
-            "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得直接加入回复消息中。",
+            "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得在回复消息中出现任何表情包信息。不要通过send函数发送表情包。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "summary": {
                         "type": "string",
-                        "description": f"表情包。可选{mface_list}"
+                        "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
                     }
                 },
                 "required": [
@@ -404,13 +404,13 @@ async def add_send_mface(tools,config):
             "type": "function",
             "function": {
                 "name": "call_send_mface",
-                "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得直接加入回复消息中。",
+                "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得在回复消息中出现任何表情包信息。不要通过send函数发送表情包。",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "summary": {
                             "type": "string",
-                            "description": f"表情包。可选{mface_list}"
+                            "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
                         }
                     },
                     "required": [
