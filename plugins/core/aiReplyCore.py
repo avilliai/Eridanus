@@ -422,7 +422,7 @@ def remove_mface_filenames(reply_message,directory="data/pictures/Mface"):
 
     # 如果匹配到表情包文件名，则打印它们
     if matched_files:
-        matched_files = [os.path.join(directory, filename) for filename in matched_files]
+        matched_files = [os.path.normpath(os.path.join(directory, filename)).replace("\\", "/") for filename in matched_files]
         logger.info(f"mface 匹配到的文件名:{matched_files}")
 
     cleaned_text = re.sub(rf"\s*({pattern})\s*", " ", reply_message).strip()
