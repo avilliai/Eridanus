@@ -48,7 +48,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
-    mface_files=[]
+    mface_files=None
     if tools is not None and config.api["llm"]["表情包发送"]:
         tools=await add_send_mface(tools,config)
     if not system_instruction:
@@ -131,7 +131,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                         if reply_message.strip()=="" or reply_message.strip()=="\n":
-                            logger.error("gemini返回了空回复，不发送。")
+                            logger.error("返回了空回复，不发送。")
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
@@ -141,16 +141,17 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             temp_history=[]
             func_call = False
 
-            if mface_files != []:
+            if mface_files != [] and mface_files is not None:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
+                mface_files=[]
 
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
 
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
-                    if func_name=="call_send_mface" and mface_files!=[]:
+                    if func_name=="call_send_mface" and mface_files==[]:
                         temp_history.append({
                             "role": "tool",
                             "content": json.dumps({"status": "succeed"}),
@@ -291,7 +292,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     """
                     进行对表情包功能的特殊处理
                     """
-                    if func_name=="call_send_mface" and mface_files!=[]:
+                    if func_name=="call_send_mface" and mface_files==[]:
                         pass
                     else:
                         """
