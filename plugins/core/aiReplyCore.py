@@ -8,7 +8,7 @@ from collections import defaultdict
 import os
 
 
-from developTools.message.message_components import Record, Text, Node
+from developTools.message.message_components import Record, Text, Node, Image
 from developTools.utils.logger import get_logger
 from plugins.core.Group_Message_DB import get_last_20_and_convert_to_prompt, add_to_group
 from plugins.core.aiReplyHandler.default import defaultModelRequest
@@ -48,6 +48,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
+    mface_files=[]
     if tools is not None and config.api["llm"]["表情包发送"]:
         tools=await add_send_mface(tools,config)
     if not system_instruction:
@@ -101,6 +102,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             )
             if "content" in response_message:
                 reply_message=response_message["content"]
+                if reply_message is not None:
+                    reply_message, mface_files = remove_mface_filenames(reply_message)  # 去除表情包文件名
                 if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
@@ -137,40 +140,53 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #函数调用
             temp_history=[]
             func_call = False
+
+            if mface_files != []:
+                for mface_file in mface_files:
+                    await bot.send(event, Image(file=mface_file))
+
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
 
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
-                    try:
-                        r=await call_func(bot, event, config,func_name, json.loads(args)) #真是到处都不想相互兼容。
-                        if r==False:
-                            await end_chat(user_id)
-                        if r:
-                            func_call = True
-                            temp_history.append({
-                                "role": "tool",
-                                "content": json.dumps(r),
-                                # Here we specify the tool_call_id that this result corresponds to
-                                "tool_call_id": part['id']
-                            })
-                        else:
-                            temp_history.append({
-                                "role": "tool",
-                                "content": json.dumps({"status":"succeed"}),
-                                # Here we specify the tool_call_id that this result corresponds to
-                                "tool_call_id": part['id']
-                            })
-                    except Exception as e:
-                        #logger.error(f"Error occurred when calling function: {e}")
-                        logger.error(f"Error occurred when calling function: {e}")
-                        traceback.print_exc()
+                    if func_name=="call_send_mface" and mface_files!=[]:
                         temp_history.append({
                             "role": "tool",
-                            "content": json.dumps({"status": "failed to call function"}),
+                            "content": json.dumps({"status": "succeed"}),
                             # Here we specify the tool_call_id that this result corresponds to
                             "tool_call_id": part['id']
                         })
+                    else:
+                        try:
+                            r=await call_func(bot, event, config,func_name, json.loads(args)) #真是到处都不想相互兼容。
+                            if r==False:
+                                await end_chat(user_id)
+                            if r:
+                                func_call = True
+                                temp_history.append({
+                                    "role": "tool",
+                                    "content": json.dumps(r),
+                                    # Here we specify the tool_call_id that this result corresponds to
+                                    "tool_call_id": part['id']
+                                })
+                            else:
+                                temp_history.append({
+                                    "role": "tool",
+                                    "content": json.dumps({"status":"succeed"}),
+                                    # Here we specify the tool_call_id that this result corresponds to
+                                    "tool_call_id": part['id']
+                                })
+                        except Exception as e:
+                            #logger.error(f"Error occurred when calling function: {e}")
+                            logger.error(f"Error occurred when calling function: {e}")
+                            traceback.print_exc()
+                            temp_history.append({
+                                "role": "tool",
+                                "content": json.dumps({"status": "failed to call function"}),
+                                # Here we specify the tool_call_id that this result corresponds to
+                                "tool_call_id": part['id']
+                            })
 
                     #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
                     reply_message=None
@@ -217,6 +233,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #print(response_message)
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
+                reply_message, mface_files = remove_mface_filenames(reply_message)  # 去除表情包文件名
             except:
                 reply_message=None
             if reply_message is not None:
@@ -248,6 +265,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     generate_voice=True
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+            if mface_files!=[]:
+                for mface_file in mface_files:
+                    await bot.send(event, Image(file=mface_file))
 
             #在函数调用之前触发更新上下文。
             await prompt_database_updata(user_id, response_message, config)
@@ -257,23 +277,32 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if "functionCall" in part:
                     func_name = part['functionCall']["name"]
                     args = part['functionCall']['args']
-                    try:
+                    """
+                    进行对表情包功能的特殊处理
+                    """
+                    if func_name=="call_send_mface" and mface_files!=[]:
+                        pass
+                    else:
+                        """
+                        正常调用函数
+                        """
+                        try:
 
-                        r=await call_func(bot, event, config,func_name, args)
-                        if r==False:
-                            await end_chat(user_id)
-                        if r:
-                            func_r={
-                                "functionResponse": {
-                                    "name": func_name,
-                                    "response": r
+                            r=await call_func(bot, event, config,func_name, args)
+                            if r==False:
+                                await end_chat(user_id)
+                            if r:
+                                func_r={
+                                    "functionResponse": {
+                                        "name": func_name,
+                                        "response": r
+                                    }
                                 }
-                            }
-                            new_func_prompt.append(func_r)
-                    except Exception as e:
-                        #logger.error(f"Error occurred when calling function: {e}")
-                        logger.error(f"Error occurred when calling function: {func_name}")
-                        traceback.print_exc()
+                                new_func_prompt.append(func_r)
+                        except Exception as e:
+                            #logger.error(f"Error occurred when calling function: {e}")
+                            logger.error(f"Error occurred when calling function: {func_name}")
+                            traceback.print_exc()
                     await add_self_rep(bot,event,config,reply_message)
                     reply_message=None
             if new_func_prompt!=[]:
@@ -379,19 +408,42 @@ async def add_self_rep(bot,event,config,reply_message):
         logger.error(f"Error occurred when adding self-reply: {e}")
 
 
+def remove_mface_filenames(reply_message,directory="data/pictures/Mface"):
+    """
+    去除文本中的表情包文件名
+    :param text:
+    :param directory:
+    :return:
+    """
+    mface_list = os.listdir(directory)
+
+    pattern = r"|".join(map(re.escape, mface_list))
+    matched_files = re.findall(pattern, reply_message)
+
+    # 如果匹配到表情包文件名，则打印它们
+    if matched_files:
+        matched_files = [os.path.normpath(os.path.join(directory, filename)).replace("\\", "/") for filename in matched_files]
+        logger.info(f"mface 匹配到的文件名:{matched_files}")
+
+    cleaned_text = re.sub(rf"\s*({pattern})\s*", " ", reply_message).strip()
+
+    return cleaned_text,matched_files
+
+
+
 async def add_send_mface(tools,config):
     mface_list = os.listdir("data/pictures/Mface")
     if config.api["llm"]["model"] == "gemini":
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
-            "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得直接加入回复消息中。",
+            "description": "根据当前聊天内容选择一张表情包，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "summary": {
                         "type": "string",
-                        "description": f"表情包。可选{mface_list}"
+                        "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
                     }
                 },
                 "required": [
@@ -404,13 +456,13 @@ async def add_send_mface(tools,config):
             "type": "function",
             "function": {
                 "name": "call_send_mface",
-                "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得直接加入回复消息中。",
+                "description": "根据当前聊天内容选择一张表情包，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "summary": {
                             "type": "string",
-                            "description": f"表情包。可选{mface_list}"
+                            "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
                         }
                     },
                     "required": [

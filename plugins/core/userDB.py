@@ -32,7 +32,7 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
         async with db.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,)) as cursor:
             if await cursor.fetchone():
                 #logger.warning(f"用户 {user_id} 已存在，无法重复注册。")
-                return f"用户 {user_id} 已存在，无法重复注册。"
+                return f"✅ 用户 {user_id} 已存在，无法重复注册。"
         registration_date = datetime.date.today().isoformat()
         await db.execute("""
         INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date)
@@ -40,7 +40,7 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
         """, (user_id, nickname, card, sex, age, city, permission, "[]", registration_date))
         await db.commit()
         #logger.info(f"用户 {user_id} 注册成功。")
-        return f"用户 {user_id} 注册成功。"
+        return f"✅ 用户 {user_id} 注册成功。"
 
 # 更新用户信息
 async def update_user(user_id, **kwargs):
@@ -54,8 +54,8 @@ async def update_user(user_id, **kwargs):
             if key in ["nickname", "card", "sex", "age", "city", "permission"]:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
         await db.commit()
-    logger.info(f"用户 {user_id} 的信息已更新：{kwargs}")
-    return f"用户 {user_id} 的信息已更新：{kwargs}"
+    logger.info(f"✅ 用户 {user_id} 的信息已更新：{kwargs}")
+    return f"✅ 用户 {user_id} 的信息已更新：{kwargs}"
 
 # 获取用户信息
 async def get_user(user_id,nickname=""): #重要信息无非user_id和nickname，因此get时没有就直接创建。

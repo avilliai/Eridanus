@@ -797,6 +797,10 @@ async def Galgame_manshuo(url,filepath=None):
     link = (re.findall(r"https?://[^\s\]\)]+", url))[0]
     #print(f'{link}')
     context = await html_read(link)
+    if '请求发生错误：' in context:
+        print(context)
+        json_check['status'] = False
+        return json_check
     context = context.split("\n")
     context_check_middle=''
 
@@ -851,8 +855,9 @@ async def Galgame_manshuo(url,filepath=None):
             desc_flag=1
         elif '[关于](' in context_check and time_flag==2:
             desc_flag=3
-        elif 'Hello！欢迎来到有希日记！' in context_check:
-            desc_flag= 9
+        elif 'Hello! 欢迎来到有希日记！' in context_check:
+            #print('检测到标志')
+            desc_flag= 10
         elif 'Staff' in context_check:
             desc_flag=0
         elif desc_flag==1:
@@ -860,7 +865,9 @@ async def Galgame_manshuo(url,filepath=None):
             if not ('https:'in context_check or 'data:image/svg+xml' in context_check or '插画欣赏' in context_check):
                 for i in context_check:
                     desc_number+=1
-                if desc_number > 200:
+                if 'ePub格式-连载' in context_check:
+                    desc_flag = 0
+                if desc_number > 200 and desc_flag != 0:
                     desc_flag = 0
                     desc +=f'{context_check}…\n'
                 else:
@@ -868,6 +875,7 @@ async def Galgame_manshuo(url,filepath=None):
         elif desc_flag != 1:
             desc_flag-=1
         flag = 0
+
 
         if 'https://gal.manshuo.ink/usr/uploads/galgame/' in context_check:
             #print(context_check)
@@ -881,10 +889,18 @@ async def Galgame_manshuo(url,filepath=None):
                 links_url = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
                 Title = context_check.replace(" ", "").replace(f"{links_url}", "").replace("[", "").replace("]", "").replace(" - Hikarinagi", "").replace("(", "").replace(")", "")
                 hikarinagi_flag=1
-        elif 'https://www.mysqil.com/wp-content/uploads/' in context_check:
+        elif '插画欣赏' in context_check or hikarinagi_flag==1:
             if hikarinagi_flag == 0:
-                links_url = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
                 hikarinagi_flag=1
+            elif hikarinagi_flag == 1:
+                #print(context_check)
+                hikarinagi_flag = 2
+                links_url_img = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
+                #print(links_url_img)
+                links_url=context_check.replace("[", "").replace("]", "").replace(links_url_img, "").replace("()", "")+'.webp'
+                match = re.search(r"(\d{4})年(\d{1,2})月", time_gal)
+                if match:
+                    links_url=f'https://www.mysqil.com/wp-content/uploads/{int(match.group(1))}/{str(int(match.group(2))).zfill(2)}/'+links_url
 
     #print(links_url)
     if links_url is None:

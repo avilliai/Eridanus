@@ -125,7 +125,7 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                     if prompt_standard == "gemini":
                         processed = await gemini_prompt_elements_construct(raw_message["message"], bot=bot, event=event)
                         final_list.append(processed)
-                        final_list.append({"role": "model", "parts": {"text": "群聊消息已记录"}})
+
                     elif prompt_standard == "new_openai":
                         processed = await prompt_elements_construct(raw_message["message"], bot=bot,
                                                                                event=event)
@@ -146,8 +146,17 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                         (json.dumps(processed), message_id)
                     )
                     await db.commit()
+            fl=[]
 
-            return final_list
+            if prompt_standard == "gemini":
+                all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['parts']]
+                fl.append({"role": "user", "parts": all_parts})
+                fl.append({"role": "model", "parts": {"text": "群聊消息已记录，将用作下条回复参考"}})
+            else:
+                all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['content']]
+                fl.append({"role": "user", "content": all_parts})
+                fl.append({"role": "assistant", "content": "群聊消息已记录，将用作下条回复参考"})
+            return fl
 
         except Exception as e:
             logger.info(f"Error getting last 20 and converting to prompt for group {group_id}: {e}")

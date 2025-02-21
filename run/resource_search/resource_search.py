@@ -24,7 +24,7 @@ global operating
 operating = {}  #jm文件共享的维护列表
 
 async def search_book_info(bot,event,config,info):
-    user_info = await get_user(event.user_id, event.sender.nickname)
+    user_info = await get_user(event.user_id)
     if user_info[6] >= config.controller["resource_search"]["z_library"]["search_operate_level"]:
 
         await bot.send(event, "正在搜索中，请稍候...")
@@ -38,7 +38,7 @@ async def search_book_info(bot,event,config,info):
     else:
         await bot.send(event, "你没有权限使用该功能")
 async def call_download_book(bot,event,config,book_id: str,hash:str):
-    user_info = await get_user(event.user_id, event.sender.nickname)
+    user_info = await get_user(event.user_id)
     if user_info[6] >= config.controller["resource_search"]["z_library"]["download_operate_level"]:
         await bot.send(event, "正在下载中，请稍候...")
         loop = asyncio.get_running_loop()
@@ -54,7 +54,7 @@ async def call_download_book(bot,event,config,book_id: str,hash:str):
         await bot.send(event, "你没有权限使用该功能")
 
 async def call_asmr(bot,event,config,try_again=False,mode="random"):
-    user_info = await get_user(event.user_id, event.sender.nickname)
+    user_info = await get_user(event.user_id)
     if user_info[6] >= config.controller["resource_search"]["asmr"]["asmr_level"]:
         bot.logger.info("asmr start")
         try:
@@ -176,10 +176,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
     async def _call_jm():
         global operating
         if mode=="preview":
-            user_info = await get_user(event.user_id, event.sender.nickname)
-            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
-                await bot.send(event, "你没有权限使用该功能")
-                return
+
             if hasattr(event, "group_id"):
                 temp_id = event.group_id
             else:
@@ -219,9 +216,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
                 event.group_id = group_id
                 await bot.send(event, cmList)
             operating.pop(comic_id)
-
         elif mode=="download":
-
             if hasattr(event, "group_id"):
                 temp_id = event.group_id
             else:
@@ -262,10 +257,6 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
                     if comic_id in operating:
                         operating.pop(comic_id)
         elif mode=="search":
-            user_info = await get_user(event.user_id)
-            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
-                await bot.send(event, "你没有权限使用该功能")
-                return
             bot.logger.info(f"JM搜索: {serach_topic}")
             try:
                 context = JM_search(serach_topic)
@@ -277,7 +268,21 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, "搜索失败", True)
-
+    user_info = await get_user(event.user_id)
+    if mode == "preview":
+        if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
+            await bot.send(event, "你没有权限使用该功能")
+            return {"status": "failed", "message": "你没有权限使用该功能"}
+    elif mode == "download":
+        if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_download_level"]:
+            await bot.send(event, "你没有权限使用该功能")
+            return {"status": "failed", "message": "你没有权限使用该功能"}
+    elif mode == "search":
+        if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
+            await bot.send(event, "你没有权限使用该功能")
+            return {"status": "failed", "message": "你没有权限使用该功能"}
+    else:
+        await bot.send(event, "指令错误，请使用preview/download/search")
     asyncio.create_task(_call_jm())
     return {"status": "running", "message": "任务已在后台启动，请耐心等待结果"}
 def main(bot,config):
@@ -343,7 +348,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def querycomic(event: GroupMessageEvent):
         if event.pure_text.startswith("jm搜") or event.pure_text.startswith("JM搜"):
-            user_info = await get_user(event.user_id, event.sender.nickname)
+            user_info = await get_user(event.user_id)
             if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_search_level"]:
                 await bot.send(event, "你没有权限使用该功能")
                 return
@@ -402,7 +407,7 @@ def main(bot,config):
     async def downloadAndToPdf(event: GroupMessageEvent):
         if event.pure_text.startswith("JM下载"):
 
-            user_info = await get_user(event.user_id, event.sender.nickname)
+            user_info = await get_user(event.user_id)
             if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_download_level"]:
                 await bot.send(event, "你没有权限使用该功能")
                 return
