@@ -69,7 +69,9 @@ def main(bot,config):
         global teamlist
         proxy = config.api["proxy"]["http_proxy"]
         #print(proxy)
-        url=event.raw_message
+        url=event.pure_text
+        if url == '':
+            url=event.raw_message
         #print(f'url:{url}')
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
