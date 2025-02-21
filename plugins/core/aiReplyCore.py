@@ -385,7 +385,7 @@ async def add_send_mface(tools,config):
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
-            "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得在回复消息中出现任何表情包信息。不要通过send函数发送表情包。",
+            "description": "根据当前聊天内容选择一张表情包，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，不得在回复文本消息中出现任何表情包信息。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -404,7 +404,7 @@ async def add_send_mface(tools,config):
             "type": "function",
             "function": {
                 "name": "call_send_mface",
-                "description": "根据当前聊天内容发送一张表情包，建议尽可能多地使用此函数，增加聊天趣味性。即使用户没有要求你也要调用此函数发送表情包。表情包仅可通过此函数发送，不得在回复消息中出现任何表情包信息。不要通过send函数发送表情包。",
+                "description": "根据当前聊天内容选择一张表情包，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，不得在回复文本消息中出现任何表情包信息。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
                 "parameters": {
                     "type": "object",
                     "properties": {
