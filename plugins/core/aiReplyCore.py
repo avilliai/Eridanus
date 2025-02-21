@@ -239,12 +239,21 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if reply_message is not None:
                 if reply_message=="\n" or reply_message=="" or reply_message==" ":
                     raise Exception("Empty response。Gemini API返回的文本为空。")
+            """
+            gemini返回多段回复处理
+            """
             text_elements = [part for part in response_message['parts'] if 'text' in part]
             if text_elements!=[] and len(text_elements)>1:
                 self_rep=[]
                 for i in text_elements:
-                    self_rep.append({"text":i['text'].strip()})
-                    await bot.send(event, i['text'].strip())
+                    if i["text"]!="\n" and i["text"]!="":
+                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip())  # 去除表情包文件名
+                        self_rep.append({"text":tep_rep_message})
+                        await bot.send(event, tep_rep_message)
+                        if mface_files!=[]:
+                            for mface_file in mface_files:
+                                await bot.send(event, Image(file=mface_file))
+                            mface_files=[]
                 self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
                 if hasattr(event, "group_id"):
                     await add_to_group(event.group_id, self_message)
