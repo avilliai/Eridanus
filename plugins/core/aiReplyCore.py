@@ -234,7 +234,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
                 reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
-            except:
+            except Exception as e:
+                logger.error(f"Error occurred when processing gemini response: {e}")
                 reply_message=None
             if reply_message is not None:
                 if reply_message=="\n" or reply_message=="" or reply_message==" ":
