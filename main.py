@@ -97,7 +97,11 @@ def load_plugins(bot,config):
 
     except Exception as e:
         bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
-if config.basic_config["webui"] and os.path.exists("../server.exe"):
+try:
+  enable_webui=config.basic_config["webui"]
+except:
+  enable_webui=False
+if enable_webui and os.path.exists("../server.exe"):
     def run_bot2():
         """在独立线程运行 bot2"""
         load_plugins(bot2,config)

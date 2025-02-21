@@ -48,7 +48,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
-    mface_files=[]
+    mface_files=None
     if tools is not None and config.api["llm"]["表情包发送"]:
         tools=await add_send_mface(tools,config)
     if not system_instruction:
@@ -103,7 +103,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if "content" in response_message:
                 reply_message=response_message["content"]
                 if reply_message is not None:
-                    reply_message, mface_files = remove_mface_filenames(reply_message)  # 去除表情包文件名
+                    reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
                 if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
@@ -131,7 +131,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
                     if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
                         if reply_message.strip()=="" or reply_message.strip()=="\n":
-                            logger.error("gemini返回了空回复，不发送。")
+                            logger.error("返回了空回复，不发送。")
                         await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
                     generate_voice=True
                 else:
@@ -141,16 +141,17 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             temp_history=[]
             func_call = False
 
-            if mface_files != []:
+            if mface_files != [] and mface_files is not None:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
+                mface_files=[]
 
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
 
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
-                    if func_name=="call_send_mface" and mface_files!=[]:
+                    if func_name=="call_send_mface" and mface_files==[]:
                         temp_history.append({
                             "role": "tool",
                             "content": json.dumps({"status": "succeed"}),
@@ -233,18 +234,28 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #print(response_message)
             try:
                 reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
-                reply_message, mface_files = remove_mface_filenames(reply_message)  # 去除表情包文件名
-            except:
+                reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
+            except Exception as e:
+                logger.error(f"Error occurred when processing gemini response: {e}")
                 reply_message=None
             if reply_message is not None:
                 if reply_message=="\n" or reply_message=="" or reply_message==" ":
                     raise Exception("Empty response。Gemini API返回的文本为空。")
+            """
+            gemini返回多段回复处理
+            """
             text_elements = [part for part in response_message['parts'] if 'text' in part]
             if text_elements!=[] and len(text_elements)>1:
                 self_rep=[]
                 for i in text_elements:
-                    self_rep.append({"text":i['text'].strip()})
-                    await bot.send(event, i['text'].strip())
+                    if i["text"]!="\n" and i["text"]!="":
+                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(),config)  # 去除表情包文件名
+                        self_rep.append({"text":tep_rep_message})
+                        await bot.send(event, tep_rep_message)
+                        if mface_files!=[]:
+                            for mface_file in mface_files:
+                                await bot.send(event, Image(file=mface_file))
+                            mface_files=[]
                 self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
                 if hasattr(event, "group_id"):
                     await add_to_group(event.group_id, self_message)
@@ -268,6 +279,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if mface_files!=[]:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
+                mface_files=[]
 
             #在函数调用之前触发更新上下文。
             await prompt_database_updata(user_id, response_message, config)
@@ -280,7 +292,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     """
                     进行对表情包功能的特殊处理
                     """
-                    if func_name=="call_send_mface" and mface_files!=[]:
+                    if func_name=="call_send_mface" and mface_files==[]:
                         pass
                     else:
                         """
@@ -408,26 +420,51 @@ async def add_self_rep(bot,event,config,reply_message):
         logger.error(f"Error occurred when adding self-reply: {e}")
 
 
-def remove_mface_filenames(reply_message,directory="data/pictures/Mface"):
-    """
-    去除文本中的表情包文件名
-    :param text:
-    :param directory:
-    :return:
-    """
-    mface_list = os.listdir(directory)
+def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"):
+    try:
+        """
+        去除文本中的表情包文件名，并允许用户输入 () {} <> 的括号，最终匹配 [] 格式。
+        现在支持 .gif 和 .png 文件。
+    
+        :param reply_message: 输入文本
+        :param directory: 表情包目录
+        :return: 处理后的文本和匹配的文件名列表（始终使用[]格式）
+        """
+        mface_list = os.listdir(directory)
 
-    pattern = r"|".join(map(re.escape, mface_list))
-    matched_files = re.findall(pattern, reply_message)
+        # 仅保留 [xxx].gif 或 [xxx].png 格式的文件名
+        mface_dict = {}
+        for filename in mface_list:
+            if filename.startswith("[") and (
+                    filename.endswith("].gif") or filename.endswith("].png") or filename.endswith("].jpg")):
+                core_name = filename[1:-5]
+                mface_dict[core_name] = filename
 
-    # 如果匹配到表情包文件名，则打印它们
-    if matched_files:
-        matched_files = [os.path.normpath(os.path.join(directory, filename)).replace("\\", "/") for filename in matched_files]
-        logger.info(f"mface 匹配到的文件名:{matched_files}")
+        core_names = map(re.escape, mface_dict.keys())
+        core_pattern = r"|".join(core_names)
 
-    cleaned_text = re.sub(rf"\s*({pattern})\s*", " ", reply_message).strip()
+        pattern = rf"[\(\[\{{\<]({core_pattern})[\)\]\}}\>]\.(gif|png|jpg)"
 
-    return cleaned_text,matched_files
+        matched_files = []
+        matches = re.findall(pattern, reply_message)
+        for match in matches:
+            core_name = match[0]
+            if core_name in mface_dict:
+                matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
+
+        if matched_files:
+            logger.info(f"mface 匹配到的文件名: {matched_files}")
+
+        cleaned_text = re.sub(pattern, "", reply_message).strip()
+        if matched_files:
+            matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
+        logger.info(f"mface 处理后的文本: {cleaned_text}")
+        return cleaned_text, matched_files
+    except Exception as e:
+        logger.error(f"Error occurred when removing mface filenames: {e}")
+        traceback.print_exc()
+        return reply_message, []
+
 
 
 
@@ -437,13 +474,13 @@ async def add_send_mface(tools,config):
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
-            "description": "根据当前聊天内容选择一张表情包，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
+            "description": "根据当前聊天内容选择一张表情包，只可选择一张，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "summary": {
                         "type": "string",
-                        "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
+                        "description": f"表情包。可选{mface_list}，将选择的结果输入此函数以记录并发送。"
                     }
                 },
                 "required": [
@@ -456,13 +493,13 @@ async def add_send_mface(tools,config):
             "type": "function",
             "function": {
                 "name": "call_send_mface",
-                "description": "根据当前聊天内容选择一张表情包，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
+                "description": "根据当前聊天内容选择一张表情包，只可选择一张，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "summary": {
                             "type": "string",
-                            "description": f"表情包。可选{mface_list}，将选择的结果通过此函数发送。"
+                            "description": f"表情包。可选{mface_list}，将选择的结果输入此函数以记录并发送。"
                         }
                     },
                     "required": [
