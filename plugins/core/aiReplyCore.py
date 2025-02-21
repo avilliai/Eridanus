@@ -425,7 +425,7 @@ def remove_mface_filenames(reply_message,directory="data/pictures/Mface"):
         matched_files = [os.path.normpath(os.path.join(directory, filename)).replace("\\", "/") for filename in matched_files]
         logger.info(f"mface 匹配到的文件名:{matched_files}")
 
-    cleaned_text = re.sub(rf"\s*({pattern})\s*", " ", reply_message).strip()
+    cleaned_text = re.sub(rf"(^|\s+)({pattern})(\s+|$)", " ", reply_message).strip()
 
     return cleaned_text,matched_files
 
