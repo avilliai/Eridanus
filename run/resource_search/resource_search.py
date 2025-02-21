@@ -221,7 +221,10 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
             operating.pop(comic_id)
 
         elif mode=="download":
-
+            user_info = await get_user(event.user_id)
+            if user_info[6] < config.controller["resource_search"]["jmcomic"]["jm_comic_download_level"]:
+                await bot.send(event, "你没有权限使用该功能")
+                return
             if hasattr(event, "group_id"):
                 temp_id = event.group_id
             else:
