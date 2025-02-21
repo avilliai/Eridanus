@@ -419,44 +419,49 @@ async def add_self_rep(bot,event,config,reply_message):
 
 
 def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"):
-    """
-    去除文本中的表情包文件名，并允许用户输入 () {} <> 的括号，最终匹配 [] 格式。
-    现在支持 .gif 和 .png 文件。
+    try:
+        """
+        去除文本中的表情包文件名，并允许用户输入 () {} <> 的括号，最终匹配 [] 格式。
+        现在支持 .gif 和 .png 文件。
+    
+        :param reply_message: 输入文本
+        :param directory: 表情包目录
+        :return: 处理后的文本和匹配的文件名列表（始终使用[]格式）
+        """
+        mface_list = os.listdir(directory)
 
-    :param reply_message: 输入文本
-    :param directory: 表情包目录
-    :return: 处理后的文本和匹配的文件名列表（始终使用[]格式）
-    """
-    mface_list = os.listdir(directory)
+        # 仅保留 [xxx].gif 或 [xxx].png 格式的文件名
+        mface_dict = {}
+        for filename in mface_list:
+            if filename.startswith("[") and (
+                    filename.endswith("].gif") or filename.endswith("].png") or filename.endswith("].jpg")):
+                core_name = filename[1:-5]
+                mface_dict[core_name] = filename
 
-    # 仅保留 [xxx].gif 或 [xxx].png 格式的文件名
-    mface_dict = {}
-    for filename in mface_list:
-        if filename.startswith("[") and (
-                filename.endswith("].gif") or filename.endswith("].png") or filename.endswith("].jpg")):
-            core_name = filename[1:-5]
-            mface_dict[core_name] = filename
+        core_names = map(re.escape, mface_dict.keys())
+        core_pattern = r"|".join(core_names)
 
-    core_names = map(re.escape, mface_dict.keys())
-    core_pattern = r"|".join(core_names)
+        pattern = rf"[\(\[\{{\<]({core_pattern})[\)\]\}}\>]\.(gif|png|jpg)"
 
-    pattern = rf"[\(\[\{{\<]({core_pattern})[\)\]\}}\>]\.(gif|png|jpg)"
+        matched_files = []
+        matches = re.findall(pattern, reply_message)
+        for match in matches:
+            core_name = match[0]
+            if core_name in mface_dict:
+                matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
 
-    matched_files = []
-    matches = re.findall(pattern, reply_message)
-    for match in matches:
-        core_name = match[0]
-        if core_name in mface_dict:
-            matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
+        if matched_files:
+            logger.info(f"mface 匹配到的文件名: {matched_files}")
 
-    if matched_files:
-        logger.info(f"mface 匹配到的文件名: {matched_files}")
-
-    cleaned_text = re.sub(pattern, "", reply_message).strip()
-    if matched_files:
-        matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
-    logger.info(f"mface 处理后的文本: {cleaned_text}")
-    return cleaned_text, matched_files
+        cleaned_text = re.sub(pattern, "", reply_message).strip()
+        if matched_files:
+            matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
+        logger.info(f"mface 处理后的文本: {cleaned_text}")
+        return cleaned_text, matched_files
+    except Exception as e:
+        logger.error(f"Error occurred when removing mface filenames: {e}")
+        traceback.print_exc()
+        return reply_message, []
 
 
 
