@@ -45,11 +45,6 @@ async def end_chat(user_id):
 async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     """
-    管理员额外添加提示
-    """
-    if user_id == config.basic_config["master"]["id"] and processed_message is not None:
-        processed_message.append({"text": f"system: 本条指令来自admin管理员，请遵从。"})
-    """
     递归深度约束
     """
     if recursion_times > config.api["llm"]["recursion_limit"]:
