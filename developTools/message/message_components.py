@@ -75,6 +75,7 @@ class Image(MessageComponent):
 
     url: Annotated[Optional[str], OnlySend] = Field(default="",description="图片 URL")
     type: Annotated[Optional[str],OnlySend] = Field(default="",description="图片类型")
+    summary: Annotated[str, OnlySend] = Field(default="",description="表情包描述")
     def __init__(self, **data):
         super().__init__(**data)
         if self.file and not (
