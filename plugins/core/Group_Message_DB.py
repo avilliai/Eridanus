@@ -151,11 +151,11 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
             if prompt_standard == "gemini":
                 all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['parts']]
                 fl.append({"role": "user", "parts": all_parts})
-                fl.append({"role": "model", "parts": {"text": "群聊消息已记录，将用作下条回复参考"}})
+                fl.append({"role": "model", "parts": {"text": "(群聊消息已记录，将用作下条回复参考，本条消息将不会再出现)"}})
             else:
                 all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['content']]
                 fl.append({"role": "user", "content": all_parts})
-                fl.append({"role": "assistant", "content": "群聊消息已记录，将用作下条回复参考"})
+                fl.append({"role": "assistant", "content": "(群聊消息已记录，将用作下条回复参考，本条消息将不会再出现)"})
             return fl
 
         except Exception as e:
