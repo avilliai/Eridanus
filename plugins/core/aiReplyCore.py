@@ -439,8 +439,7 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
         :return: 处理后的文本和匹配的文件名列表（始终使用[]格式）
         """
         mface_list = os.listdir(directory)
-
-        # 仅保留 [xxx].gif 或 [xxx].png 格式的文件名
+        # 仅保留 [xxx].gif, [xxx].png, [xxx].jpg 格式的文件名
         mface_dict = {}
         for filename in mface_list:
             if filename.startswith("[") and (
@@ -448,24 +447,27 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
                 core_name = filename[1:-5]
                 mface_dict[core_name] = filename
 
-        core_names = map(re.escape, mface_dict.keys())
-        core_pattern = r"|".join(core_names)
 
-        pattern = rf"[\(\[\{{\<]({core_pattern})[\)\]\}}\>]\.(gif|png|jpg)"
+        brackets = "\(\[\{\<"  # 开括号
+        brackets_close = "\)\]\}\>"  # 闭括号
+        pattern = rf"[{brackets}]([^\[\](){{}}<>]+)[{brackets_close}]\.(gif|png|jpg)"
 
         matched_files = []
-        matches = re.findall(pattern, reply_message)
-        for match in matches:
-            core_name = match[0]
+
+        def replace_match(match):
+            core_name, ext = match.groups()
             if core_name in mface_dict:
-                matched_files.append(os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/"))
+                file_path = os.path.normpath(os.path.join(directory, mface_dict[core_name])).replace("\\", "/")
+                matched_files.append(file_path)
+                return ""
+            return ""
+
+        cleaned_text = re.sub(pattern, replace_match, reply_message).strip()
 
         if matched_files:
+            matched_files = matched_files[:config.api["llm"]["单次发送表情包数量"]]
             logger.info(f"mface 匹配到的文件名: {matched_files}")
 
-        cleaned_text = re.sub(pattern, "", reply_message).strip()
-        if matched_files:
-            matched_files=matched_files[:config.api["llm"]["单次发送表情包数量"]]
         logger.info(f"mface 处理后的文本: {cleaned_text}")
         return cleaned_text, matched_files
     except Exception as e:
