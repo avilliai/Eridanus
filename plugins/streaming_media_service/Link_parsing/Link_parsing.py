@@ -803,6 +803,15 @@ async def Galgame_manshuo(url,filepath=None):
         return json_check
     context = context.split("\n")
     context_check_middle=''
+    links_url = None
+    Title=''
+    avatar_name_flag=0
+    time_flag=0
+    desc_flag=0
+    desc=''
+    desc_number=0
+    hikarinagi_flag=0
+    time_gal='未知'
 
     if 'gal.manshuo.ink' in url:
         type_software='世伊Galgame论坛'
@@ -819,15 +828,15 @@ async def Galgame_manshuo(url,filepath=None):
         type_color = (241, 87, 178, 80)
         avatar_name = '有希日记 - 读书可以改变人生！'
         json_check['soft_type'] = '有希日记'
-    Title=''
-    avatar_name_flag=0
-    time_flag=0
-    desc_flag=0
-    desc=''
-    desc_number=0
-    hikarinagi_flag=0
-    time_gal='未知'
-    links_url=None
+        try:
+            from plugins.streaming_media_service.Link_parsing.core.selenium_core import scrape_images_get_url
+            links_url_list = scrape_images_get_url(url)
+            links_url = links_url_list[0]
+            #print(f'links_url:{links_url}')
+        except Exception as e:
+            links_url = None
+            print(f"链接获取失败，错误: {e}")
+
     for context_check in context:
         #print(context_check)
         if time_flag ==1:
@@ -844,10 +853,10 @@ async def Galgame_manshuo(url,filepath=None):
                 time_flag=1
         context_check_middle=context_check
 
-        if '作者:' in context_check or '[avatar]' in context_check:
+        if ('作者:' in context_check or '[avatar]' in context_check) and avatar_name_flag==0:
             avatar_name_flag=1
         elif avatar_name_flag==1:
-            avatar_name_flag=0
+            avatar_name_flag=2
             match = re.search(r"\[(.*?)\]", context_check)
             if match:
                 avatar_name=match.group(1).replace(" ", "")
@@ -889,18 +898,6 @@ async def Galgame_manshuo(url,filepath=None):
                 links_url = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
                 Title = context_check.replace(" ", "").replace(f"{links_url}", "").replace("[", "").replace("]", "").replace(" - Hikarinagi", "").replace("(", "").replace(")", "")
                 hikarinagi_flag=1
-        elif '插画欣赏' in context_check or hikarinagi_flag==1:
-            if hikarinagi_flag == 0:
-                hikarinagi_flag=1
-            elif hikarinagi_flag == 1:
-                #print(context_check)
-                hikarinagi_flag = 2
-                links_url_img = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
-                #print(links_url_img)
-                links_url=context_check.replace("[", "").replace("]", "").replace(links_url_img, "").replace("()", "")+'.webp'
-                match = re.search(r"(\d{4})年(\d{1,2})月", time_gal)
-                if match:
-                    links_url=f'https://www.mysqil.com/wp-content/uploads/{int(match.group(1))}/{str(int(match.group(2))).zfill(2)}/'+links_url
 
     #print(links_url)
     if links_url is None:
@@ -1065,7 +1062,7 @@ if __name__ == "__main__":#测试用，不用管
     url='https://v.douyin.com/iPhd561x'
     url='https://gal.manshuo.ink/archives/297/'
     url = 'https://www.hikarinagi.com/p/21338'
-    url='https://www.mysqil.com/4605.html'
+    url='https://www.mysqil.com/4699.html'
     #url='https://t.bilibili.com/1020450668700237844?share_source=pc_native'
     asyncio.run(link_prising(url))
     #asyncio.run(wb(url))
