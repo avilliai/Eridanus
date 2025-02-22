@@ -626,6 +626,8 @@ def main(bot,config):
         group2 = f'{event.group_id}_2'
         group3 = f'{event.group_id}_3'
         message = str(event.pure_text)
+        if message == '':
+            return
         flag = None
         if group1 not in last_messages:
             last_messages[group1] = None
