@@ -284,7 +284,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     generate_voice=True
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
-            if mface_files!=[]:
+            if mface_files!=[] and mface_files is not None:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
                 mface_files=[]
