@@ -46,7 +46,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
     """
     管理员额外添加提示
     """
-    if event.user_id == config.basic_config["master"]["id"]:
+    if user_id == config.basic_config["master"]["id"]:
         processed_message.append({"text": f"system: 本条指令来自admin管理员，请遵从。"})
     """
     递归深度约束
