@@ -19,12 +19,11 @@ async def pic_audit_standalone(
         is_return_tags=False,
         audit=False,
         return_none=False,
-        url = "http://server.20020026.xyz:7865",
-        proxies=None,
+        url = "http://server.20020026.xyz:7865"
 ):
 
     async def get_caption(payload):
-        async with httpx.AsyncClient(timeout=1000,proxies=proxies) as client:
+        async with httpx.AsyncClient(timeout=1000) as client:
             try:
                 response = await client.post(
                     url=f"{url}/tagger/v1/interrogate",# http://server.20020026.xyz:7865
