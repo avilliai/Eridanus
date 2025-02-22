@@ -17,11 +17,13 @@ def main(bot,config):
             if event.message_chain.has(Image) and event.message_chain.get(Image)[0].summary!="":
                 summary = event.message_chain.get(Image)[0].summary
                 url = event.message_chain.get(Image)[0].url
-            else:
+            elif event.message_chain.has(Mface):
                 #print(event.message_chain.get(Mface)[0])
                 mface=event.message_chain.get(Mface)[0]
                 summary=mface.summary
                 url=mface.url
+            else:
+                return
                 #await bot.send(event,f"收到表情包：{summary}，地址：{url}")
             bot.logger.info(f"收到表情包：{summary}，地址：{url}")
             try:
