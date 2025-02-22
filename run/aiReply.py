@@ -6,7 +6,7 @@ import asyncio
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
 from plugins.core.Group_Message_DB import clear_group_messages
-from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep, tts_and_send
+from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep, tts_and_send, send_text
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
@@ -117,7 +117,7 @@ def main(bot,config):
                     )
             #reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
                     if reply_message is not None:
-                        await tts_and_send(bot,event,config,reply_message.strip())
+                        await send_text(bot,event,config,reply_message.strip())
 
 
 
@@ -165,4 +165,4 @@ def main(bot,config):
                   )
                   # reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
                   if reply_message is not None:
-                      await tts_and_send(bot,event,config,reply_message.strip())
+                      await send_text(bot,event,config,reply_message.strip())

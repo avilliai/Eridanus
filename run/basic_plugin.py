@@ -230,7 +230,7 @@ async def call_all_speakers(bot,event,config):
         acgn_ai_speakers=None
     modelscope_speakers=get_modelscope_tts_speakers()
     try:
-        vits_speakers=await get_vits_speakers()
+        vits_speakers=await get_vits_speakers(config.api["tts"]["vits"]["base_url"],None)
     except Exception as e:
         bot.logger.error(f"Error in get_vits_speakers: {e}")
         vits_speakers=None
