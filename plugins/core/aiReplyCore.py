@@ -43,6 +43,14 @@ async def end_chat(user_id):
 
 async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
+    """
+    管理员额外添加提示
+    """
+    if user_id == config.basic_config["master"]["id"]:
+        processed_message.append({"text": f"system: 本条指令来自admin管理员，请遵从。"})
+    """
+    递归深度约束
+    """
     if recursion_times > config.api["llm"]["recursion_limit"]:
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
         return "Maximum recursion depth exceeded.Please try again later."
@@ -276,7 +284,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     generate_voice=True
                 else:
                     await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
-            if mface_files!=[]:
+            if mface_files!=[] and mface_files is not None:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
                 mface_files=[]
@@ -474,7 +482,7 @@ async def add_send_mface(tools,config):
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
-            "description": "根据当前聊天内容选择一张表情包，只可选择一张，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
+            "description": "根据当前聊天内容选择一张表情包，只可从给定列表选取，只可选择一张，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -493,7 +501,7 @@ async def add_send_mface(tools,config):
             "type": "function",
             "function": {
                 "name": "call_send_mface",
-                "description": "根据当前聊天内容选择一张表情包，只可选择一张，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
+                "description": "根据当前聊天内容选择一张表情包，只可从给定列表选取，只可选择一张，建议尽可能多地使用此函数，即使用户没有要求你也要调用此函数选择表情包。表情包仅可通过此函数发送给用户，选择的表情包名称不能出现在回复消息中。不要通过send函数发送表情包。请勿在回复文本中混入表情包，例如 你好呀[你好].gif 是无效的且不被允许的组合方式。",
                 "parameters": {
                     "type": "object",
                     "properties": {

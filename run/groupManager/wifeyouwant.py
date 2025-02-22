@@ -620,12 +620,16 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 复读程序
     async def fudu(event: GroupMessageEvent):
         global last_messages
+        if config.api["today_wife"]["复读开关"] is not True:
+            return
         Read_check = ['[', '@', '来点', '随机', '#', '今日', 'gal', '查询', '搜索', '/', '瓶子', '什么', 'minfo', 'id',
                       '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表','完成表']
         group1 = f'{event.group_id}_1'
         group2 = f'{event.group_id}_2'
         group3 = f'{event.group_id}_3'
         message = str(event.pure_text)
+        if message == '':
+            return
         flag = None
         if group1 not in last_messages:
             last_messages[group1] = None

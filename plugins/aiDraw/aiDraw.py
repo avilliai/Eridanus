@@ -531,7 +531,7 @@ async def getcheckpoints(config):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    
+
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url)
         r = response.json()
