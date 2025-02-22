@@ -12,6 +12,7 @@ from ruamel.yaml import YAML
 
 from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
+from plugins.core.tts.vits import vits
 from plugins.utils.random_str import random_str
 
 yaml = YAML(typ='safe')
@@ -47,6 +48,17 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         if speaker is None:
             speaker=config.api["tts"]["modelscope_tts"]["speaker"]
         return await modelscope_tts(text,speaker)
+    elif mode=="vits":
+        if speaker is None:
+            speaker=config.api["tts"]["vits"]["speaker"]
+        base_url=config.api["tts"]["vits"]["base_url"]
+        lang_type=config.api["tts"]["vits"]["lang_type"]
+        proxy=config.api["proxy"]["http_proxy"]
+        if proxy:
+            proxies={"http://": proxy,"https://": proxy}
+        else:
+            proxies=None
+        return await vits(text,speaker,base_url,lang_type,proxies)
     else:
         pass
 

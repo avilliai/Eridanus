@@ -41,7 +41,11 @@ llm:
     智能体ID: ""
     token: ""
 tts:
-  tts_engine: modelscope_tts     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai，配了哪个填哪个。
+  tts_engine: modelscope_tts     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
+  vits:
+    lang_type: "ja"
+    speaker: "綾地寧々"
+    base_url: "http://127.0.0.1:5009"
   acgn_ai:
     token:           #https://getkey.acgnai.top/注册后，登录获取令牌，每个token每天2000字，支持多token
     - ""
