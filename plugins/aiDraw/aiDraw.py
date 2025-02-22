@@ -485,8 +485,6 @@ async def SdDraw0(prompt, path, config, groupid, args):
         round_sd = 0
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
-    print(response)
-    print(response.status_code)
     r = response.json()
 
     b64 = r['images'][0]
