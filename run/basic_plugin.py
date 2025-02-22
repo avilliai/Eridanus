@@ -16,7 +16,7 @@ from plugins.basic_plugin.weather_query import weather_query
 from plugins.core.tts.modelscopeTTS import get_modelscope_tts_speakers
 from plugins.core.tts.napcat_tts import napcat_tts_speakers
 from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
-
+from plugins.core.tts.vits import get_vits_speakers
 
 from plugins.core.userDB import get_user
 
@@ -170,7 +170,8 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     ncspk=all_speakers[0]
     acgnspk=all_speakers[1]
     modelscope_speakers=all_speakers[2]
-    if not ncspk and not acgnspk and not modelscope_speakers:
+    vits_speakers=all_speakers[3]
+    if not ncspk and not acgnspk and not modelscope_speakers and not vits_speakers:
         bot.logger.error("No speakers found")
         return
     lock_mode=None
@@ -205,6 +206,10 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     if modelscope_speakers and lock_mode is None and lock_speaker is None:
         if speaker in modelscope_speakers:
             mode="modelscope_tts"
+            lock_mode="modelscope_tts"
+    if vits_speakers and lock_mode is None and lock_speaker is None:
+        if speaker in vits_speakers:
+            mode="vits"
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
         await bot.send(event, Record(file=p))
@@ -224,7 +229,12 @@ async def call_all_speakers(bot,event,config):
         bot.logger.error(f"Error in get_acgn_ai_speaker_list: {e}")
         acgn_ai_speakers=None
     modelscope_speakers=get_modelscope_tts_speakers()
-    return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers]}
+    try:
+        vits_speakers=await get_vits_speakers()
+    except Exception as e:
+        bot.logger.error(f"Error in get_vits_speakers: {e}")
+        vits_speakers=None
+    return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers,vits_speakers]}
 async def call_tarot(bot,event,config):
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
