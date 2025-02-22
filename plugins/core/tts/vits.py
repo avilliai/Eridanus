@@ -1,4 +1,6 @@
+import asyncio
 import httpx
+import requests
 
 from plugins.utils.random_str import random_str
 from plugins.utils.translate import translate
