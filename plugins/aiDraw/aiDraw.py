@@ -483,7 +483,19 @@ async def SdDraw0(prompt, path, config, groupid, args):
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
-    async with httpx.AsyncClient(timeout=None) as client:
+    """
+    代理
+    """
+    proxies=None
+    proxy=config.api["proxy"]["http_proxy"]
+    if config.api['ai绘画']['enalbe_proxy']:
+        if config.api["proxy"]["http_proxy"]:
+            if proxy is not None and proxy != "":
+                proxies = {"http://": proxy, "https://": proxy}
+            else:
+                proxies = None
+
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
     r = response.json()
 
@@ -509,8 +521,18 @@ async def getloras(config):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-
-    async with httpx.AsyncClient(timeout=None) as client:
+    """
+    代理
+    """
+    proxies=None
+    proxy=config.api["proxy"]["http_proxy"]
+    if config.api['ai绘画']['enalbe_proxy']:
+        if config.api["proxy"]["http_proxy"]:
+            if proxy is not None and proxy != "":
+                proxies = {"http://": proxy, "https://": proxy}
+            else:
+                proxies = None
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         response = await client.get(url)
         r = response.json()
         result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
@@ -531,8 +553,18 @@ async def getcheckpoints(config):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    
-    async with httpx.AsyncClient(timeout=None) as client:
+    """
+    代理
+    """
+    proxies=None
+    proxy=config.api["proxy"]["http_proxy"]
+    if config.api['ai绘画']['enalbe_proxy']:
+        if config.api["proxy"]["http_proxy"]:
+            if proxy is not None and proxy != "":
+                proxies = {"http://": proxy, "https://": proxy}
+            else:
+                proxies = None
+    async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
         response = await client.get(url)
         r = response.json()
         model_lines = [f'{model.get("model_name", "未知")}.safetensors' for model in r]

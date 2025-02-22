@@ -416,11 +416,22 @@ def main(bot,config):
             bot.logger.info(f"发起反推tag请求，path:{path}")
             tag_user.pop(event.sender.user_id)
 
+            """
+            代理
+            """
+            proxies = None
+            proxy = config.api["proxy"]["http_proxy"]
+            if config.api['ai绘画']['enalbe_proxy']:
+                if config.api["proxy"]["http_proxy"]:
+                    if proxy is not None and proxy != "":
+                        proxies = {"http://": proxy, "https://": proxy}
+                    else:
+                        proxies = None
             try:
                 b64_in = await url_to_base64(img_url)
                 await bot.send(event, "tag反推中", True)
                 message, tags, tags_str = await pic_audit_standalone(b64_in, is_return_tags=True,
-                                                                    url=config.api["ai绘画"]["sd审核和反推api"])
+                                                                    url=config.api["ai绘画"]["sd审核和反推api"],proxies=proxies)
                 tags_str = tags_str.replace("_", " ")
                 await bot.send(event, Text(tags_str), True)
             except Exception as e:
