@@ -8,7 +8,8 @@ from plugins.utils.translate import translate
 
 async def vits(text,speaker,base_url,lang,proxies):
     if lang=="ja":
-        text=f"[JA]{translate(text)}[JA]"
+        transed_text=await translate(text)
+        text=f"[JA]{transed_text}[JA]"
     url = f"{base_url}/get_audio"
     params = {
         "text": f"{text}",
@@ -20,11 +21,12 @@ async def vits(text,speaker,base_url,lang,proxies):
 
     audio_content = await asyncio.to_thread(fetch)
 
-    p = f"data/voice/cache/{random_str()}.wav"
+    p = f"data/voice/cache/{random_str()}.mp3"
 
 
     with open(p, "wb") as f:
         f.write(audio_content)
+    return p
 async def get_vits_speakers(base_url,proxies):
     url = f"{base_url}/get_speakers"
     def fetch():

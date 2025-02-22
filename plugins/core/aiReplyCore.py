@@ -7,6 +7,7 @@ import traceback
 from collections import defaultdict
 import os
 
+import asyncio
 
 from developTools.message.message_components import Record, Text, Node, Image
 from developTools.utils.logger import get_logger
@@ -134,16 +135,9 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             status=False
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
                 status=True
-            generate_voice=False
-            if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
-                if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
-                    if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                        if reply_message.strip()=="" or reply_message.strip()=="\n":
-                            logger.error("返回了空回复，不发送。")
-                        await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
-                    generate_voice=True
-                else:
-                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+
+            if status and reply_message is not None:
+                await send_text(bot, event,config,reply_message)
 
             #函数调用
             temp_history=[]
@@ -205,29 +199,22 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
                                                    system_instruction=system_instruction, func_result=True)
                 return final_response
-            if generate_voice and reply_message:
-                try:
-                    bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                    path = await tts(reply_message, config=config,bot=bot)
-                    await bot.send(event, Record(file=path))
-                except Exception as e:
-                    bot.logger.error(f"Error occurred when calling tts: {e}")
-                if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+
             #print(response_message)
-        elif config.api["llm"]["model"]=="gemini":
+        elif config.api["llm"]["model"] == "gemini":
             if processed_message:
-                prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,func_result,event)
-                p=await read_context(bot,event,config,prompt)
-                if p:
-                    prompt=p
-            else:
-                prompt=await get_current_gemini_prompt(user_id)
+                prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
+                                                                                  func_result, event)
                 p = await read_context(bot, event, config, prompt)
                 if p:
                     prompt = p
-            if processed_message is None:  #防止二次递归无限循环
-                tools=None
+            else:
+                prompt = await get_current_gemini_prompt(user_id)
+                p = await read_context(bot, event, config, prompt)
+                if p:
+                    prompt = p
+            if processed_message is None:  # 防止二次递归无限循环
+                tools = None
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],
@@ -239,59 +226,54 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 temperature=config.api["llm"]["gemini"]["temperature"],
                 maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
             )
-            #print(response_message)
+            # print(response_message)
             try:
-                reply_message=response_message["parts"][0]["text"]  #函数调用可能不给你返回提示文本，只给你整一个调用函数。
-                reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
+                reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
+                reply_message, mface_files = remove_mface_filenames(reply_message, config)  # 去除表情包文件名
             except Exception as e:
                 logger.error(f"Error occurred when processing gemini response: {e}")
-                reply_message=None
+                reply_message = None
             if reply_message is not None:
-                if reply_message=="\n" or reply_message=="" or reply_message==" ":
+                if reply_message == "\n" or reply_message == "" or reply_message == " ":
                     raise Exception("Empty response。Gemini API返回的文本为空。")
             """
             gemini返回多段回复处理
             """
             text_elements = [part for part in response_message['parts'] if 'text' in part]
-            if text_elements!=[] and len(text_elements)>1:
-                self_rep=[]
+            if text_elements != [] and len(text_elements) > 1:
+                self_rep = []
                 for i in text_elements:
-                    if i["text"]!="\n" and i["text"]!="":
-                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(),config)  # 去除表情包文件名
-                        self_rep.append({"text":tep_rep_message})
-                        await bot.send(event, tep_rep_message)
-                        if mface_files!=[]:
+                    if i["text"] != "\n" and i["text"] != "":
+                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(), config)  # 去除表情包文件名
+                        self_rep.append({"text": tep_rep_message})
+                        await send_text(bot, event, config, tep_rep_message)
+                        if mface_files != []:
                             for mface_file in mface_files:
                                 await bot.send(event, Image(file=mface_file))
-                            mface_files=[]
-                self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+                            mface_files = []
+                self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000,
+                                "message": self_rep}
                 if hasattr(event, "group_id"):
                     await add_to_group(event.group_id, self_message)
-                reply_message=None
-            #检查是否存在函数调用，如果还有提示词就发
-            status=False
+                reply_message = None
+            # 检查是否存在函数调用，如果还有提示词就发
+            status = False
 
             for part in response_message["parts"]:
                 if "functionCall" in part and config.api["llm"]["func_calling"]:
-                    status=True
+                    status = True
 
-            generate_voice=False
-            if status and reply_message is not None: #有函数调用且有回复，就发回复和语音
-                if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
-                    if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                        await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+            if status and reply_message is not None:  # 有函数调用且有回复，就发回复和语音
+                await send_text(bot, event, config, reply_message)
 
-                    generate_voice=True
-                else:
-                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
-            if mface_files!=[] and mface_files is not None:
+            if mface_files != [] and mface_files is not None:
                 for mface_file in mface_files:
                     await bot.send(event, Image(file=mface_file))
-                mface_files=[]
+                mface_files = []
 
-            #在函数调用之前触发更新上下文。
+            # 在函数调用之前触发更新上下文。
             await prompt_database_updata(user_id, response_message, config)
-            #函数调用
+            # 函数调用
             new_func_prompt = []
             for part in response_message["parts"]:
                 if "functionCall" in part:
@@ -300,7 +282,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     """
                     进行对表情包功能的特殊处理
                     """
-                    if func_name=="call_send_mface" and mface_files==[]:
+                    if func_name == "call_send_mface" and mface_files == []:
                         pass
                     else:
                         """
@@ -308,11 +290,11 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         """
                         try:
 
-                            r=await call_func(bot, event, config,func_name, args)
-                            if r==False:
+                            r = await call_func(bot, event, config, func_name, args)
+                            if r == False:
                                 await end_chat(user_id)
                             if r:
-                                func_r={
+                                func_r = {
                                     "functionResponse": {
                                         "name": func_name,
                                         "response": r
@@ -320,26 +302,18 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 }
                                 new_func_prompt.append(func_r)
                         except Exception as e:
-                            #logger.error(f"Error occurred when calling function: {e}")
+                            # logger.error(f"Error occurred when calling function: {e}")
                             logger.error(f"Error occurred when calling function: {func_name}")
                             traceback.print_exc()
-                    await add_self_rep(bot,event,config,reply_message)
-                    reply_message=None
-            if new_func_prompt!=[]:
-
+                    await add_self_rep(bot, event, config, reply_message)
+                    reply_message = None
+            if new_func_prompt != []:
                 await prompt_database_updata(user_id, {"role": "function", "parts": new_func_prompt}, config)
-                #await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
-                final_response=await aiReplyCore(None,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=True)
+                # await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
+                final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
+                                                   system_instruction=system_instruction, func_result=True)
                 return final_response
-            if generate_voice and reply_message is not None:
-                try:
-                    bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                    path = await tts(reply_message, config=config,bot=bot)
-                    await bot.send(event, Record(file=path))
-                except Exception as e:
-                    bot.logger.error(f"Error occurred when calling tts: {e}")
-                if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                    await bot.send(event, reply_message.strip(), config.api["llm"]["Quote"])
+
         elif config.api["llm"]["model"]=="腾讯元器":
             prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
@@ -374,6 +348,24 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
         else:
             return "Maximum recursion depth exceeded.Please try again later."
+async def send_text(bot,event,config,text):
+    if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
+        if config.api["llm"]["语音回复附带文本"]:
+            await bot.send(event, text.strip(), config.api["llm"]["Quote"])
+
+        await tts_and_send(bot, event, config, text)
+    else:
+        await bot.send(event, text.strip(), config.api["llm"]["Quote"])
+async def tts_and_send(bot,event,config,reply_message):
+    async def _tts_and_send():
+        try:
+            bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
+            path = await tts(reply_message, config=config, bot=bot)
+            await bot.send(event, Record(file=path))
+        except Exception as e:
+            bot.logger.error(f"Error occurred when calling tts: {e}")
+
+    asyncio.create_task(_tts_and_send())
 async def prompt_database_updata(user_id,response_message,config):
     history = await get_user_history(user_id)
     if len(history) > config.api["llm"]["max_history_length"]:
