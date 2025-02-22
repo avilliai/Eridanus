@@ -70,6 +70,9 @@ def main(bot,config):
         proxy = config.api["proxy"]["http_proxy"]
         #print(proxy)
         url=event.pure_text
+        if url == '':
+            url=event.raw_message
+        #print(f'url:{url}')
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
             if event.get("text") is not None and event.get("text")[0]=="下载视频":
