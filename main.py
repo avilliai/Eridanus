@@ -118,6 +118,7 @@ if enable_webui and os.path.exists("../server.exe"):
         config_copy.settings["JMComic"]["anti_nsfw"] = "no_censor"
         config_copy.settings["asmr"]["gray_layer"] = False
         config_copy.settings["basic_plugin"]["setu"]["gray_layer"] = False
+        config_copy.api["llm"]["读取群聊上下文"]=False
     def run_bot2():
         """在独立线程运行 bot2"""
         config_fix(config_copy)
