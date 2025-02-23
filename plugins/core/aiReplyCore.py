@@ -42,7 +42,7 @@ async def end_chat(user_id):
     except:
         print("end_chat error。已不存在对应trigger")
 
-async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0): #后面几个函数都是供函数调用的场景使用的
+async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,do_not_read_context=False): #后面几个函数都是供函数调用的场景使用的
     logger.info(f"aiReplyCore called with message: {processed_message}")
     """
     递归深度约束
@@ -90,9 +90,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             """
             读取上下文
             """
-            p = await read_context(bot, event, config, prompt)
-            if p:
-                prompt = p
+            if not do_not_read_context:
+                p = await read_context(bot, event, config, prompt)
+                if p:
+                    prompt = p
             response_message = await openaiRequest(
                 prompt,
                 config.api["llm"]["openai"]["quest_url"],
@@ -200,14 +201,16 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
                                                                                   func_result, event)
-                p = await read_context(bot, event, config, prompt)
-                if p:
-                    prompt = p
+                if not do_not_read_context:
+                    p = await read_context(bot, event, config, prompt)
+                    if p:
+                        prompt = p
             else:
                 prompt = await get_current_gemini_prompt(user_id)
-                p = await read_context(bot, event, config, prompt)
-                if p:
-                    prompt = p
+                if not do_not_read_context:
+                    p = await read_context(bot, event, config, prompt)
+                    if p:
+                        prompt = p
             if processed_message is None:  # 防止二次递归无限循环
                 tools = None
             response_message = await geminiRequest(
@@ -234,23 +237,26 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             """
             gemini返回多段回复处理
             """
-            text_elements = [part for part in response_message['parts'] if 'text' in part]
-            if text_elements != [] and len(text_elements) > 1:
-                self_rep = []
-                for i in text_elements:
-                    if i["text"] != "\n" and i["text"] != "":
-                        tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(), config)  # 去除表情包文件名
-                        self_rep.append({"text": tep_rep_message})
-                        await send_text(bot, event, config, tep_rep_message)
-                        if mface_files != []:
-                            for mface_file in mface_files:
-                                await bot.send(event, Image(file=mface_file))
-                            mface_files = []
-                self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000,
-                                "message": self_rep}
-                if hasattr(event, "group_id"):
-                    await add_to_group(event.group_id, self_message)
-                reply_message = None
+            try:
+                text_elements = [part for part in response_message['parts'] if 'text' in part]
+                if text_elements != [] and len(text_elements) > 1:
+                    self_rep = []
+                    for i in text_elements:
+                        if i["text"] != "\n" and i["text"] != "":
+                            tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(), config)  # 去除表情包文件名
+                            self_rep.append({"text": tep_rep_message})
+                            await send_text(bot, event, config, tep_rep_message)
+                            if mface_files != []:
+                                for mface_file in mface_files:
+                                    await bot.send(event, Image(file=mface_file))
+                                mface_files = []
+                    self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000,
+                                    "message": self_rep}
+                    if hasattr(event, "group_id"):
+                        await add_to_group(event.group_id, self_message)
+                    reply_message = None
+            except Exception as e:
+                logger.error(f"Error occurred when processing gemini response: {e}")
             # 检查是否存在函数调用，如果还有提示词就发
             status = False
 
@@ -340,7 +346,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
                 logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
-            return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1)
+            return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1,do_not_read_context=True)
         else:
             return "Maximum recursion depth exceeded.Please try again later."
 async def send_text(bot,event,config,text):

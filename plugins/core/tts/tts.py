@@ -66,12 +66,15 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
 def gptVitsSpeakers():
     global GPTSOVITS_SPEAKERS
     model_url="https://gsv.ai-lab.top/models"
-    models=requests.get(model_url).json()
-    for model in models:
-        url=f"https://gsv.ai-lab.top/spks"
-        response=requests.post(url,json={"model": model}).json()
-        for spk in response["speakers"]:
-            GPTSOVITS_SPEAKERS[spk]=model
+    try:
+        models=requests.get(model_url).json()
+        for model in models:
+            url=f"https://gsv.ai-lab.top/spks"
+            response=requests.post(url,json={"model": model}).json()
+            for spk in response["speakers"]:
+                GPTSOVITS_SPEAKERS[spk]=model
+    except:
+        GPTSOVITS_SPEAKERS=None
 
 
 try:
