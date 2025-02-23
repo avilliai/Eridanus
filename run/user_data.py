@@ -67,7 +67,7 @@ def main(bot,config):
     master_name = config.basic_config["master"]["name"]
     asyncio.run(add_user(master_id, master_name, master_name))
     asyncio.run(update_user(master_id, permission=9999, nickname=master_name))
-    asyncio.run(update_user(111111111,permission=9999,nickname="test"))
+    asyncio.run(update_user(111111111,permission=9999,nickname="主人"))
     if master_id not in config.censor_user["whitelist"]:
         config.censor_user["whitelist"].append(master_id)
         config.save_yaml(str("censor_user"))

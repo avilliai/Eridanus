@@ -456,11 +456,13 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
             logger.info(f"mface 匹配到的文件名: {matched_files}")
 
         logger.info(f"mface 处理后的文本: {cleaned_text}")
+        if matched_files==[]:
+            return cleaned_text, None
         return cleaned_text, matched_files
     except Exception as e:
         logger.error(f"Error occurred when removing mface filenames: {e}")
         traceback.print_exc()
-        return reply_message, []
+        return reply_message, None
 
 
 

@@ -1,4 +1,5 @@
 import concurrent.futures
+import copy
 import importlib
 import os
 import sys
@@ -102,9 +103,14 @@ try:
 except:
   enable_webui=False
 if enable_webui and os.path.exists("../server.exe"):
+    config_copy = copy.deepcopy(config)
+    def config_fix(config_copy):
+        config_copy.settings["JMComic"]["anti_nsfw"] = "no_censor"
+        config_copy.settings["asmr"]["gray_layer"] = False
+        config_copy.settings["basic_plugin"]["setu"]["gray_layer"] = False
     def run_bot2():
         """在独立线程运行 bot2"""
-        load_plugins(bot2,config)
+        load_plugins(bot2,config_copy)
         bot2.run()
 
 
