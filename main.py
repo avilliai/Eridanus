@@ -120,6 +120,7 @@ if enable_webui and os.path.exists("../server.exe"):
         config_copy.settings["basic_plugin"]["setu"]["gray_layer"] = False
     def run_bot2():
         """在独立线程运行 bot2"""
+        config_fix(config_copy)
         load_plugins(bot2,config_copy)
         bot2.run()
 
