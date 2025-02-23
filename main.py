@@ -1,4 +1,5 @@
 import concurrent.futures
+import copy
 import importlib
 import os
 import sys
@@ -102,9 +103,25 @@ try:
 except:
   enable_webui=False
 if enable_webui and os.path.exists("../server.exe"):
+    config_copy = YAMLManager(["config/settings.yaml",
+                          "config/basic_config.yaml",
+                          "config/api.yaml",
+                          "config/controller.yaml",
+                          "data/censor/censor_group.yaml",
+                          "data/censor/censor_user.yaml",
+                          "data/media_service/bilibili/bili_dynamic.yaml",
+                          "data/tasks/scheduledTasks.yaml",
+                          "data/tasks/scheduledTasks_push_groups.yaml",
+                          "data/recognize/doro.yaml",
+                          "data/recognize/nailong.yaml", ])  # 这玩意用来动态加载和修改配置文件
+    def config_fix(config_copy):
+        config_copy.settings["JMComic"]["anti_nsfw"] = "no_censor"
+        config_copy.settings["asmr"]["gray_layer"] = False
+        config_copy.settings["basic_plugin"]["setu"]["gray_layer"] = False
     def run_bot2():
         """在独立线程运行 bot2"""
-        load_plugins(bot2,config)
+        config_fix(config_copy)
+        load_plugins(bot2,config_copy)
         bot2.run()
 
 

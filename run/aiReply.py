@@ -6,7 +6,7 @@ import asyncio
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
 from plugins.core.Group_Message_DB import clear_group_messages
-from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep
+from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep, tts_and_send, send_text
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
@@ -117,20 +117,7 @@ def main(bot,config):
                     )
             #reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
                     if reply_message is not None:
-                        if random.randint(0,100)<config.api["llm"]["语音回复几率"]:
-                            if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                                await bot.send(event, reply_message, config.api["llm"]["Quote"])
-                            try:
-                                bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                                path=await tts(reply_message,config=config,bot=bot)
-                                await bot.send(event,Record(file=path))
-                            except Exception as e:
-                                bot.logger.error(f"Error occurred when calling tts: {e}")
-                            if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                                await bot.send(event, reply_message, config.api["llm"]["Quote"])
-
-                        else:
-                            await bot.send(event,reply_message,config.api["llm"]["Quote"])
+                        await send_text(bot,event,config,reply_message.strip())
 
 
 
@@ -178,17 +165,4 @@ def main(bot,config):
                   )
                   # reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
                   if reply_message is not None:
-                      if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
-                          if config.api["llm"]["语音回复附带文本"] and not config.api["llm"]["文本语音同时发送"]:
-                              await bot.send(event, reply_message, config.api["llm"]["Quote"])
-                          try:
-                              bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-                              path = await tts(reply_message, config=config, bot=bot)
-                              await bot.send(event, Record(file=path))
-                          except Exception as e:
-                              bot.logger.error(f"Error occurred when calling tts: {e}")
-                          if config.api["llm"]["语音回复附带文本"] and config.api["llm"]["文本语音同时发送"]:
-                              await bot.send(event, reply_message, config.api["llm"]["Quote"])
-
-                      else:
-                          await bot.send(event, reply_message, config.api["llm"]["Quote"])
+                      await send_text(bot,event,config,reply_message.strip())

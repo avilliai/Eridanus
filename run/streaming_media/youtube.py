@@ -106,8 +106,6 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                     file=await download_file(i[0],path,config.api["proxy"]["http_proxy"])
                     file_paths.append(file)
                     bot.logger.info(f"download_file success:{file}")
-                    text=f"音频名称: {i[1]}\n音频url: {i[0]}"
-                    forward_list.append(Node(content=[Text(text)]))
 
                 await bot.send(event, forward_list)
 
