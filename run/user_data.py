@@ -43,9 +43,10 @@ async def call_permit(bot,event,config,target_id,level,type="user"):
             await bot.send(event, f"已将{target_id}的权限设置为{level}")
         elif type == "group":
             groupmemberlist_get = await bot.get_group_member_list(target_id)
+            bot.logger.info(f"number of members in group {target_id}: {len(groupmemberlist_get['data'])}")
             for member in groupmemberlist_get["data"]:
                 try:
-                    bot.logger.info(f"Setting permission of {member['user_id']} to {level}")
+                    #bot.logger.info(f"Setting permission of {member['user_id']} to {level}")
                     await update_user(user_id=member["user_id"], permission=level)
                 except Exception as e:
                     bot.logger.error(f"Error in updating user permission: {e}")
