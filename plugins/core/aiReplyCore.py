@@ -134,6 +134,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             if status and reply_message is not None:
                 await send_text(bot, event,config,reply_message)
+                reply_message = None
 
             #函数调用
             temp_history=[]
@@ -246,6 +247,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(), config)  # 去除表情包文件名
                             self_rep.append({"text": tep_rep_message})
                             await send_text(bot, event, config, tep_rep_message)
+                            reply_message = None
                             if mface_files != []:
                                 for mface_file in mface_files:
                                     await bot.send(event, Image(file=mface_file))
@@ -256,7 +258,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await add_to_group(event.group_id, self_message)
                     reply_message = None
             except Exception as e:
-                logger.error(f"Error occurred when processing gemini response: {e}")
+                logger.error(f"Error occurred when processing gemini response2: {e}")
             # 检查是否存在函数调用，如果还有提示词就发
             status = False
 
@@ -266,6 +268,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
             if status and reply_message is not None:  # 有函数调用且有回复，就发回复和语音
                 await send_text(bot, event, config, reply_message)
+                reply_message = None
 
             if mface_files != [] and mface_files is not None:
                 for mface_file in mface_files:
