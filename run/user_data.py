@@ -35,11 +35,20 @@ async def call_change_name(bot,event,config,name):
         await bot.send(event, f"已将你的昵称改为{name}")
     else:
         await bot.send(event,"权限好像不够呢.....")
-async def call_permit(bot,event,config,target_qq,level):
+async def call_permit(bot,event,config,target_id,level,type="user"):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if user_info[6] >= config.controller["user_data"]["permit_user_operate_level"]:
-        await update_user(user_id=target_qq, permission=level)
-        await bot.send(event, f"已将{target_qq}的权限设置为{level}")
+        if type == "user":
+            await update_user(user_id=target_id, permission=level)
+            await bot.send(event, f"已将{target_id}的权限设置为{level}")
+        elif type == "group":
+            groupmemberlist_get = await bot.get_group_member_list(target_id)
+            for member in groupmemberlist_get["data"]:
+                try:
+                    await update_user(user_id=member["user_id"], permission=level)
+                except Exception as e:
+                    bot.logger.error(f"Error in updating user permission: {e}")
+            await bot.send(event, f"已将群{target_id}中所有成员的权限设置为{level}")
     else:
         await bot.send(event,"权限不足以进行此操作。")
 async def call_delete_user_history(bot,event,config):

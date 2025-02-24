@@ -393,22 +393,26 @@
             },
             {
                 "name": "call_permit",
-                "description": "给指定用户授权",
+                "description": "给指定用户或群授权",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "target_qq": {
+                        "target_id": {
                             "type": "integer",
-                            "description": "所要授权的对象的qq号码"
+                            "description": "所要授权的对象的qq号码/群的群号"
                         },
                         "level": {
                             "type": "integer",
                             "description": "授权等级。1为最低，数字越大权限越高"
+                        },
+                        "type": {
+                            "type": "string", "enum": ["user","group"],"description": "授权对象类型。user为qq号码，group为群号"
                         }
                     },
                     "required": [
                         "target_qq",
-                        "level"
+                        "level",
+                        "type"
                     ]
                 }
             },
