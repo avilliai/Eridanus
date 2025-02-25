@@ -65,9 +65,6 @@ async def call_text2img(bot, event, config, prompt):
 
     # 在后台运行任务，不等待完成
     asyncio.create_task(run_tasks())
-
-    # 立即返回
-    return {"status": "绘制中....请等待结果返回"}
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id, event.sender.nickname)
@@ -101,6 +98,11 @@ async def call_text2img2(bot, event, config, tag):
         #await bot.send(event, "你没有权限使用该功能。")
 
 async def call_text2img1(bot,event,config,tag):
+    user_info = await get_user(event.user_id)
+    if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
+        bot.logger.info(f"reject text2img request: 权限不足")
+        await bot.send(event,"无绘图功能使用权限",True)
+        return
     if config.settings["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
         global turn
         global sd_user_args

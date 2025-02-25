@@ -120,7 +120,7 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                 else:
                     # 处理消息并缓存
                     raw_message["message"].insert(0, {
-                        "text": f"本条及接下来的消息为群聊上下文背景消息，消息发送者为 {raw_message['user_name']} id为{raw_message['user_id']} "})
+                        "text": f"本条消息为群聊上下文背景消息，消息发送者为 {raw_message['user_name']} id为{raw_message['user_id']} "})
 
                     if prompt_standard == "gemini":
                         processed = await gemini_prompt_elements_construct(raw_message["message"], bot=bot, event=event)

@@ -119,6 +119,7 @@ if enable_webui and os.path.exists("../server.exe"):
         config_copy.settings["asmr"]["gray_layer"] = False
         config_copy.settings["basic_plugin"]["setu"]["gray_layer"] = False
         config_copy.api["llm"]["读取群聊上下文"]=False
+        config_copy.basic_config["master"]["id"]=111111111
     def run_bot2():
         """在独立线程运行 bot2"""
         config_fix(config_copy)

@@ -5,6 +5,8 @@ from plugins.core.Group_Message_DB import add_to_group
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def add_message_to_db(event: GroupMessageEvent):
+        if not config.api["llm"]["读取群聊上下文"]:
+            return
         try:
             user_name=event.sender.nickname
         except:
