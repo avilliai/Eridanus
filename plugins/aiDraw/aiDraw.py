@@ -12,6 +12,7 @@ import json
 from PIL import Image
 from plugins.utils.utils import parse_arguments
 from plugins.utils.random_str import random_str
+from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
@@ -69,6 +70,7 @@ async def n4(prompt, path, groupid, config, args):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
     nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
     nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
     nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
@@ -204,6 +206,7 @@ async def n3(prompt, path, groupid, config, args):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
     nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
     nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
     nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
@@ -336,6 +339,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
     sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
@@ -438,6 +442,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
     sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
@@ -570,6 +575,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
     nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
     if groupid in no_nsfw_groups:
@@ -715,6 +721,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
 
     if groupid in no_nsfw_groups:
         if check_censored(positive, censored_words):
@@ -848,6 +855,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
     sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
