@@ -17,8 +17,19 @@ basic_plugin:
     r18mode: true
     gray_layer: true #是否开启灰度图功能
   tarot:
-    lock: false #是否开启卡片锁定功能
+    lock: false #是否开启卡片锁定功能，现在没写锁定，开了也没用
     mode: "blueArchive" #牌面。可填 blueArchive,bilibili,AbstractImages
+    彩蛋牌:
+      enable: true #是否开启彩蛋牌
+      probability: 10 #彩蛋牌出现概率
+      card_index:
+        - data/pictures/tarot/hidden_tarot/dio.jpg: ""
+        - data/pictures/tarot/hidden_tarot/GIOGIO.jpg: ""
+        - data/pictures/tarot/hidden_tarot/gyro.jpg: ""
+        - data/pictures/tarot/hidden_tarot/hp.jpg: ""
+        - data/pictures/tarot/hidden_tarot/johnny.jpg: ""
+        - data/pictures/tarot/hidden_tarot/joseph.jpg: ""
+        - data/pictures/tarot/hidden_tarot/vlt.jpg: ""
   搜图:
     聚合搜图: true     #搜单图
     soutu_bot: true  #搜本子

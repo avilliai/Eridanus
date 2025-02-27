@@ -268,7 +268,7 @@ def merge_dicts(old, new):
             merge_dicts(v, new[k])
         # 如果值是列表，且新旧值都是列表，则合并并去重
         elif isinstance(v, list) and k in new and isinstance(new[k], list):
-            if k == "api_keys" or k=="sdUrl" or k=="其他默认绘图参数":  # 特殊处理 api_keys
+            if k == "api_keys" or k=="sdUrl" or k=="其他默认绘图参数" or k=="card_index":  # 特殊处理, 保留旧值
                 logger.info(f"覆盖列表 key: {k}")
                 new[k] = v  # 使用旧的列表覆盖新的列表
             else:
