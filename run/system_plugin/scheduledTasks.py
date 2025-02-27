@@ -150,3 +150,31 @@ def main(bot,config):
         scheduler.start()
         logger.info("定时任务已启动")
 
+    allow_args = ["每日天文", "bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一"]
+    @bot.on(GroupMessageEvent)
+    async def _(event):
+        if event.message.startswith("/cron add "):
+            args = event.message.split("/cron add ")
+
+            if args[1] and args[1] in allow_args:
+                if event.group_id in config.sheduled_tasks_push_groups_ordinary[args[1]]["groups"]:
+                    await bot.send(event, "本群已经订阅过了")
+                    return
+                else:
+                    config.sheduled_tasks_push_groups_ordinary[args[1]]["groups"].append(event.group_id)
+                    config.save_yaml("sheduled_tasks_push_groups_ordinary")
+                    await bot.send(event, "订阅成功")
+            else:
+                await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+        elif event.message.startswith("/cron remove "):
+            args = event.message.split("/cron remove ")
+            if args[1] and args[1] in allow_args:
+                if event.group_id in config.sheduled_tasks_push_groups_ordinary[args[1]]["groups"]:
+                    config.sheduled_tasks_push_groups_ordinary[args[1]]["groups"].remove(event.group_id)
+                    config.save_yaml("sheduled_tasks_push_groups_ordinary")
+                    await bot.send(event, "取消订阅成功")
+                else:
+                    await bot.send(event, "本群没有订阅过")
+            else:
+                await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+

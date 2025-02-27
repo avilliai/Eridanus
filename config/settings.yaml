@@ -109,14 +109,10 @@ scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
     enable: True
     text: "晚上好，这里是今天的bangumi推送"
     time: 19/16
-  astronomy:       #nasa天文推送
+  每日天文:       #nasa天文推送
     enable: True
     text: "今日nasa天文推送"
     time: 18/59
-  每日天文:   #星座推送
-    enable: True
-    text: 杂鱼怎么还信星座这种东西啊
-    time: 16/30
   单向历:      #单向历
     enable: true
     text: 今日单向历
@@ -133,10 +129,6 @@ scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
     enable: true
     text: 杂鱼❤来白嫖游戏了
     time: 12/2
-  bingEveryDay: #今日bing
-    enable: true
-    text: ""
-    time: 10/2
   nightASMR:
     enable: true
     text: 听完就赶紧睡觉吧~祝你好梦！(≧▽≦*)
