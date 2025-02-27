@@ -42,8 +42,9 @@ plugin_modules = [
     ("user_data", "run.user_data"),
     ("api_implements", "run.api_implements"),
     ("Mface_Record","run.system_plugin.Mface_Record"),
+    ("scheduledTasks", "run.system_plugin.scheduledTasks"),
     #群管/自管
-    ("self_Manager", "run.groupManager.self_Manager"),
+    #("self_Manager", "run.groupManager.self_Manager"),
     ("group_manager", "run.groupManager.group_manager"),
     ("word_cloud", "run.groupManager.word_cloud"),
     ("wifeyouwant", "run.groupManager.wifeyouwant"),
@@ -62,7 +63,6 @@ plugin_modules = [
     #游戏服务
     ("blue_archive", "run.anime_game_service.blue_archive"),
     ("steam_service", "run.anime_game_service.steam_service"),
-
 
 ]
 
@@ -110,8 +110,8 @@ if enable_webui and os.path.exists("../server.exe"):
                           "data/censor/censor_group.yaml",
                           "data/censor/censor_user.yaml",
                           "data/media_service/bilibili/bili_dynamic.yaml",
-                          "data/tasks/scheduledTasks.yaml",
-                          "data/tasks/scheduledTasks_push_groups.yaml",
+                            "data/tasks/sheduled_tasks_push_groups_ordinary.yaml",
+                            "data/tasks/scheduledTasks_push_groups.yaml",
                           "data/recognize/doro.yaml",
                           "data/recognize/nailong.yaml", ])  # 这玩意用来动态加载和修改配置文件
     def config_fix(config_copy):

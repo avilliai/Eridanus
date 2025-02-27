@@ -32,7 +32,7 @@ dynamic_imports = {
     "run.acg_infromation.character_identify": ["call_character_identify"],
     "run.streaming_media.youtube": ["download_video"],
     "run.aiDraw": ["call_text2img", "call_aiArtModerate"],
-    "run.scheduledTasks": ["operate_group_push_tasks"],
+    "run.system_plugin.func_collection": ["operate_group_push_tasks"],
     "run.resource_search.engine_search": ["search_net", "read_html"],
     "run.system_plugin.Mface_Record": ["call_send_mface"]
 }
