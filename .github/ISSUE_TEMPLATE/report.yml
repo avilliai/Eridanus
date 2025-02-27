@@ -1,0 +1,70 @@
+name: 问题反馈
+description: 功能异常
+title: '[BUG] '
+labels: bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎来到 Eridanus 的 Issue Tracker！请填写以下表格来提交 Bug。
+        在提交新的 Bug 反馈前，请确保您：
+        * 已经搜索了现有的 issues，并且没有找到可以解决您问题的方法
+        * 不与现有的某一 issue 重复
+        * 请确保您的描述清晰，并提供足够的上下文信息，以便我们理解问题。
+        * 请不要在标题或内容中出现无意义的词语，否则可能会被忽略。
+        * 请不要在标题或内容中出现无意义的词语，否则可能会被忽略。
+        * 请不要在标题或内容中出现无意义的词语，否则可能会被忽略。
+        * 本issue template修改自napcat官方issue template，感谢NapCat团队的辛勤工作！
+  - type: input
+    id: system
+    attributes:
+      label: 系统信息
+      description: 您所使用的操作系统
+      placeholder: Windows 11 24H2
+    validations:
+      required: true
+  - type: input
+    id: onebot-version
+    attributes:
+      label: OneBot实现
+      description: 您所使用的 OneBot 实现及其版本
+      placeholder: napcat 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么?
+      description: 问题描述
+    validations:
+      required: true
+  - type: textarea
+    id: how-reproduce
+    attributes:
+      label: 如何复现
+      description: 填写应当如何操作才能触发这个异常行为
+      placeholder: |
+        1. xxx
+        2. xxx
+        3. xxx
+    validations:
+      required: true
+  - type: textarea
+    id: what-expected
+    attributes:
+      label: 期望的结果?
+      description: 程序原本的预期结果
+    validations:
+      required: true
+  - type: textarea
+    id: napcat-log
+    attributes:
+      label: 运行日志
+      description: 粘贴相关日志内容到此处，可在log目录下找到
+      render: shell
+  - type: textarea
+    id: onebot-client-log
+    attributes:
+      label: OneBot 客户端运行日志
+      description: 粘贴 OneBot 客户端的相关日志内容到此处
+      render: shell
