@@ -237,7 +237,7 @@ async def call_all_speakers(bot,event,config):
     return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers,vits_speakers]}
 async def call_tarot(bot,event,config):
     if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1, 100) < \
-            config.settings["basic_plugin"]["tarot"]["probability"]:
+            config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["probability"]:
         cards_ = config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["card_index"]
         card = random.choice(cards_)
         card_path, text = list(card.items())[0]
@@ -330,7 +330,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
         if event.pure_text=="今日塔罗":
-            if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1,100)<config.settings["basic_plugin"]["tarot"]["probability"]:
+            if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1,100)<config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["probability"]:
                 cards_=config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["card_index"]
                 card=random.choice(cards_)
                 card_path, text = list(card.items())[0]
