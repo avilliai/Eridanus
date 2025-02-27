@@ -87,3 +87,5 @@ ai绘画:
 sightengine:       #ai创作图片鉴别，自己去申请https://dashboard.sightengine.com/api-credentials
   api_user: ''
   api_secret: ''
+nasa_api:
+  api_key: ""   #nasa的每日天文api 从https://api.nasa.gov/index.html#main-content申请
