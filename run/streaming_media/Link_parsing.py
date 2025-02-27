@@ -80,9 +80,8 @@ def main(bot,config):
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
                     teamlist.pop(event.group_id)
                     return
-                #await bot.send(event, '开始下载，请稍等喵~~~')
                 await call_bili_download_video(bot,event,config)
-            return
+
 
 
         link_prising_json = await link_prising(url, filepath='data/pictures/cache/',proxy=proxy)
