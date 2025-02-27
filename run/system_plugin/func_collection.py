@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from developTools.event.events import GroupMessageEvent
+import datetime
+
+
+from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic, fetch_latest_dynamic_id
-
-
 async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:str,operation:bool,target_uid:int=None):
     if not isinstance(event,GroupMessageEvent):
         await bot.send(event,"订阅功能目前仅支持群聊")   #私聊主动群发消息容易被腾子shutdown
@@ -62,9 +63,3 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                     await bot.send(event, "你没有订阅过")
             else:
                 await bot.send(event, "不存在订阅任务")
-
-def main(bot,config):
-
-    @bot.on(GroupMessageEvent)
-    async def _(event):
-        pass

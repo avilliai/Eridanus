@@ -8,7 +8,7 @@ from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prisi
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
 import sys
 
-from run.scheduledTasks import operate_group_push_tasks
+from run.system_plugin.func_collection import operate_group_push_tasks
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())

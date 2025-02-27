@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Type, Union
 from developTools.message.message_components import (
     MessageComponent, Text, Face, Image, Record, Video, At, Rps, Dice,
     Shake, Poke, Anonymous, Share, Contact, Location, Music, Reply,
-    Forward, Node, Xml, Json, Contact_user, Contact_group, Mface, File
+    Forward, Node, Xml, Json, Contact_user, Contact_group, Mface, File,Markdown
 )
 
 class MessageChain(list):
@@ -34,6 +34,7 @@ class MessageChain(list):
         "contact_group": Contact_group,
         "mface": Mface,
         "file": File,
+        "markdown": Markdown
     }
 
     def __init__(self, messages: List[Union[MessageComponent, Dict[str, Any], str]]):

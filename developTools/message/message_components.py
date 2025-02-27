@@ -207,7 +207,9 @@ class Reply(MessageComponent):
     comp_type: str = "reply"
     id: int = Field(description="回复时引用的消息 ID")
 
-
+class Markdown(MessageComponent):
+    comp_type: str = "markdown"
+    content: str = Field(default="",description="Markdown 内容")
 
 class Forward(MessageComponent):
     comp_type: str = "forward"
