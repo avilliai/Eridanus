@@ -77,7 +77,7 @@ def main(bot,config):
             img,text=await get_nasa_apod(config.api["nasa_api"]["api_key"],config.api["proxy"]["http_proxy"])
             text=await aiReplyCore([{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}], random.randint(1000000, 99999999),
                                           config, bot=bot, tools=None)
-            for group_id in config.sheduled_tasks_push_groups_ordinary["nasa_daily"]["groups"]:
+            for group_id in config.sheduled_tasks_push_groups_ordinary["每日天文"]["groups"]:
                 if group_id == 0: continue
                 try:
                     await bot.send_group_message(group_id, [Text(text), Image(file=img)])
@@ -92,7 +92,7 @@ def main(bot,config):
             logger.info("获取bing图像")
             text, p = await bingEveryDay()
             logger.info("推送bing每日图像")
-            for group_id in config.sheduled_tasks_push_groups_ordinary["bing_daily"]["groups"]:
+            for group_id in config.sheduled_tasks_push_groups_ordinary["bing每日图像"]["groups"]:
                 if group_id == 0: continue
                 try:
                     await bot.send_group_message(group_id, [Text(text), Image(file=p)])
@@ -150,7 +150,7 @@ def main(bot,config):
         scheduler.start()
         logger.info("定时任务已启动")
 
-    allow_args = ["每日天文", "bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一"]
+    allow_args = ["每日天文","bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一"]
     @bot.on(GroupMessageEvent)
     async def _(event: GroupMessageEvent):
         if event.pure_text.startswith("/cron add "):

@@ -1,9 +1,24 @@
 nasa_daily:
   groups:
     - 0
-bing_daily:
+bing每日图像:
   groups:
     - 0
 单向历:
+  groups:
+    - 0
+bangumi:
+  groups:
+    - 0
+nightASMR:
+  groups:
+    - 0
+摸鱼人日历:
+  groups:
+    - 0
+新闻:
+  groups:
+    - 0
+免费游戏喜加一:
   groups:
     - 0
