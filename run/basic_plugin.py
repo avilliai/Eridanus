@@ -240,7 +240,7 @@ async def call_tarot(bot,event,config):
             config.settings["basic_plugin"]["tarot"]["probability"]:
         cards_ = config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["card_index"]
         card = random.choice(cards_)
-        card_path, text = card.items().__next__()
+        card_path, text = list(card.items())[0]
         await bot.send(event, [Text(f"开出了隐藏牌 {text}"), Image(file=card_path)])
         return {"text": "开出彩蛋牌，来源：jojo的奇妙冒险", "img": card_path}
     txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
@@ -333,7 +333,7 @@ def main(bot,config):
             if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1,100)<config.settings["basic_plugin"]["tarot"]["probability"]:
                 cards_=config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["card_index"]
                 card=random.choice(cards_)
-                card_path, text = card.items().__next__()
+                card_path, text = list(card.items())[0]
                 await bot.send(event, [Text(f"开出了隐藏牌 {text}"), Image(file=card_path)])
                 return
 
