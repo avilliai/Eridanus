@@ -120,7 +120,7 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                 else:
                     # 处理消息并缓存
                     raw_message["message"].insert(0, {
-                        "text": f"本条及接下来的消息为群聊上下文背景消息，消息发送者为 {raw_message['user_name']} id为{raw_message['user_id']} "})
+                        "text": f"本条消息消息发送者为 {raw_message['user_name']} id为{raw_message['user_id']} 这是参考消息，当我再次向你提问时，请正常回复我。"})
 
                     if prompt_standard == "gemini":
                         processed = await gemini_prompt_elements_construct(raw_message["message"], bot=bot, event=event)
@@ -151,11 +151,11 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
             if prompt_standard == "gemini":
                 all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['parts']]
                 fl.append({"role": "user", "parts": all_parts})
-                fl.append({"role": "model", "parts": {"text": "(群聊消息已记录，将用作下条回复参考)"}})
+                fl.append({"role": "model", "parts": {"text": "嗯嗯，我记住了"}})
             else:
                 all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['content']]
                 fl.append({"role": "user", "content": all_parts})
-                fl.append({"role": "assistant", "content": "(群聊消息已记录，将用作下条回复参考)"})
+                fl.append({"role": "assistant", "content": "嗯嗯我记住了"})
             return fl
 
         except Exception as e:

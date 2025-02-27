@@ -65,9 +65,6 @@ async def call_text2img(bot, event, config, prompt):
 
     # 在后台运行任务，不等待完成
     asyncio.create_task(run_tasks())
-
-    # 立即返回
-    return {"status": "绘制中....请等待结果返回"}
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id, event.sender.nickname)
