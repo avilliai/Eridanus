@@ -127,6 +127,12 @@ async def record_sign_in(user_id, nickname="DefaultUser", card="00000"):
         else:
             return f"用户 {user_id} 今天已经签到过了！"
 
+# 查找所有 permission 高于指定值的 user_id
+async def get_users_with_permission_above(permission_value):
+    async with aiosqlite.connect(dbpath) as db:
+        async with db.execute("SELECT user_id FROM users WHERE permission > ?", (permission_value,)) as cursor:
+            result = await cursor.fetchall()
+            return [user[0] for user in result]  # 返回所有符合条件的 user_id 列表
 
 
 asyncio.run(initialize_db())

@@ -21,7 +21,7 @@ config = YAMLManager(["config/settings.yaml",
                       "data/censor/censor_group.yaml",
                       "data/censor/censor_user.yaml",
                       "data/media_service/bilibili/bili_dynamic.yaml",
-                      "data/tasks/scheduledTasks.yaml",
+                      "data/tasks/sheduled_tasks_push_groups_ordinary.yaml",
                       "data/tasks/scheduledTasks_push_groups.yaml",
                       "data/recognize/doro.yaml",
                       "data/recognize/nailong.yaml",]) #这玩意用来动态加载和修改配置文件
