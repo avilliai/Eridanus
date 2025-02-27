@@ -19,14 +19,12 @@ def main(bot,config):
     logger=bot.logger
     scheduledTasks=config.settings["scheduledTasks"]
 
-
     global scheduler
     scheduler = AsyncIOScheduler()
 
     @bot.on(LifecycleMetaEvent)
-    def start_scheduler(_):
-        create_dynamic_jobs()
-        scheduler.start()
+    async def start_scheduler(_):
+        await start_scheduler()  # 异步调用
         logger.info_func("定时任务已启动")
 
     async def task_executor(task_name, task_info):
@@ -115,4 +113,15 @@ def main(bot,config):
                 time_parts = task_info.get('time').split('/')
                 hour = int(time_parts[0])
                 minute = int(time_parts[1])
+
+                bot.logger.info_func(f"定时任务已激活：{task_name}，时间：{hour}:{minute}")
                 scheduler.add_job(task_executor, CronTrigger(hour=hour, minute=minute), args=[task_name, task_info])
+
+    # 启动调度器
+    async def start_scheduler():
+        create_dynamic_jobs()
+        scheduler.start()  # 启动调度器
+        logger.info("定时任务已启动")
+
+    # 调用定时任务启动函数
+

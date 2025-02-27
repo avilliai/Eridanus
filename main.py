@@ -44,7 +44,7 @@ plugin_modules = [
     ("Mface_Record","run.system_plugin.Mface_Record"),
     ("scheduledTasks", "run.system_plugin.scheduledTasks"),
     #群管/自管
-    #("self_Manager", "run.groupManager.self_Manager"),
+    ("self_Manager", "run.groupManager.self_Manager"),
     ("group_manager", "run.groupManager.group_manager"),
     ("word_cloud", "run.groupManager.word_cloud"),
     ("wifeyouwant", "run.groupManager.wifeyouwant"),
