@@ -30,6 +30,8 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     if config is None:
         config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
+    if len(text) > config.api["tts"]["length_limit"]:
+        raise ValueError("文本长度超出限制")
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
 
