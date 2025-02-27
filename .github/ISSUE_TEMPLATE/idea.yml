@@ -1,0 +1,35 @@
+name: 功能建议
+description: 功能建议
+title: '[idea] '
+labels: idea
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎来到 Eridanus 的 Issue Tracker！请填写以下表格来提交 Bug。
+        在提交新的问题反馈前，请确保您：
+        * 已经搜索了现有的 issues，并且没有找到可以解决您问题的方法
+        * 不与现有的某一 issue 重复
+        * 请确保您的描述清晰，并提供足够的上下文信息，以便我们理解问题。
+        * 请不要在标题或内容中出现无意义的词语，否则可能会被忽略。
+        * 请不要在标题或内容中出现无意义的词语，否则可能会被忽略。
+        * 请不要在标题或内容中出现无意义的词语，否则可能会被忽略。
+        * 本issue template修改自napcat官方issue template，感谢NapCat团队的辛勤工作！
+  - type: textarea
+    id: idea-content
+    attributes:
+      label: 功能描述
+      description: 请详细描述您想要实现的功能，以便我们理解您的需求。
+    validations:
+      required: true
+  - type: textarea
+    id: how-reproduce
+    attributes:
+      label: 【可选】实现思路
+      description: 请描述您实现该功能的思路，如果可以的话，您可以提供一些参考代码或链接。
+      placeholder: |
+        1. xxx
+        2. xxx
+        3. xxx
+    validations:
+      required: false
