@@ -97,13 +97,13 @@ scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
   早安问候:         #晨间推送
     enable: true  #向信任用户推送天气信息
     time: 8/3      #推送时间
-    trustThreshold: 3 #权限等级要求，低于此值的用户将不会被推送
+    trustThreshold: 9 #权限等级要求，低于此值的用户将不会被推送
     onlyTrustUser: True  #仅向信任用户推送
   晚安问候: #晚安提示
     enable: true
     text: 晚安！    #开启aiReplyCore后，此项将被ai替代
     time: 22/31
-    trustThreshold: 3 #低于权限等级的用户将不会被推送
+    trustThreshold: 9 #低于权限等级的用户将不会被推送
     onlyTrustUser: True  #仅向信任用户推送
   bangumi:         #bangumi推送
     enable: True
