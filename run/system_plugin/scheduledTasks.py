@@ -115,7 +115,12 @@ def main(bot,config):
                 minute = int(time_parts[1])
 
                 bot.logger.info_func(f"定时任务已激活：{task_name}，时间：{hour}:{minute}")
-                scheduler.add_job(task_executor, CronTrigger(hour=hour, minute=minute), args=[task_name, task_info])
+                scheduler.add_job(
+                    task_executor,
+                    CronTrigger(hour=hour, minute=minute),
+                    args=[task_name, task_info],
+                    misfire_grace_time=120,
+                )
 
     # 启动调度器
     async def start_scheduler():
