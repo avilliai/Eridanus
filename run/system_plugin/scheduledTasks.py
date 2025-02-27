@@ -26,10 +26,9 @@ def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def start_scheduler(_):
         await start_scheduler()  # 异步调用
-        logger.info_func("定时任务已启动")
 
     async def task_executor(task_name, task_info):
-        logger.info(f"执行任务：{task_name}")
+        logger.info_func(f"执行任务：{task_name}")
         global trustUser, userdict
         if task_name == "晚安问候":
             friend_list = await bot.get_friend_list()
@@ -46,7 +45,7 @@ def main(bot,config):
                     await sleep(6)
                 except Exception as e:
                     logger.error(f"向{user['nickname']}发送晚安问候失败，原因：{e}")
-            bot.logger.info("晚安问候任务执行完毕")
+            bot.logger.info_func("晚安问候任务执行完毕")
         elif task_name == "早安问候":
             friend_list = await bot.get_friend_list()
             friend_list = friend_list["data"]
@@ -67,13 +66,13 @@ def main(bot,config):
                     await sleep(6)
                 except Exception as e:
                     logger.error(f"向{user['nickname']}发送早安问候失败，原因：{e}")
-            logger.info("早安问候任务执行完毕")
+            logger.info_func("早安问候任务执行完毕")
         elif task_name == "新闻":
             pass
         elif task_name == "免费游戏喜加一":
             pass
         elif task_name == "每日天文":
-            logger.info("获取今日nasa天文信息推送")
+            logger.info_func("获取今日nasa天文信息推送")
             img,text=await get_nasa_apod(config.api["nasa_api"]["api_key"],config.api["proxy"]["http_proxy"])
             text=await aiReplyCore([{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}], random.randint(1000000, 99999999),
                                           config, bot=bot, tools=None)
@@ -84,14 +83,12 @@ def main(bot,config):
                 except Exception as e:
                     logger.error(f"向群{group_id}推送每日天文失败，原因：{e}")
                 await sleep(6)
-            logger.info("每日天文任务执行完毕")
+            logger.info_func("每日天文任务执行完毕")
         elif task_name == "摸鱼人日历":
-            logger.info("摸鱼")
-
+            logger.info_func("获取摸鱼人日历")
         elif task_name == "bing每日图像":
-            logger.info("获取bing图像")
             text, p = await bingEveryDay()
-            logger.info("推送bing每日图像")
+            logger.info_func("推送bing每日图像")
             for group_id in config.sheduled_tasks_push_groups_ordinary["bing每日图像"]["groups"]:
                 if group_id == 0: continue
                 try:
@@ -99,12 +96,12 @@ def main(bot,config):
                 except Exception as e:
                     logger.error(f"向群{group_id}推送bing每日图像失败，原因：{e}")
                 await sleep(6)
-            logger.info("bing每日图像任务执行完毕")
+            logger.info_func("bing每日图像任务执行完毕")
 
         elif task_name == "单向历":
-            logger.info("获取单向历")
+            logger.info_func("获取单向历")
             path = await danxianglii()
-            logger.info("推送单向历")
+            logger.info_func("推送单向历")
             for group_id in config.sheduled_tasks_push_groups_ordinary["单向历"]["groups"]:
                 if group_id == 0: continue
                 try:
@@ -112,7 +109,7 @@ def main(bot,config):
                 except Exception as e:
                     logger.error(f"向群{group_id}推送单向历失败，原因：{e}")
                 await sleep(6)
-            logger.info("单向历任务执行完毕")
+            logger.info_func("单向历推送执行完毕")
 
         elif task_name == "bangumi":
             url = "https://www.bangumi.app/calendar/today"
@@ -124,7 +121,7 @@ def main(bot,config):
             未完成
             """
         elif task_name == "nightASMR":
-            logger.info("获取晚安ASMR")
+            logger.info_func("获取晚安ASMR")
             """
             用新的asmr推送实现
             """
@@ -148,7 +145,6 @@ def main(bot,config):
     async def start_scheduler():
         create_dynamic_jobs()
         scheduler.start()
-        logger.info("定时任务已启动")
 
     allow_args = ["每日天文","bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一"]
     @bot.on(GroupMessageEvent)
