@@ -101,6 +101,33 @@ def main(bot,config):
                         bot.logger.error(f"Error in today_husband: {e}")
                         await bot.send(event, 'api失效，望君息怒')
 
+    @bot.on(GroupMessageEvent)  # 今日萝莉
+    async def today_luoli(event: GroupMessageEvent):
+        async with httpx.AsyncClient() as client:
+            global filepath
+            if str(event.pure_text).startswith("今"):
+                if ('今日' in str(event.pure_text) or '今天' in str(event.pure_text) or '今日' in str(
+                        event.pure_text)) and '老公' in str(event.pure_text):
+                    bot.logger.info("今日萝莉开启！")
+                    params = {
+                        "format": "json",
+                        "num": '1',
+                        'tag': 'ロリ'
+                    }
+                    url = 'https://api.hikarinagi.com/random/v2/?'
+                    try:
+                        response = await client.get(url, params=params)
+                        data = response.json()
+                        url = data[0]['url']
+                        proxy_url = url.replace("https://i.pximg.net/", "https://i.yuki.sh/")
+                        bot.logger.info(f"搜索成功，作品pid：{data[0]['pid']}，反代url：{proxy_url}")
+                        #img_path = await get_game_image(proxy_url, filepath_check)
+                        await bot.send(event, [Image(file=proxy_url)])
+                    except Exception as e:
+                        bot.logger.error(f"Error in today_husband: {e}")
+                        await bot.send(event, 'api失效，望君息怒')
+
+
 
     @bot.on(GroupMessageEvent)  # 不知道从哪里找的api对接
     async def api_collect(event: GroupMessageEvent):

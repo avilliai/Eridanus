@@ -79,8 +79,9 @@ def main(bot,config):
                 if json['soft_type'] not in {'bilibili','dy','wb','xhs','x'}:
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
                     teamlist.pop(event.group_id)
-                    return
-                await call_bili_download_video(bot,event,config)
+                else:
+                    teamlist.pop(event.group_id)
+                    await call_bili_download_video(bot,event,config)
 
 
 

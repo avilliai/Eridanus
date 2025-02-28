@@ -133,6 +133,7 @@ def main(bot,config):
                 for title, cover in zip(finalT, finalC[:len(finalT)]):
                     # display(Image(url=cover, cache=True))  # 显示图片
                     #print(title, cover)
+
                     cmList.append(Node(content=[Text(f'{title}'),Image(file=cover)]))
             bot.logger.info("获取番剧排行成功")
             await bot.send(event, cmList)
