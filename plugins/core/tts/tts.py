@@ -12,8 +12,10 @@ from ruamel.yaml import YAML
 
 from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
+from plugins.core.tts.online_vits import huggingface_online_vits
 from plugins.core.tts.vits import vits
 from plugins.utils.random_str import random_str
+from plugins.utils.translate import translate
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
@@ -32,6 +34,11 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
     if len(text) > config.api["tts"]["length_limit"]:
         raise ValueError("文本长度超出限制")
+    """
+    语言类型转换
+    """
+    if config.api["tts"]["lang_type"]=="ja":
+        text=await translate(text)  #默认就是转日文
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
 
@@ -55,6 +62,12 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
             speaker=config.api["tts"]["vits"]["speaker"]
         base_url=config.api["tts"]["vits"]["base_url"]
         return await vits(text,speaker,base_url)
+    elif mode=="online_vits":
+        if speaker is None:
+            speaker=config.api["tts"]["online_vits"]["speaker"]
+        fn_index=config.api["tts"]["online_vits"]["fn_index"]
+        proxy=config.api["proxy"]["http_proxy"]
+        return await huggingface_online_vits(text,speaker,fn_index,proxy)
     else:
         pass
 

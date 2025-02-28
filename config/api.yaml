@@ -42,6 +42,10 @@ llm:
 tts:
   tts_engine: modelscope_tts     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
   length_limit: 100 #语音合成最大长度，超过此长度将自动拒绝合成
+  lang_type: "ja"  #自动转换语言类型,ja或zh
+  online_vits:
+    speaker: "明月栞那"
+    fn_index: 6
   vits:               #本地语音合成，配置要求极低，服务端整合包请在q群913122269下载
     speaker: "綾地寧々"
     base_url: "http://127.0.0.1:5009"

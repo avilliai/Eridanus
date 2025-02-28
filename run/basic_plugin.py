@@ -177,26 +177,30 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     lock_mode=None
     lock_speaker=None
     if acgnspk:
-        mode="acgn_ai"
         if speaker in acgnspk:
             lock_mode="acgn_ai"
             lock_speaker=speaker
+            mode = "acgn_ai"
         elif f"{speaker}【鸣潮】" in acgnspk:
             speaker=f"{speaker}【鸣潮】"
             lock_mode="acgn_ai"
             lock_speaker=speaker
+            mode = "acgn_ai"
         elif f"{speaker}【原神】" in acgnspk:
             speaker=f"{speaker}【原神】"
             lock_mode="acgn_ai"
             lock_speaker=speaker
+            mode = "acgn_ai"
         elif f"{speaker}【崩坏3】" in acgnspk:
             speaker=f"{speaker}【崩坏3】"
             lock_mode="acgn_ai"
             lock_speaker=speaker
+            mode = "acgn_ai"
         elif f"{speaker}【星穹铁道】" in acgnspk:
             speaker=f"{speaker}【星穹铁道】"
             lock_mode="acgn_ai"
             lock_speaker=speaker
+            mode = "acgn_ai"
     if ncspk and lock_mode is None and lock_speaker is None:
         if speaker in ncspk:
             mode="napcat_tts"
@@ -210,6 +214,8 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     if vits_speakers and lock_mode is None and lock_speaker is None:
         if speaker in vits_speakers:
             mode="vits"
+    else:
+        mode=config.api["tts"]["tts_engine"]
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
         await bot.send(event, Record(file=p))
