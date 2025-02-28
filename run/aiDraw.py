@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.aiArtModerate import aiArtModerate
+from plugins.aiDraw.modelscope_text2img import modelscope_drawer
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.userDB import get_user
@@ -47,6 +48,7 @@ async def call_text2img(bot, event, config, prompt):
                 call_text2img1(bot, event, config, tag),
                 call_text2img2(bot, event, config, tag),
                 nai4(bot, event, config, tag),
+                call_text2img3(bot, event, config, tag)
                 # nai3(bot, event, config, tag),
             ]
         ]
@@ -65,11 +67,17 @@ async def call_text2img(bot, event, config, prompt):
 
     # 在后台运行任务，不等待完成
     asyncio.create_task(run_tasks())
+async def call_text2img3(bot, event, config, prompt):
+    user_info = await get_user(event.user_id)
+    if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画2所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画2开关"]:
+        bot.logger.info(f"Received text2img prompt: {prompt}")
+        img=await modelscope_drawer(prompt)
+        await bot.send(event,[Text(f"NoobXL-V-pred-v1.0："),Image(file=img)])
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
-    user_info = await get_user(event.user_id, event.sender.nickname)
+    user_info = await get_user(event.user_id)
     
-    if user_info[6] >= config.controller["basic_plugin"]["bing_dalle3_operate_level"] and config.controller["basic_plugin"]["内置ai绘画开关"]:
+    if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画1所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画1开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
         proxy = config.api["proxy"]["http_proxy"]
 
