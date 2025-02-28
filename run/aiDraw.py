@@ -71,7 +71,7 @@ async def call_text2img3(bot, event, config, prompt):
     user_info = await get_user(event.user_id)
     if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画2所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画2开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
-        img=await modelscope_drawer(prompt)
+        img=await modelscope_drawer(prompt,config.api["proxy"]["http_proxy"])
         await bot.send(event,[Text(f"NoobXL-V-pred-v1.0："),Image(file=img)])
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
@@ -239,6 +239,7 @@ def main(bot,config):
         if str(event.pure_text).startswith("画 "):
             prompt = str(event.pure_text).split("画 ")[1]
             await call_text2img2(bot, event, config, prompt)
+            await call_text2img3(bot, event, config, prompt)
     
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):

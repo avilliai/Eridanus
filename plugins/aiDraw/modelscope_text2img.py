@@ -21,11 +21,15 @@ def random_session_hash(random_length):
     return random_str(random_length, "abcdefghijklmnopqrstuvwxyz1234567890")
 
 #modelscopeTTS V3，对接原神崩铁语音合成器。API用法相较之前发生了变化，参考V2修改而成。
-async def modelscope_drawer(prompt,negative=None,user_cookie=None):
+async def modelscope_drawer(prompt,proxy,negative=None,user_cookie=None):
+    if proxy:
+        proxies = {"http://": proxy, "https://": proxy}
+    else:
+        proxies = None
     # 随机session hash
     session_hash = random_session_hash(11)
     # 请求studio_token
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get("https://www.modelscope.cn/api/v1/studios/token", headers={"cookie": cookie if user_cookie==None else user_cookie})
         response_data = response.json()
         studio_token = response_data["Data"]["Token"]
@@ -70,7 +74,7 @@ async def modelscope_drawer(prompt,negative=None,user_cookie=None):
         "event_data":None,"fn_index":0,"trigger_id":18,"dataType":["textbox","textbox","dropdown","slider","slider","slider","slider","dropdown","slider"],"session_hash":session_hash}
 
     # 发起第一个请求
-    async with httpx.AsyncClient(headers=headers) as client:
+    async with httpx.AsyncClient(headers=headers,proxies=proxies) as client:
         response = await client.post(queue_join_url, params=queue_join_params,json=data1)
         # print(f"POST request status code: {response.status_code}")
         # for header in response.headers:

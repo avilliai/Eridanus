@@ -6,7 +6,7 @@ import random
 import time
 
 import httpx
-
+import requests
 
 from developTools.utils.logger import get_logger
 from plugins.utils.random_str import random_str
@@ -72,14 +72,30 @@ async def huggingface_online_vits(text,speaker,fn_index,proxy=None):
                         event_data = json.loads(event)
                         #print(event_data)
                         if "output" in event_data:
+                            save_path = f"data/voice/cache/{session_hash}.wav"
                             audiourl=event_data["output"]["data"][1]["url"]
-                            async with httpx.AsyncClient(headers=headers,proxies=proxies) as client:
+                            for attempt in range(10):  # 最多重试 10 次
                                 response = await client.get(audiourl)
-                                with open(f"data/voice/cache/{session_hash}.wav", "wb") as f:
-                                    f.write(response.content)
-                            return f"data/voice/cache/{session_hash}.wav"
+                                print(f"请求状态码: {response.status_code}")
+
+                                if response.status_code == 200:
+                                    with open(save_path, "wb") as f:
+                                        f.write(response.content)
+                                    print(f"音频已保存: {save_path}")
+                                    return save_path
+
+                                elif response.status_code == 404:
+                                    print("音频文件未生成，等待 2 秒后重试...")
+                                    await asyncio.sleep(2)
+
+                                else:
+                                    print(f"未知错误: {response.status_code}, {response.text}")
+                                    break  # 避免死循环
+                            return audiourl
                     except Exception as e:
                         logger.error(f"Error in processing event data: {e}")
+
+
 
 
 
