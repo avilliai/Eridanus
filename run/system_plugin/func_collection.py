@@ -4,6 +4,7 @@ import datetime
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
+from plugins.basic_plugin.nasa_api import get_nasa_apod
 from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic, fetch_latest_dynamic_id
 async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:str,operation:bool,target_uid:int=None):
     if not isinstance(event,GroupMessageEvent):
@@ -63,3 +64,8 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                     await bot.send(event, "你没有订阅过")
             else:
                 await bot.send(event, "不存在订阅任务")
+async def trigger_tasks(bot,event,config,task_name):
+    if task_name=="nasa_daily":
+        bot.logger.info_func("获取今日nasa天文信息推送")
+        img, text = await get_nasa_apod(config.api["nasa_api"]["api_key"], config.api["proxy"]["http_proxy"])
+        return {"text": text, "image": img}
