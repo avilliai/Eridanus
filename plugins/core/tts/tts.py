@@ -54,13 +54,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         if speaker is None:
             speaker=config.api["tts"]["vits"]["speaker"]
         base_url=config.api["tts"]["vits"]["base_url"]
-        lang_type=config.api["tts"]["vits"]["lang_type"]
-        proxy=config.api["proxy"]["http_proxy"]
-        if proxy:
-            proxies={"http://": proxy,"https://": proxy}
-        else:
-            proxies=None
-        return await vits(text,speaker,base_url,lang_type,proxies)
+        return await vits(text,speaker,base_url)
     else:
         pass
 
