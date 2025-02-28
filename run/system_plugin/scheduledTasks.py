@@ -178,10 +178,12 @@ def main(bot,config):
     async def _(event: GroupMessageEvent):
         if event.pure_text=="今日天文":
             data=await trigger_tasks(bot,event,config,"nasa_daily")
-            img=data["image"]
-            text=data["text"]
+            img=data["要发送的图片"]
+            text=data["将下列文本翻译后发送"]
             text = await aiReplyCore(
                 [{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}],
                 random.randint(1000000, 99999999),
                 config, bot=bot, tools=None)
             await bot.send(event, [Text(text), Image(file=img)])
+        if event.pure_text=="单向历":
+            await trigger_tasks(bot,event,config,"单向历")
