@@ -39,6 +39,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     """
     if config.api["tts"]["lang_type"]=="ja":
         text=await translate(text)  #默认就是转日文
+        print(f"翻译后的文本：{text}")
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
 

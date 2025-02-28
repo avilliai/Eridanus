@@ -73,7 +73,11 @@ async def huggingface_online_vits(text,speaker,fn_index,proxy=None):
                         #print(event_data)
                         if "output" in event_data:
                             audiourl=event_data["output"]["data"][1]["url"]
-                            return audiourl
+                            async with httpx.AsyncClient(headers=headers,proxies=proxies) as client:
+                                response = await client.get(audiourl)
+                                with open(f"data/voice/cache/{session_hash}.wav", "wb") as f:
+                                    f.write(response.content)
+                            return f"data/voice/cache/{session_hash}.wav"
                     except Exception as e:
                         logger.error(f"Error in processing event data: {e}")
 
