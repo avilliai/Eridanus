@@ -29,6 +29,10 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     # 去除括号及其中的内容
     cleaned_text = pattern.sub('', text)
     text = cleaned_text.replace("·", "").replace("~", "").replace("-", "")
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+    
+
+    text=text.replace('```', '').strip()
     if config is None:
         config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
