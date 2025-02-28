@@ -33,8 +33,8 @@ body:
   - type: textarea
     id: what-happened
     attributes:
-      label: 发生了什么?
-      description: 问题描述
+      label: 发生了什么
+      description: 问题描述。
     validations:
       required: true
   - type: textarea
