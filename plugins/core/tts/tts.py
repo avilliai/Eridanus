@@ -13,6 +13,7 @@ from ruamel.yaml import YAML
 from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.core.tts.online_vits import huggingface_online_vits
+from plugins.core.tts.online_vits2 import huggingface_online_vits2
 from plugins.core.tts.vits import vits
 from plugins.utils.random_str import random_str
 from plugins.utils.translate import translate
@@ -73,6 +74,10 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         fn_index=config.api["tts"]["online_vits"]["fn_index"]
         proxy=config.api["proxy"]["http_proxy"]
         return await huggingface_online_vits(text,speaker,fn_index,proxy)
+    elif mode=="online_vits2":
+        if speaker is None:
+            speaker=config.api["tts"]["online_vits2"]["speaker"]
+        return await huggingface_online_vits2(text,speaker)
     else:
         pass
 
