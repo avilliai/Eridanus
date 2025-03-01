@@ -146,7 +146,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 mface_files=[]
 
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
-
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
@@ -154,6 +153,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         temp_history.append({
                             "role": "tool",
                             "content": json.dumps({"status": "succeed"}),
+                            "name": "call_send_mface",
                             # Here we specify the tool_call_id that this result corresponds to
                             "tool_call_id": part['id']
                         })
@@ -167,6 +167,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 temp_history.append({
                                     "role": "tool",
                                     "content": json.dumps(r),
+                                    "name": func_name,
                                     # Here we specify the tool_call_id that this result corresponds to
                                     "tool_call_id": part['id']
                                 })
@@ -174,6 +175,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 temp_history.append({
                                     "role": "tool",
                                     "content": json.dumps({"status":"succeed"}),
+                                    "name": func_name,
                                     # Here we specify the tool_call_id that this result corresponds to
                                     "tool_call_id": part['id']
                                 })
@@ -184,6 +186,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps({"status": "failed to call function"}),
+                                "name": func_name,
                                 # Here we specify the tool_call_id that this result corresponds to
                                 "tool_call_id": part['id']
                             })
@@ -192,6 +195,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     reply_message=None
 
             await prompt_database_updata(user_id, response_message, config)
+            for i in temp_history:
+                await prompt_database_updata(user_id, i,config)
             if func_call:
                 final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
                                                    system_instruction=system_instruction, func_result=True)
@@ -346,7 +351,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         if recursion_times<=config.api["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
-            if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
+            if recursion_times+3==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
                 logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1,do_not_read_context=True)
@@ -355,6 +360,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 async def send_text(bot,event,config,text):
     if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
         if config.api["llm"]["语音回复附带文本"]:
+            text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+            text=text.replace('```', '').strip()
             await bot.send(event, text.strip(), config.api["llm"]["Quote"])
 
         await tts_and_send(bot, event, config, text)
