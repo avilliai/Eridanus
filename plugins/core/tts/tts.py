@@ -10,9 +10,11 @@ import requests
 
 from ruamel.yaml import YAML
 
+from developTools.utils.logger import get_logger
 from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.core.tts.online_vits import huggingface_online_vits
+from plugins.core.tts.online_vits2 import huggingface_online_vits2
 from plugins.core.tts.vits import vits
 from plugins.utils.random_str import random_str
 from plugins.utils.translate import translate
@@ -20,7 +22,7 @@ from plugins.utils.translate import translate
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
-
+logger=get_logger()
 global GPTSOVITS_SPEAKERS
 GPTSOVITS_SPEAKERS={}
 async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
@@ -46,7 +48,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         print(f"翻译后的文本：{text}")
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
-
+    logger.info_func(f"语音合成任务：文本：{text}，发音人：{speaker}，模式：{mode}")
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
@@ -73,6 +75,14 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         fn_index=config.api["tts"]["online_vits"]["fn_index"]
         proxy=config.api["proxy"]["http_proxy"]
         return await huggingface_online_vits(text,speaker,fn_index,proxy)
+    elif mode=="online_vits2":
+        if speaker is None:
+            speaker=config.api["tts"]["online_vits2"]["speaker"]
+        if config.api["tts"]["lang_type"] == "ja":
+            lang="日本語"
+        else:
+            lang="简体中文"
+        return await huggingface_online_vits2(text,speaker,lang)
     else:
         pass
 
