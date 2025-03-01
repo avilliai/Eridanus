@@ -27,12 +27,8 @@ else:
     git_path = "git"
 logger.info(f"git_path: {git_path}")
 custom_python_path = os.path.join(parent_dir, "environments", "Python311", "python.exe")
-if os.path.exists(custom_python_path):
-    python_path = custom_python_path
-elif os.path.exists(os.path.join("venv", "Scripts", "python.exe")):
-    python_path = os.path.join("venv", "Scripts", "python.exe")
-else:
-    python_path = "python"
+
+python_path = sys.executable
 logger.info(f"python_path: {python_path}")
 custom_pip_path = os.path.join(parent_dir, "environments", "Python311", "Scripts", "pip.exe")
 if os.path.exists(custom_pip_path):

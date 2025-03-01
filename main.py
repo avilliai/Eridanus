@@ -14,10 +14,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 """
 def install_and_import(package_name):
     """检测模块是否已安装，若未安装则通过 pip 安装"""
+    # 检查模块是否已经安装
     spec = importlib.util.find_spec(package_name)
     if spec is None:
         print(f"{package_name} 未安装，正在安装...")
+        # 使用 os.system 安装模块
         os.system(f"{sys.executable} -m pip install {package_name}")
+        # 安装后再次导入模块
         spec = importlib.util.find_spec(package_name)
         if spec is None:
             print(f"安装失败：无法找到 {package_name} 模块")
