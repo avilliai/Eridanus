@@ -327,7 +327,8 @@ def main(bot,config):
             speaker=event.pure_text.split("说")[0].replace("/","").strip()
             text=event.pure_text.split("说")[1].strip()
             r=await call_tts(bot,event,config,text,speaker)
-            await bot.send(event, Record(file=r.get("audio")))
+            if r.get("audio"):
+                await bot.send(event, Record(file=r.get("audio")))
         elif event.pure_text=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             all_speakers = await call_all_speakers(bot, event, config)
