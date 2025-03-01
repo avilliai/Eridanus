@@ -237,10 +237,10 @@ def main(bot,config):
             ai_img_recognize.pop(event.sender.user_id)
 
     @bot.on(GroupMessageEvent)
-    async def bing_dalle3_draw(event):  #无需配置的ai绘图接口
+    async def collection_draw(event):
         if str(event.pure_text).startswith("画 "):
             prompt = str(event.pure_text).split("画 ")[1]
-            await call_text2img3(bot, event, config, prompt)
+            await call_text2img(bot, event, config, prompt)
 
     
     @bot.on(GroupMessageEvent)

@@ -57,7 +57,7 @@ def main(bot,config):
         user_info = await get_user(event.user_id, event.sender.nickname)
         if event.pure_text=="退出":
             await end_chat(event.user_id)
-            await bot.send(event,"那就先不聊啦~")
+            await bot.send(event,"退出聊天~")
         elif event.pure_text=="/clear" or t=="/clear":
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
