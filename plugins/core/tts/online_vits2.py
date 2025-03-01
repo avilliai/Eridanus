@@ -2,9 +2,31 @@ import json
 
 import asyncio
 import httpx
-import requests
-import websocket
-import websockets
+
+import importlib.util
+import os
+import sys
+
+def install_and_import(package_name):
+    """检测模块是否已安装，若未安装则通过 pip 安装"""
+    # 检查模块是否已经安装
+    spec = importlib.util.find_spec(package_name)
+    if spec is None:
+        print(f"{package_name} 未安装，正在安装...")
+        # 使用 os.system 安装模块
+        os.system(f"{sys.executable} -m pip install {package_name}")
+        # 安装后再次导入模块
+        spec = importlib.util.find_spec(package_name)
+        if spec is None:
+            print(f"安装失败：无法找到 {package_name} 模块")
+            return None
+    return importlib.import_module(package_name)
+
+# 使用示例
+websockets = install_and_import('websockets')
+if websockets:
+    print("websockets 模块已成功导入")
+
 
 from plugins.core.tts.online_vits import random_session_hash
 
