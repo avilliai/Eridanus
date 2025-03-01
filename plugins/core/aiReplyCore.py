@@ -21,7 +21,13 @@ from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_p
 from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, clear_all_history, change_folder_chara, read_chara, use_folder_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
-from plugins.func_map import call_func
+import importlib
+
+def call_func(*args, **kwargs):
+    # 运行时动态导入，避免循环导入
+    func_map = importlib.import_module("plugins.func_map")
+    return func_map.call_func(*args, **kwargs)
+#from plugins.func_map import call_func
 last_trigger_time = defaultdict(float)
 
 logger=get_logger()
