@@ -32,13 +32,15 @@ websockets = install_and_import('websockets')
 from plugins.core.tts.online_vits import random_session_hash
 
 logger=get_logger()
-async def huggingface_online_vits2(speaker, text, lang_type="简体中文"):
+async def huggingface_online_vits2(text, speaker,lang_type="简体中文",proxy=None):
+    logger.info(f"params: speaker={speaker}, text={text}, lang_type={lang_type}")
     url = "wss://plachta-vits-umamusume-voice-synthesizer.hf.space/queue/join"
     session_hash = random_session_hash(11)
 
     async with websockets.connect(url) as ws:
         logger.info(f"连接到 {url}")
         while True:
+            await asyncio.sleep(1)
             result = await ws.recv()
             if result:
                 result = json.loads(result)
