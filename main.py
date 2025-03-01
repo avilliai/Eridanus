@@ -2,6 +2,7 @@ import concurrent.futures
 import importlib
 
 import os
+import subprocess
 import sys
 import asyncio
 import threading
@@ -12,40 +13,43 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 """
 依赖import检测
 """
-def install_and_import(package_name):
-    """检测模块是否已安装，若未安装则通过 pip 安装"""
-    # 检查模块是否已经安装
-    spec = importlib.util.find_spec(package_name)
-    if spec is None:
+def install_and_import(package_name, version_spec=None):
+    """检测模块是否已安装，若未安装则通过 pip 安装，并确保符合版本约束"""
+    try:
+        # 尝试导入模块
+        importlib.import_module(package_name)
+    except ImportError:
         print(f"{package_name} 未安装，正在安装...")
-        # 使用 os.system 安装模块
-        os.system(f"{sys.executable} -m pip install {package_name}")
+        install_package(package_name, version_spec)
         # 安装后再次导入模块
-        spec = importlib.util.find_spec(package_name)
-        if spec is None:
-            print(f"安装失败：无法找到 {package_name} 模块")
-            return None
+        importlib.import_module(package_name)
     return importlib.import_module(package_name)
+
+def install_package(package_name, version_spec=None):
+    """通过 pip 安装模块，并指定版本"""
+    if version_spec:
+        package_name = f"{package_name}{version_spec}"  # 添加版本约束
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
 
 def check_and_install_requirements(requirements_file="requirements.txt"):
     """从 requirements.txt 中读取依赖并检查是否已安装"""
     try:
         with open(requirements_file, 'r') as f:
             requirements = f.readlines()
+
         for requirement in requirements:
             package_name = requirement.strip()
-            if "<" in package_name:
-                package_name = package_name.split("<")[0].strip()
-            elif ">" in package_name:
-                package_name = package_name.split(">")[0].strip()
-            elif "=" in package_name:
-                package_name = package_name.split("=")[0].strip()
-            if package_name and not package_name.startswith('#'):  # 跳过空行和注释
-                install_and_import(package_name)
+            if package_name and not package_name.startswith('#'):
+                print(f"正在检查：{package_name}")
+                if '==' in package_name or '<' in package_name or '>' in package_name:
+                    install_and_import(package_name.split('==')[0], package_name.split('==')[1] if '==' in package_name else None)
+                else:
+                    install_and_import(package_name, None)
 
     except FileNotFoundError:
         print(f"未找到 {requirements_file} 文件。请确保该文件存在。")
         return
+
 check_and_install_requirements()
 
 from plugins.core.yamlLoader import YAMLManager
