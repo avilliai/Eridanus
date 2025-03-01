@@ -10,47 +10,6 @@ import traceback
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-"""
-依赖import检测
-"""
-def install_and_import(package_name, version_spec=None):
-    """检测模块是否已安装，若未安装则通过 pip 安装，并确保符合版本约束"""
-    try:
-        # 尝试导入模块
-        importlib.import_module(package_name)
-    except ImportError:
-        print(f"{package_name} 未安装，正在安装...")
-        install_package(package_name, version_spec)
-        # 安装后再次导入模块
-        importlib.import_module(package_name)
-    return importlib.import_module(package_name)
-
-def install_package(package_name, version_spec=None):
-    """通过 pip 安装模块，并指定版本"""
-    if version_spec:
-        package_name = f"{package_name}{version_spec}"  # 添加版本约束
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
-
-def check_and_install_requirements(requirements_file="requirements.txt"):
-    """从 requirements.txt 中读取依赖并检查是否已安装"""
-    try:
-        with open(requirements_file, 'r') as f:
-            requirements = f.readlines()
-
-        for requirement in requirements:
-            package_name = requirement.strip()
-            if package_name and not package_name.startswith('#'):
-                print(f"正在检查：{package_name}")
-                if '==' in package_name or '<' in package_name or '>' in package_name:
-                    install_and_import(package_name.split('==')[0], package_name.split('==')[1] if '==' in package_name else None)
-                else:
-                    install_and_import(package_name, None)
-
-    except FileNotFoundError:
-        print(f"未找到 {requirements_file} 文件。请确保该文件存在。")
-        return
-
-check_and_install_requirements()
 
 from plugins.core.yamlLoader import YAMLManager
 if sys.platform == 'win32':
