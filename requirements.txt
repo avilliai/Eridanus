@@ -20,5 +20,5 @@ bilibili-api-python
 PicImageSearch
 numpy
 pydub
-websockets
+websockets~=14.1
 httpx<0.28.0
