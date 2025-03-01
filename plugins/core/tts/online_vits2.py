@@ -8,6 +8,12 @@ import os
 import sys
 
 from developTools.utils.logger import get_logger
+import ssl
+import websockets
+
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
 
 
 def install_and_import(package_name):
@@ -36,7 +42,7 @@ async def huggingface_online_vits2(speaker, text, lang_type="简体中文",proxy
     url = "wss://plachta-vits-umamusume-voice-synthesizer.hf.space/queue/join"
     session_hash = random_session_hash(11)
 
-    async with websockets.connect(url) as ws:
+    async with websockets.connect(url,ssl_context=ssl_context) as ws:
         logger.info(f"连接到 {url}")
         while True:
             result = await ws.recv()
