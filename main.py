@@ -32,39 +32,41 @@ bot1 = ExtendBot(config.basic_config["adapter"]["ws_client"]["ws_link"],config,b
 if config.basic_config["webui"]:
     bot2 = ExtendBot("ws://127.0.0.1:5008", config,
                      blocked_loggers=["DEBUG", "INFO_MSG","warning"])
-#插件列表
-plugin_modules = [
-    #基础功能？
-    ("aiDraw", "run.aiDraw"),
-    ("aiReply", "run.aiReply"),
-    ("basic_plugin", "run.basic_plugin"),
 
-    ("user_data", "run.user_data"),
-    ("api_implements", "run.api_implements"),
-    ("Mface_Record","run.system_plugin.Mface_Record"),
-    ("scheduledTasks", "run.system_plugin.scheduledTasks"),
-    #群管/自管
-    ("self_Manager", "run.groupManager.self_Manager"),
-    ("group_manager", "run.groupManager.group_manager"),
-    ("word_cloud", "run.groupManager.word_cloud"),
-    ("wifeyouwant", "run.groupManager.wifeyouwant"),
-    #acg信息
-    ("galgame", "run.acg_infromation.galgame"),
-    ("bangumi", "run.acg_infromation.bangumi"),
-    ("character_identify", "run.acg_infromation.character_identify"),
-    #流媒体相关
-    ("youtube", "run.streaming_media.youtube"),
-    ("bilibili", "run.streaming_media.bilibili"),
-    ("Link_parsing", "run.streaming_media.Link_parsing"),
-    ("iwara", "run.streaming_media.iwara"),
-    #资源搜索
-    ("resource_search", "run.resource_search.resource_search"),
-    ("engine_search", "run.resource_search.engine_search"),
-    #游戏服务
-    ("blue_archive", "run.anime_game_service.blue_archive"),
-    ("steam_service", "run.anime_game_service.steam_service"),
+PLUGIN_DIR = "run"
+def find_plugins(plugin_dir=PLUGIN_DIR):
+    plugin_modules = []
+    for root, _, files in os.walk(plugin_dir):
+        for file in files:
+            if file.endswith(".py") and file != "__init__.py":
+                module_path = os.path.join(root, file)
+                module_name = module_path.replace(os.sep, ".").removesuffix(".py")
+                plugin_name = os.path.splitext(file)[0]
+                if check_has_main(module_name) and plugin_name!="nailong_get":
+                    plugin_modules.append((plugin_name, module_name))
+                else:
+                    if plugin_name!="nailong_get" and plugin_name!="func_collection":
+                        bot1.logger.info(f"⚠️ The plugin `{plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
-]
+    return plugin_modules
+
+def check_has_main(module_name):
+    """检查模块是否包含 `main()` 方法"""
+    try:
+        spec = importlib.util.find_spec(module_name)
+        if spec is None:
+            return False
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return hasattr(module, "main")
+    except Exception:
+        return False
+
+
+# 自动构建插件列表
+plugin_modules = find_plugins()
+bot1.logger.info(f"🔧 共读取到插件：{len(plugin_modules)}个")
+bot1.logger.info(f"🔧 正在加载插件....") #{', '.join(name for name, _ in plugin_modules)}")
 
 def safe_import_and_load(plugin_name, module_path,bot,config):
     try:
