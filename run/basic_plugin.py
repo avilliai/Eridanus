@@ -333,13 +333,25 @@ def main(bot,config):
             f= all_speakers[0]
             e= all_speakers[1]
             c = all_speakers[2]
+            b = all_speakers[3]
+            a = all_speakers[4]
+            if a:
+                a='\n'.join(a)
+            if b:
+                b='\n'.join(b)
             if f:
                 f='\n'.join(f)
             if e:
                 e='\n'.join(e)
             if c:
                 c='\n'.join(c)
-            await bot.send(event, [Node(content=[Text(f"使用 /xx说xxxxx")]),Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"modelscope_tts可用角色：\n{c}")])])
+            await bot.send(event, [
+                Node(content=[Text(f"使用 /xx说xxxxx")]),
+                Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),
+                Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),
+                Node(content=[Text(f"modelscope_tts可用角色：\n{c}")]),
+                Node(content=[Text(f"vits可用角色：\n{b}")]),
+                Node(content=[Text(f"online_vits2可用角色：\n{a}")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
