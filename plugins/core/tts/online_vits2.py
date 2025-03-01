@@ -9,7 +9,7 @@ import websockets
 from plugins.core.tts.online_vits import random_session_hash
 
 
-async def huggingface_online_vits2(speaker, text, proxy=None):
+async def huggingface_online_vits2(speaker, text, lang_type="简体中文",proxy=None):
     url = "wss://plachta-vits-umamusume-voice-synthesizer.hf.space/queue/join"
     session_hash = random_session_hash(11)
 
@@ -26,7 +26,7 @@ async def huggingface_online_vits2(speaker, text, proxy=None):
                 elif result["msg"] == "send_data":
                     await ws.send(json.dumps({
                         "fn_index": 2,
-                        "data": [text, speaker, "简体中文", 1, False],
+                        "data": [text, speaker, lang_type, 1, False],
                         "session_hash": session_hash
                     }))
 

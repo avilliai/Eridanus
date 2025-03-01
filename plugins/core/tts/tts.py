@@ -77,7 +77,11 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     elif mode=="online_vits2":
         if speaker is None:
             speaker=config.api["tts"]["online_vits2"]["speaker"]
-        return await huggingface_online_vits2(text,speaker)
+        if config.api["tts"]["lang_type"] == "ja":
+            lang="日本語"
+        else:
+            lang="简体中文"
+        return await huggingface_online_vits2(text,speaker,lang)
     else:
         pass
 
