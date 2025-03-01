@@ -72,7 +72,9 @@ async def call_text2img3(bot, event, config, prompt):
     if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画2所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画2开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
         img=await modelscope_drawer(prompt,config.api["proxy"]["http_proxy"])
-        await bot.send(event,[Text(f"NoobXL-V-pred-v1.0："),Image(file=img)])
+        bot.logger.info(f"NoobXL-V-pred-v1.0：{img}")
+        if img:
+            await bot.send(event,[Text(f"NoobXL-V-pred-v1.0："),Image(file=img)])
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id)
@@ -238,8 +240,8 @@ def main(bot,config):
     async def bing_dalle3_draw(event):  #无需配置的ai绘图接口
         if str(event.pure_text).startswith("画 "):
             prompt = str(event.pure_text).split("画 ")[1]
-            await call_text2img2(bot, event, config, prompt)
             await call_text2img3(bot, event, config, prompt)
+
     
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
@@ -525,9 +527,6 @@ def main(bot,config):
     async def AiSdDraw(event):
         global turn
         global sd_user_args
-        if str(event.pure_text).startswith("画 ") and config.settings["ai绘画"]["sd画图"] and config.api["ai绘画"]["sdUrl"] !="" and config.api["ai绘画"]["sdUrl"]!='':
-            tag = str(event.pure_text).replace("画 ", "")
-            await call_text2img1(bot,event,config,tag)
         if str(event.pure_text) == "lora" and config.settings["ai绘画"]["sd画图"]:  # 获取lora列表
             bot.logger.info('查询loras中...')
             try:
