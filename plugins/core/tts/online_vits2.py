@@ -7,6 +7,9 @@ import importlib.util
 import os
 import sys
 
+from developTools.utils.logger import get_logger
+
+
 def install_and_import(package_name):
     """检测模块是否已安装，若未安装则通过 pip 安装"""
     # 检查模块是否已经安装
@@ -28,12 +31,13 @@ websockets = install_and_import('websockets')
 
 from plugins.core.tts.online_vits import random_session_hash
 
-
+logger=get_logger()
 async def huggingface_online_vits2(speaker, text, lang_type="简体中文",proxy=None):
     url = "wss://plachta-vits-umamusume-voice-synthesizer.hf.space/queue/join"
     session_hash = random_session_hash(11)
 
     async with websockets.connect(url) as ws:
+        logger.info(f"连接到 {url}")
         while True:
             result = await ws.recv()
             if result:

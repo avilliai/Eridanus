@@ -10,6 +10,7 @@ import requests
 
 from ruamel.yaml import YAML
 
+from developTools.utils.logger import get_logger
 from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.core.tts.online_vits import huggingface_online_vits
@@ -21,7 +22,7 @@ from plugins.utils.translate import translate
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
-
+logger=get_logger()
 global GPTSOVITS_SPEAKERS
 GPTSOVITS_SPEAKERS={}
 async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
@@ -47,7 +48,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         print(f"翻译后的文本：{text}")
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
-
+    logger.info_func(f"语音合成任务：文本：{text}，发音人：{speaker}，模式：{mode}")
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
