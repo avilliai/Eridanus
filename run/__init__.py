@@ -79,7 +79,7 @@ function_declarations=[
                 },
                 "speaker": {
                     "type": "string",
-                    "description": "使用的语音合成角色。默认为玲可【星穹铁道】"
+                    "description": "使用的语音合成角色。默认角色为None"
                 },
                 "mood": {
                     "type": "string",
