@@ -9,6 +9,14 @@ import sys
 
 from developTools.utils.logger import get_logger
 
+import ssl
+import websockets
+
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+ssl_context.check_hostname = False  # 关闭主机名检查
+ssl_context.verify_mode = ssl.CERT_NONE  # 关闭证书验证
+
+
 
 def install_and_import(package_name):
     """检测模块是否已安装，若未安装则通过 pip 安装"""
@@ -37,7 +45,7 @@ async def huggingface_online_vits2(text, speaker,lang_type="简体中文",proxy=
     url = "wss://plachta-vits-umamusume-voice-synthesizer.hf.space/queue/join"
     session_hash = random_session_hash(11)
 
-    async with websockets.connect(url) as ws:
+    async with websockets.connect(url,ssl=ssl_context) as ws:
         logger.info(f"连接到 {url}")
         while True:
             await asyncio.sleep(1)
