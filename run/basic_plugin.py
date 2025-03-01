@@ -1,6 +1,7 @@
 import os
 import random
 import re
+import traceback
 
 from asyncio import sleep
 
@@ -223,6 +224,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
         await bot.send(event, Record(file=p))
         return {"status":"success"}
     except:
+        traceback.print_exc()
         pass
 
 async def call_all_speakers(bot,event,config):
