@@ -24,8 +24,6 @@ def install_and_import(package_name):
 
 # 使用示例
 websockets = install_and_import('websockets')
-if websockets:
-    print("websockets 模块已成功导入")
 
 
 from plugins.core.tts.online_vits import random_session_hash
