@@ -37,13 +37,9 @@ for root, dirs, files in os.walk(PLUGIN_DIR):
 
 def openai_func_map():
     tools=convert_gemini_to_openai({"function_declarations": function_declarations})
-    #with open('plugins/core/openai_func_call.json', 'r',encoding='utf-8') as f:
-        #data = json.load(f)
-    #tools = data
+
     return tools
 def gemini_func_map():
-    #with open('plugins/core/gemini_func_call.json', 'r',encoding='utf-8') as f:
-        #data = json.load(f)
-    #tools = data
+
     tools = {"function_declarations": function_declarations}
     return tools

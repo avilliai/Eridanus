@@ -24,7 +24,5 @@ def convert_gemini_to_openai(gemini_tools):
             parameters["additionalProperties"] = False
 
         openai_functions.append(openai_function)
-    #with open('plugins/core/openai_func_call.json', 'w',encoding='utf-8') as f:
 
-        #f.write(json.dumps(openai_functions))
     return openai_functions
