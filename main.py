@@ -9,6 +9,42 @@ import traceback
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+"""
+依赖import检测
+"""
+def install_and_import(package_name):
+    """检测模块是否已安装，若未安装则通过 pip 安装"""
+    spec = importlib.util.find_spec(package_name)
+    if spec is None:
+        print(f"{package_name} 未安装，正在安装...")
+        os.system(f"{sys.executable} -m pip install {package_name}")
+        spec = importlib.util.find_spec(package_name)
+        if spec is None:
+            print(f"安装失败：无法找到 {package_name} 模块")
+            return None
+    return importlib.import_module(package_name)
+
+def check_and_install_requirements(requirements_file="requirements.txt"):
+    """从 requirements.txt 中读取依赖并检查是否已安装"""
+    try:
+        with open(requirements_file, 'r') as f:
+            requirements = f.readlines()
+        for requirement in requirements:
+            package_name = requirement.strip()
+            if "<" in package_name:
+                package_name = package_name.split("<")[0].strip()
+            elif ">" in package_name:
+                package_name = package_name.split(">")[0].strip()
+            elif "=" in package_name:
+                package_name = package_name.split("=")[0].strip()
+            if package_name and not package_name.startswith('#'):  # 跳过空行和注释
+                install_and_import(package_name)
+
+    except FileNotFoundError:
+        print(f"未找到 {requirements_file} 文件。请确保该文件存在。")
+        return
+check_and_install_requirements()
+
 from plugins.core.yamlLoader import YAMLManager
 if sys.platform == 'win32':
   asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
