@@ -1,6 +1,6 @@
 import concurrent.futures
-import copy
 import importlib
+
 import os
 import sys
 import asyncio
@@ -50,16 +50,22 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
 
     return plugin_modules
 
+
 def check_has_main(module_name):
     """检查模块是否包含 `main()` 方法"""
     try:
-        spec = importlib.util.find_spec(module_name)
-        if spec is None:
-            return False
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return hasattr(module, "main")
-    except Exception:
+        # 动态导入模块
+        module = __import__(module_name, fromlist=[''])
+
+        # 检查是否存在 main() 方法
+        return hasattr(module, 'main')
+    except ImportError as e:
+        # 导入失败时的处理
+        print(f"Error importing module {module_name}: {e}")
+        return False
+    except Exception as e:
+        # 捕获其他异常
+        print(f"Unexpected error: {e}")
         return False
 
 
