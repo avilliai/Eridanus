@@ -70,11 +70,17 @@ def main(bot,config):
     async def Link_Prising_search(event: GroupMessageEvent):
         global teamlist
         proxy = config.api["proxy"]["http_proxy"]
-        #print(proxy)
         url=event.pure_text
         if url == '' and 'json' in event.processed_message[0]:
             url = event.processed_message[0]['json']['data']
-        #print(f'url:{url}\nevent:{event}')
+        if url == '' :
+            try:
+                event_context=json_handle.loads(event.message_chain[0].data)
+                if 'meta' in event_context:
+                    url = "QQ小程序"+event_context['meta']['detail_1']['qqdocurl']
+            except:
+                pass
+
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
             if event.get("text") is not None and event.get("text")[0]=="下载视频":
