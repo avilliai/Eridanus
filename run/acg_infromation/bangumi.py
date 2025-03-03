@@ -186,25 +186,25 @@ def main(bot,config):
                 keywords = context.replace(" ", "").split("查询")[1]
         elif "查询动画" in context or "查询番剧" in context or "番剧查询" in context:
                 search_type=2
-                if not context.startswith("查询"):
+                if context.startswith("查询"):
                     if '动画' in context:keywords = context.replace(" ", "").split("动画")[1]
                     elif '番剧' in context:keywords = context.replace(" ", "").split("番剧")[1]
                 else:keywords = context.replace(" ", "").split("查询")[1]
         elif "查询书籍" in context or "书籍查询" in context:
                 search_type=1
-                if not context.startswith("查询"):keywords = context.replace(" ", "").split("书籍")[1]
+                if context.startswith("查询"):keywords = context.replace(" ", "").split("书籍")[1]
                 else:keywords = context.replace(" ", "").split("查询")[1]
         elif "查询游戏" in context or "游戏查询" in context:
                 search_type=4
-                if not context.startswith("查询"):keywords = context.replace(" ", "").split("游戏")[1]
+                if  context.startswith("查询"):keywords = context.replace(" ", "").split("游戏")[1]
                 else:keywords = context.replace(" ", "").split("查询")[1]
         elif "查询音乐" in context or "音乐查询" in context:
                 search_type=3
-                if not context.startswith("查询"):keywords = context.replace(" ", "").split("音乐")[1]
+                if  context.startswith("查询"):keywords = context.replace(" ", "").split("音乐")[1]
                 else:keywords = context.replace(" ", "").split("查询")[1]
         elif "查询三次元" in context or "三次元查询" in context:
                 search_type=6
-                if not context.startswith("查询"):keywords = context.replace(" ", "").split("三次元")[1]
+                if  context.startswith("查询"):keywords = context.replace(" ", "").split("三次元")[1]
                 else:keywords = context.replace(" ", "").split("查询")[1]
         else:
             return
@@ -225,6 +225,8 @@ def main(bot,config):
                     await bot.send(event, [f"这是{botname}为您查询到的结果～～", Image(file=bangumi_json['pic_path'])])
                     if event.sender.user_id in searchtask:
                         searchtask.pop(event.sender.user_id)
+            else:
+                await bot.send(event, f"{botname}没有找到该番剧呢～")
         except Exception as e:
             bot.logger.error(e)
             if event.sender.user_id in searchtask:
