@@ -103,7 +103,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     prompt = p
             kwargs = {
                 "ask_prompt": prompt,
-                "url": config.api["llm"]["openai"]["quest_url"],
+                "url": config.api["llm"]["openai"].get("quest_url") or config.api["llm"]["openai"].get("base_url"),
                 "apikey": random.choice(config.api["llm"]["openai"]["api_keys"]),
                 "model":config.api["llm"]["openai"]["model"],
                 "stream":False,
