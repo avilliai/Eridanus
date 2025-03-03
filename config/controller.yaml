@@ -2,6 +2,8 @@ user_data:
   auto_register: true  #自动为发送消息的用户注册。确保所有人都在数据库中，不建议关。
   change_info_operate_level: 0     #相关指令所需操作权限等级。默认0级最低，数字越大等级越高
   permit_user_operate_level: 998   #允许使用授权#{目标QQ}#{level} 指令的操作权限等级
+api_implement:
+  send_like: 0    #“赞我”功能所需权限等级
 core:
   ai_reply_group: 0    #群内ai对话所需权限等级
   ai_reply_private: 1  #私聊ai对话所需权限等级
@@ -23,9 +25,10 @@ resource_search: #资源搜索功能
 basic_plugin:
   setu_operate_level: 0    #色图功能所需等级
   search_image_resource_operate_level: 0  #图片搜索功能所需等级
-  内置ai绘画开关: true  #内置ai绘画功能开关
-  bing_dalle3_operate_level: 0  #bing_dalle3绘图功能所需等级
-  recall_level : 3
+  内置ai绘画1开关: true  #聚合接口
+  内置ai绘画2开关: true  #NoobXL-V-pred-v1.0，来自modelscope。
+  内置ai绘画1所需权限等级: 0  #默认聚合绘图功能所需等级
+  内置ai绘画2所需权限等级: 0  #NoobXL-V-pred-v1.0
 流媒体:
   youtube:
     download_audio_level: 0  #下载音频所需权限等级

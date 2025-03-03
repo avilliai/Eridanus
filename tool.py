@@ -9,10 +9,9 @@ import sys
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from ruamel.yaml import YAML
+
 
 from developTools.utils.logger import get_logger
-from plugins.utils.convert_func_calling import gemini_func_map, convert_gemini_to_openai
 
 
 """
@@ -28,12 +27,8 @@ else:
     git_path = "git"
 logger.info(f"git_path: {git_path}")
 custom_python_path = os.path.join(parent_dir, "environments", "Python311", "python.exe")
-if os.path.exists(custom_python_path):
-    python_path = custom_python_path
-elif os.path.exists(os.path.join("venv", "Scripts", "python.exe")):
-    python_path = os.path.join("venv", "Scripts", "python.exe")
-else:
-    python_path = "python"
+
+python_path = sys.executable
 logger.info(f"python_path: {python_path}")
 custom_pip_path = os.path.join(parent_dir, "environments", "Python311", "Scripts", "pip.exe")
 if os.path.exists(custom_pip_path):
@@ -91,15 +86,15 @@ async def main():
         os.system(f"\"{python_path}\" -m playwright install chromium")
     elif user_input=="4":
         logger.info("""请输入开发者工具序号：
-        1 同步gemini函数调用到openai函数调用
+#
         2 没想好呢""")
         sleep(0.3)
         user_input2=input("请输入开发者工具序号：")
-        if user_input2=="1":
+        '''if user_input2=="1":
             logger.info("同步gemini函数调用到openai函数调用")
             r = gemini_func_map()
             convert_gemini_to_openai(r)
-            logger.info("同步完成")
+            logger.info("同步完成")'''
     elif user_input=="5":
         logger.info("安装奶龙相关ai库依赖中")
         ai_req()

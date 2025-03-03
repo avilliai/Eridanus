@@ -2,46 +2,33 @@
 import importlib
 import inspect
 import json
+import os
+import traceback
 
 from developTools.utils.logger import get_logger
 
 logger=get_logger()
-dynamic_imports = {
-    "run.basic_plugin": [
-        "call_weather_query", "call_setu", "call_image_search",
-        "call_tts", "call_tarot", "call_pick_music",
-        "call_fortune", "call_all_speakers"
-    ],
-    "run.user_data": [
-        "call_user_data_register", "call_user_data_query", "call_user_data_sign",
-        "call_change_city", "call_change_name", "call_permit",
-        "call_delete_user_history", "call_clear_all_history"
-    ],
-    "run.groupManager.self_Manager": [
-        "call_operate_blandwhite", "garbage_collection",
-        "report_to_master", "send", "send_contract"
-    ],
-    "run.groupManager.nailong_get": ["operate_group_censor"],
-    "run.resource_search.resource_search": [
-        "search_book_info", "call_asmr", "call_download_book","call_jm"
-    ],
-    "run.anime_game_service.func_collection":[
-        "anime_game_service_func_collection"
-    ],
-    "run.acg_infromation.bangumi": ["call_bangumi_search"],
-    "run.acg_infromation.character_identify": ["call_character_identify"],
-    "run.streaming_media.youtube": ["download_video"],
-    "run.aiDraw": ["call_text2img", "call_aiArtModerate"],
-    "run.system_plugin.func_collection": ["operate_group_push_tasks"],
-    "run.resource_search.engine_search": ["search_net", "read_html"],
-    "run.system_plugin.Mface_Record": ["call_send_mface"]
-}
+PLUGIN_DIR = "run"
+dynamic_imports = {}
 
-# 存储成功加载的函数
+for root, dirs, files in os.walk(PLUGIN_DIR):
+    if "__init__.py" in files:
+        module_name = root.replace(os.sep, ".")
+        try:
+            module = importlib.import_module(module_name)
+            if hasattr(module, "dynamic_imports"):
+                dynamic_imports.update(module.dynamic_imports)
+                logger.info(f"✅ 函数调用映射加载成功: {module_name}.dynamic_imports")
+            else:
+                logger.warning(f"⚠️ {module_name} 未定义 dynamic_imports")
+        except Exception as e:
+            logger.error(f"❌ 无法导入 {module_name}: {e}")
+            traceback.print_exc()
+
 loaded_functions = {}
 
 
-# 动态导入模块和函数
+# 动态导入
 for module_name, functions in dynamic_imports.items():
     try:
         module = importlib.import_module(module_name)  # 动态导入模块

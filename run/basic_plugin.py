@@ -1,6 +1,7 @@
 import os
 import random
 import re
+import traceback
 
 from asyncio import sleep
 
@@ -15,6 +16,7 @@ from plugins.basic_plugin.image_search import fetch_results, automate_browser
 from plugins.basic_plugin.weather_query import weather_query
 from plugins.core.tts.modelscopeTTS import get_modelscope_tts_speakers
 from plugins.core.tts.napcat_tts import napcat_tts_speakers
+from plugins.core.tts.online_vits2 import get_huggingface_online_vits2_speakers
 from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
 from plugins.core.tts.vits import get_vits_speakers
 
@@ -31,6 +33,8 @@ image_search={}
 """
 供func call调用
 """
+async def call_quit_chat(bot,event,config):
+    return False
 async def call_weather_query(bot,event,config,location=None):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if location is None:
@@ -171,50 +175,56 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
     acgnspk=all_speakers[1]
     modelscope_speakers=all_speakers[2]
     vits_speakers=all_speakers[3]
-    if not ncspk and not acgnspk and not modelscope_speakers and not vits_speakers:
+    online_vits2_speakers=all_speakers[4]
+    if not ncspk and not acgnspk and not modelscope_speakers and not vits_speakers and not online_vits2_speakers:
         bot.logger.error("No speakers found")
         return
-    lock_mode=None
-    lock_speaker=None
+    lock=False
     if acgnspk:
-        mode="acgn_ai"
         if speaker in acgnspk:
-            lock_mode="acgn_ai"
-            lock_speaker=speaker
+            lock=True
+            mode = "acgn_ai"
         elif f"{speaker}【鸣潮】" in acgnspk:
             speaker=f"{speaker}【鸣潮】"
-            lock_mode="acgn_ai"
-            lock_speaker=speaker
+            lock=True
+            mode = "acgn_ai"
         elif f"{speaker}【原神】" in acgnspk:
             speaker=f"{speaker}【原神】"
-            lock_mode="acgn_ai"
-            lock_speaker=speaker
+            lock=True
+            mode = "acgn_ai"
         elif f"{speaker}【崩坏3】" in acgnspk:
             speaker=f"{speaker}【崩坏3】"
-            lock_mode="acgn_ai"
-            lock_speaker=speaker
+            lock=True
+            mode = "acgn_ai"
         elif f"{speaker}【星穹铁道】" in acgnspk:
             speaker=f"{speaker}【星穹铁道】"
-            lock_mode="acgn_ai"
-            lock_speaker=speaker
-    if ncspk and lock_mode is None and lock_speaker is None:
+            lock=True
+            mode = "acgn_ai"
+    if ncspk and not lock:
         if speaker in ncspk:
             mode="napcat_tts"
             speaker=ncspk[speaker]
-            lock_mode="napcat_tts"
-            lock_speaker=speaker
-    if modelscope_speakers and lock_mode is None and lock_speaker is None:
+            lock=True
+    if modelscope_speakers and not lock:
         if speaker in modelscope_speakers:
             mode="modelscope_tts"
-            lock_mode="modelscope_tts"
-    if vits_speakers and lock_mode is None and lock_speaker is None:
+            lock=True
+    if vits_speakers and not lock:
         if speaker in vits_speakers:
             mode="vits"
+            lock = True
+    if online_vits2_speakers and not lock:
+        if speaker in online_vits2_speakers:
+            mode="online_vits2"
+            lock = True
+    else:
+        mode=config.api["tts"]["tts_engine"]
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
         await bot.send(event, Record(file=p))
         return {"status":"success"}
     except:
+        traceback.print_exc()
         pass
 
 async def call_all_speakers(bot,event,config):
@@ -234,7 +244,12 @@ async def call_all_speakers(bot,event,config):
     except Exception as e:
         bot.logger.error(f"Error in get_vits_speakers: {e}")
         vits_speakers=None
-    return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers,vits_speakers]}
+    try:
+        online_vits2_speakers=await get_huggingface_online_vits2_speakers()
+    except Exception as e:
+        bot.logger.error(f"Error in get_huggingface_online_vits2_speakers: {e}")
+        online_vits2_speakers=None
+    return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers,vits_speakers,online_vits2_speakers]}
 async def call_tarot(bot,event,config):
     if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1, 100) < \
             config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["probability"]:
@@ -315,7 +330,8 @@ def main(bot,config):
             speaker=event.pure_text.split("说")[0].replace("/","").strip()
             text=event.pure_text.split("说")[1].strip()
             r=await call_tts(bot,event,config,text,speaker)
-            await bot.send(event, Record(file=r.get("audio")))
+            if r.get("audio"):
+                await bot.send(event, Record(file=r.get("audio")))
         elif event.pure_text=="可用角色":
             #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             all_speakers = await call_all_speakers(bot, event, config)
@@ -323,13 +339,25 @@ def main(bot,config):
             f= all_speakers[0]
             e= all_speakers[1]
             c = all_speakers[2]
+            b = all_speakers[3]
+            a = all_speakers[4]
+            if a:
+                a='\n'.join(a)
+            if b:
+                b='\n'.join(b)
             if f:
                 f='\n'.join(f)
             if e:
                 e='\n'.join(e)
             if c:
                 c='\n'.join(c)
-            await bot.send(event, [Node(content=[Text(f"使用 /xx说xxxxx")]),Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),Node(content=[Text(f"modelscope_tts可用角色：\n{c}")])])
+            await bot.send(event, [
+                Node(content=[Text(f"使用 /xx说xxxxx")]),
+                Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),
+                Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),
+                Node(content=[Text(f"modelscope_tts可用角色：\n{c}")]),
+                Node(content=[Text(f"vits可用角色：\n{b}")]),
+                Node(content=[Text(f"online_vits2可用角色：\n{a}")])])
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):

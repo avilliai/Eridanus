@@ -16,12 +16,19 @@ from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
-    get_current_openai_prompt, add_openai_standard_prompt, construct_openai_standard_prompt_old_version
+    get_current_openai_prompt, add_openai_standard_prompt, construct_openai_standard_prompt_old_version, \
+    openaiRequest_official
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, clear_all_history, change_folder_chara, read_chara, use_folder_chara
 from plugins.core.tts.tts import tts
 from plugins.core.userDB import get_user
-from plugins.func_map import call_func
+import importlib
+
+def call_func(*args, **kwargs):
+    # 运行时动态导入，避免循环导入
+    func_map = importlib.import_module("plugins.func_map")
+    return func_map.call_func(*args, **kwargs)
+#from plugins.func_map import call_func
 last_trigger_time = defaultdict(float)
 
 logger=get_logger()
@@ -94,35 +101,40 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 p = await read_context(bot, event, config, prompt)
                 if p:
                     prompt = p
-            response_message = await openaiRequest(
-                prompt,
-                config.api["llm"]["openai"]["quest_url"],
-                random.choice(config.api["llm"]["openai"]["api_keys"]),
-                config.api["llm"]["openai"]["model"],
-                False,
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
-                tools=tools,
-                temperature=config.api["llm"]["openai"]["temperature"],
-                max_tokens=config.api["llm"]["openai"]["max_tokens"]
-            )
+            kwargs = {
+                "ask_prompt": prompt,
+                "url": config.api["llm"]["openai"]["quest_url"],
+                "apikey": random.choice(config.api["llm"]["openai"]["api_keys"]),
+                "model":config.api["llm"]["openai"]["model"],
+                "stream":False,
+                "proxy": config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                "tools": tools,
+                "temperature": config.api["llm"]["openai"]["temperature"],
+                "max_tokens": config.api["llm"]["openai"]["max_tokens"]
+            }
+            if config.api["llm"]["openai"]["enable_official_sdk"]:
+                response_message = await openaiRequest_official(**kwargs)
+            else:
+                response_message = await openaiRequest(**kwargs)
             if "content" in response_message:
                 reply_message=response_message["content"]
                 if reply_message is not None:
                     reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
-                if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
 
                     if match_think:
                         think_text = match_think.group(1)
-                        await bot.send(event,[Node(content=[Text(think_text)])])
+                        if config.api["llm"]["openai"]["CoT"]:
+                            await bot.send(event,[Node(content=[Text(think_text)])])
                         pattern_rest = r"</think>\n\n(.*?)$"
                         match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
                         if match_rest:
                             reply_message = match_rest.group(1)
                     else:
                         if "reasoning_content" in response_message:
-                            await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
+                            if config.api["llm"]["openai"]["CoT"]:
+                                await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
                             response_message.pop("reasoning_content")
             else:
                 reply_message=None
@@ -146,7 +158,6 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 mface_files=[]
 
             if "tool_calls" in response_message and response_message['tool_calls'] is not None:
-
                 for part in response_message['tool_calls']:
                     func_name = part['function']["name"]
                     args = part['function']['arguments']
@@ -154,6 +165,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         temp_history.append({
                             "role": "tool",
                             "content": json.dumps({"status": "succeed"}),
+                            "name": "call_send_mface",
                             # Here we specify the tool_call_id that this result corresponds to
                             "tool_call_id": part['id']
                         })
@@ -167,6 +179,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 temp_history.append({
                                     "role": "tool",
                                     "content": json.dumps(r),
+                                    "name": func_name,
                                     # Here we specify the tool_call_id that this result corresponds to
                                     "tool_call_id": part['id']
                                 })
@@ -174,6 +187,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 temp_history.append({
                                     "role": "tool",
                                     "content": json.dumps({"status":"succeed"}),
+                                    "name": func_name,
                                     # Here we specify the tool_call_id that this result corresponds to
                                     "tool_call_id": part['id']
                                 })
@@ -184,6 +198,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps({"status": "failed to call function"}),
+                                "name": func_name,
                                 # Here we specify the tool_call_id that this result corresponds to
                                 "tool_call_id": part['id']
                             })
@@ -192,6 +207,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     reply_message=None
 
             await prompt_database_updata(user_id, response_message, config)
+            for i in temp_history:
+                await prompt_database_updata(user_id, i,config)
             if func_call:
                 final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
                                                    system_instruction=system_instruction, func_result=True)
@@ -349,7 +366,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         if recursion_times<=config.api["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
-            if recursion_times+1==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
+            if recursion_times+3==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
                 logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1,do_not_read_context=True)
@@ -358,6 +375,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 async def send_text(bot,event,config,text):
     if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
         if config.api["llm"]["语音回复附带文本"]:
+            text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+            text=text.replace('```', '').strip()
             await bot.send(event, text.strip(), config.api["llm"]["Quote"])
 
         await tts_and_send(bot, event, config, text)
@@ -408,6 +427,9 @@ async def read_context(bot,event,config,prompt):
             return None
         bot.logger.info(f"群聊上下文消息：已读取")
         insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
+        if config.api["llm"]["model"]=="openai":  #必须交替出现
+            while prompt[insert_pos-1]["role"]!= "assistant":
+                insert_pos += 1
         prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
         return prompt
     except:

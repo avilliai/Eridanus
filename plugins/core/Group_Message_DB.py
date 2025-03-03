@@ -127,8 +127,7 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                         final_list.append(processed)
 
                     elif prompt_standard == "new_openai":
-                        processed = await prompt_elements_construct(raw_message["message"], bot=bot,
-                                                                               event=event)
+                        processed = await prompt_elements_construct(raw_message["message"], bot=bot,event=event)
                         final_list.append(processed)
                         final_list.append({"role": "assistant", "content": [{"type": "text", "text": "(群聊背景消息已记录)"}]})
                     else:
@@ -153,8 +152,18 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                 fl.append({"role": "user", "parts": all_parts})
                 fl.append({"role": "model", "parts": {"text": "嗯嗯，我记住了"}})
             else:
-                all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['content']]
-                fl.append({"role": "user", "content": all_parts})
+                all_parts = []
+                all_parts_str = ""
+                for entry in final_list:
+                    if entry['role'] == 'user':  # 只处理 'role' 为 'user' 的项
+                        if isinstance(entry['content'], str):  # 如果 'content' 是字符串
+                            all_parts_str += entry['content'] + "\n"
+                            #all_parts.append(entry['content'])
+                        else:  # 如果 'content' 是列表
+                            for part in entry['content']:
+                                all_parts.append(part)
+                #all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['content']]
+                fl.append({"role": "user", "content": all_parts if all_parts!= [] else all_parts_str})
                 fl.append({"role": "assistant", "content": "嗯嗯我记住了"})
             return fl
 

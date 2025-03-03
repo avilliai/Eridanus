@@ -21,14 +21,15 @@ llm:
   recursion_limit: 10                  #对话模型最大递归深度，出错时自动递归。
   auto_clear_when_recursion_failed: True #对话模型递归失败时自动清除历史记录。
   openai:          #兼容所有openai标准接口。https://platform.openai.com/docs/overview
+    enable_official_sdk: True   #是否使用官方sdk，如果不使用，则为直接发送post请求。
     api_keys:   #继续像这样添加apikey
     - YOUR_API_KEY_1
-    model: gpt-4o-mini
-    quest_url: https://api.openai.com/v1/chat/completions   #完整调用地址。只填base_url不行
+    model: deepseek-reasoner
+    quest_url: https://api.deepseek.com   #如使用官方sdk，则只填base_url，否则填完整url。
     temperature: 1.3
     max_tokens: 2048
     CoT: True               #显示思维链
-    使用旧版prompt结构: false  #官网版deepseek-reasoner需要使用旧版prompt结构
+    使用旧版prompt结构: false  #部分模型需要使用旧版prompt结构
   gemini:         #https://ai.google.dev/
     api_keys:  #继续像这样添加apikey
       - YOUR_API_KEY_1
@@ -40,10 +41,15 @@ llm:
     智能体ID: ""
     token: ""
 tts:
-  tts_engine: modelscope_tts     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
+  tts_engine: online_vits2     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
   length_limit: 100 #语音合成最大长度，超过此长度将自动拒绝合成
+  lang_type: "zh"  #自动转换语言类型,ja或zh。vits系列建议全部ja
+  online_vits2:
+    speaker: "东海帝王 Tokai Teio (Umamusume Pretty Derby)"   #speaker见https://huggingface.co/spaces/Plachta/VITS-Umamusume-voice-synthesizer
+  online_vits:   #配置方式见文档
+    speaker: "和泉妃愛"
+    fn_index: 3
   vits:               #本地语音合成，配置要求极低，服务端整合包请在q群913122269下载
-    lang_type: "ja"
     speaker: "綾地寧々"
     base_url: "http://127.0.0.1:5009"
   acgn_ai:

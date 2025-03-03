@@ -10,15 +10,19 @@ import requests
 
 from ruamel.yaml import YAML
 
+from developTools.utils.logger import get_logger
 from plugins.core.tts.modelscopeTTS import modelscope_tts
 from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
+from plugins.core.tts.online_vits import huggingface_online_vits
+from plugins.core.tts.online_vits2 import huggingface_online_vits2
 from plugins.core.tts.vits import vits
 from plugins.utils.random_str import random_str
+from plugins.utils.translate import translate
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
     local_config = yaml.load(f)
-
+logger=get_logger()
 global GPTSOVITS_SPEAKERS
 GPTSOVITS_SPEAKERS={}
 async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
@@ -27,14 +31,24 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     # 去除括号及其中的内容
     cleaned_text = pattern.sub('', text)
     text = cleaned_text.replace("·", "").replace("~", "").replace("-", "")
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+    
+
+    text=text.replace('```', '').strip()
     if config is None:
         config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
     if len(text) > config.api["tts"]["length_limit"]:
         raise ValueError("文本长度超出限制")
+    """
+    语言类型转换
+    """
+    if config.api["tts"]["lang_type"]=="ja":
+        text=await translate(text)  #默认就是转日文
+        print(f"翻译后的文本：{text}")
     if mode is None:
         mode = config.api["tts"]["tts_engine"]
-
+    logger.info_func(f"语音合成任务：文本：{text}，发音人：{speaker}，模式：{mode}")
     if mode == "acgn_ai":
         if speaker is None:
             speaker=config.api["tts"]["acgn_ai"]["speaker"]
@@ -54,13 +68,21 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
         if speaker is None:
             speaker=config.api["tts"]["vits"]["speaker"]
         base_url=config.api["tts"]["vits"]["base_url"]
-        lang_type=config.api["tts"]["vits"]["lang_type"]
+        return await vits(text,speaker,base_url)
+    elif mode=="online_vits":
+        if speaker is None:
+            speaker=config.api["tts"]["online_vits"]["speaker"]
+        fn_index=config.api["tts"]["online_vits"]["fn_index"]
         proxy=config.api["proxy"]["http_proxy"]
-        if proxy:
-            proxies={"http://": proxy,"https://": proxy}
+        return await huggingface_online_vits(text,speaker,fn_index,proxy)
+    elif mode=="online_vits2":
+        if speaker is None:
+            speaker=config.api["tts"]["online_vits2"]["speaker"]
+        if config.api["tts"]["lang_type"] == "ja":
+            lang="日本語"
         else:
-            proxies=None
-        return await vits(text,speaker,base_url,lang_type,proxies)
+            lang="简体中文"
+        return await huggingface_online_vits2(text,speaker,lang)
     else:
         pass
 
