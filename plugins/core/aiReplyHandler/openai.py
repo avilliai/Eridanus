@@ -64,7 +64,7 @@ async def openaiRequest_official(ask_prompt,url: str,apikey: str,model: str,stre
     :param max_tokens:
     :return:
     """
-    print(ask_prompt)
+    #print(ask_prompt)
     kwargs = {
         "model": model,
         "messages": ask_prompt,
