@@ -231,20 +231,19 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         prompt = p
             if processed_message is None:  # 防止二次递归无限循环
                 tools = None
-            try:
-                response_message = await geminiRequest(
-                    prompt,
-                    config.api["llm"]["gemini"]["base_url"],
-                    random.choice(config.api["llm"]["gemini"]["api_keys"]),
-                    config.api["llm"]["gemini"]["model"],
-                    config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
-                    tools=tools,
-                    system_instruction=system_instruction,
-                    temperature=config.api["llm"]["gemini"]["temperature"],
-                    maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
-                )
-            except Exception as e:
-                logger.error(f"Error occurred when calling geminiRequest: {e}")
+            #这里是需要完整报错的，不用try catch，否则会影响自动重试。
+            response_message = await geminiRequest(
+                prompt,
+                config.api["llm"]["gemini"]["base_url"],
+                random.choice(config.api["llm"]["gemini"]["api_keys"]),
+                config.api["llm"]["gemini"]["model"],
+                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                tools=tools,
+                system_instruction=system_instruction,
+                temperature=config.api["llm"]["gemini"]["temperature"],
+                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+            )
+
             # print(response_message)
             try:
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
