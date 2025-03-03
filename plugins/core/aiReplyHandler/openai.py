@@ -9,8 +9,21 @@ from PIL import Image
 
 from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
+from plugins.utils.install_and_import import install_and_import
 from plugins.utils.random_str import random_str
 logger=get_logger()
+"""
+安全导入
+"""
+
+
+openai = install_and_import('openai')
+
+if openai:
+    from openai import AsyncOpenAI  # 现在可以安全地导入 AsyncOpenAI
+
+
+
 BASE64_PATTERN = re.compile(r"^data:([a-zA-Z0-9]+/[a-zA-Z0-9-.+]+);base64,([A-Za-z0-9+/=]+)$")
 async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=1.3,max_tokens=2560):
     if proxy is not None and proxy !="":
@@ -36,9 +49,48 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
         r = await client.post(url, json=data)  # 使用 `json=data`
         print(r.json())
         return r.json()["choices"][0]["message"]
-"""
-从processed_message构造openai标准的prompt
-"""
+async def openaiRequest_official(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=1.3,max_tokens=2560):
+    """
+    使用官方sdk
+    :param ask_prompt:
+    :param url:
+    :param apikey:
+    :param model:
+    :param stream:
+    :param proxy:
+    :param tools:
+    :param instructions:
+    :param temperature:
+    :param max_tokens:
+    :return:
+    """
+    print(ask_prompt)
+    kwargs = {
+        "model": model,
+        "messages": ask_prompt,
+        "stream": stream,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    # 仅当 tools 不为 None 时添加它
+    if tools is not None:
+        kwargs["tools"] = tools
+        kwargs["tool_choice"] = "auto"
+
+    client = AsyncOpenAI(api_key=apikey, base_url=url)
+
+    async def get_response():
+        response =await client.chat.completions.create(**kwargs)
+
+        #response = await client.chat.completions.create(**kwargs)
+        print(response)
+        response_dict=response.model_dump()
+        return response_dict["choices"][0]["message"]
+        #print(response.choices[0].message.content)
+    return await get_response()
+
+
 
 
 async def prompt_elements_construct(precessed_message,bot=None,func_result=False,event=None):
