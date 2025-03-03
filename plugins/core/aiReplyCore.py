@@ -231,17 +231,20 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         prompt = p
             if processed_message is None:  # 防止二次递归无限循环
                 tools = None
-            response_message = await geminiRequest(
-                prompt,
-                config.api["llm"]["gemini"]["base_url"],
-                random.choice(config.api["llm"]["gemini"]["api_keys"]),
-                config.api["llm"]["gemini"]["model"],
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
-                tools=tools,
-                system_instruction=system_instruction,
-                temperature=config.api["llm"]["gemini"]["temperature"],
-                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
-            )
+            try:
+                response_message = await geminiRequest(
+                    prompt,
+                    config.api["llm"]["gemini"]["base_url"],
+                    random.choice(config.api["llm"]["gemini"]["api_keys"]),
+                    config.api["llm"]["gemini"]["model"],
+                    config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                    tools=tools,
+                    system_instruction=system_instruction,
+                    temperature=config.api["llm"]["gemini"]["temperature"],
+                    maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+                )
+            except Exception as e:
+                logger.error(f"Error occurred when calling geminiRequest: {e}")
             # print(response_message)
             try:
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
@@ -542,3 +545,21 @@ async def add_send_mface(tools,config):
     return tools
 
 #asyncio.run(openaiRequest("1"))
+def count_tokens_approximate(input_text, output_text,token_ori=None):
+    def tokenize(text):
+        # 英文和数字：按空格分词，同时考虑标点符号和特殊符号
+        english_tokens = re.findall(r"\w+|[^\w\s]", text, re.UNICODE)
+        # 中文：每个汉字单独作为一个 token
+        chinese_tokens = re.findall(r'[\u4e00-\u9fff]', text)
+        # 合并英文和中文 token
+        tokens = english_tokens + chinese_tokens
+        return tokens
+
+    input_tokens = tokenize(input_text)
+    output_tokens = tokenize(output_text)
+    add_token=len(input_tokens) + len(output_tokens)
+    if token_ori is not None:
+        total_token = add_token+token_ori
+    else:
+        total_token = add_token
+    return total_token

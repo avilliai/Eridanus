@@ -285,19 +285,22 @@ def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=No
                     char_width = bbox[2] - bbox[0]
                     draw.text((x, y), char, font=font_restore, fill=text_color)
                 else:
-                    text_emoji_width = font.getbbox('的')[2] - font.getbbox('的')[0]
-                    color_emoji_maker(char,f'{filepath}/{char}.png',text_color)
-                    img = Image.open(f'{filepath}/{char}.png').convert("RGBA")
-                    img = img.resize((text_emoji_width, int(text_emoji_width * img.height / img.width)))
-                    image.paste(img, (int(x), int(y + 3)), img.split()[3])
-                    x += text_emoji_width + spacing + 3
-                    continue
+                    try:
+                        text_emoji_width = font.getbbox('的')[2] - font.getbbox('的')[0]
+                        color_emoji_maker(char,f'{filepath}/{char}.png',text_color)
+                        img = Image.open(f'{filepath}/{char}.png').convert("RGBA")
+                        img = img.resize((text_emoji_width, int(text_emoji_width * img.height / img.width)))
+                        image.paste(img, (int(x), int(y + 3)), img.split()[3])
+                        x += text_emoji_width + spacing + 3
+                        continue
+                    except Exception as e:
+                        continue
             x += char_width + spacing
     return image
 
 
 def handle_context(contents,font,content_width,total_height,padding,type_check,introduce,font_tx,header_height,
-                   type_software=None,height_software=None,avatar_path=None,layer=None,font_tx_pil=None):
+                   type_software=None,height_software=None,avatar_path=None,layer=None,font_tx_pil=None,per_row_pic=3):
 
     if type_software is not None:
         total_height +=height_software
@@ -350,20 +353,20 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
                 img = content[0]
                 new_height = int(((content_width- padding) // 2 ) * img.height / img.width)
                 total_height += new_height + padding
-            elif len(content) == 3:  # 三张图片
+            elif len(content) == per_row_pic:  # 三张图片
                 img = content[0]
-                new_height = int(((content_width- 2 * padding) // 3 ) * img.height / img.width)
+                new_height = int(((content_width- (per_row_pic-1) * padding) // per_row_pic ) * img.height / img.width)
                 total_height += new_height + padding
             elif len(content) == 4:
                 img = content[0]
                 new_height = int(((content_width - padding) // 2) * img.height / img.width) * 2
                 total_height += new_height + padding * 2
             elif len(content) > 4:  # 三张以上图片
-                if len(content)%3 == 0 :
-                    len_number=len(content)//3
-                else:len_number=len(content)//3+1
+                if len(content)%per_row_pic == 0 :
+                    len_number=len(content)//per_row_pic
+                else:len_number=len(content)//per_row_pic+1
                 img = content[0]
-                new_height = int(((content_width- 2 * padding) // 3 ) * img.height / img.width)*len_number
+                new_height = int(((content_width- (per_row_pic-1) * padding) // per_row_pic ) * img.height / img.width)*len_number
                 total_height += new_height + padding * len_number
         elif isinstance(content, list):  # 文字
             check_text=1
@@ -396,7 +399,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
 def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,name,Time,header_height,
                processed_contents,content_width,introduce,type_check,font_tx,font_tx_pil,introduce_height,
                introduce_contentm,introduce_content,font_tx_introduce,current_y_set=None,total_height=None,type_software=None,
-               color_software=None,layer=None,height_software=None,emoji_list=None,filepath=None,font_tx_title=None,avatar_json=None):
+               color_software=None,layer=None,height_software=None,emoji_list=None,filepath=None,font_tx_title=None,avatar_json=None,per_row_pic=3):
 
     draw = ImageDraw.Draw(canvas)
     # 显示头像和名字
@@ -527,8 +530,8 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                         canvas.paste(img, (int(x_offset), int(current_y)))
                     x_offset += new_width + padding
                 current_y += img.height + padding
-            elif len(content) == 3:  # 三张图片
-                new_width = ((content_width- 2 * padding) // 3)
+            elif len(content) == per_row_pic:  # 三张图片
+                new_width = ((content_width- (per_row_pic-1) * padding) // per_row_pic)
                 x_offset = padding_x_text
                 for img in content:
                     img = img.resize((new_width, int(new_width * img.height / img.width)))
@@ -569,8 +572,8 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                         x_offset = padding_x_text
                 current_y = check_y + check_fix_y + padding
 
-            elif len(content) > 4:  # 三张以上图片
-                new_width = ((content_width- 2 * padding) // 3)
+            elif len(content) > per_row_pic:  # 三张以上图片
+                new_width = ((content_width- (per_row_pic-1) * padding) // per_row_pic)
                 x_offset = padding_x_text
                 check=0
                 check_flag=1
@@ -589,7 +592,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                     check+=1
                     if img.height >= check_fix_y:
                         check_fix_y=img.height
-                    if check==3:
+                    if check==per_row_pic:
                         check=0
                         check_flag+=1
                         current_y += check_fix_y + padding
@@ -663,7 +666,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
                          avatar_path=None, name=None,Time=None,type=None,introduce=None,title=None,
                          contents_dy=None,orig_avatar_path=None, orig_name=None,orig_Time=None,
                          filepath=None,output_path=None,output_path_name=None,type_software=None,avatar_json=None,
-                         color_software=None,orig_type_software=None,emoji_list=None,orig_emoji_list=None):
+                         color_software=None,orig_type_software=None,emoji_list=None,orig_emoji_list=None,per_row_pic=3):
     """
     图像绘制
     type类型说明：
@@ -723,7 +726,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     # 文本自动换行
     (processed_contents,introduce_content,introduce_height,total_height) = handle_context(contents,font, content_width,
                                 total_height, padding, type_check, introduce, font_tx_introduce,header_height,
-                                type_software,height_software,avatar_path=avatar_path,layer=layer,font_tx_pil=font_tx_pil)
+                                type_software,height_software,avatar_path=avatar_path,layer=layer,font_tx_pil=font_tx_pil,per_row_pic=per_row_pic)
     #print(processed_contents,introduce_content,introduce_height,total_height)
     if type == 14:
         type_check = True
@@ -731,7 +734,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
          orig_introduce_height, total_height) = handle_context(contents_dy,font, content_width- padding_x,
                                                 total_height, padding,
                                                 type_check, introduce,font_tx_introduce,header_height,
-                                                orig_type_software,height_software,avatar_path=avatar_path,layer=2,font_tx_pil=font_tx_pil)
+                                                orig_type_software,height_software,avatar_path=avatar_path,layer=2,font_tx_pil=font_tx_pil,per_row_pic=per_row_pic)
 
         #print(orig_processed_contents, orig_introduce_content,orig_introduce_height, total_height)
 
@@ -747,7 +750,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
                    processed_contents, content_width, introduce, type_check, font_tx, font_tx_pil, introduce_height,
                    introduce_content, introduce_content, font_tx_introduce,total_height=total_height,type_software=type_software,
                    color_software=color_software,height_software=height_software,emoji_list=emoji_list,filepath=filepath,layer=layer
-                                ,font_tx_title=font_tx_title,avatar_json=avatar_json)
+                                ,font_tx_title=font_tx_title,avatar_json=avatar_json,per_row_pic=per_row_pic)
 
     if type == 14:
         current_y_set=current_y
@@ -756,7 +759,7 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
                             orig_processed_contents, content_width - padding_x, introduce, type_check, font_tx, font_tx_pil,
                             orig_introduce_height,orig_introduce_content, orig_introduce_content, font_tx_introduce,current_y,
                             total_height,layer=2,type_software=orig_type_software,color_software=color_software,height_software=height_software,emoji_list=orig_emoji_list,filepath=filepath
-                                      ,font_tx_title=font_tx_title,avatar_json=avatar_json)
+                                      ,font_tx_title=font_tx_title,avatar_json=avatar_json,per_row_pic=per_row_pic)
 
 
     # 保存图片
