@@ -1135,6 +1135,35 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
         json_check['soft_type'] = 'bangumi_search'
         return json_check
 
+async def gal_PILimg(text=None,img_context=None,filepath=None,proxy=None,type_soft='Bangumi 番剧',name=None,url=None,
+                         type=None,target=None,search_type=None):
+    contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'Galgame'
+    json_check['status'] = True
+    json_check['video_url'] = False
+    if filepath is None: filepath = filepath_init
+    if name is not None:
+        if os.path.isfile(f'{filepath}{name}.png'):
+            json_check['pic_path'] = f'{filepath}{name}.png'
+            return json_check
+    else:
+        name = f'{int(time.time())}'
+    if type is None:
+        title=text.split("gid")[0]
+        contents.append(f"title:{title}")
+        desc=text.split("简介如下：")[1]
+        if '开发商：' in text:
+            developer=text.split("开发商：")[1].replace(desc,'').replace('简介如下：','')
+            contents.append(f"title:开发商：{developer}")
+        contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in img_context]))
+
+        contents.append(desc)
+        out_path = draw_adaptive_graphic_and_textual(contents,type=11,filepath=filepath, type_software=type_soft,
+                                                         color_software=(251, 114, 153, 80),canvas_width=1000,
+                                                         output_path_name=name,per_row_pic=5)
+        json_check['pic_path'] = out_path
+        return json_check
 
 
 async def download_video_link_prising(json,filepath=None,proxy=None):
