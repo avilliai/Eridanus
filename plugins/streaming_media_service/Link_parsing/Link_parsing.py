@@ -27,13 +27,17 @@ from plugins.streaming_media_service.Link_parsing.core.tiktok import generate_x_
 from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
 from plugins.streaming_media_service.Link_parsing.core.acfun import parse_url, download_m3u8_videos, parse_m3u8, merge_ac_file_to_mp4
 from plugins.streaming_media_service.Link_parsing.core.xhs import XHS_REQ_LINK
+from plugins.streaming_media_service.Link_parsing.core.bangumi_core import claendar_bangumi_get_json,bangumi_subject_post_json,bangumi_subjects_get_json_PIL
 import inspect
-
+from asyncio import sleep
 from bilibili_api import settings
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 settings.http_client = settings.HTTPClient.HTTPX
 import random
+import os
+
+
 
 json_init={'status':False,'content':{},'reason':{},'pic_path':{},'url':{},'video_url':False,'soft_type':False}
 filepath_init=f'{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(bili_init))))}/data/cache/'
@@ -43,7 +47,7 @@ if not os.path.exists(filepath_init):  # 初始化检测文件夹
 from plugins.resource_search_plugin.engine_search import html_read
 logger=get_logger()
 
-name_qq_list={'漫朔':1270858640,'枫与岚':2319804644,'Lemony':2424378897}
+name_qq_list={'漫朔':1270858640,'枫与岚':2319804644,'Lemony':2424378897,'forandsix':1004704649,'魏咸哲':1431631009}
 card_url_list=['https://gal.manshuo.ink/usr/uploads/galgame/img/zhenhong.png']
 
 async def bilibili(url,filepath=None,is_twice=None):
@@ -156,7 +160,8 @@ async def bilibili(url,filepath=None,is_twice=None):
         if is_opus is True:
             dynamic_info = await dy.get_info()
 
-            #logger.info('is opus')
+            logger.info('is opus')
+            #print(json.dumps(dynamic_info, indent=4))
             orig_check=1        #判断是否为转发，转发为2
             type_set=None
             if dynamic_info is not None:
@@ -311,6 +316,10 @@ async def bilibili(url,filepath=None,is_twice=None):
         owner_name,owner_cover = data_get_url_context['anchor_info']['base_info']['uname'], data_get_url_context['anchor_info']['base_info']['face']
         area_name,parent_area_name=room_info['area_name'],room_info['parent_area_name']
 
+        #print(f'owner_cover:{owner_cover}\ncover:{cover}')
+
+        if cover =='':
+            cover='https://gal.manshuo.ink/usr/uploads/galgame/img/bili-logo.webp'
         introduce=f'{parent_area_name} {area_name}'
         avatar_path = (await asyncio.gather(*[asyncio.create_task(download_img(owner_cover, f'{filepath}'))]))[0]
         contents.append((await asyncio.gather(*[asyncio.create_task(download_img(cover, f'{filepath}'))]))[0])
@@ -331,11 +340,24 @@ async def bilibili(url,filepath=None,is_twice=None):
         return contents, avatar_path, owner_name, video_time, type, introduce,emoji_list
     # 专栏识别
     if 'read' in url:
+        read_id = re.search(r'read\/cv(\d+)', url).group(1)
+        ar = article.Article(read_id)
+        # 如果专栏为公开笔记，则转换为笔记类
+        # NOTE: 笔记类的函数与专栏类的函数基本一致
+        if ar.is_note():
+            ar = ar.turn_to_note()
+        # 加载内容
+        await ar.fetch_content()
+        print(ar.markdown())
+        markdown_path = f'{filepath}{read_id}.md'
+        with open(markdown_path, 'w', encoding='utf8') as f:
+            f.write(ar.markdown())
         logger.info('专栏未做识别，跳过，欢迎催更')
 
         return None
     # 收藏夹识别
     if 'favlist' in url and BILI_SESSDATA != '':
+
         logger.info('收藏夹未做识别，跳过，欢迎催更')
         return None
 
@@ -795,7 +817,7 @@ async def Galgame_manshuo(url,filepath=None):
     json_check['video_url'] = False
     if filepath is None: filepath = filepath_init
     link = (re.findall(r"https?://[^\s\]\)]+", url))[0]
-    #print(f'{link}')
+    if link =="https://gal.manshuo.ink":return
     context = await html_read(link)
     if '请求发生错误：' in context:
         print(context)
@@ -855,16 +877,19 @@ async def Galgame_manshuo(url,filepath=None):
 
         if ('作者:' in context_check or '[avatar]' in context_check) and avatar_name_flag==0:
             avatar_name_flag=1
+            if 'https://www.manshuo.ink/img/' in context_check:
+                avatar_name_flag = 0
         elif avatar_name_flag==1:
             avatar_name_flag=2
             match = re.search(r"\[(.*?)\]", context_check)
             if match:
                 avatar_name=match.group(1).replace(" ", "")
+
         if '故事介绍' in context_check or '<img src="https://img-static.hikarinagi.com/uploads/2024/08/aca2d187ca20240827180105.jpg"' in context_check:
             desc_flag=1
         elif '[关于](' in context_check and time_flag==2:
             desc_flag=3
-        elif 'Hello! 欢迎来到有希日记！' in context_check:
+        elif 'Hello!有希日記へようこそ!' in context_check:
             #print('检测到标志')
             desc_flag= 10
         elif 'Staff' in context_check:
@@ -874,7 +899,7 @@ async def Galgame_manshuo(url,filepath=None):
             if not ('https:'in context_check or 'data:image/svg+xml' in context_check or '插画欣赏' in context_check):
                 for i in context_check:
                     desc_number+=1
-                if 'ePub格式-连载' in context_check:
+                if 'ePub格式-连载' in context_check or '作者:' == context_check or '文章链接:' == context_check:
                     desc_flag = 0
                 if desc_number > 200 and desc_flag != 0:
                     desc_flag = 0
@@ -887,12 +912,13 @@ async def Galgame_manshuo(url,filepath=None):
 
 
         if 'https://gal.manshuo.ink/usr/uploads/galgame/' in context_check:
-            #print(context_check)
-            for name_check in {'chara', 'title_page', '图片'}:
-                if f'{name_check}' in context_check: flag = 1
-            if flag == 1: continue
-            links = re.findall(r"https?://[^\s\]\)]+", context_check)
-            links_url=links[0]
+            if hikarinagi_flag == 0:
+                for name_check in {'chara', 'title_page', '图片'}:
+                    if f'{name_check}' in context_check: flag = 1
+                if flag == 1: continue
+                links = re.findall(r"https?://[^\s\]\)]+", context_check)
+                links_url=links[0]
+                hikarinagi_flag = 1
         elif 'https://img-static.hikarinagi.com/uploads/' in context_check:
             if hikarinagi_flag == 0:
                 links_url = (re.findall(r"https?://[^\s\]\)]+", context_check))[0]
@@ -903,6 +929,7 @@ async def Galgame_manshuo(url,filepath=None):
     if links_url is None:
         try:
             for context_check in context:
+                flag = 0
                 if 'https://gal.manshuo.ink/usr/uploads/' in context_check:
                     for name_check in {'chara', 'title_page', '图片'}:
                         if f'{name_check}' in context_check: flag = 1
@@ -945,6 +972,170 @@ async def Galgame_manshuo(url,filepath=None):
     json_check['pic_path'] = out_path
     return json_check
 
+async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,type_soft='Bangumi 番剧',name=None,url=None,
+                         type=None,target=None,search_type=None):
+    contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = 'bangumi'
+    json_check['status'] = True
+    json_check['video_url'] = False
+    if filepath is None: filepath = filepath_init
+    if name is not None:
+        if os.path.isfile(f'{filepath}{name}.png'):
+            json_check['pic_path'] = f'{filepath}{name}.png'
+            return json_check
+    else:
+        name = f'{int(time.time())}'
+    if type is None:
+        count=0
+        count_1=0
+        text_add=''
+        words = text.split("\n")  # 按换行符分割文本，逐行处理
+        for line in words:  # 遍历每一行（处理换行符的部分）
+            count+=1
+            text_add+=f'{line}\n'
+            if count == len(words):break
+            if count % 10 ==0 :
+                contents.append(text_add)
+                img_add_context =[]
+                for i in range(10):
+                    img_add_context.append(img_context[i+count_1])
+                contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in img_add_context]))
+                text_add = ''
+                count_1=count
+                await sleep(1)  # 设置好内间隔，以防被冻
+        out_path = draw_adaptive_graphic_and_textual(contents,type=11,filepath=filepath, type_software=type_soft,
+                                                         color_software=(251, 114, 153, 80),canvas_width=1000,
+                                                         output_path_name=name,per_row_pic=5)
+        json_check['pic_path'] = out_path
+        return json_check
+    elif type == 'calendar':
+        calendar_json,week = await claendar_bangumi_get_json()
+        text_total=''
+        img_context=[]
+        count=0
+        for calendar_item in calendar_json:
+            count+=1
+            name_bangumi = calendar_item['name_cn']
+            if '' == name_bangumi:
+                name_bangumi = calendar_item['name']
+            if 'rating' in calendar_item:
+                text_total += f"{count}、 {name_bangumi}----{calendar_item['rating']['score']}☆\n"
+            else:
+                text_total += f"{count}、 {name_bangumi}\n"
+            img_context.append(calendar_item['images']['common'].replace('http','https'))
+
+        count=0
+        count_1=0
+        text_add=''
+        words = text_total.split("\n")  # 按换行符分割文本，逐行处理
+        for line in words:  # 遍历每一行（处理换行符的部分）
+            if line == '' :continue
+            count+=1
+            text_add+=f'{line}\n'
+            if count % 10 ==0 :
+                contents.append(text_add)
+                img_add_context =[]
+                for i in range(10):
+                    img_add_context.append(img_context[i+count_1])
+                contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in img_add_context]))
+                text_add = ''
+                count_1=count
+        if count < 10 :
+            contents.append(text_add)
+            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in img_context]))
+        out_path = draw_adaptive_graphic_and_textual(contents,type=11,filepath=filepath, type_software=type_soft,
+                                                         color_software=(251, 114, 153, 80),canvas_width=1000,
+                                                         output_path_name=name,per_row_pic=5)
+        json_check['pic_path'] = out_path
+        json_check['soft_type'] = 'bangumi_calendar'
+        return json_check
+    elif type == 'search':
+        search_json_init = await bangumi_subject_post_json(type=search_type,target=target)
+        if search_json_init is False:
+            json_check['status'] = False
+            return json_check
+        search_json=search_json_init['list']
+
+        if int(search_json_init['results']) == 1:
+            id = search_json_init['list'][0]['id']
+            contents,img_url,contents_other =await bangumi_subjects_get_json_PIL(subject_id=id)
+            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(img_url, f'{filepath}'))]))
+            contents.append(contents_other)
+            out_path = draw_adaptive_graphic_and_textual(contents, type=11, filepath=filepath, type_software=type_soft,
+                                                         color_software=(251, 114, 153, 80), canvas_width=1000,
+                                                         output_path_name=name, per_row_pic=5)
+            json_check['pic_path'] = out_path
+            json_check['next_choice'] = False
+            json_check['soft_type'] = 'bangumi_search'
+            return json_check
+
+
+        id_collect={}
+        text_total = ''
+        img_context = []
+        count = 0
+        for search_item in search_json_init['list']:
+            count += 1
+            id_collect[count] = search_item['id']
+            name_bangumi = search_item['name_cn']
+            if '' == name_bangumi:
+                name_bangumi = search_item['name']
+            if 'rating' in search_item:
+                text_total += f"{count}、 {name_bangumi}----{search_item['rating']['score']}☆\n"
+            else:
+                text_total += f"{count}、 {name_bangumi}\n"
+            if int(search_json_init['results']) <= 5:
+                img_context.append(search_item['images']['large'].replace('http', 'https'))
+            else:
+                img_context.append(search_item['images']['common'].replace('http', 'https'))
+
+        count = 0
+        count_1 = 0
+        text_add = ''
+        words = text_total.split("\n")  # 按换行符分割文本，逐行处理
+        for line in words:  # 遍历每一行（处理换行符的部分）
+            if line == '': continue
+            count += 1
+            text_add += f'{line}\n'
+            if count % 10 == 0:
+                contents.append(text_add)
+                img_add_context = []
+                for i in range(10):
+                    img_add_context.append(img_context[i + count_1])
+                contents = await add_append_img(contents, await asyncio.gather(
+                    *[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in
+                      img_add_context]))
+                text_add = ''
+                count_1 = count
+        if count < 10:
+            contents.append(text_add)
+            contents = await add_append_img(contents, await asyncio.gather(
+                *[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in
+                  img_context]))
+        out_path = draw_adaptive_graphic_and_textual(contents, type=11, filepath=filepath, type_software=type_soft,
+                                                     color_software=(251, 114, 153, 80), canvas_width=1000,
+                                                     output_path_name=name, per_row_pic=5)
+        json_check['pic_path'] = out_path
+        json_check['soft_type'] = 'bangumi_search'
+        json_check['next_choice'] = True
+        json_check['choice_contents'] = id_collect
+        #print(id_collect)
+        return json_check
+    elif type == 'search_accurate':
+        contents, img_url, contents_other = await bangumi_subjects_get_json_PIL(subject_id=target)
+        contents = await add_append_img(contents, await asyncio.gather(
+            *[asyncio.create_task(download_img(img_url, f'{filepath}'))]))
+        contents.append(contents_other)
+        out_path = draw_adaptive_graphic_and_textual(contents, type=11, filepath=filepath, type_software=type_soft,
+                                                     color_software=(251, 114, 153, 80), canvas_width=1000,
+                                                     output_path_name=name, per_row_pic=5)
+        json_check['pic_path'] = out_path
+        json_check['next_choice'] = False
+        json_check['soft_type'] = 'bangumi_search'
+        return json_check
+
+
 
 async def download_video_link_prising(json,filepath=None,proxy=None):
     if filepath is None:filepath = filepath_init
@@ -979,28 +1170,36 @@ async def download_video_link_prising(json,filepath=None,proxy=None):
 async def link_prising(url,filepath=None,proxy=None,type=None):
     json_check = copy.deepcopy(json_init)
     link_prising_json=None
+    try:
+        url = (re.findall(r"https?:[^\s\]\)]+", url))[0]
+        print(url)
+    except Exception as e:
+        json_check['status'] = False
+        return json_check
     #print(f'json_init:{json_init}\njson_check:{json_check}\nlink_prising_json:{link_prising_json}\n\n')
     try:
-        if 'bili' in url or 'b23' in url:
-            link_prising_json=await bilibili(url,filepath=filepath)
-            #print(link_prising_json)
-        elif 'douyin' in url or 'douyin' in url:
-            link_prising_json=await dy(url, filepath=filepath)
-        elif 'weibo' in url:
-            link_prising_json=await wb(url, filepath=filepath)
-        elif 'xhslink' in url or 'xiaohongshu' in url:
-            link_prising_json=await xiaohongshu(url, filepath=filepath)
-        elif 'x.com' in url:
-            link_prising_json=await twitter(url, filepath=filepath, proxy=proxy)
-        elif 'gal.manshuo.ink' in url or 'www.hikarinagi.com' in url or 'www.mysqil.com' in url:
-            link_prising_json = await Galgame_manshuo(url, filepath=filepath)
+        match url:
+            case url if 'bili' in url or 'b23' in url:
+                link_prising_json = await bilibili(url, filepath=filepath)
+            case url if 'douyin' in url:
+                link_prising_json = await dy(url, filepath=filepath)
+            case url if 'weibo' in url:
+                link_prising_json = await wb(url, filepath=filepath)
+            case url if 'xhslink' in url or 'xiaohongshu' in url:
+                link_prising_json = await xiaohongshu(url, filepath=filepath)
+            case url if 'x.com' in url:
+                link_prising_json = await twitter(url, filepath=filepath, proxy=proxy)
+            case url if 'gal.manshuo.ink' in url or 'www.hikarinagi.com' in url or 'www.mysqil.com' in url:
+                link_prising_json = await Galgame_manshuo(url, filepath=filepath)
+            case _:
+                pass
 
     except Exception as e:
         json_check['status'] = False
         json_check['reason'] = str(e)
-        #traceback.print_exc()
+        traceback.print_exc()
         return json_check
-    if link_prising_json:
+    if link_prising_json is not None:
         if type == 'dynamic_check':
             if '编辑于 ' in link_prising_json['time']:
                 time_check=link_prising_json['time'].split("编辑于 ")[1].strip()
@@ -1062,10 +1261,12 @@ if __name__ == "__main__":#测试用，不用管
     url='https://v.douyin.com/iPhd561x'
     url='https://gal.manshuo.ink/archives/297/'
     url = 'https://www.hikarinagi.com/p/21338'
-    url='https://www.mysqil.com/4699.html'
-    #url='https://t.bilibili.com/1020450668700237844?share_source=pc_native'
-    asyncio.run(link_prising(url))
-    #asyncio.run(wb(url))
+    url='https://live.bilibili.com/26178650'
+    url='https://gal.manshuo.ink/archives/212/'
+    url='https://www.bilibili.com/read/cv40866200/'
+
+    #asyncio.run(link_prising(url))
+    asyncio.run(bangumi_PILimg(type='search',target='败犬',search_type=2))
 
 
     url='44 【来抄作业✨早秋彩色衬衫叠穿｜时髦知识分子风 - 杨意子_ | 小红书 - 你的生活指南】 😆 Inw56apL6vWYuoS 😆 https://www.xiaohongshu.com/discovery/item/64c0e9c0000000001201a7de?source=webshare&xhsshare=pc_web&xsec_token=AB8GfF7dOtdlB0n_mqoz61fDayAXpCqWbAz9xb45p6huE=&xsec_source=pc_share'

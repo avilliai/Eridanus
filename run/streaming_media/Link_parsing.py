@@ -1,11 +1,13 @@
 import asyncio
 import shutil
 import os
+import json as json_handle
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image,File,Video
 from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
 from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising,download_video_link_prising
 from plugins.streaming_media_service.Link_parsing.music_link_parsing import netease_music_link_parse
+
 
 global teamlist
 teamlist = {}
@@ -70,9 +72,9 @@ def main(bot,config):
         proxy = config.api["proxy"]["http_proxy"]
         #print(proxy)
         url=event.pure_text
-        if url == '':
-            url=event.raw_message
-        #print(f'url:{url}')
+        if url == '' and 'json' in event.processed_message[0]:
+            url = event.processed_message[0]['json']['data']
+        #print(f'url:{url}\nevent:{event}')
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
             if event.get("text") is not None and event.get("text")[0]=="下载视频":
@@ -80,7 +82,7 @@ def main(bot,config):
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
                     teamlist.pop(event.group_id)
                 else:
-                    teamlist.pop(event.group_id)
+                    #teamlist.pop(event.group_id)
                     await call_bili_download_video(bot,event,config)
 
 

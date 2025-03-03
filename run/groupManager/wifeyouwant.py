@@ -171,11 +171,13 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 开卢
     async def today_LU(event: GroupMessageEvent):
         global membercheck
-
+        context=event.pure_text
+        if context == '':
+            context=event.raw_message
         membercheck_id = int(event.sender.user_id)
-        if str(event.pure_text).startswith('🦌') or str(event.pure_text) in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
+        if context.startswith('🦌') or context in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
             if membercheck_id in membercheck:
-                if str(event.pure_text) in {'补🦌'}:
+                if context in {'补🦌'}:
                     membercheck.pop(membercheck_id)
                 else:
                     await bot.send(event,'技能冷却ing')
@@ -183,18 +185,20 @@ def main(bot,config):
                     return
             else:
                 membercheck[membercheck_id] = 1
-        else:return
+        else:
+            return
+
         lu_recall = ['不！给！你！🦌！！！','我靠你怎么这么坏！','再🦌都🦌出火星子了！！','让我来帮你吧~','好恶心啊~~','有变态！！','你这种人渣我才不会喜欢你呢！',
                         '令人害怕的坏叔叔','才不给你计数呢！（哼']
-        if str(event.pure_text).startswith('🦌'):
+        if context.startswith('🦌'):
             target_id = int(event.sender.user_id)
             times_add=0
-            match = re.search(r"qq=(\d+)", event.pure_text)
+            match = re.search(r"qq=(\d+)", context)
             if match:
                 target_id = match.group(1)
             else:
-                for context in str(event.pure_text):
-                    if context != '🦌':
+                for context_check in context:
+                    if context_check != '🦌':
                         membercheck.pop(membercheck_id)
                         return
             flag = random.randint(0, 50)
@@ -209,8 +213,8 @@ def main(bot,config):
                 membercheck.pop(membercheck_id)
                 return
 
-            for context in str(event.pure_text):
-                if context =='🦌':
+            for context_check in context:
+                if context_check =='🦌':
                     times_add +=1
 
             current_date = datetime.now()
@@ -233,7 +237,7 @@ def main(bot,config):
                     await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+times_add}次！',
                                            Image(file='data/pictures/wife_you_want_img/lulululu.png')])
 
-        elif '戒🦌' == str(event.pure_text):
+        elif '戒🦌' == context:
             bot.logger.info('No! 戒🦌!!!!')
             target_id = int(event.sender.user_id)
             current_date = datetime.now()
@@ -249,7 +253,7 @@ def main(bot,config):
                 bot.logger.info('制作成功，开始发送~~')
                 await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
 
-        elif '补🦌' == str(event.pure_text):
+        elif '补🦌' == context:
             bot.logger.info('yes! 补🦌!!!!')
             target_id = int(event.sender.user_id)
             current_date = datetime.now()
@@ -276,12 +280,12 @@ def main(bot,config):
             except Exception as e:
                 await bot.send(event, [At(qq=target_id), f' 补🦌失败了喵~'])
 
-        elif '开启贞操锁' == str(event.pure_text):
+        elif '开启贞操锁' == context:
             target_id = int(event.sender.user_id)
             await manage_group_status('lu_limit', f'lu_others', target_id,1)
             membercheck.pop(membercheck_id)
             await bot.send(event,'您已开启贞操锁~')
-        elif '关闭贞操锁' == str(event.pure_text):
+        elif '关闭贞操锁' == context:
             target_id = int(event.sender.user_id)
             await manage_group_status('lu_limit', f'lu_others', target_id,0)
             membercheck.pop(membercheck_id)
@@ -309,7 +313,7 @@ def main(bot,config):
                     elif '黑' in str(event.pure_text):
                         bot.logger.info("今日黑丝开启！")
                         url='https://api.dwo.cc/api/hs_img'
-                    elif '白' in str(event.pure_text):
+                    elif '白丝' in str(event.pure_text):
                         bot.logger.info("今日白丝开启！")
                         url='https://api.dwo.cc/api/bs_img'
                     elif '头像' in str(event.pure_text):

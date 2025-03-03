@@ -6,10 +6,10 @@ import asyncio
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from developTools.message.message_components import Record
 from plugins.core.Group_Message_DB import clear_group_messages
-from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep, tts_and_send, send_text
+from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep, tts_and_send, send_text ,count_tokens_approximate
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 from plugins.core.tts.tts import tts
-from plugins.core.userDB import get_user
+from plugins.core.userDB import get_user,update_user
 from plugins.func_map_loader import gemini_func_map, openai_func_map
 from developTools.message.message_components import Record, Text, Node, At
 
@@ -94,6 +94,11 @@ def main(bot,config):
             if not user_info[6] >= config.controller["core"]["ai_reply_group"]:
                 await bot.send(event,"你没有足够的权限使用该功能哦~")
                 return
+            if not user_info[6] >= config.controller["core"]["ai_token_limt"]:
+                if user_info[9] >= config.controller["core"]["ai_token_limt_token"]:
+                    await bot.send(event,"您的ai对话token已用完，请耐心等待下一次刷新～～")
+                    return
+
             #锁机制
             if event.user_id not in locks:
                 locks[event.user_id] = asyncio.Lock()
@@ -115,9 +120,18 @@ def main(bot,config):
                         bot=bot,
                         event=current_event,
                     )
-            #reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
-                    if reply_message is not None:
-                        await send_text(bot,event,config,reply_message.strip())
+                    if '' == str(reply_message) or 'Maximum recursion depth' in reply_message:
+                        return
+                    #print(f'reply_message:{reply_message}')
+                    if "call_send_mface(summary='')" in reply_message:
+                        reply_message = reply_message.replace("call_send_mface(summary='')", '')
+                    #print(f"{current_event.processed_message[1]['text']}\n{reply_message}")
+                    try:
+                        tokens_total=count_tokens_approximate(current_event.processed_message[1]['text'],reply_message,user_info[9])
+                        await update_user(user_id=event.user_id, ai_token_record=tokens_total)
+                    except:
+                        pass
+                    await send_text(bot,event,config,reply_message.strip())
 
 
 
@@ -139,6 +153,7 @@ def main(bot,config):
           await clear_all_history()
           await bot.send(event, "已清理所有用户的对话记录")
       else:
+          if event.user_id == 1270858640: return
           bot.logger.info(f"私聊接受消息{event.processed_message}")
           user_info = await get_user(event.user_id, event.sender.nickname)
           if not user_info[6] >= config.controller["core"]["ai_reply_private"]:

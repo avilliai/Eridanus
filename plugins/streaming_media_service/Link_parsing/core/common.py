@@ -131,13 +131,26 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
     # 多个文件
     else:
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
-            response = await client.get(url)
-            if response.status_code  == 200:
-                square_image = crop_center_square(Image.open(BytesIO(response.content)))
-                if square_image.mode != "RGB":
-                    square_image = square_image.convert("RGB")
-                square_image.save(path)
-                return path
+            try:
+                response = await client.get(url)
+                #print(url,response)
+                if response.status_code  == 200:
+                    square_image = crop_center_square(Image.open(BytesIO(response.content)))
+                    if square_image.mode != "RGB":
+                        square_image = square_image.convert("RGB")
+                    square_image.save(path)
+                    return path
+            except Exception as e:
+                print(f'url: {url}, response: {e}')
+                response = await client.get('https://gal.manshuo.ink/usr/uploads/galgame/zatan.png')
+                if response.status_code  == 200:
+                    square_image = crop_center_square(Image.open(BytesIO(response.content)))
+                    if square_image.mode != "RGB":
+                        square_image = square_image.convert("RGB")
+                    square_image.save(path)
+                    return path
+
+
 
 
 

@@ -217,14 +217,17 @@ def main(bot,config):
     ai_img_recognize = {}
     @bot.on(GroupMessageEvent)
     async def search_image(event):
-        if str(event.pure_text) == "ai图检测" or (
-                event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0] == "ai图检测"):
-            await bot.send(event, "请发送要检测的图片")
-            ai_img_recognize[event.sender.user_id] = []
-        if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize) and event.get('image'):
-            img_url = event.get("image")[0]["url"]
-            await call_aiArtModerate(bot, event, config, img_url)
-            ai_img_recognize.pop(event.sender.user_id)
+        try:
+            if str(event.pure_text) == "ai图检测" or (
+                    event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0] == "ai图检测"):
+                await bot.send(event, "请发送要检测的图片")
+                ai_img_recognize[event.sender.user_id] = []
+            if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize) and event.get('image'):
+                img_url = event.get("image")[0]["url"]
+                await call_aiArtModerate(bot, event, config, img_url)
+                ai_img_recognize.pop(event.sender.user_id)
+        except Exception as e:
+            pass
 
     @bot.on(GroupMessageEvent)
     async def bing_dalle3_draw(event):  #无需配置的ai绘图接口

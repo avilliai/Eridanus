@@ -4,9 +4,11 @@ user_data:
   permit_user_operate_level: 998   #允许使用授权#{目标QQ}#{level} 指令的操作权限等级
 core:
   ai_reply_group: 0    #群内ai对话所需权限等级
-  ai_reply_private: 0  #私聊ai对话所需权限等级
-  ai_change_character: 99  #ai更换角色所需权限等级
-resource_search:   #资源搜索功能
+  ai_reply_private: 1  #私聊ai对话所需权限等级
+  ai_change_character: 1  #ai更换角色所需权限等级
+  ai_token_limt: 2 #不限制ai对话token所需权限等级
+  ai_token_limt_token: 10000 #一般用户限制ai对话token数量
+resource_search: #资源搜索功能
   z_library:
     search_operate_level: 0    #书籍搜索所需等级
     download_operate_level: 998  #书籍下载所需等级
@@ -23,6 +25,7 @@ basic_plugin:
   search_image_resource_operate_level: 0  #图片搜索功能所需等级
   内置ai绘画开关: true  #内置ai绘画功能开关
   bing_dalle3_operate_level: 0  #bing_dalle3绘图功能所需等级
+  recall_level : 3
 流媒体:
   youtube:
     download_audio_level: 0  #下载音频所需权限等级

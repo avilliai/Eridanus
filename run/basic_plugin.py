@@ -291,9 +291,12 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def search_image(event):
-        if str(event.pure_text) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
-            await bot.send(event, "请发送要搜索的图片")
-            image_search[event.sender.user_id] = []
+        try:
+            if str(event.pure_text) == "搜图" or (event.get("at") and event.get("at")[0]["qq"]==str(bot.id) and event.get("text")[0]=="搜图"):
+                await bot.send(event, "请发送要搜索的图片")
+                image_search[event.sender.user_id] = []
+        except Exception as e:
+            pass
         if ("搜图" in str(event.pure_text) or event.sender.user_id in image_search) and event.get('image'):
             try:
                 image_search.pop(event.sender.user_id)
