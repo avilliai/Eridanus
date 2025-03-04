@@ -121,7 +121,7 @@ def main(bot,config):
                         bot=bot,
                         event=current_event,
                     )
-                    if '' == str(reply_message) or 'Maximum recursion depth' in reply_message:
+                    if reply_message is None or '' == str(reply_message) or 'Maximum recursion depth' in reply_message:
                         return
                     #print(f'reply_message:{reply_message}')
                     if "call_send_mface(summary='')" in reply_message:
