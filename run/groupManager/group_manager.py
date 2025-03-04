@@ -3,7 +3,7 @@ import re
 from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
 from developTools.message.message_components import Node, Text
 from plugins.core.aiReplyCore import aiReplyCore
-
+from plugins.core.userDB import get_user
 
 def main(bot,config):
     @bot.on(GroupMessageEvent)
@@ -17,6 +17,15 @@ def main(bot,config):
                 if event.get("reply"):
                     await bot.delete_essence_msg(int(event.get("reply")[0]["id"]))
                     await bot.send(event, "取消成功")
+
+            if event.get("text")[0].strip() == "recall" or event.get("text")[0].strip() == "撤回" :
+                if event.get("reply"):
+                    user_info = await get_user(event.user_id, event.sender.nickname)
+                    if not user_info[6] >= config.controller["basic_plugin"]["recall_level"]:
+                        await bot.send(event, "你没有足够的权限使用该功能哦~")
+                    else:
+                        await bot.recall(int(event.get("reply")[0]["id"]))
+
 
     @bot.on(GroupDecreaseNoticeEvent)
     async def group_decrease(event: GroupDecreaseNoticeEvent):
@@ -36,4 +45,4 @@ def main(bot,config):
                                              tools=None)
                 await bot.send(event, str(r))
             else:
-                await bot.send(event, f"欢迎新群员{event.user_id}加入群聊")
+                await bot.send(event, f"有新的旅行伙伴加入哟~~")

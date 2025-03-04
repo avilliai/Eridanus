@@ -1,7 +1,7 @@
 from asyncio import sleep
 
 import asyncio
-
+import re
 from developTools.event.events import GroupMessageEvent
 from plugins.core.llmDB import delete_user_history, clear_all_history
 from plugins.core.userDB import add_user, get_user, record_sign_in, update_user
@@ -113,4 +113,15 @@ def main(bot,config):
                 await call_permit(bot,event,config,target_qq,permission)
             except:
                 await bot.send(event, "请输入正确的权限值。\n指令为\n授权#{target_qq}#{level}\n如授权#1223434343#1")
-
+        if event.raw_message.startswith("授权"):
+            match = re.search(r"qq=(\d+)", event.raw_message)
+            if match:
+                target_qq = match.group(1)
+                if '用户' in event.raw_message:
+                    await call_permit(bot, event, config, target_qq, 1)
+                elif '贡献者' in event.raw_message:
+                    await call_permit(bot, event, config, target_qq, 2)
+                elif '信任' in event.raw_message:
+                    await call_permit(bot, event, config, target_qq, 3)
+                elif '管理员' in event.raw_message:
+                    await call_permit(bot, event, config, target_qq, 10)

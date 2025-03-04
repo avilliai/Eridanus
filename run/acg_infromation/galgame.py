@@ -12,6 +12,7 @@ from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
 from plugins.game_plugin.galgame import Get_Access_Token,Get_Access_Token_json,flag_check,params_check,get_game_image,remove_game_image,\
     context_assemble,developers_check,character_check,get_introduction
+from plugins.streaming_media_service.Link_parsing.Link_parsing import gal_PILimg
 
 def main(bot,config):
     @bot.on(GroupMessageEvent)
@@ -68,7 +69,7 @@ def main(bot,config):
                     flag = 5
                 bot.logger.info(f'access_token：{access_token}，flag:{flag}，gal查询目标：{keyword}')
 
-        if "新作" in str(event.pure_text) and event.get("at") and event.get("at")[0]["qq"]==str(bot.id):
+        if "新作" in str(event.pure_text) :
             now = datetime.datetime.now().date()
             flag=7
             month = datetime.datetime.now().date().month
@@ -280,17 +281,24 @@ def main(bot,config):
                     context = await context_assemble(data)
                     #print(data)
                     gid=data["gid"]
-                    #print(f'gid={gid}')
+                    introduction = await get_introduction(gid)
                     mainImg_state = 'https://store.ymgal.games/'+data["mainImg"]
-                    #print(mainImg_state)
-                    img_path = await get_game_image(mainImg_state, filepath)
-                    cmList.append(Node(content=[Image(file=img_path)]))
-                    cmList.append(Node(content=[Text(f'{context}')]))
-                    introduction=await get_introduction(gid)
-                    cmList.append(Node(content=[Text(f'{introduction}')]))
-                #print(context)
+                    if config.settings["basic_plugin"]["绘图框架"]['gal_recommend'] is False:
+                        img_path = await get_game_image(mainImg_state, filepath)
+                        cmList.append(Node(content=[Image(file=img_path)]))
+                        cmList.append(Node(content=[Text(f'{context}')]))
+                        cmList.append(Node(content=[Text(f'{introduction}')]))
 
-        if flag != 0:
+                    elif config.settings["basic_plugin"]["绘图框架"]['gal_recommend'] is True:
+                        text=f"{context}\n{introduction}"
+                        bangumi_json = await gal_PILimg(text, [mainImg_state], 'data/pictures/cache/',type_soft=f'Galgame 推荐')
+                        if bangumi_json['status']:
+                            bot.logger.info('gal推荐图片制作成功，开始推送~~~')
+                            await bot.send(event, Image(file=bangumi_json['pic_path']))
+                        flag =0
+
+
+        if flag != 0 :
             #print(context)
             try:
                 if state == True:

@@ -16,7 +16,8 @@ from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
-    get_current_openai_prompt, add_openai_standard_prompt, construct_openai_standard_prompt_old_version
+    get_current_openai_prompt, add_openai_standard_prompt, construct_openai_standard_prompt_old_version, \
+    openaiRequest_official
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, clear_all_history, change_folder_chara, read_chara, use_folder_chara
 from plugins.core.tts.tts import tts
@@ -100,35 +101,40 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 p = await read_context(bot, event, config, prompt)
                 if p:
                     prompt = p
-            response_message = await openaiRequest(
-                prompt,
-                config.api["llm"]["openai"]["quest_url"],
-                random.choice(config.api["llm"]["openai"]["api_keys"]),
-                config.api["llm"]["openai"]["model"],
-                False,
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
-                tools=tools,
-                temperature=config.api["llm"]["openai"]["temperature"],
-                max_tokens=config.api["llm"]["openai"]["max_tokens"]
-            )
+            kwargs = {
+                "ask_prompt": prompt,
+                "url": config.api["llm"]["openai"].get("quest_url") or config.api["llm"]["openai"].get("base_url"),
+                "apikey": random.choice(config.api["llm"]["openai"]["api_keys"]),
+                "model":config.api["llm"]["openai"]["model"],
+                "stream":False,
+                "proxy": config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                "tools": tools,
+                "temperature": config.api["llm"]["openai"]["temperature"],
+                "max_tokens": config.api["llm"]["openai"]["max_tokens"]
+            }
+            if config.api["llm"]["openai"]["enable_official_sdk"]:
+                response_message = await openaiRequest_official(**kwargs)
+            else:
+                response_message = await openaiRequest(**kwargs)
             if "content" in response_message:
                 reply_message=response_message["content"]
                 if reply_message is not None:
                     reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
-                if reply_message is not None and config.api["llm"]["openai"]["CoT"]:
                     pattern_think = r"<think>\n(.*?)\n</think>"
                     match_think = re.search(pattern_think, reply_message, re.DOTALL)
 
                     if match_think:
                         think_text = match_think.group(1)
-                        await bot.send(event,[Node(content=[Text(think_text)])])
+                        if config.api["llm"]["openai"]["CoT"]:
+                            await bot.send(event,[Node(content=[Text(think_text)])])
                         pattern_rest = r"</think>\n\n(.*?)$"
                         match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
                         if match_rest:
                             reply_message = match_rest.group(1)
                     else:
                         if "reasoning_content" in response_message:
-                            await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
+                            if config.api["llm"]["openai"]["CoT"]:
+                                await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
                             response_message.pop("reasoning_content")
             else:
                 reply_message=None
@@ -225,6 +231,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         prompt = p
             if processed_message is None:  # 防止二次递归无限循环
                 tools = None
+            #这里是需要完整报错的，不用try catch，否则会影响自动重试。
             response_message = await geminiRequest(
                 prompt,
                 config.api["llm"]["gemini"]["base_url"],
@@ -236,6 +243,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 temperature=config.api["llm"]["gemini"]["temperature"],
                 maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
             )
+
             # print(response_message)
             try:
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
@@ -418,6 +426,9 @@ async def read_context(bot,event,config,prompt):
             return None
         bot.logger.info(f"群聊上下文消息：已读取")
         insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
+        if config.api["llm"]["model"]=="openai":  #必须交替出现
+            while prompt[insert_pos-1]["role"]!= "assistant":
+                insert_pos += 1
         prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
         return prompt
     except:
@@ -533,3 +544,21 @@ async def add_send_mface(tools,config):
     return tools
 
 #asyncio.run(openaiRequest("1"))
+def count_tokens_approximate(input_text, output_text,token_ori=None):
+    def tokenize(text):
+        # 英文和数字：按空格分词，同时考虑标点符号和特殊符号
+        english_tokens = re.findall(r"\w+|[^\w\s]", text, re.UNICODE)
+        # 中文：每个汉字单独作为一个 token
+        chinese_tokens = re.findall(r'[\u4e00-\u9fff]', text)
+        # 合并英文和中文 token
+        tokens = english_tokens + chinese_tokens
+        return tokens
+
+    input_tokens = tokenize(input_text)
+    output_tokens = tokenize(output_text)
+    add_token=len(input_tokens) + len(output_tokens)
+    if token_ori is not None:
+        total_token = add_token+token_ori
+    else:
+        total_token = add_token
+    return total_token

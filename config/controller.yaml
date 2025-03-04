@@ -7,8 +7,10 @@ api_implement:
 core:
   ai_reply_group: 0    #群内ai对话所需权限等级
   ai_reply_private: 0  #私聊ai对话所需权限等级
-  ai_change_character: 99  #ai更换角色所需权限等级
-resource_search:   #资源搜索功能
+  ai_change_character: 0  #ai更换角色所需权限等级
+  ai_token_limt: 0 #不限制ai对话token所需权限等级
+  ai_token_limt_token: 10000 #一般用户限制ai对话token数量
+resource_search: #资源搜索功能
   z_library:
     search_operate_level: 0    #书籍搜索所需等级
     download_operate_level: 998  #书籍下载所需等级
