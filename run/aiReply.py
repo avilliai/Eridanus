@@ -61,6 +61,8 @@ def main(bot,config):
             await bot.send(event,"退出聊天~")
         elif event.pure_text=="/clear" or t=="/clear":
             await delete_user_history(event.user_id)
+            await clear_group_messages(event.group_id)
+
             await bot.send(event,"历史记录已清除",True)
         elif event.pure_text=="/clear group":
             await clear_group_messages(event.group_id)
