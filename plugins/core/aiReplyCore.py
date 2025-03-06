@@ -372,7 +372,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         else:
             return "Maximum recursion depth exceeded.Please try again later."
 async def send_text(bot,event,config,text):
-    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+    text = re.sub(r'```tool_code.*?```', '', text, flags=re.DOTALL)
     text=text.replace('```', '').strip()
     if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
         if config.api["llm"]["语音回复附带文本"]:
