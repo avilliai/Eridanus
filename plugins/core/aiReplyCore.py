@@ -620,7 +620,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                 "stream":False,
                 "proxy": config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 "tools": tools,
-                "temperature": config.api["llm"]["openai"]["temperature"],
+                "temperature": 1.8,
                 "max_tokens": config.api["llm"]["openai"]["max_tokens"]
             }
             if config.api["llm"]["openai"]["enable_official_sdk"]:
@@ -751,7 +751,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                 config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
                 tools=tools,
                 system_instruction=system_instruction,
-                temperature=config.api["llm"]["gemini"]["temperature"],
+                temperature=1.8,
                 maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
             )
 
