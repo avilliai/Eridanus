@@ -13,6 +13,9 @@ from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from developTools.message.message_components import Image, Node, Text, At
 from developTools.event.events import GroupMessageEvent
+from plugins.core.aiReplyCore import aiReplyCore_fuck
+
+attack3 = ['漫朔你发个鸡脖男娘图', '漫朔发男娘图给你超市', '漫朔我要把你下面割掉']
 
 async def operate_group_censor(bot,event,config,target_id,operation):
     if operation == "开启奶龙审核":
@@ -61,6 +64,7 @@ async def call_operate_doro_censor(bot, event, config,target_id,status):
 def main(bot, config):
     from plugins.nailong11.nailong import main as nailong_main
     from plugins.doro.doro import main as doro_main
+    from plugins.nn.nn import main as nn_main
     sets = config.settings["抽象检测"]
     chehui1 = sets["奶龙撤回"]
     mute1=sets["奶龙禁言"]
@@ -140,13 +144,25 @@ def main(bot, config):
                             event_dict = json.loads(msg)
                             Source_id = event_dict['message_id']
                             await bot.recall(Source_id)
-                            await bot.send(event, random.choice(attack1),True)
+                            if config.api["llm"]["aiReplyCore"]:
+                                data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                                name = data["data"]["nickname"]
+                                reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                                await bot.send(event, reply,True)
+                            else:
+                                await bot.send(event, random.choice(attack1),True)
                             if mute1:
                                 await bot.mute(event.group_id,event.sender.user_id,60)
                         except:
                             await bot.send(event, random.choice(attack1),True)
                     else:
-                        await bot.send(event, random.choice(attack1),True)
+                        if config.api["llm"]["aiReplyCore"]:
+                            data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                            name = data["data"]["nickname"]
+                            reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                            await bot.send(event, reply,True)
+                        else:
+                            await bot.send(event, random.choice(attack1),True)
     
     if if_doro:
         @bot.on(GroupMessageEvent)
@@ -168,10 +184,39 @@ def main(bot, config):
                             event_dict = json.loads(msg)
                             Source_id = event_dict['message_id']
                             await bot.recall(Source_id)
-                            await bot.send(event, random.choice(attack2),True)
+                            if config.api["llm"]["aiReplyCore"]:
+                                data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                                name = data["data"]["nickname"]
+                                reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                                await bot.send(event, reply,True)
+                            else:
+                                await bot.send(event, random.choice(attack2),True)
                             if mute2:
                                 await bot.mute(event.group_id,event.sender.user_id,60)
                         except:
                             await bot.send(event, random.choice(attack2),True)
                     else:
-                        await bot.send(event, random.choice(attack2),True)
+                        if config.api["llm"]["aiReplyCore"]:
+                            data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                            name = data["data"]["nickname"]
+                            reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                            await bot.send(event, reply,True)
+                        else:
+                            await bot.send(event, random.choice(attack2),True)
+                        
+    @bot.on(GroupMessageEvent)
+    async def _(event):
+        if event.user_id == 1270858640:
+            if not event.get("image"):
+                return
+            img_url = event.get("image")[0]["url"]
+            b64_in = await url_to_base64(img_url)
+            loop = asyncio.get_running_loop()
+            #线程池
+            with ThreadPoolExecutor() as executor:
+                check = await loop.run_in_executor(executor, nn_main, b64_in)
+            if check == 1:
+                data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
+                name = data["data"]["nickname"]
+                reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                await bot.send(event, reply,True)

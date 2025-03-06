@@ -562,3 +562,320 @@ def count_tokens_approximate(input_text, output_text,token_ori=None):
     else:
         total_token = add_token
     return total_token
+
+async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,event=None,system_instruction=None,func_result=False,recursion_times=0,do_not_read_context=False): #后面几个函数都是供函数调用的场景使用的
+    logger.info(f"aiReplyCore called with message: {processed_message}")
+    """
+    递归深度约束
+    """
+    if recursion_times > config.api["llm"]["recursion_limit"]:
+        logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+        return "Maximum recursion depth exceeded.Please try again later."
+    reply_message = ""
+    original_history = []
+    mface_files=None
+    system_instruction = await use_folder_chara('喷子.txt')
+    if tools is not None and config.api["llm"]["表情包发送"]:
+        tools=await add_send_mface(tools,config)
+        system_instruction = await use_folder_chara('喷子.txt')
+        user_info=await get_user(user_id)
+        system_instruction=system_instruction.replace("{用户}","漫朔").replace("{bot_name}","贴吧老哥")
+    try:
+        if recursion_times==0 and processed_message:
+            last_trigger_time[user_id] = time.time()
+        if config.api["llm"]["model"]=="default":
+            prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
+                                                                              user_id)
+            response_message = await defaultModelRequest(
+                prompt,
+                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+            )
+            reply_message = response_message['content']
+            await prompt_database_updata(user_id,response_message,config)
+
+        elif config.api["llm"]["model"]=="openai":
+            if processed_message:
+                if config.api["llm"]["openai"]["使用旧版prompt结构"]:
+                    prompt, original_history = await construct_openai_standard_prompt_old_version(processed_message,
+                                                                                      system_instruction, user_id, bot,
+                                                                                      func_result, event)
+                else:
+                    prompt, original_history = await construct_openai_standard_prompt(processed_message,system_instruction, user_id,bot,func_result,event)
+            else:
+                prompt=await get_current_openai_prompt(user_id)
+            if processed_message is None:  #防止二次递归无限循环
+                tools=None
+            """
+            读取上下文
+            """
+            if not do_not_read_context:
+                p = await read_context(bot, event, config, prompt)
+                if p:
+                    prompt = p
+            kwargs = {
+                "ask_prompt": prompt,
+                "url": config.api["llm"]["openai"].get("quest_url") or config.api["llm"]["openai"].get("base_url"),
+                "apikey": random.choice(config.api["llm"]["openai"]["api_keys"]),
+                "model":config.api["llm"]["openai"]["model"],
+                "stream":False,
+                "proxy": config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                "tools": tools,
+                "temperature": config.api["llm"]["openai"]["temperature"],
+                "max_tokens": config.api["llm"]["openai"]["max_tokens"]
+            }
+            if config.api["llm"]["openai"]["enable_official_sdk"]:
+                response_message = await openaiRequest_official(**kwargs)
+            else:
+                response_message = await openaiRequest(**kwargs)
+            if "content" in response_message:
+                reply_message=response_message["content"]
+                if reply_message is not None:
+                    reply_message, mface_files = remove_mface_filenames(reply_message,config)  # 去除表情包文件名
+                    pattern_think = r"<think>\n(.*?)\n</think>"
+                    match_think = re.search(pattern_think, reply_message, re.DOTALL)
+
+                    if match_think:
+                        think_text = match_think.group(1)
+                        if config.api["llm"]["openai"]["CoT"]:
+                            await bot.send(event,[Node(content=[Text(think_text)])])
+                        pattern_rest = r"</think>\n\n(.*?)$"
+                        match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
+                        if match_rest:
+                            reply_message = match_rest.group(1)
+                    else:
+                        if "reasoning_content" in response_message:
+                            if config.api["llm"]["openai"]["CoT"]:
+                                await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
+                            response_message.pop("reasoning_content")
+            else:
+                reply_message=None
+
+            #检查是否存在函数调用，如果还有提示词就发
+            status=False
+            if "tool_calls" in response_message and response_message['tool_calls'] is not None:
+                status=True
+
+            if status and reply_message is not None:
+                await send_text(bot, event,config,reply_message)
+                reply_message = None
+
+            #函数调用
+            temp_history=[]
+            func_call = False
+
+            if mface_files != [] and mface_files is not None:
+                for mface_file in mface_files:
+                    await bot.send(event, Image(file=mface_file))
+                mface_files=[]
+
+            if "tool_calls" in response_message and response_message['tool_calls'] is not None:
+                for part in response_message['tool_calls']:
+                    func_name = part['function']["name"]
+                    args = part['function']['arguments']
+                    if func_name=="call_send_mface" and mface_files==[]:
+                        temp_history.append({
+                            "role": "tool",
+                            "content": json.dumps({"status": "succeed"}),
+                            "name": "call_send_mface",
+                            # Here we specify the tool_call_id that this result corresponds to
+                            "tool_call_id": part['id']
+                        })
+                    else:
+                        try:
+                            r=await call_func(bot, event, config,func_name, json.loads(args)) #真是到处都不想相互兼容。
+                            if r==False:
+                                await end_chat(user_id)
+                            if r:
+                                func_call = True
+                                temp_history.append({
+                                    "role": "tool",
+                                    "content": json.dumps(r),
+                                    "name": func_name,
+                                    # Here we specify the tool_call_id that this result corresponds to
+                                    "tool_call_id": part['id']
+                                })
+                            else:
+                                temp_history.append({
+                                    "role": "tool",
+                                    "content": json.dumps({"status":"succeed"}),
+                                    "name": func_name,
+                                    # Here we specify the tool_call_id that this result corresponds to
+                                    "tool_call_id": part['id']
+                                })
+                        except Exception as e:
+                            #logger.error(f"Error occurred when calling function: {e}")
+                            logger.error(f"Error occurred when calling function: {e}")
+                            traceback.print_exc()
+                            temp_history.append({
+                                "role": "tool",
+                                "content": json.dumps({"status": "failed to call function"}),
+                                "name": func_name,
+                                # Here we specify the tool_call_id that this result corresponds to
+                                "tool_call_id": part['id']
+                            })
+
+                    #函数成功调用，如果函数调用有附带文本，则把这个b文本改成None。
+                    reply_message=None
+
+            await prompt_database_updata(user_id, response_message, config)
+            for i in temp_history:
+                await prompt_database_updata(user_id, i,config)
+            if func_call:
+                final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
+                                                   system_instruction=system_instruction, func_result=True)
+                return final_response
+
+            #print(response_message)
+        elif config.api["llm"]["model"] == "gemini":
+            if processed_message:
+                prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
+                                                                                  func_result, event)
+                if not do_not_read_context:
+                    p = await read_context(bot, event, config, prompt)
+                    if p:
+                        prompt = p
+            else:
+                prompt = await get_current_gemini_prompt(user_id)
+                if not do_not_read_context:
+                    p = await read_context(bot, event, config, prompt)
+                    if p:
+                        prompt = p
+            if processed_message is None:  # 防止二次递归无限循环
+                tools = None
+            #这里是需要完整报错的，不用try catch，否则会影响自动重试。
+            response_message = await geminiRequest(
+                prompt,
+                config.api["llm"]["gemini"]["base_url"],
+                random.choice(config.api["llm"]["gemini"]["api_keys"]),
+                config.api["llm"]["gemini"]["model"],
+                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                tools=tools,
+                system_instruction=system_instruction,
+                temperature=config.api["llm"]["gemini"]["temperature"],
+                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+            )
+
+            # print(response_message)
+            try:
+                reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
+                reply_message, mface_files = remove_mface_filenames(reply_message, config)  # 去除表情包文件名
+            except Exception as e:
+                logger.error(f"Error occurred when processing gemini response: {e}")
+                reply_message = None
+            if reply_message is not None:
+                if reply_message == "\n" or reply_message == "" or reply_message == " ":
+                    raise Exception("Empty response。Gemini API返回的文本为空。")
+            """
+            gemini返回多段回复处理
+            """
+            try:
+                text_elements = [part for part in response_message['parts'] if 'text' in part]
+                if text_elements != [] and len(text_elements) > 1:
+                    self_rep = []
+                    for i in text_elements:
+                        if i["text"] != "\n" and i["text"] != "":
+                            tep_rep_message, mface_files = remove_mface_filenames(i['text'].strip(), config)  # 去除表情包文件名
+                            self_rep.append({"text": tep_rep_message})
+                            await send_text(bot, event, config, tep_rep_message)
+                            reply_message = None
+                            if mface_files != []:
+                                for mface_file in mface_files:
+                                    await bot.send(event, Image(file=mface_file))
+                                mface_files = []
+                    self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000,
+                                    "message": self_rep}
+                    if hasattr(event, "group_id"):
+                        await add_to_group(event.group_id, self_message)
+                    reply_message = None
+            except Exception as e:
+                logger.error(f"Error occurred when processing gemini response2: {e}")
+            # 检查是否存在函数调用，如果还有提示词就发
+            status = False
+
+            for part in response_message["parts"]:
+                if "functionCall" in part and config.api["llm"]["func_calling"]:
+                    status = True
+
+            if status and reply_message is not None:  # 有函数调用且有回复，就发回复和语音
+                await send_text(bot, event, config, reply_message)
+                reply_message = None
+
+            if mface_files != [] and mface_files is not None:
+                for mface_file in mface_files:
+                    await bot.send(event, Image(file=mface_file))
+                mface_files = []
+
+            # 在函数调用之前触发更新上下文。
+            await prompt_database_updata(user_id, response_message, config)
+            # 函数调用
+            new_func_prompt = []
+            for part in response_message["parts"]:
+                if "functionCall" in part:
+                    func_name = part['functionCall']["name"]
+                    args = part['functionCall']['args']
+                    """
+                    进行对表情包功能的特殊处理
+                    """
+                    if func_name == "call_send_mface" and mface_files == []:
+                        pass
+                    else:
+                        """
+                        正常调用函数
+                        """
+                        try:
+
+                            r = await call_func(bot, event, config, func_name, args)
+                            if r == False:
+                                await end_chat(user_id)
+                            if r:
+                                func_r = {
+                                    "functionResponse": {
+                                        "name": func_name,
+                                        "response": r
+                                    }
+                                }
+                                new_func_prompt.append(func_r)
+                        except Exception as e:
+                            # logger.error(f"Error occurred when calling function: {e}")
+                            logger.error(f"Error occurred when calling function: {func_name}")
+                            traceback.print_exc()
+                    await add_self_rep(bot, event, config, reply_message)
+                    reply_message = None
+            if new_func_prompt != []:
+                await prompt_database_updata(user_id, {"role": "function", "parts": new_func_prompt}, config)
+                # await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
+                final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
+                                                   system_instruction=system_instruction, func_result=True)
+                return final_response
+
+        elif config.api["llm"]["model"]=="腾讯元器":
+            prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
+            response_message = await YuanQiTencent(
+                prompt,
+                config.api["llm"]["腾讯元器"]["智能体ID"],
+                config.api["llm"]["腾讯元器"]["token"],
+                user_id,
+            )
+            reply_message = response_message["content"]
+            response_message["content"]=[{"type": "text", "text": response_message["content"]}]
+
+            await prompt_database_updata(user_id,response_message,config)
+
+
+        logger.info(f"aiReplyCore returned: {reply_message}")
+        await delete_user_history(event.user_id)
+        await prompt_length_check(user_id,config)
+        if reply_message is not None:
+            return reply_message.strip()
+        else:
+            return reply_message
+    except Exception as e:
+        logger.error(f"Error occurred: {e}")
+        traceback.print_exc()
+        logger.warning(f"roll back to original history, recursion times: {recursion_times}")
+        if recursion_times<=config.api["llm"]["recursion_limit"]:
+
+            logger.warning(f"Recursion times: {recursion_times}")
+            return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1,do_not_read_context=True)
+        else:
+            return "Maximum recursion depth exceeded.Please try again later."
