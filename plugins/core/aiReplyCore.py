@@ -863,7 +863,10 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
 
 
         logger.info(f"aiReplyCore returned: {reply_message}")
-        await delete_user_history(event.user_id)
+        try:
+            await delete_user_history(event.user_id)
+        except Exception as e:
+            pass
         await prompt_length_check(user_id,config)
         if reply_message is not None:
             return reply_message.strip()
