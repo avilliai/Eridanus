@@ -14,6 +14,7 @@ from plugins.basic_plugin.nasa_api import get_nasa_apod
 from plugins.basic_plugin.weather_query import weather_query, free_weather_query
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import get_users_with_permission_above, get_user
+from run.system_plugin.func_collection import trigger_tasks
 
 
 def main(bot,config):
@@ -60,7 +61,7 @@ def main(bot,config):
                     user_info = await get_user(int(user["user_id"]))
                     location = user_info[5]
                     weather = await free_weather_query(location)
-                    r = await aiReplyCore([{"text": f"播报今天的天气，直接发送结果，不要发送'好的'之类的命令应答提示。今天的天气信息如下{weather}"}], int(user["user_id"]),
+                    r = await aiReplyCore([{"text": f"播报今天的天气，保持你的角色，根据天气给出建议，直接发送结果，不要发送'好的'之类的命令应答提示。今天的天气信息如下{weather}"}], int(user["user_id"]),
                                           config, bot=bot, tools=None)
                     await bot.send_friend_message(int(user["user_id"]), r)
                     await sleep(6)
@@ -173,4 +174,16 @@ def main(bot,config):
                     await bot.send(event, "本群没有订阅过")
             else:
                 await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
-
+    @bot.on(GroupMessageEvent)
+    async def _(event: GroupMessageEvent):
+        if event.pure_text=="今日天文":
+            data=await trigger_tasks(bot,event,config,"nasa_daily")
+            img=data["要发送的图片"]
+            text=data["将下列文本翻译后发送"]
+            text = await aiReplyCore(
+                [{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}],
+                random.randint(1000000, 99999999),
+                config, bot=bot, tools=None)
+            await bot.send(event, [Text(text), Image(file=img)])
+        if event.pure_text=="单向历":
+            await trigger_tasks(bot,event,config,"单向历")

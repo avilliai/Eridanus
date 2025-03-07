@@ -6,12 +6,7 @@ from plugins.utils.random_str import random_str
 from plugins.utils.translate import translate
 
 
-async def vits(text,speaker,base_url,lang,proxies):
-    if lang=="ja":
-        transed_text=await translate(text)
-        text=f"[JA]{transed_text}[JA]"
-    else:
-        text=f"[ZH]{text}[ZH]"
+async def vits(text,speaker,base_url):
     url = f"{base_url}/get_audio"
     params = {
         "text": f"{text}",

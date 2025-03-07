@@ -1,17 +1,11 @@
 import copy
 import json
 
-
-def gemini_func_map():
-    with open('plugins/core/gemini_func_call.json', 'r',encoding='utf-8') as f:
-        data = json.load(f)
-    tools = data
-    return tools
 def convert_gemini_to_openai(gemini_tools):
     openai_functions = []
 
     for tool in gemini_tools["function_declarations"]:
-        print(tool)
+        #print(tool)
         openai_function = {
             "type": "function",
             "function": {
@@ -30,7 +24,5 @@ def convert_gemini_to_openai(gemini_tools):
             parameters["additionalProperties"] = False
 
         openai_functions.append(openai_function)
-    with open('plugins/core/openai_func_call.json', 'w',encoding='utf-8') as f:
 
-        f.write(json.dumps(openai_functions))
     return openai_functions

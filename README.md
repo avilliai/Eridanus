@@ -15,6 +15,7 @@ onebot v11标准的多功能bot，大部分功能支持gemini/openai函数调用
 QQ群：913122269
 # 派生项目
 - [Achernar](https://github.com/avilliai/Achernar) cpolar隧道本地反向代理，kaggle自动切换账号运行指定脚本。(用于在kaggle持久化部署ai绘画等服务)
+- [vits api](https://github.com/avilliai/vits_api) 本地部署vits语音合成服务端，已打包。
 - [Eridanus-dep](https://github.com/avilliai/eridanus-dep) 一个轻量化、易于上手的onebot v11 python SDK。
 - [material-dashboard](https://github.com/avilliai/material-dashboard) 基于原版material-dashboard项目修改而成的Eridanus webui。
 # 开源协议

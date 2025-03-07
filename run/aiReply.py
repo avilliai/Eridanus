@@ -8,8 +8,9 @@ from developTools.message.message_components import Record
 from plugins.core.Group_Message_DB import clear_group_messages
 from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, add_self_rep, tts_and_send, send_text ,count_tokens_approximate
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
-from plugins.core.tts.tts import tts
+
 from plugins.core.userDB import get_user,update_user
+
 from plugins.func_map_loader import gemini_func_map, openai_func_map
 from developTools.message.message_components import Record, Text, Node, At
 
@@ -57,7 +58,7 @@ def main(bot,config):
         user_info = await get_user(event.user_id, event.sender.nickname)
         if event.pure_text=="退出":
             await end_chat(event.user_id)
-            await bot.send(event,"那就先不聊啦~")
+            await bot.send(event,"退出聊天~")
         elif event.pure_text=="/clear" or t=="/clear":
             await delete_user_history(event.user_id)
             await bot.send(event,"历史记录已清除",True)
