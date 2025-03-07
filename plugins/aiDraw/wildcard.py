@@ -55,7 +55,7 @@ def parse_weight_params(weight_str):
         return 'range', 0.0, 1.0, warning_msg
 
 async def replace_wildcards(input_string, wildcards_relative_path='wildcards'):
-    pattern = re.compile(r'<(wd[^:]*):([a-zA-Z0-9_]+)(?:=([0-9]+))?>')
+    pattern = re.compile(r'<(wd[^:]*):([^=]+)(?:=([0-9]+))?>', re.UNICODE)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     wildcards_dir = os.path.join(current_dir, wildcards_relative_path)
     if not os.path.isdir(wildcards_dir):
