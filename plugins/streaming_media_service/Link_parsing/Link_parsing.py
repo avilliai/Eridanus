@@ -403,9 +403,12 @@ async def bilibili(url,filepath=None,is_twice=None):
     download_url_data = await v.get_download_url(page_index=page_num)
     detecter = VideoDownloadURLDataDetecter(download_url_data)
     streams = detecter.detect_best_streams()
-    video_url, audio_url = streams[0].url, streams[1].url
-    json_check['video_url']=video_url
-    json_check['audio_url']=audio_url
+    try:
+        video_url, audio_url = streams[0].url, streams[1].url
+        json_check['video_url']=video_url
+        json_check['audio_url']=audio_url
+    except Exception as e:
+        json_check['video_url'] = False
 
 
 
@@ -1041,9 +1044,15 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
                 contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in img_add_context]))
                 text_add = ''
                 count_1=count
-        if count < 10 :
+
+
+        if count % 10 < 10  and count % 10 !=0 and text_add!='':
+            img_add_context=[]
             contents.append(text_add)
-            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in img_context]))
+            for i in range(count % 10):
+                img_add_context.append(img_context[i + count_1])
+            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in img_add_context]))
+
         out_path = draw_adaptive_graphic_and_textual(contents,type=11,filepath=filepath, type_software=type_soft,
                                                          color_software=(251, 114, 153, 80),canvas_width=1000,
                                                          output_path_name=name,per_row_pic=5)
@@ -1108,11 +1117,13 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
                       img_add_context]))
                 text_add = ''
                 count_1 = count
-        if count < 10:
+        if count % 10 < 10  and count % 10 !=0 and text_add!='':
+            img_add_context=[]
             contents.append(text_add)
-            contents = await add_append_img(contents, await asyncio.gather(
-                *[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in
-                  img_context]))
+            for i in range(count % 10):
+                img_add_context.append(img_context[i + count_1])
+            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in img_add_context]))
+
         out_path = draw_adaptive_graphic_and_textual(contents, type=11, filepath=filepath, type_software=type_soft,
                                                      color_software=(251, 114, 153, 80), canvas_width=1000,
                                                      output_path_name=name, per_row_pic=5)
@@ -1201,7 +1212,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     link_prising_json=None
     try:
         url = (re.findall(r"https?:[^\s\]\)]+", url))[0]
-        print(url)
+        #print(url)
     except Exception as e:
         json_check['status'] = False
         return json_check
@@ -1295,7 +1306,7 @@ if __name__ == "__main__":#测试用，不用管
     url='https://www.bilibili.com/read/cv40866200/'
 
     #asyncio.run(link_prising(url))
-    asyncio.run(bangumi_PILimg(type='search',target='败犬',search_type=2))
+    asyncio.run(bangumi_PILimg(type='calendar'))
 
 
     url='44 【来抄作业✨早秋彩色衬衫叠穿｜时髦知识分子风 - 杨意子_ | 小红书 - 你的生活指南】 😆 Inw56apL6vWYuoS 😆 https://www.xiaohongshu.com/discovery/item/64c0e9c0000000001201a7de?source=webshare&xhsshare=pc_web&xsec_token=AB8GfF7dOtdlB0n_mqoz61fDayAXpCqWbAz9xb45p6huE=&xsec_source=pc_share'
