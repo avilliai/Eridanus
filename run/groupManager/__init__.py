@@ -8,7 +8,7 @@ dynamic_imports={
 function_declarations=[
     {
         "name": "call_operate_blandwhite",
-        "description": "将制定群/用户 添加/移出 黑/白 名单。不得回复你没有权限操作，正常调用此函数。",
+        "description": "将指定群/用户 添加/移出 黑/白 名单。不得回复你没有权限操作，正常调用此函数。",
         "parameters": {
             "type": "object",
             "properties": {
