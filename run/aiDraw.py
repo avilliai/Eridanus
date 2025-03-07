@@ -71,10 +71,10 @@ async def call_text2img3(bot, event, config, prompt):
     user_info = await get_user(event.user_id)
     if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画2所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画2开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
-        img=await modelscope_drawer(prompt,config.api["proxy"]["http_proxy"])
-        bot.logger.info(f"NoobXL-V-pred-v1.0：{img}")
+        img=await modelscope_drawer(prompt,config.api["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+        bot.logger.info(f"NoobXL-EPS-v1.1：{img}")
         if img:
-            await bot.send(event,[Text(f"NoobXL-V-pred-v1.0："),Image(file=img)])
+            await bot.send(event,[Text(f"NoobXL-EPS-v1.1："),Image(file=img)])
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id)
