@@ -354,6 +354,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         logger.info(f"aiReplyCore returned: {reply_message}")
         await prompt_length_check(user_id,config)
         if reply_message is not None:
+            reply_message = re.sub(r'```tool_code.*?```', '', reply_message, flags=re.DOTALL)
+            reply_message = reply_message.replace('```', '').strip()
             return reply_message.strip()
         else:
             return reply_message
