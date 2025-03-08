@@ -267,7 +267,7 @@ def main(bot,config):
             bot.logger.info(f"收到来自群{event.group_id}的请求，prompt:{tag}")
             await bot.send(event, f'正在搜索词条{tag}')
             limit = 5
-            if config.api["proxy"]["http_proxy"] is not None:
+            if config.api["proxy"]["http_proxy"]:
                 proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
             else:
                 proxies = None
