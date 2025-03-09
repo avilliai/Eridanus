@@ -505,6 +505,10 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
 async def add_send_mface(tools,config):
     mface_list = os.listdir("data/pictures/Mface")
     if config.api["llm"]["model"] == "gemini":
+        tools["function_declarations"] = [
+            func for func in tools["function_declarations"]
+            if func.get("name") != "call_send_mface"
+        ]
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
@@ -523,6 +527,10 @@ async def add_send_mface(tools,config):
             }
         }, )
     else:
+        tools = [
+            tool for tool in tools
+            if not (tool.get("function", {}).get("name") == "call_send_mface")
+        ]
         tools.append({
             "type": "function",
             "function": {
