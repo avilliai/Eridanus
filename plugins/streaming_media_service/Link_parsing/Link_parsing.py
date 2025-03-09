@@ -1177,6 +1177,42 @@ async def gal_PILimg(text=None,img_context=None,filepath=None,proxy=None,type_so
         return json_check
 
 
+async def majsoul_PILimg(text=None,img_context=None,filepath=None,type_soft='雀魂牌谱屋'):
+    contents=[]
+    json_check = copy.deepcopy(json_init)
+    json_check['soft_type'] = '雀魂牌谱屋'
+    json_check['status'] = True
+    json_check['video_url'] = False
+    if filepath is None: filepath = filepath_init
+
+    text_total = ''
+    words = text.split("\n")  # 按换行符分割文本，逐行处理
+    for line in words:  # 遍历每一行（处理换行符的部分）
+        if '昵称' in line:
+            title = text.split("当前段位")[0]
+            rating=line.replace(title,'').split('当前pt')[0].replace('当前段位：','')
+            pt_check=line.split('当前pt')[1]
+            contents.append(f"title:{title.replace('昵称：','玩家：')}")
+            contents.append(f"段位：【{rating}】当前pt{pt_check}")
+
+        else:
+            text_total += f"{line}\n"
+
+
+    contents.append(text_total)
+    if img_context is not None:
+        contents = await add_append_img(contents, await asyncio.gather(
+            *[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in img_context]))
+
+    out_path = draw_adaptive_graphic_and_textual(contents, type=11, filepath=filepath, type_software=type_soft,
+                                                 color_software=(251, 114, 153, 80), canvas_width=1000,
+                                                 output_path_name=f'{int(time.time())}', per_row_pic=5)
+    json_check['pic_path'] = out_path
+    return json_check
+
+
+
+
 async def download_video_link_prising(json,filepath=None,proxy=None):
     if filepath is None:filepath = filepath_init
     video_json={}
@@ -1303,10 +1339,10 @@ if __name__ == "__main__":#测试用，不用管
     url = 'https://www.hikarinagi.com/p/21338'
     url='https://live.bilibili.com/26178650'
     url='https://gal.manshuo.ink/archives/212/'
-    url='https://www.bilibili.com/read/cv40866200/'
+    url='【☝️-哔哩哔哩】 https://b23.tv/Twf4lT8'
 
-    #asyncio.run(link_prising(url))
-    asyncio.run(bangumi_PILimg(type='calendar'))
+    asyncio.run(link_prising(url))
+    #asyncio.run(bangumi_PILimg(type='calendar'))
 
 
     url='44 【来抄作业✨早秋彩色衬衫叠穿｜时髦知识分子风 - 杨意子_ | 小红书 - 你的生活指南】 😆 Inw56apL6vWYuoS 😆 https://www.xiaohongshu.com/discovery/item/64c0e9c0000000001201a7de?source=webshare&xhsshare=pc_web&xsec_token=AB8GfF7dOtdlB0n_mqoz61fDayAXpCqWbAz9xb45p6huE=&xsec_source=pc_share'
