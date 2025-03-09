@@ -354,6 +354,8 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         logger.info(f"aiReplyCore returned: {reply_message}")
         await prompt_length_check(user_id,config)
         if reply_message is not None:
+            reply_message = re.sub(r'```tool_code.*?```', '', reply_message, flags=re.DOTALL)
+            reply_message = reply_message.replace('```', '').strip()
             return reply_message.strip()
         else:
             return reply_message
@@ -503,6 +505,10 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
 async def add_send_mface(tools,config):
     mface_list = os.listdir("data/pictures/Mface")
     if config.api["llm"]["model"] == "gemini":
+        tools["function_declarations"] = [
+            func for func in tools["function_declarations"]
+            if func.get("name") != "call_send_mface"
+        ]
 
         tools["function_declarations"].append({
             "name": "call_send_mface",
@@ -521,6 +527,10 @@ async def add_send_mface(tools,config):
             }
         }, )
     else:
+        tools = [
+            tool for tool in tools
+            if not (tool.get("function", {}).get("name") == "call_send_mface")
+        ]
         tools.append({
             "type": "function",
             "function": {
