@@ -24,7 +24,6 @@ async def check_for_majsoul_personal_info(context,type=0,target_id=None,target_n
         else:
             target_name=f'{target_name_search}'
         json_majsoul['uesr_name'] = target_name
-
     context_check=context.replace(' ','')
     if context_check == "金场" or context_check == "金" or context_check == "金之间":
         room_set = "金"
@@ -34,7 +33,7 @@ async def check_for_majsoul_personal_info(context,type=0,target_id=None,target_n
         room_set = "王座"
     if room_set is not None:
         target_name=f'{room_set} {target_name}'
-
+    type=int(type)
     if type == 0:
         status,context_text = await majsoulInfo(target_name)
         json_majsoul['type'] = '雀魂四麻查询'
@@ -49,64 +48,64 @@ async def check_for_majsoul_personal_info(context,type=0,target_id=None,target_n
             json_majsoul['status'] = True
             json_majsoul['text'] = context_text
             return json_majsoul
-        elif type ==1:
-            status, context_text = await majsoulInfo(target_name)
-            json_majsoul['type'] = '雀魂四麻查询'
-            if status is False:
-                json_majsoul['text'] = context_text
-                json_majsoul['status'] = False
-                return json_majsoul
-            elif status is True:
-                json_majsoul['status'] = True
-                json_majsoul['text'] = context_text
-                return json_majsoul
-        elif type ==2:
-            status, context_text = await RecordInfo(target_name)
-            json_majsoul['type'] = '雀魂四麻牌局查询'
-            if status is False:
-                json_majsoul['text'] = context_text
-                json_majsoul['status'] = False
-                return json_majsoul
-            elif status is True:
-                json_majsoul['status'] = True
-                json_majsoul['text'] = context_text
-                return json_majsoul
-        elif type ==3:
-            status, context_text = await TrimajsoulInfo(target_name)
-            json_majsoul['type'] = '雀魂三麻查询'
-            if status is False:
-                json_majsoul['text'] = context_text
-                json_majsoul['status'] = False
-                return json_majsoul
-            elif status is True:
-                json_majsoul['status'] = True
-                json_majsoul['text'] = context_text
-                return json_majsoul
-        elif type ==4:
+    elif type == 1:
+        status, context_text = await majsoulInfo(target_name)
+        json_majsoul['type'] = '雀魂四麻查询'
+        if status is False:
+            json_majsoul['text'] = context_text
+            json_majsoul['status'] = False
+            return json_majsoul
+        elif status is True:
+            json_majsoul['status'] = True
+            json_majsoul['text'] = context_text
+            return json_majsoul
+    elif type == 2:
+        status, context_text = await RecordInfo(target_name)
+        json_majsoul['type'] = '雀魂四麻牌局查询'
+        if status is False:
+            json_majsoul['text'] = context_text
+            json_majsoul['status'] = False
+            return json_majsoul
+        elif status is True:
+            json_majsoul['status'] = True
+            json_majsoul['text'] = context_text
+            return json_majsoul
+    elif type == 3:
+        status, context_text = await TrimajsoulInfo(target_name)
+        json_majsoul['type'] = '雀魂三麻查询'
+        if status is False:
+            json_majsoul['text'] = context_text
+            json_majsoul['status'] = False
+            return json_majsoul
+        elif status is True:
+            json_majsoul['status'] = True
+            json_majsoul['text'] = context_text
+            return json_majsoul
+    elif type == 4:
+        status, context_text = await TriRecordInfo(target_name)
+        json_majsoul['type'] = '雀魂三麻牌局查询'
+        if status is False:
+            json_majsoul['text'] = context_text
+            json_majsoul['status'] = False
+            return json_majsoul
+        elif status is True:
+            json_majsoul['status'] = True
+            json_majsoul['text'] = context_text
+            return json_majsoul
+    elif type == 5:
+        status, context_text = await RecordInfo(target_name)
+        json_majsoul['type'] = '雀魂四麻牌局查询'
+        if status is False:
             status, context_text = await TriRecordInfo(target_name)
             json_majsoul['type'] = '雀魂三麻牌局查询'
             if status is False:
                 json_majsoul['text'] = context_text
                 json_majsoul['status'] = False
                 return json_majsoul
-            elif status is True:
-                json_majsoul['status'] = True
-                json_majsoul['text'] = context_text
-                return json_majsoul
-        elif type == 5:
-            status, context_text = await RecordInfo(target_name)
-            json_majsoul['type'] = '雀魂四麻牌局查询'
-            if status is False:
-                status, context_text = await TriRecordInfo(target_name)
-                json_majsoul['type'] = '雀魂三麻牌局查询'
-                if status is False:
-                    json_majsoul['text'] = context_text
-                    json_majsoul['status'] = False
-                    return json_majsoul
-            if status is True:
-                json_majsoul['status'] = True
-                json_majsoul['text'] = context_text
-                return json_majsoul
+        if status is True:
+            json_majsoul['status'] = True
+            json_majsoul['text'] = context_text
+            return json_majsoul
 
 
 

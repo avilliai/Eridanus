@@ -1177,7 +1177,7 @@ async def gal_PILimg(text=None,img_context=None,filepath=None,proxy=None,type_so
         return json_check
 
 
-async def majsoul_PILimg(text=None,img_context=None,filepath=None,type_soft='雀魂牌谱屋'):
+async def majsoul_PILimg(text=None,img_context=None,filepath=None,type_soft='雀魂牌谱屋',canvas_width=1200):
     contents=[]
     json_check = copy.deepcopy(json_init)
     json_check['soft_type'] = '雀魂牌谱屋'
@@ -1188,16 +1188,18 @@ async def majsoul_PILimg(text=None,img_context=None,filepath=None,type_soft='雀
     text_total = ''
     words = text.split("\n")  # 按换行符分割文本，逐行处理
     for line in words:  # 遍历每一行（处理换行符的部分）
-        if '昵称' in line:
-            title = text.split("当前段位")[0]
-            rating=line.replace(title,'').split('当前pt')[0].replace('当前段位：','')
-            pt_check=line.split('当前pt')[1]
+        if '昵称：' in line:
+            title = line.split("当前段位")[0]
+            rating=line.replace(title,'').split('当前pt')[0].replace('当前段位：','').replace(' ','')
+            if '当前pt' in line:
+                pt_check=line.split('当前pt')[1]
+            else:pt_check='未知'
             contents.append(f"title:{title.replace('昵称：','玩家：')}")
             contents.append(f"段位：【{rating}】当前pt{pt_check}")
-
+        elif '查询到多条角色昵称呢~，若输出不是您想查找的昵称，请补全查询昵称' in line:
+            contents.append(f'tag:{line}')
         else:
             text_total += f"{line}\n"
-
 
     contents.append(text_total)
     if img_context is not None:
@@ -1205,7 +1207,7 @@ async def majsoul_PILimg(text=None,img_context=None,filepath=None,type_soft='雀
             *[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_context))) for item in img_context]))
 
     out_path = draw_adaptive_graphic_and_textual(contents, type=11, filepath=filepath, type_software=type_soft,
-                                                 color_software=(251, 114, 153, 80), canvas_width=1000,
+                                                 color_software=(161, 23, 21, 80), canvas_width=canvas_width,
                                                  output_path_name=f'{int(time.time())}', per_row_pic=5)
     json_check['pic_path'] = out_path
     return json_check
