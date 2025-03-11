@@ -66,16 +66,16 @@ def main(bot ,config):
         if event.pure_text=="识别" or (event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text") is not None and "识别" in event.get("text")[0]):
             image_identify_list[event.user_id] ={'model' :"anime_model_lovelive"}
             if re.search(r"(?:gal|galgame|游戏)", event.pure_text, re.IGNORECASE):     # 匹配字符串，忽略大小写
-                image_identify_list[event.user_id]['model'] ="game_model_kirakira"
+                image_identify_list[event.user_id]['model'] ="full_game_model_kira"
             await bot.send(event, "请发送要识别的图片")
 
         if ((event.get("text") is not None and "识别" in event.get("text")[0]) or (event.user_id in image_identify_list)) and event.get('image') is not None:
 
             if event.user_id not in image_identify_list:
                 if re.search(r"(?:gal|galgame|游戏)", event.pure_text, re.IGNORECASE):
-                    model_name="game_model_kirakira"
+                    model_name="full_game_model_kira"
                 else:
-                    model_name="game_model_kirakira"
+                    model_name="full_game_model_kira"
                 await bot.send(event,"未指定识别类型，可能影响识别精度")
             else:
                 model_name = image_identify_list[event.user_id]['model']
