@@ -10,6 +10,7 @@ from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.aiArtModerate import aiArtModerate
 from plugins.aiDraw.modelscope_text2img import modelscope_drawer
+from plugins.aiDraw.hf_t2i import hf_drawer
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.userDB import get_user
@@ -48,7 +49,8 @@ async def call_text2img(bot, event, config, prompt):
                 call_text2img1(bot, event, config, tag),
                 call_text2img2(bot, event, config, tag),
                 nai4(bot, event, config, tag),
-                call_text2img3(bot, event, config, tag)
+                call_text2img3(bot, event, config, tag),
+                call_text2img4(bot, event, config, tag),
                 # nai3(bot, event, config, tag),
             ]
         ]
@@ -75,6 +77,20 @@ async def call_text2img3(bot, event, config, prompt):
         bot.logger.info(f"NoobXL-EPS-v1.1：{img}")
         if img:
             await bot.send(event,[Text(f"NoobXL-EPS-v1.1："),Image(file=img)])
+
+async def call_text2img4(bot, event, config, prompt):
+    if config.api["proxy"]["http_proxy"]:
+        try:
+            user_info = await get_user(event.user_id)
+            if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画2所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画2开关"]:
+                bot.logger.info(f"Received text2img prompt: {prompt}")
+                img=await hf_drawer(prompt,config.api["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+                bot.logger.info(f"ani4：{img}")
+                if img:
+                    await bot.send(event,[Text(f"ani4："),Image(file=img)])
+        except Exception as e:
+            print("ani4：{e}")
+
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id)
