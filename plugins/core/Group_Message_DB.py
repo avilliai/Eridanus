@@ -8,7 +8,7 @@ from plugins.core.aiReplyHandler.gemini import gemini_prompt_elements_construct
 from plugins.core.aiReplyHandler.openai import prompt_elements_construct,prompt_elements_construct_old_version  # 假设你已有这两个函数
 
 DB_NAME = "data/dataBase/group_message.db"
-MAX_RETRIES = 5  # 最大重试次数
+MAX_RETRIES = 2  # 最大重试次数
 INITIAL_DELAY = 2  # 初始延迟时间 (秒)
 
 logger=get_logger()

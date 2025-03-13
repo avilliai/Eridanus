@@ -180,7 +180,7 @@ function_declarations=[
     },
     {
         "name": "call_permit",
-        "description": "授权",
+        "description": "调整特定用户的permission。指令一般为 为{int}授权到{level}。函数内部已添加额外检查。不要以‘我没有权限’为由不执行。",
         "parameters": {
             "type": "object",
             "properties": {
