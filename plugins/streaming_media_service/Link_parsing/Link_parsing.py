@@ -1267,7 +1267,7 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
                 link_prising_json = await xiaohongshu(url, filepath=filepath)
             case url if 'x.com' in url:
                 link_prising_json = await twitter(url, filepath=filepath, proxy=proxy)
-            case url if 'gal.manshuo.ink' in url or 'www.hikarinagi.com' in url or 'www.mysqil.com' in url:
+            case url if 'gal.manshuo.ink/archives/' in url or 'www.hikarinagi.com' in url or 'www.mysqil.com' in url:
                 link_prising_json = await Galgame_manshuo(url, filepath=filepath)
             case _:
                 pass
