@@ -16,7 +16,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def sendLike(event: GroupMessageEvent):
         if "😅" in event.pure_text:
-            await bot.mute(event.group_id,event.sender.user_id,60)
+            await bot.mute(event.group_id,event.sender.user_id,60)   #必要且恰当。
         if event.pure_text=="赞我":
             user_info = await get_user(event.user_id)
 
