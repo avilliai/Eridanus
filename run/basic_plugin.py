@@ -57,7 +57,10 @@ async def call_setu(bot,event,config,tags,num=3):
                     tags=i["tags"]
                     path=f"data/pictures/cache/{random_str()}.png"
                     bot.logger.info(f"Downloading {url} to {path}")
-                    p=await download_img(url,path,config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    if config.settings["basic_plugin"]["setu"]["download"]:
+                        p=await download_img(url,path,config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    else:
+                        p=url
                     r = Node(content=[Text(f"link：{page}\n作者：{author}\nUID：{author_uid}\n标签：{tags}\n"),Image(file=p)])
                     fordMes.append(r)
                 except Exception as e:
@@ -77,7 +80,10 @@ async def call_setu(bot,event,config,tags,num=3):
                     tags=i["tags"]
                     path = f"data/pictures/cache/{random_str()}.png"
                     bot.logger.info(f"Downloading {url} to {path}")
-                    p = await download_img(url, path, config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    if config.settings["basic_plugin"]["setu"]["download"]:
+                        p = await download_img(url, path, config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    else:
+                        p=url
                     r = Node(content=[Text(f"标题：{title}\n作者：{author}\n标签：{tags}\nurl：{url}"), Image(file=p)])
                     fordMes.append(r)
                 except Exception as e:
