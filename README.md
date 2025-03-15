@@ -2,6 +2,8 @@
 # Eridanus
 onebot v11标准的多功能bot，大部分功能支持llm函数调用，插件化设计，具有一定拓展性。
 
+4月恢复更新频率
+
 # 部署
 见[文档](https://eridanus-doc.netlify.app/)
 
