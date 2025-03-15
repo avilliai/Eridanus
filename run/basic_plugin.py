@@ -162,12 +162,18 @@ async def call_image_search2(bot,event,config,img_url):
         return
     forMeslist.append(Node(content=[Text(f"图片已经过处理，但不保证百分百不被吞。")]))
     for item in r:
-        sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
-        sst_img=f"data/pictures/cache/{random_str()}.png"
-        await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
-        forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
-    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}\n\n")],True)
+        
+        try:
+            sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
+            sst_img=f"data/pictures/cache/{random_str()}.png"
+            await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
+            forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
+        except:
+            bot.logger.error("图片下载失败")
+            forMeslist.append(Node(content=[Text(sst)]))
     await bot.send(event, forMeslist)
+    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}\n\n")],True)
+    
 
 
 
