@@ -21,7 +21,12 @@ QQ群：913122269
 - [Eridanus-dep](https://github.com/avilliai/eridanus-dep) 一个轻量化、易于上手的onebot v11 python SDK。
 - [material-dashboard](https://github.com/avilliai/material-dashboard) 基于原版material-dashboard项目修改而成的Eridanus webui。
 # 开源协议
-Eridanus使用AGPL V3协议，我们禁止任何未经授权的商用行为，任何基于Eridanus修改的项目/二次分发均需依照协议要求公开源码，不得隐瞒项目开源事实。
+Eridanus is licensed under CC BY-NC-SA, everyone is FREE of charge to access, use, modify and redistribute with the same license.
+
+Eridanus的许可证为 CC BY-NC-SA，任何人都可以自由获取、使用、修改、以相同协议重分发本项目。<br>
+此开源协议禁止任何商用行为。
+
+If you like the project, please give me a star! 
 # Thanks to all contributors for their efforts
 
 <a href="https://github.com/avilliai/Eridanus/graphs/contributors" target="_blank">
