@@ -23,8 +23,8 @@ QQ群：913122269
 # 开源协议
 Eridanus is licensed under CC BY-NC-SA, everyone is FREE of charge to access, use, modify and redistribute with the same license.
 
-Eridanus的许可证为 CC BY-NC-SA，任何人都可以自由获取、使用、修改、以相同协议重分发本项目。<br>
-此开源协议禁止任何商用行为。
+Eridanus的许可证为 CC BY-NC-SA，任何人都可以自由获取、使用、修改、以相同协议重分发本项目，但仅限于非商业用途。<br>
+此开源协议禁止未授权的任何商用行为。
 
 If you like the project, please give me a star! 
 # Thanks to all contributors for their efforts
