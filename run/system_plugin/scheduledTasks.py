@@ -24,9 +24,15 @@ def main(bot,config):
     global scheduler
     scheduler = AsyncIOScheduler()
 
+    global enabled
+    enabled=False
+
     @bot.on(LifecycleMetaEvent)
     async def start_scheduler(_):
-        await start_scheduler()  # 异步调用
+        global enabled
+        if not enabled:
+            enabled=True
+            await start_scheduler()  # 异步调用
 
     async def task_executor(task_name, task_info):
         logger.info_func(f"执行任务：{task_name}")
