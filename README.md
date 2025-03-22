@@ -5,9 +5,8 @@ onebot v11标准的多功能bot，大部分功能支持llm函数调用，插件�
 学业繁忙，4月恢复原先更新频率
 
 # 部署
-见
 [文档](https://eridanus-doc.netlify.app/) <br>
-[备用地址](https://eridanusdoc.netlify.app)
+[备用文档地址](https://eridanusdoc.netlify.app)
 
 
 ## 快捷部署
