@@ -934,9 +934,15 @@ async def getsampler(config):
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url)
         r = response.json()
-        names_list = [item["name"] for item in r if "name" in item]
-        result = f'\n'.join(names_list)
-        return result
+        try:
+            names_list = [item["name"] for item in r if "name" in item]
+            if names_list:
+                return f'\n'.join(names_list)
+        except TypeError:
+            pass
+        if isinstance(r, dict) and "body" in r:
+            names_list = [item["name"] for item in r["body"] if "name" in item]
+            return f'\n'.join(names_list)
     
 async def getscheduler(config):
     global round_sd
