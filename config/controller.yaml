@@ -25,6 +25,7 @@ resource_search: #资源搜索功能
 basic_plugin:
   setu_operate_level: 0    #色图功能所需等级
   search_image_resource_operate_level: 0  #图片搜索功能所需等级
+  recall_level: 0 #撤回？
   内置ai绘画1开关: true  #聚合接口
   内置ai绘画2开关: true  #NoobXL-V-pred-v1.0，来自modelscope。
   内置ai绘画1所需权限等级: 0  #默认聚合绘图功能所需等级

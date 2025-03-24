@@ -120,7 +120,7 @@ async def replace_wildcards(input_string, wildcards_relative_path='wildcards'):
         last_end = match.end()
     parts.append(input_string[last_end:])
     result = ''.join(parts)
-    log = '; '.join(replacement_log) if replacement_log else False
+    log = '\n'.join(replacement_log) if replacement_log else False
     return result, log
 
 async def get_available_wildcards(wildcards_relative_path='wildcards'):

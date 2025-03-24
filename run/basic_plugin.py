@@ -57,7 +57,10 @@ async def call_setu(bot,event,config,tags,num=3):
                     tags=i["tags"]
                     path=f"data/pictures/cache/{random_str()}.png"
                     bot.logger.info(f"Downloading {url} to {path}")
-                    p=await download_img(url,path,config.settings["basic_plugin"]["setu"]["gray_layer"])
+                    if config.settings["basic_plugin"]["setu"]["download"]:
+                        p=await download_img(url,path,config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    else:
+                        p=url
                     r = Node(content=[Text(f"link：{page}\n作者：{author}\nUID：{author_uid}\n标签：{tags}\n"),Image(file=p)])
                     fordMes.append(r)
                 except Exception as e:
@@ -77,13 +80,22 @@ async def call_setu(bot,event,config,tags,num=3):
                     tags=i["tags"]
                     path = f"data/pictures/cache/{random_str()}.png"
                     bot.logger.info(f"Downloading {url} to {path}")
-                    p = await download_img(url, path, config.settings["basic_plugin"]["setu"]["gray_layer"])
+                    if config.settings["basic_plugin"]["setu"]["download"]:
+                        p = await download_img(url, path, config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    else:
+                        p=url
                     r = Node(content=[Text(f"标题：{title}\n作者：{author}\n标签：{tags}\nurl：{url}"), Image(file=p)])
                     fordMes.append(r)
                 except Exception as e:
+
+                    traceback.print_exc()
                     bot.logger.error(f"Error downloading: {e}")
+                    try:
+                        fordMes.append(Node(content=[Text(f"标题：{title}\n作者：{author}\n标签：{tags}\nurl：{url}")]))
+                    except:
+                        pass
         if fordMes==[]:
-            await bot.send(event, "没有找到符合条件的涩图呢，换个标签试试吧")
+            await bot.send(event, "没有找到符合条件的涩图/或下载失败，换个标签试试吧")
             return
         await bot.send(event, fordMes)
     else:
@@ -156,12 +168,18 @@ async def call_image_search2(bot,event,config,img_url):
         return
     forMeslist.append(Node(content=[Text(f"图片已经过处理，但不保证百分百不被吞。")]))
     for item in r:
-        sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
-        sst_img=f"data/pictures/cache/{random_str()}.png"
-        await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
-        forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
-    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}\n\n")],True)
+        
+        try:
+            sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
+            sst_img=f"data/pictures/cache/{random_str()}.png"
+            await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
+            forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
+        except:
+            bot.logger.error("图片下载失败")
+            forMeslist.append(Node(content=[Text(sst)]))
     await bot.send(event, forMeslist)
+    await bot.send(event,[Image(file=img),Text(f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}\n\n")],True)
+    
 
 
 

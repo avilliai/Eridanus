@@ -10,6 +10,7 @@ from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
 from plugins.aiDraw.aiArtModerate import aiArtModerate
 from plugins.aiDraw.modelscope_text2img import modelscope_drawer
+from plugins.aiDraw.hf_t2i import hf_drawer
 from plugins.aiDraw.setu_moderate import pic_audit_standalone
 from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.userDB import get_user
@@ -38,6 +39,29 @@ aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 
+async def get_img(processed_message, bot, event):
+    for item in processed_message:
+        if "image" in item or "mface" in item:
+            try:
+                if "mface" in item:
+                    url = item["mface"]["url"]
+                else:
+                    url = item["image"]["url"]
+                return url
+            except Exception as e:
+                bot.logger.warning(f"获取图片失败: {e}")
+                return False
+        elif "reply" in item:
+            try:
+                event_obj = await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await get_img(event_obj.processed_message, bot, event)
+                if message:
+                    return message
+            except Exception as e:
+                bot.logger.warning(f"引用消息解析失败: {e}")
+                return False
+    return False
+
 async def call_text2img(bot, event, config, prompt):
     tag = prompt
 
@@ -48,7 +72,8 @@ async def call_text2img(bot, event, config, prompt):
                 call_text2img1(bot, event, config, tag),
                 call_text2img2(bot, event, config, tag),
                 nai4(bot, event, config, tag),
-                call_text2img3(bot, event, config, tag)
+                call_text2img3(bot, event, config, tag),
+                call_text2img4(bot, event, config, tag),
                 # nai3(bot, event, config, tag),
             ]
         ]
@@ -75,6 +100,20 @@ async def call_text2img3(bot, event, config, prompt):
         bot.logger.info(f"NoobXL-EPS-v1.1：{img}")
         if img:
             await bot.send(event,[Text(f"NoobXL-EPS-v1.1："),Image(file=img)])
+
+async def call_text2img4(bot, event, config, prompt):
+    if config.api["proxy"]["http_proxy"]:
+        try:
+            user_info = await get_user(event.user_id)
+            if user_info[6] >= config.controller["basic_plugin"]["内置ai绘画2所需权限等级"] and config.controller["basic_plugin"]["内置ai绘画2开关"]:
+                bot.logger.info(f"Received text2img prompt: {prompt}")
+                img=await hf_drawer(prompt,config.api["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+                bot.logger.info(f"ani4：{img}")
+                if img:
+                    await bot.send(event,[Text(f"ani4："),Image(file=img)])
+        except Exception as e:
+            print("ani4：{e}")
+
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id)
@@ -232,10 +271,11 @@ def main(bot,config):
                     event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0] == "ai图检测"):
                 await bot.send(event, "请发送要检测的图片")
                 ai_img_recognize[event.sender.user_id] = []
-            if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize) and event.get('image'):
-                img_url = event.get("image")[0]["url"]
-                await call_aiArtModerate(bot, event, config, img_url)
-                ai_img_recognize.pop(event.sender.user_id)
+            if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize):
+                if await get_img(event.processed_message, bot, event):
+                    img_url = await get_img(event.processed_message, bot, event)
+                    await call_aiArtModerate(bot, event, config, img_url)
+                    ai_img_recognize.pop(event.sender.user_id)
         except Exception as e:
             pass
 
@@ -325,7 +365,7 @@ def main(bot,config):
                 img_urls = [img['src'] for img in soup.find_all('img') if img['src'].startswith('http')][:2]
                 bot.logger.info(f"Found {len(img_urls)} images for tag: {formatted_tag}")
 
-                async def download_img1(image_url: str) -> (str, bytes):
+                async def download_img1(image_url: str):
                     try:
                         async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
                             response = await client.get(image_url)
@@ -407,41 +447,42 @@ def main(bot,config):
     async def tagger(event):
         global tag_user
 
-        if event.get('image') == None and (
-                str(event.pure_text) == ("tag") or str(event.pure_text).startswith("tag ")):
-            if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
-                await bot.send(event, "未配置审核和反推api")
-                return
-            tag_user[event.sender.user_id] = []
-            await bot.send(event, "请发送要识别的图片")
+        if (str(event.pure_text) == ("tag")):
+            if await get_img(event.processed_message, bot, event) == False:
+                if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
+                    await bot.send(event, "未配置审核和反推api")
+                    return
+                tag_user[event.sender.user_id] = []
+                await bot.send(event, "请发送要识别的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("tag") or event.sender.user_id in tag_user) and event.get('image'):
-            if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
-                await bot.send(event, "未配置审核和反推api")
-                return
-            if (str(event.pure_text).startswith("tag")) and event.get('image'):
-                tag_user[event.sender.user_id] = []
+        if (str(event.pure_text).startswith("tag") or event.sender.user_id in tag_user):
+            if await get_img(event.processed_message, bot, event):
+                if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
+                    await bot.send(event, "未配置审核和反推api")
+                    return
+                if (str(event.pure_text).startswith("tag")):
+                    tag_user[event.sender.user_id] = []
 
-            # 日志记录
-            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的tag反推指令")
+                # 日志记录
+                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的tag反推指令")
 
-            # 获取图片路径
-            path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
-            bot.logger.info(f"发起反推tag请求，path:{path}")
-            tag_user.pop(event.sender.user_id)
+                # 获取图片路径
+                path = f"data/pictures/cache/{random_str()}.png"
+                img_url = await get_img(event.processed_message, bot, event)
+                bot.logger.info(f"发起反推tag请求，path:{path}")
+                tag_user.pop(event.sender.user_id)
 
-            try:
-                b64_in = await url_to_base64(img_url)
-                await bot.send(event, "tag反推中", True)
-                message, tags, tags_str = await pic_audit_standalone(b64_in, is_return_tags=True,
-                                                                    url=config.api["ai绘画"]["sd审核和反推api"])
-                tags_str = tags_str.replace("_", " ")
-                await bot.send(event, Text(tags_str), True)
-            except Exception as e:
-                bot.logger.error(f"反推失败: {e}")
-                await bot.send(event, f"反推失败: {e}", True)
+                try:
+                    b64_in = await url_to_base64(img_url)
+                    await bot.send(event, "tag反推中", True)
+                    message, tags, tags_str = await pic_audit_standalone(b64_in, is_return_tags=True,
+                                                                        url=config.api["ai绘画"]["sd审核和反推api"])
+                    tags_str = tags_str.replace("_", " ")
+                    await bot.send(event, Text(tags_str), True)
+                except Exception as e:
+                    bot.logger.error(f"反推失败: {e}")
+                    await bot.send(event, f"反推失败: {e}", True)
 
     @bot.on(GroupMessageEvent)
     async def sdsettings(event):
@@ -475,56 +516,69 @@ def main(bot,config):
     async def sdreDrawRun(event):
         global UserGet
         global turn
+        user_info = await get_user(event.user_id)
 
-        if event.get('image') == None and (
-                str(event.pure_text) == ("重绘") or str(event.pure_text).startswith("重绘 ")):
-            prompt = str(event.pure_text).replace("重绘", "").strip()
-            UserGet[event.sender.user_id] = [prompt]
-            await bot.send(event, "请发送要重绘的图片")
+        if ((event.pure_text) == ("重绘") or str(event.pure_text).startswith("重绘 ")):
+            if await get_img(event.processed_message, bot, event) == False:
+                prompt = str(event.pure_text).replace("重绘", "").strip()
+                if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
+                    bot.logger.info(f"reject text2img request: 权限不足")
+                    await bot.send(event,"无绘图功能使用权限",True)
+                    return
+                UserGet[event.sender.user_id] = [prompt]
+                await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
-            if (str(event.pure_text).startswith("重绘")) and event.get('image'):
-                prompt = str(event.pure_text).replace("重绘", "").strip()
-                UserGet[event.sender.user_id] = [prompt]
+        if (str(event.pure_text).startswith("重绘") or event.sender.user_id in UserGet):
+            if await get_img(event.processed_message, bot, event):
+                if (str(event.pure_text).startswith("重绘")):
+                    prompt = str(event.pure_text).replace("重绘", "").strip()
+                    UserGet[event.sender.user_id] = [prompt]
 
-            # 日志记录
-            prompts = ', '.join(UserGet[event.sender.user_id])
-            if prompts:
-                prompts,log = await replace_wildcards(prompts)
-                if log:
-                    await bot.send(event, log, True)
-            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
+                # 日志记录
+                prompts = ', '.join(UserGet[event.sender.user_id])
+                if prompts:
+                    prompts,log = await replace_wildcards(prompts)
+                    if log:
+                        await bot.send(event, log, True)
+                if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
+                    bot.logger.info(f"reject text2img request: 权限不足")
+                    await bot.send(event,"无绘图功能使用权限",True)
+                    return
+                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
 
-            # 获取图片路径
-            path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
-            bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
-            prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
-            UserGet.pop(event.sender.user_id)
+                # 获取图片路径
+                path = f"data/pictures/cache/{random_str()}.png"
+                img_url = await get_img(event.processed_message, bot, event)
+                bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
+                prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
+                UserGet.pop(event.sender.user_id)
+                if turn>config.settings["ai绘画"]["sd队列长度限制"] and event.user_id!=config.basic_config["master"]["id"]:
+                        await bot.send(event,"服务端任务队列已满，稍后再试")
+                        return 
 
-            try:
-                args = sd_re_args.get(event.sender.user_id, {})
-                b64_in = await url_to_base64(img_url)
+                try:
+                    args = sd_re_args.get(event.sender.user_id, {})
+                    b64_in = await url_to_base64(img_url)
 
-                await bot.send(event, f"开始重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
-                turn += 1
-                # 将 UserGet[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
-                p = await SdreDraw(prompts_str, path, config, event.group_id, b64_in, args)
-                if p == False:
-                    turn -= 1
-                    bot.logger.info("色图已屏蔽")
-                    await bot.send(event, "杂鱼，色图不给你喵~", True)
-                elif p.startswith("审核api"):
-                    turn -= 1
-                    bot.logger.info(p)
-                    await bot.send(event, p, True)
-                else:
-                    turn -= 1
-                    await bot.send(event, [Text("sd重绘结果"),Image(file=p)], True)
-            except Exception as e:
-                bot.logger.error(f"重绘失败: {e}")
-                await bot.send(event, f"sd api重绘失败。{e}", True)
+                    await bot.send(event, f"开始重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
+                    turn += 1
+                    # 将 UserGet[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
+                    p = await SdreDraw(prompts_str, path, config, event.group_id, b64_in, args)
+                    if p == False:
+                        turn -= 1
+                        bot.logger.info("色图已屏蔽")
+                        await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    elif p.startswith("审核api"):
+                        turn -= 1
+                        bot.logger.info(p)
+                        await bot.send(event, p, True)
+                    else:
+                        turn -= 1
+                        await bot.send(event, [Text("sd重绘结果"),Image(file=p)], True)
+                except Exception as e:
+                    bot.logger.error(f"重绘失败: {e}")
+                    await bot.send(event, f"sd api重绘失败。{e}", True)
 
     @bot.on(GroupMessageEvent)
     async def AiSdDraw(event):
@@ -620,113 +674,115 @@ def main(bot,config):
     async def n4reDrawRun(event):
         global n4re
 
-        if event.get('image') == None and (
-                str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ")):
-            prompt = str(event.pure_text).replace("n4re", "").strip()
-            n4re[event.sender.user_id] = [prompt]
-            await bot.send(event, "请发送要重绘的图片")
-
-        # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
-            if (str(event.pure_text).startswith("n4re")) and event.get('image'):
+        if (str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ")):
+            if await get_img(event.processed_message, bot, event) == False:
                 prompt = str(event.pure_text).replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
+                await bot.send(event, "请发送要重绘的图片")
 
-            # 日志记录
-            prompts = ', '.join(n4re[event.sender.user_id])
-            if prompts:
-                prompts,log = await replace_wildcards(prompts)
-                if log:
-                    await bot.send(event, log, True)
-            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n4re指令 prompt: {prompts}")
+        # 处理图片和重绘命令
+        if (str(event.pure_text).startswith("n4re") or event.sender.user_id in n4re):
+            if await get_img(event.processed_message, bot, event):
+                if (str(event.pure_text).startswith("n4re")):
+                    prompt = str(event.pure_text).replace("n4re", "").strip()
+                    n4re[event.sender.user_id] = [prompt]
 
-            # 获取图片路径
-            path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
-            bot.logger.info(f"发起n4re请求，path:{path}|prompt:{prompts}")
-            prompts_str = ' '.join(n4re[event.sender.user_id]) + ' '
-            await bot.send(event, "正在nai4重绘",True)
-            n4re.pop(event.sender.user_id)
+                # 日志记录
+                prompts = ', '.join(n4re[event.sender.user_id])
+                if prompts:
+                    prompts,log = await replace_wildcards(prompts)
+                    if log:
+                        await bot.send(event, log, True)
+                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n4re指令 prompt: {prompts}")
 
-            async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
-                try:
-                    args = sd_re_args.get(event.sender.user_id, {})
-                    b64_in = await url_to_base64(img_url)
-                    # 将 n4re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
-                    p = await n4re0(prompts_str, path, event.group_id, config, b64_in, args)
-                    if p == False:
-                        bot.logger.info("色图已屏蔽")
-                        await bot.send(event, "杂鱼，色图不给你喵~", True)
-                    elif p.startswith("审核api"):
-                        bot.logger.info(p)
-                        await bot.send(event, p, True)
-                    else:
-                        await bot.send(event, [Text("nai4重绘结果"),Image(file=p)], True)
-                except Exception as e:
-                    bot.logger.error(e)
-                    if retries_left > 0:
-                        bot.logger.error(f"尝试重新请求nai4re，剩余尝试次数：{retries_left - 1}")
-                        await attempt_draw(retries_left - 1)
-                    else:
-                        await bot.send(event, f"nai4重绘失败。{e}", True)
+                # 获取图片路径
+                path = f"data/pictures/cache/{random_str()}.png"
+                img_url = await get_img(event.processed_message, bot, event)
+                bot.logger.info(f"发起n4re请求，path:{path}|prompt:{prompts}")
+                prompts_str = ' '.join(n4re[event.sender.user_id]) + ' '
+                await bot.send(event, "正在nai4重绘",True)
+                n4re.pop(event.sender.user_id)
 
-            await attempt_draw()
+                async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+                    try:
+                        args = sd_re_args.get(event.sender.user_id, {})
+                        b64_in = await url_to_base64(img_url)
+                        # 将 n4re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
+                        p = await n4re0(prompts_str, path, event.group_id, config, b64_in, args)
+                        if p == False:
+                            bot.logger.info("色图已屏蔽")
+                            await bot.send(event, "杂鱼，色图不给你喵~", True)
+                        elif p.startswith("审核api"):
+                            bot.logger.info(p)
+                            await bot.send(event, p, True)
+                        else:
+                            await bot.send(event, [Text("nai4重绘结果"),Image(file=p)], True)
+                    except Exception as e:
+                        bot.logger.error(e)
+                        if retries_left > 0:
+                            bot.logger.error(f"尝试重新请求nai4re，剩余尝试次数：{retries_left - 1}")
+                            await attempt_draw(retries_left - 1)
+                        else:
+                            await bot.send(event, f"nai4重绘失败。{e}", True)
+
+                await attempt_draw()
 
     @bot.on(GroupMessageEvent)
     async def n3reDrawRun(event):
         global n3re
 
-        if event.get('image') == None and (
-                str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ")):
-            prompt = str(event.pure_text).replace("n3re", "").strip()
-            n3re[event.sender.user_id] = [prompt]
-            await bot.send(event, "请发送要重绘的图片")
-
-        # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
-            if (str(event.pure_text).startswith("n3re")) and event.get('image'):
+        if (str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ")):
+            if await get_img(event.processed_message, bot, event) == False:
                 prompt = str(event.pure_text).replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
+                await bot.send(event, "请发送要重绘的图片")
 
-            # 日志记录
-            prompts = ', '.join(n3re[event.sender.user_id])
-            if prompts:
-                prompts,log = await replace_wildcards(prompts)
-                if log:
-                    await bot.send(event, log, True)
-            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n3re指令 prompt: {prompts}")
+        # 处理图片和重绘命令
+        if (str(event.pure_text).startswith("n3re") or event.sender.user_id in n3re):
+            if await get_img(event.processed_message, bot, event):
+                if (str(event.pure_text).startswith("n3re")):
+                    prompt = str(event.pure_text).replace("n3re", "").strip()
+                    n3re[event.sender.user_id] = [prompt]
 
-            # 获取图片路径
-            path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
-            bot.logger.info(f"发起n3re请求，path:{path}|prompt:{prompts}")
-            prompts_str = ' '.join(n3re[event.sender.user_id]) + ' '
-            await bot.send(event, "正在nai3重绘",True)
-            n3re.pop(event.sender.user_id)
+                # 日志记录
+                prompts = ', '.join(n3re[event.sender.user_id])
+                if prompts:
+                    prompts,log = await replace_wildcards(prompts)
+                    if log:
+                        await bot.send(event, log, True)
+                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n3re指令 prompt: {prompts}")
 
-            async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
-                try:
-                    args = sd_re_args.get(event.sender.user_id, {})
-                    b64_in = await url_to_base64(img_url)
-                    # 将 n3re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
-                    p = await n3re0(prompts_str, path, event.group_id, config, b64_in, args)
-                    if p == False:
-                        bot.logger.info("色图已屏蔽")
-                        await bot.send(event, "杂鱼，色图不给你喵~", True)
-                    elif p.startswith("审核api"):
-                        bot.logger.info(p)
-                        await bot.send(event, p, True)
-                    else:
-                        await bot.send(event, [Text("nai3重绘结果"),Image(file=p)], True)
-                except Exception as e:
-                    bot.logger.error(e)
-                    if retries_left > 0:
-                        bot.logger.error(f"尝试重新请求nai3re，剩余尝试次数：{retries_left - 1}")
-                        await attempt_draw(retries_left - 1)
-                    else:
-                        await bot.send(event, f"nai3重绘失败。{e}", True)
+                # 获取图片路径
+                path = f"data/pictures/cache/{random_str()}.png"
+                img_url = await get_img(event.processed_message, bot, event)
+                bot.logger.info(f"发起n3re请求，path:{path}|prompt:{prompts}")
+                prompts_str = ' '.join(n3re[event.sender.user_id]) + ' '
+                await bot.send(event, "正在nai3重绘",True)
+                n3re.pop(event.sender.user_id)
 
-            await attempt_draw()
+                async def attempt_draw(retries_left=50):  # 这里是递归请求的次数
+                    try:
+                        args = sd_re_args.get(event.sender.user_id, {})
+                        b64_in = await url_to_base64(img_url)
+                        # 将 n3re[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
+                        p = await n3re0(prompts_str, path, event.group_id, config, b64_in, args)
+                        if p == False:
+                            bot.logger.info("色图已屏蔽")
+                            await bot.send(event, "杂鱼，色图不给你喵~", True)
+                        elif p.startswith("审核api"):
+                            bot.logger.info(p)
+                            await bot.send(event, p, True)
+                        else:
+                            await bot.send(event, [Text("nai3重绘结果"),Image(file=p)], True)
+                    except Exception as e:
+                        bot.logger.error(e)
+                        if retries_left > 0:
+                            bot.logger.error(f"尝试重新请求nai3re，剩余尝试次数：{retries_left - 1}")
+                            await attempt_draw(retries_left - 1)
+                        else:
+                            await bot.send(event, f"nai3重绘失败。{e}", True)
+
+                await attempt_draw()
 
     @bot.on(GroupMessageEvent)
     async def sdmaskDrawRun(event):
@@ -734,81 +790,61 @@ def main(bot,config):
         global turn
         global mask
 
-        if event.get('image') == None and (
-                str(event.pure_text) == ("局部重绘") or str(event.pure_text).startswith("局部重绘 ")):
-            prompt = str(event.pure_text).replace("局部重绘 ", "").strip()
-            UserGetm[event.sender.user_id] = prompt  # 直接将值设置为字符串
-            await bot.send(event, "请发送要局部重绘的图片")
-
+        if str(event.pure_text) == ("局部重绘") or str(event.pure_text).startswith("局部重绘 "):
+            if await get_img(event.processed_message, bot, event) == False:
+                prompt = str(event.pure_text).replace("局部重绘 ", "").replace("局部重绘", "").strip()
+                UserGetm[event.sender.user_id] = prompt  # 直接将值设置为字符串
+                await bot.send(event, "请发送要局部重绘的图片")
+                return
+            else:
+                prompt = str(event.pure_text).replace("局部重绘 ", "").replace("局部重绘", "").strip()
+                UserGetm[event.sender.user_id] = prompt
+                img_url = await get_img(event.processed_message, bot, event)
+                await bot.send(event, "请发送蒙版")
+                mask[event.sender.user_id] = img_url
+                return
+            
         # 处理图片和重绘命令
-        
-        if event.sender.user_id in UserGetm and event.get('image') and event.sender.user_id in mask:
-            path = f"data/pictures/cache/{random_str()}.png"
-            prompts = UserGetm[event.sender.user_id]  # 直接使用字符串
-            mask_url = event.get("image")[0]["url"]
-            img_url = mask[event.sender.user_id]  # 直接使用字符串
-            bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的局部重绘指令 prompt: {prompts}")
-            UserGetm.pop(event.sender.user_id)
-            mask.pop(event.sender.user_id)
+        if event.sender.user_id in UserGetm and event.sender.user_id not in mask:
+            if await get_img(event.processed_message, bot, event):
+                img_url = await get_img(event.processed_message, bot, event)
+                await bot.send(event, "请发送蒙版")
+                mask[event.sender.user_id] = img_url
+                return
 
-            try:
-                args = sd_re_args.get(event.sender.user_id, {})
-                b64_in = await url_to_base64(img_url)
-                mask_b64 = await url_to_base64(mask_url)
+        if event.sender.user_id in UserGetm and event.sender.user_id in mask:
+            if await get_img(event.processed_message, bot, event):
+                path = f"data/pictures/cache/{random_str()}.png"
+                prompts = UserGetm[event.sender.user_id]  # 直接使用字符串
+                mask_url = await get_img(event.processed_message, bot, event)
+                img_url = mask[event.sender.user_id]  # 直接使用字符串
+                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的局部重绘指令 prompt: {prompts}")
+                UserGetm.pop(event.sender.user_id)
+                mask.pop(event.sender.user_id)
 
-                await bot.send(event, f"开始局部重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
-                turn += 1
-                p = await SdmaskDraw(prompts, path, config, event.group_id, b64_in, args, mask_b64)
-                if p == False:
-                    turn -= 1
-                    bot.logger.info("色图已屏蔽")
-                    await bot.send(event, "杂鱼，色图不给你喵~", True)
-                elif p.startswith("审核api"):
-                    turn -= 1
-                    bot.logger.info(p)
-                    await bot.send(event, p, True)
-                else:
-                    turn -= 1
-                    await bot.send(event, [Text("sd局部重绘结果"),Image(file=p)], True)
-            except Exception as e:
-                bot.logger.error(f"局部重绘失败: {e}")
-                await bot.send(event, f"sd api局部重绘失败。{e}", True)
-            return
+                try:
+                    args = sd_re_args.get(event.sender.user_id, {})
+                    b64_in = await url_to_base64(img_url)
+                    mask_b64 = await url_to_base64(mask_url)
 
-        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.pure_text).startswith("局部重绘 ")) and event.get('image'):
-                prompts = str(event.pure_text).replace("局部重绘 ", "").strip()
-                UserGetm[event.sender.user_id] = prompts
-
-            prompts = UserGetm[event.sender.user_id]
-            # 日志记录
-            if prompts:
-                prompts, log = await replace_wildcards(prompts)
-                if log:
-                    await bot.send(event, log, True)
-                UserGetm[event.sender.user_id] = prompts  # 直接将值设置为字符串
-
-            img_url = event.get("image")[0]["url"]
-            await bot.send(event, "请发送蒙版")
-            mask[event.sender.user_id] = img_url  # 直接将值设置为字符串
-            return
-
-
-        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.pure_text).startswith("局部重绘")) and event.get('image'):
-                prompt = str(event.pure_text).replace("局部重绘", "").strip()
-
-            # 日志记录
-            prompts = ', '.join(UserGetm[event.sender.user_id])
-            prompts,log = await replace_wildcards(prompts)
-            if log:
-                await bot.send(event, log, True)
-            UserGetm[event.sender.user_id] = [prompt]
-
-            img_url = event.get("image")[0]["url"]
-            await bot.send(event, "请发送蒙版")
-            mask[event.sender.user_id] = [img_url]
-            return
+                    await bot.send(event, f"开始局部重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
+                    turn += 1
+                    p = await SdmaskDraw(prompts, path, config, event.group_id, b64_in, args, mask_b64)
+                    if p == False:
+                        turn -= 1
+                        bot.logger.info("色图已屏蔽")
+                        await bot.send(event, "杂鱼，色图不给你喵~", True)
+                    elif p.startswith("审核api"):
+                        turn -= 1
+                        bot.logger.info(p)
+                        await bot.send(event, p, True)
+                    else:
+                        turn -= 1
+                        await bot.send(event, [Text("sd局部重绘结果"),Image(file=p)], True)
+                except Exception as e:
+                    bot.logger.error(f"局部重绘失败: {e}")
+                    await bot.send(event, f"sd api局部重绘失败。{e}", True)
+                return
                 
     @bot.on(GroupMessageEvent)
     async def end_re(event):

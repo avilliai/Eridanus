@@ -1,6 +1,6 @@
 llm:
   model: default #选择使用的模型大类。default为自带免费模型，可选openai、gemini。
-  system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。注意，你需要在回复时避免使用markdown语法。"
+  system: "你现在是一只猫娘，你的名字是{bot_name}，我的名字是{用户}，是你的主人。注意，你需要在回复时避免使用markdown语法。" #修改后要用【/全切人设 0】(不要带括号，不要带艾特，在群里发)为所有人刷新。
   chara_file_name: 猫娘.txt   #system为""时生效 默认启动的人设文件名，在data/system/chara文件夹内(目前支持txt,json,酒馆角色卡(图片))
   func_calling: True  #开启函数调用功能
   表情包发送: true      #记录master发送的表情包并在回复时根据上下文发送。
