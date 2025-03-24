@@ -6,7 +6,9 @@ import traceback
 from asyncio import sleep
 
 import asyncio
-
+from developTools.message.message_components import Image, Text, Node
+from plugins.random_pic.random_anime import delete_files, get_random_dongfangproject,get_random_pic_1, get_vv_pic,get_wap,get_random_cat,get_deskphoto,get_request,functions,get_text_number,doro,chaijun
+from plugins.basic_plugin.get_sentence import get_en,get_common,get_news
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Record, Node, Text, Image, Music
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
