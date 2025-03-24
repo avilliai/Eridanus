@@ -5,6 +5,9 @@ import zipfile
 from bs4 import BeautifulSoup
 import io
 import base64
+from io import BytesIO
+import asyncio
+import math
 
 from .setu_moderate import pic_audit_standalone
 import ruamel.yaml
@@ -23,8 +26,16 @@ ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else Non
 if_save = aiDrawController.get("sd图片是否保存到生图端") if aiDrawController else False
 sd_w = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[0]) if aiDrawController else 1024
 sd_h = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[1]) if aiDrawController else 1536
-sdre_w = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[0]) if aiDrawController else 1064
-sdre_h = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[1]) if aiDrawController else 1064
+try:
+    resolution_str = aiDrawController.get("sd最大分辨率", "1600,1600") if aiDrawController else "1600,1600"
+    separator = next((s for s in [",", "*", "x"] if s in resolution_str), None)
+    if separator:
+        width, height = resolution_str.split(separator)
+        sd_max_size = int(width) * int(height)
+    else:
+        sd_max_size = int(resolution_str)
+except (ValueError, IndexError, TypeError):
+    sd_max_size = 1600 * 1600
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
 positives = '{},rating:general, best quality, very aesthetic, absurdres'
@@ -47,6 +58,84 @@ def check_censored(positive, censored_words):
         if word.lower() in words:
             return True
     return
+
+async def get_image_dimensions(base64_string):
+    try:
+        if ',' in base64_string:
+            base64_string = base64_string.split(',')[1]
+        image_bytes = base64.b64decode(base64_string)
+        image_buffer = BytesIO(image_bytes)
+        loop = asyncio.get_event_loop()
+        image = await loop.run_in_executor(None, Image.open, image_buffer)
+        width, height = image.size
+        image.close()
+        image_buffer.close()
+        
+        return width, height
+        
+    except Exception as e:
+        raise Exception(f"处理图像时发生错误: {str(e)}")
+    
+def process_image_dimensions(width, height, max_area=None, min_area=None, resolution_options=None, divisible_by=None, upscale_to_max=False):
+    """
+    参数:
+        width: 输入宽度
+        height: 输入高度
+        max_area: 最大面积（可选）
+        min_area: 最小面积（可选）
+        resolution_options: 分辨率选项元组（可选），如 ((1024,1024), (1024,1536), (1536,1024))
+        divisible_by: 输出尺寸必须能被此值整除（可选）
+        upscale_to_max: 如果面积小于max_area，是否放大到接近max_area（可选，默认为False）
+    返回:
+        width, height: 处理后的宽度和高度
+    """
+    try:
+        orig_width, orig_height = width, height
+        orig_ratio = orig_width / orig_height
+        
+        new_width, new_height = orig_width, orig_height
+        
+        curr_area = orig_width * orig_height
+        
+        if max_area is not None and curr_area > max_area:
+            scale = math.sqrt(max_area / curr_area)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+        
+        if min_area is not None and curr_area < min_area:
+            scale = math.sqrt(min_area / curr_area)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+        
+        elif max_area is not None and curr_area < max_area and upscale_to_max:
+            scale = math.sqrt(max_area / curr_area)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+                
+        elif resolution_options is not None:
+            best_match = None
+            min_diff = float('inf')
+            
+            for opt_width, opt_height in resolution_options:
+                opt_ratio = opt_width / opt_height
+                ratio_diff = abs(orig_ratio - opt_ratio)
+                
+                if ratio_diff < min_diff:
+                    min_diff = ratio_diff
+                    best_match = (opt_width, opt_height)
+                    
+            new_width, new_height = best_match
+        
+        if divisible_by is not None and divisible_by > 0:
+            new_width = (new_width // divisible_by) * divisible_by
+            new_height = (new_height // divisible_by) * divisible_by
+            new_width = max(new_width, divisible_by)
+            new_height = max(new_height, divisible_by)
+        
+        return new_width, new_height
+    
+    except Exception as e:
+        raise Exception(f"处理尺寸时发生错误: {str(e)}")
 
 async def n4(prompt, path, groupid, config, args):
     global round_nai
@@ -309,8 +398,10 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = int(args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
-    height = int(args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
+    super_width, super_height = await get_image_dimensions(b64_in)
+    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
     denoising_strength = float(
         args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
         if isinstance(args, dict) else 
@@ -331,10 +422,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         width = 1024
         height = 1536
     
-    if width > 1600:
-        width = 1600
-    if height > 1600:
-        height = 1600
+    width, height = process_image_dimensions(width, height, max_area=sd_max_size, divisible_by=8)
 
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
@@ -434,10 +522,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
         width = 1024
         height = 1536
     
-    if width > 1600:
-        width = 1600
-    if height > 1600:
-        height = 1600
+    width, height = process_image_dimensions(width, height, max_area=sd_max_size, divisible_by=8)
 
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
@@ -546,8 +631,10 @@ async def getcheckpoints(config):
 
 async def n4re0(prompt, path, groupid, config, b64_in, args):
     global round_nai
-    width = 1024
-    height = 1024
+    super_width, super_height = await get_image_dimensions(b64_in)
+    super_width, super_height = process_image_dimensions(super_width, super_height, resolution_options=((1024,1024), (1216,832), (832,1216)))
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
     args = args
     url = "https://image.novelai.net"
     denoising_strength = float(
@@ -692,8 +779,10 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
 
 async def n3re0(prompt, path, groupid, config, b64_in, args):
     global round_nai
-    width = 1024
-    height = 1024
+    super_width, super_height = await get_image_dimensions(b64_in)
+    super_width, super_height = process_image_dimensions(super_width, super_height, resolution_options=((1024,1024), (1216,832), (832,1216)))
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
     args = args
     url = "https://image.novelai.net"
     denoising_strength = float(
@@ -825,8 +914,10 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
-    width = int(args.get('w', sdre_w) if args.get('w', sdre_w) > 0 else sdre_w) if isinstance(args, dict) else sdre_w
-    height = int(args.get('h', sdre_h) if args.get('h', sdre_h) > 0 else sdre_h) if isinstance(args, dict) else sdre_h
+    super_width, super_height = await get_image_dimensions(b64_in)
+    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
     denoising_strength = float(
         args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
         if isinstance(args, dict) else 
@@ -847,10 +938,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         width = 1024
         height = 1536
     
-    if width > 1600:
-        width = 1600
-    if height > 1600:
-        height = 1600
+    width, height = process_image_dimensions(width, height, max_area=sd_max_size, divisible_by=8)
 
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)

@@ -512,6 +512,7 @@ def main(bot,config):
     async def sdreDrawRun(event):
         global UserGet
         global turn
+        user_info = await get_user(event.user_id)
 
         if await get_img(event.processed_message, bot, event) == False and (
                 str(event.pure_text) == ("重绘") or str(event.pure_text).startswith("重绘 ")):
