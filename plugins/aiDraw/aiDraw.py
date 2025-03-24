@@ -76,12 +76,13 @@ async def get_image_dimensions(base64_string):
     except Exception as e:
         raise Exception(f"处理图像时发生错误: {str(e)}")
     
-def process_image_dimensions(width, height, max_area=None, resolution_options=None, divisible_by=None, upscale_to_max=False):
+def process_image_dimensions(width, height, max_area=None, min_area=None, resolution_options=None, divisible_by=None, upscale_to_max=False):
     """
     参数:
         width: 输入宽度
         height: 输入高度
         max_area: 最大面积（可选）
+        min_area: 最小面积（可选）
         resolution_options: 分辨率选项元组（可选），如 ((1024,1024), (1024,1536), (1536,1024))
         divisible_by: 输出尺寸必须能被此值整除（可选）
         upscale_to_max: 如果面积小于max_area，是否放大到接近max_area（可选，默认为False）
@@ -94,16 +95,22 @@ def process_image_dimensions(width, height, max_area=None, resolution_options=No
         
         new_width, new_height = orig_width, orig_height
         
-        if max_area is not None:
-            curr_area = orig_width * orig_height
-            if curr_area > max_area:
-                scale = math.sqrt(max_area / curr_area)
-                new_width = int(orig_width * scale)
-                new_height = int(orig_height * scale)
-            elif curr_area < max_area and upscale_to_max:
-                scale = math.sqrt(max_area / curr_area)
-                new_width = int(orig_width * scale)
-                new_height = int(orig_height * scale)
+        curr_area = orig_width * orig_height
+        
+        if max_area is not None and curr_area > max_area:
+            scale = math.sqrt(max_area / curr_area)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+        
+        if min_area is not None and curr_area < min_area:
+            scale = math.sqrt(min_area / curr_area)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+        
+        elif max_area is not None and curr_area < max_area and upscale_to_max:
+            scale = math.sqrt(max_area / curr_area)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
                 
         elif resolution_options is not None:
             best_match = None
@@ -392,7 +399,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     super_width, super_height = await get_image_dimensions(b64_in)
-    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, divisible_by=8)
+    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
     width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
     height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
     denoising_strength = float(
@@ -908,7 +915,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     super_width, super_height = await get_image_dimensions(b64_in)
-    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, divisible_by=8)
+    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
     width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
     height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
     denoising_strength = float(
