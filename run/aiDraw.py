@@ -516,6 +516,10 @@ def main(bot,config):
         if await get_img(event.processed_message, bot, event) == False and (
                 str(event.pure_text) == ("重绘") or str(event.pure_text).startswith("重绘 ")):
             prompt = str(event.pure_text).replace("重绘", "").strip()
+            if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
+                bot.logger.info(f"reject text2img request: 权限不足")
+                await bot.send(event,"无绘图功能使用权限",True)
+                return
             UserGet[event.sender.user_id] = [prompt]
             await bot.send(event, "请发送要重绘的图片")
 
@@ -531,6 +535,10 @@ def main(bot,config):
                 prompts,log = await replace_wildcards(prompts)
                 if log:
                     await bot.send(event, log, True)
+            if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
+                bot.logger.info(f"reject text2img request: 权限不足")
+                await bot.send(event,"无绘图功能使用权限",True)
+                return
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
 
             # 获取图片路径
@@ -539,6 +547,9 @@ def main(bot,config):
             bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
             prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
             UserGet.pop(event.sender.user_id)
+            if turn>config.settings["ai绘画"]["sd队列长度限制"] and event.user_id!=config.basic_config["master"]["id"]:
+                    await bot.send(event,"服务端任务队列已满，稍后再试")
+                    return 
 
             try:
                 args = sd_re_args.get(event.sender.user_id, {})
