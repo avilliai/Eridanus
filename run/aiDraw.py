@@ -39,24 +39,26 @@ aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 
-async def get_img(precessed_message, bot, event):
-    for i in precessed_message:
-        if "image" in i or "mface" in i:
+async def get_img(processed_message, bot, event):
+    for item in processed_message:
+        if "image" in item or "mface" in item:
             try:
-                if "mface" in i:
-                    url=i["mface"]["url"]
+                if "mface" in item:
+                    url = item["mface"]["url"]
                 else:
-                    url=i["image"]["url"]
+                    url = item["image"]["url"]
                 return url
             except Exception as e:
-                bot.logger.warning(f"获取图片失败{e}")
-        elif "reply" in i:
+                bot.logger.warning(f"获取图片失败: {e}")
+                return False
+        elif "reply" in item:
             try:
-                event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+                event_obj = await bot.get_msg(int(event.get("reply")[0]["id"]))
                 message = await get_img(event_obj.processed_message, bot, event)
-                return message
+                if message:
+                    return message
             except Exception as e:
-                bot.logger.warning(f"引用消息解析失败:{e}")
+                bot.logger.warning(f"引用消息解析失败: {e}")
                 return False
     return False
 
