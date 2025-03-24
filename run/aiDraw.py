@@ -39,6 +39,28 @@ aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
 
+async def get_img(processed_message):
+    for i in precessed_message:
+        if "image" in i or "mface" in i:
+            try:
+                if "mface" in i:
+                    url=i["mface"]["url"]
+                else:
+                    url=i["image"]["url"]
+                return url
+            except Exception as e:
+                logger.warning(f"获取图片失败{e}")
+        elif "reply" in i:
+            try:
+                event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await get_img(event_obj.processed_message)
+                return message
+            except Exception as e:
+                logger.warning(f"引用消息解析失败:{e}")
+                return False
+        else:
+            return False
+
 async def call_text2img(bot, event, config, prompt):
     tag = prompt
 
@@ -248,8 +270,8 @@ def main(bot,config):
                     event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text")[0] == "ai图检测"):
                 await bot.send(event, "请发送要检测的图片")
                 ai_img_recognize[event.sender.user_id] = []
-            if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize) and event.get('image'):
-                img_url = event.get("image")[0]["url"]
+            if ("ai图检测" in str(event.pure_text) or event.sender.user_id in ai_img_recognize) and await get_img(event.processed_message):
+                img_url = await get_img(event.processed_message)
                 await call_aiArtModerate(bot, event, config, img_url)
                 ai_img_recognize.pop(event.sender.user_id)
         except Exception as e:
@@ -432,7 +454,7 @@ def main(bot,config):
             await bot.send(event, "请发送要识别的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("tag") or event.sender.user_id in tag_user) and event.get('image'):
+        if (str(event.pure_text).startswith("tag") or event.sender.user_id in tag_user) and await get_img(event.processed_message):
             if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
                 await bot.send(event, "未配置审核和反推api")
                 return
@@ -444,7 +466,7 @@ def main(bot,config):
 
             # 获取图片路径
             path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
+            img_url = await get_img(event.processed_message)
             bot.logger.info(f"发起反推tag请求，path:{path}")
             tag_user.pop(event.sender.user_id)
 
@@ -499,8 +521,8 @@ def main(bot,config):
             await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("重绘") or event.sender.user_id in UserGet) and event.get('image'):
-            if (str(event.pure_text).startswith("重绘")) and event.get('image'):
+        if (str(event.pure_text).startswith("重绘") or event.sender.user_id in UserGet) and await get_img(event.processed_message):
+            if (str(event.pure_text).startswith("重绘")) and await get_img(event.processed_message):
                 prompt = str(event.pure_text).replace("重绘", "").strip()
                 UserGet[event.sender.user_id] = [prompt]
 
@@ -514,7 +536,7 @@ def main(bot,config):
 
             # 获取图片路径
             path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
+            img_url = await get_img(event.processed_message)
             bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
             prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
             UserGet.pop(event.sender.user_id)
@@ -643,8 +665,8 @@ def main(bot,config):
             await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("n4re") or event.sender.user_id in n4re) and event.get('image'):
-            if (str(event.pure_text).startswith("n4re")) and event.get('image'):
+        if (str(event.pure_text).startswith("n4re") or event.sender.user_id in n4re) and await get_img(event.processed_message):
+            if (str(event.pure_text).startswith("n4re")) and await get_img(event.processed_message):
                 prompt = str(event.pure_text).replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
 
@@ -658,7 +680,7 @@ def main(bot,config):
 
             # 获取图片路径
             path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
+            img_url = await get_img(event.processed_message)
             bot.logger.info(f"发起n4re请求，path:{path}|prompt:{prompts}")
             prompts_str = ' '.join(n4re[event.sender.user_id]) + ' '
             await bot.send(event, "正在nai4重绘",True)
@@ -699,8 +721,8 @@ def main(bot,config):
             await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("n3re") or event.sender.user_id in n3re) and event.get('image'):
-            if (str(event.pure_text).startswith("n3re")) and event.get('image'):
+        if (str(event.pure_text).startswith("n3re") or event.sender.user_id in n3re) and await get_img(event.processed_message):
+            if (str(event.pure_text).startswith("n3re")) and await get_img(event.processed_message):
                 prompt = str(event.pure_text).replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
 
@@ -714,7 +736,7 @@ def main(bot,config):
 
             # 获取图片路径
             path = f"data/pictures/cache/{random_str()}.png"
-            img_url = event.get("image")[0]["url"]
+            img_url = await get_img(event.processed_message)
             bot.logger.info(f"发起n3re请求，path:{path}|prompt:{prompts}")
             prompts_str = ' '.join(n3re[event.sender.user_id]) + ' '
             await bot.send(event, "正在nai3重绘",True)
@@ -758,10 +780,10 @@ def main(bot,config):
 
         # 处理图片和重绘命令
         
-        if event.sender.user_id in UserGetm and event.get('image') and event.sender.user_id in mask:
+        if event.sender.user_id in UserGetm and await get_img(event.processed_message) and event.sender.user_id in mask:
             path = f"data/pictures/cache/{random_str()}.png"
             prompts = UserGetm[event.sender.user_id]  # 直接使用字符串
-            mask_url = event.get("image")[0]["url"]
+            mask_url = await get_img(event.processed_message)
             img_url = mask[event.sender.user_id]  # 直接使用字符串
             bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的局部重绘指令 prompt: {prompts}")
             UserGetm.pop(event.sender.user_id)
@@ -791,8 +813,8 @@ def main(bot,config):
                 await bot.send(event, f"sd api局部重绘失败。{e}", True)
             return
 
-        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.pure_text).startswith("局部重绘 ")) and event.get('image'):
+        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and await get_img(event.processed_message):
+            if (str(event.pure_text).startswith("局部重绘 ")) and await get_img(event.processed_message):
                 prompts = str(event.pure_text).replace("局部重绘 ", "").strip()
                 UserGetm[event.sender.user_id] = prompts
 
@@ -804,14 +826,14 @@ def main(bot,config):
                     await bot.send(event, log, True)
                 UserGetm[event.sender.user_id] = prompts  # 直接将值设置为字符串
 
-            img_url = event.get("image")[0]["url"]
+            img_url = await get_img(event.processed_message)
             await bot.send(event, "请发送蒙版")
             mask[event.sender.user_id] = img_url  # 直接将值设置为字符串
             return
 
 
-        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and event.get('image'):
-            if (str(event.pure_text).startswith("局部重绘")) and event.get('image'):
+        if (str(event.pure_text).startswith("局部重绘") or event.sender.user_id in UserGetm) and await get_img(event.processed_message):
+            if (str(event.pure_text).startswith("局部重绘")) and await get_img(event.processed_message):
                 prompt = str(event.pure_text).replace("局部重绘", "").strip()
 
             # 日志记录
@@ -821,7 +843,7 @@ def main(bot,config):
                 await bot.send(event, log, True)
             UserGetm[event.sender.user_id] = [prompt]
 
-            img_url = event.get("image")[0]["url"]
+            img_url = await get_img(event.processed_message)
             await bot.send(event, "请发送蒙版")
             mask[event.sender.user_id] = [img_url]
             return
