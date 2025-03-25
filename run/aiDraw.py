@@ -16,7 +16,7 @@ from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
-    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd
+    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
@@ -564,7 +564,7 @@ def main(bot,config):
                     await bot.send(event, f"开始重绘啦~sd前面排队{turn}人，请耐心等待喵~", True)
                     turn += 1
                     # 将 UserGet[event.sender.user_id] 列表中的内容和 positive_prompt 合并成一个字符串
-                    p = await SdreDraw(prompts_str, path, config, event.group_id, b64_in, args)
+                    p = await SdOutpaint(prompts_str, path, config, event.group_id, b64_in, args)
                     if p == False:
                         turn -= 1
                         bot.logger.info("色图已屏蔽")

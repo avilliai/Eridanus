@@ -84,6 +84,8 @@ ai绘画:
     - --nai-scheduler karras
     - --cfg 6.5
     - --nai-cfg 5
+    - --ns 5
+    - --nf 20
 抽象检测:
   奶龙检测: false
   奶龙撤回: true

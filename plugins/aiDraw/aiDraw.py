@@ -1,18 +1,20 @@
 import httpx
-
 import random
 import zipfile
 from bs4 import BeautifulSoup
 import io
 import base64
+import re
+import numpy as np
 from io import BytesIO
 import asyncio
+from PIL import ImageFilter
 import math
 
 from .setu_moderate import pic_audit_standalone
 import ruamel.yaml
 import json
-from PIL import Image
+from PIL import Image, ImageDraw
 from plugins.utils.utils import parse_arguments
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
@@ -1085,3 +1087,278 @@ async def skipsd(config):
     except httpx.HTTPError as e:
         print(f"请求失败: {e}")
         return None
+
+async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
+    """
+    使用纯 NumPy 分形噪声和内容感知插值优化扩图填充
+    prompt中含 --left 1145/--right 1145/--up 1145/--down 1145这种就会触发扩图
+    setre中的--d --ns --nf参数都会影响扩图的多样性
+    --ns默认是5,代表扩图初始区域与原图边缘的相似度,--nf默认是20,代表离原图边缘越远图像和原图边缘的差异度，两个都是数值越大差异越大
+    扩图算法的原理是根据边缘颜色对扩图区域进行延伸，然后利用原图边缘的轮廓信息进行插值填充，并附加噪声作为底图，最后经过蒙版后交给潜空间处理
+    扩图可以理解成是从局部重绘拓展而来
+    """
+    def extract_outpaint_params(prompt):
+        patterns = {
+            "left": r"--left\s*(\d*)",
+            "right": r"--right\s*(\d*)",
+            "up": r"--up\s*(\d*)",
+            "down": r"--down\s*(\d*)"
+        }
+        params = {"left": 0, "right": 0, "up": 0, "down": 0}
+        for direction, pattern in patterns.items():
+            match = re.search(pattern, prompt)
+            if match:
+                params[direction] = int(match.group(1)) if match.group(1) else 0
+                prompt = re.sub(pattern, "", prompt).strip()
+        return params, prompt
+
+    outpaint_params, cleaned_prompt = extract_outpaint_params(prompt)
+
+    if all(value == 0 for value in outpaint_params.values()):
+        return await SdreDraw(cleaned_prompt, path, config, groupid, b64_in, args)
+
+    global round_sd
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    OVERMASK = 64
+
+    orig_width, orig_height = await get_image_dimensions(b64_in)
+    canvas_width = orig_width + outpaint_params["left"] + outpaint_params["right"]
+    canvas_height = orig_height + outpaint_params["up"] + outpaint_params["down"]
+
+    # 参数配置
+    denoising_strength = float(args.get('d', 0.75) if isinstance(args, dict) else 0.75)
+    steps = min(int(args.get('steps', 15) if isinstance(args, dict) else 15), 35)
+    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
+    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive, _ = await replace_wildcards(positive)
+    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', 6.5) if isinstance(args, dict) else 6.5)
+    noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns', 5)) if isinstance(default_args, dict) else 5
+    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 15)) if isinstance(default_args, dict) else 20
+    
+    if groupid in no_nsfw_groups and check_censored(positive, censored_words):
+        return False
+
+    # 初始化画布
+    canvas = Image.new("RGBA", (canvas_width, canvas_height), (0, 0, 0, 0))
+    with Image.open(io.BytesIO(base64.b64decode(b64_in.split(',')[1] if ',' in b64_in else b64_in))) as img:
+        img = img.convert("RGBA")
+        offset_x = outpaint_params["left"]
+        offset_y = outpaint_params["up"]
+        canvas.paste(img, (offset_x, offset_y))
+
+    # 转换为 NumPy 数组
+    img_array = np.array(canvas, dtype=np.float32)
+    orig_region = img_array[offset_y:offset_y + orig_height, offset_x:offset_x + orig_width]
+
+    # 生成纯 NumPy 分形噪声
+    def generate_fractal_noise(shape, octaves=4, persistence=0.5):
+        noise_array = np.zeros(shape)
+        for octave in range(octaves):
+            freq = 2 ** octave
+            scale = persistence ** octave
+            # 生成基础噪声
+            noise_base = np.random.uniform(-1, 1, (shape[0] // freq + 1, shape[1] // freq + 1))
+            # 插值到目标尺寸
+            y = np.linspace(0, noise_base.shape[0] - 1, shape[0])
+            x = np.linspace(0, noise_base.shape[1] - 1, shape[1])
+            yv, xv = np.meshgrid(y, x, indexing='ij')
+            noise_interp = np.zeros(shape)
+            for i in range(shape[0]):
+                for j in range(shape[1]):
+                    y0, x0 = int(yv[i, j]), int(xv[i, j])
+                    y1, x1 = min(y0 + 1, noise_base.shape[0] - 1), min(x0 + 1, noise_base.shape[1] - 1)
+                    wy = yv[i, j] - y0
+                    wx = xv[i, j] - x0
+                    noise_interp[i, j] = (
+                        noise_base[y0, x0] * (1 - wy) * (1 - wx) +
+                        noise_base[y1, x0] * wy * (1 - wx) +
+                        noise_base[y0, x1] * (1 - wy) * wx +
+                        noise_base[y1, x1] * wy * wx
+                    )
+            noise_array += noise_interp * scale
+        # 归一化到 [0, 255]
+        noise_array = (noise_array - np.min(noise_array)) / (np.max(noise_array) - np.min(noise_array)) * 255
+        return noise_array
+
+    # 内容感知填充函数
+    def content_aware_fill(target_region, ref_region, direction, size):
+        h, w, _ = target_region.shape
+        noise_map = generate_fractal_noise((h, w))  # 生成噪声图
+        for y in range(h):
+            for x in range(w):
+                if direction == "left":
+                    dist = size - x - 1
+                    ref_x = 0
+                    ref_y = y
+                elif direction == "right":
+                    dist = x
+                    ref_x = -1
+                    ref_y = y
+                elif direction == "up":
+                    dist = size - y - 1
+                    ref_x = x
+                    ref_y = 0
+                else:  # down
+                    dist = y
+                    ref_x = x
+                    ref_y = -1
+                
+                # 插值颜色
+                base_color = ref_region[ref_y, ref_x]
+                fade_factor = dist / size
+                noise_scale = noise_start + noise_fact * fade_factor
+                noise_value = noise_map[y, x] * noise_scale / 255.0
+                
+                # 混合插值和噪声
+                target_region[y, x] = base_color * (1 - fade_factor) + noise_value * fade_factor
+                target_region[y, x] = np.clip(target_region[y, x] + np.random.normal(0, noise_scale, 4), 0, 255)
+
+    # 填充扩展区域
+    if outpaint_params["left"] > 0:
+        left_region = img_array[offset_y:offset_y + orig_height, :outpaint_params["left"]]
+        content_aware_fill(left_region, orig_region, "left", outpaint_params["left"])
+        img_array[offset_y:offset_y + orig_height, :outpaint_params["left"]] = left_region
+
+    if outpaint_params["right"] > 0:
+        right_region = img_array[offset_y:offset_y + orig_height, offset_x + orig_width:canvas_width]
+        content_aware_fill(right_region, orig_region, "right", outpaint_params["right"])
+        img_array[offset_y:offset_y + orig_height, offset_x + orig_width:canvas_width] = right_region
+
+    if outpaint_params["up"] > 0:
+        up_region = img_array[:outpaint_params["up"], offset_x:offset_x + orig_width]
+        content_aware_fill(up_region, orig_region, "up", outpaint_params["up"])
+        img_array[:outpaint_params["up"], offset_x:offset_x + orig_width] = up_region
+
+    if outpaint_params["down"] > 0:
+        down_region = img_array[offset_y + orig_height:canvas_height, offset_x:offset_x + orig_width]
+        content_aware_fill(down_region, orig_region, "down", outpaint_params["down"])
+        img_array[offset_y + orig_height:canvas_height, offset_x:offset_x + orig_width] = down_region
+
+    # 处理角落
+    def fill_corner(corner_region, ref_color, size_y, size_x, direction_y, direction_x):
+        noise_map = generate_fractal_noise((corner_region.shape[0], corner_region.shape[1]))
+        for y in range(corner_region.shape[0]):
+            for x in range(corner_region.shape[1]):
+                dist_y = y if direction_y == "down" else size_y - y - 1
+                dist_x = x if direction_x == "right" else size_x - x - 1
+                dist = max(dist_x, dist_y)
+                fade_factor = dist / max(size_x, size_y)
+                noise_scale = noise_start + noise_fact * fade_factor
+                noise_value = noise_map[y, x] * noise_scale / 255.0
+                corner_region[y, x] = ref_color * (1 - fade_factor) + noise_value * fade_factor
+                corner_region[y, x] = np.clip(corner_region[y, x] + np.random.normal(0, noise_scale, 4), 0, 255)
+
+    if outpaint_params["left"] > 0 and outpaint_params["up"] > 0:
+        corner = img_array[:outpaint_params["up"], :outpaint_params["left"]]
+        fill_corner(corner, orig_region[0, 0], outpaint_params["up"], outpaint_params["left"], "up", "left")
+        img_array[:outpaint_params["up"], :outpaint_params["left"]] = corner
+
+    if outpaint_params["left"] > 0 and outpaint_params["down"] > 0:
+        corner = img_array[offset_y + orig_height:canvas_height, :outpaint_params["left"]]
+        fill_corner(corner, orig_region[-1, 0], outpaint_params["down"], outpaint_params["left"], "down", "left")
+        img_array[offset_y + orig_height:canvas_height, :outpaint_params["left"]] = corner
+
+    if outpaint_params["right"] > 0 and outpaint_params["up"] > 0:
+        corner = img_array[:outpaint_params["up"], offset_x + orig_width:canvas_width]
+        fill_corner(corner, orig_region[0, -1], outpaint_params["up"], outpaint_params["right"], "up", "right")
+        img_array[:outpaint_params["up"], offset_x + orig_width:canvas_width] = corner
+
+    if outpaint_params["right"] > 0 and outpaint_params["down"] > 0:
+        corner = img_array[offset_y + orig_height:canvas_height, offset_x + orig_width:canvas_width]
+        fill_corner(corner, orig_region[-1, -1], outpaint_params["down"], outpaint_params["right"], "down", "right")
+        img_array[offset_y + orig_height:canvas_height, offset_x + orig_width:canvas_width] = corner
+
+    # 转换回图像
+    canvas = Image.fromarray(img_array.astype(np.uint8))
+    buffered = io.BytesIO()
+    canvas.save(buffered, format="PNG")
+    canvas_data = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    # 生成掩码
+    mask = Image.new("L", (canvas_width, canvas_height), 0)
+    draw = ImageDraw.Draw(mask)
+    if outpaint_params["left"] > 0:
+        draw.rectangle([0, 0, outpaint_params["left"] + OVERMASK, canvas_height], fill=255)
+    if outpaint_params["right"] > 0:
+        draw.rectangle([orig_width + outpaint_params["left"] - OVERMASK, 0, canvas_width, canvas_height], fill=255)
+    if outpaint_params["up"] > 0:
+        draw.rectangle([0, 0, canvas_width, outpaint_params["up"] + OVERMASK], fill=255)
+    if outpaint_params["down"] > 0:
+        draw.rectangle([0, orig_height + outpaint_params["up"] - OVERMASK, canvas_width, canvas_height], fill=255)
+    
+    buffered = io.BytesIO()
+    mask.save(buffered, format="PNG")
+    mask_data = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+    super_width, super_height = process_image_dimensions(canvas_width, canvas_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
+    super_width1 = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
+    super_height1 = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
+
+    payload = {
+        "init_images": [canvas_data],
+        "mask": mask_data,
+        "denoising_strength": denoising_strength,
+        "prompt": positive,
+        "negative_prompt": negative,
+        "width": super_width1,
+        "height": super_height1,
+        "steps": steps,
+        "cfg_scale": cfg,
+        "mask_blur": 8,
+        "inpainting_fill": 0,
+        "inpaint_full_res": True,
+        "sampler_name": sampler,
+        "enable_hr": "false",
+        "hr_scale": 1.5,
+        "hr_second_pass_steps": 15,
+        "hr_upscaler": "SwinIR_4x",
+        "seed": -1,
+        "batch_size": 1,
+        "n_iter": 1,
+        "save_images": if_save,
+        "restore_faces": False,
+        "tiling": False,
+        "scheduler": scheduler,
+        "clip_skip_steps": 2,
+        "override_settings": {
+            "CLIP_stop_at_last_layers": 2,
+            "sd_model_checkpoint": ckpt,
+        },
+        "override_settings_restore_afterwards": False,
+    }
+
+    headers = {"Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"}
+
+    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+        print("审核api未配置,为保证安全已禁止画图请求")
+        return "审核api未配置,为保证安全已禁止画图请求"
+
+    round_sd += 1
+    list_length = len(config.api["ai绘画"]["sdUrl"])
+    if round_sd >= list_length:
+        round_sd = 0
+
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
+    
+    r = response.json()
+    if 'images' not in r or len(r['images']) == 0:
+        return None
+
+    b64 = r['images'][0]
+
+    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+        try:
+            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            if check:
+                return False
+        except Exception as e:
+            print(f"审核api失效,为保证安全已禁止画图请求: {e}")
+            return f"审核api失效,为保证安全已禁止画图请求: {e}"
+
+    image = Image.open(io.BytesIO(base64.b64decode(b64)))
+    image.save(f'{path}')
+    return path
