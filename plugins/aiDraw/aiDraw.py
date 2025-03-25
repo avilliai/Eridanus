@@ -1330,8 +1330,6 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         "override_settings_restore_afterwards": False,
     }
 
-    headers = {"Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"}
-
     if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
@@ -1342,7 +1340,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         round_sd = 0
 
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
     
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
