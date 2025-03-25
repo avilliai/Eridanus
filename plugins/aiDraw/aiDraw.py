@@ -1087,7 +1087,7 @@ async def skipsd(config):
     except httpx.HTTPError as e:
         print(f"请求失败: {e}")
         return None
-
+    
 async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     """
     使用纯 NumPy 分形噪声和内容感知插值优化扩图填充
