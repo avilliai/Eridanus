@@ -1097,7 +1097,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     扩图算法的原理是根据边缘颜色对扩图区域进行延伸，然后利用原图边缘的轮廓信息进行插值填充，并附加噪声作为底图，最后经过蒙版后交给潜空间处理
     扩图可以理解成是从局部重绘拓展而来
     如果prompt中包含--full且处于扩图模式,直接将扩展后的图像调用SdreDraw进行全图重绘
-    --overmask参数代表扩图对原图的覆盖长度,默认0
+    --overmask参数代表扩图对原图的覆盖长度,默认64
     """
     def extract_outpaint_params(prompt):
         patterns = {
@@ -1125,7 +1125,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
-    OVERMASK = int(args.get('overmask', default_args.get('overmask', 0)) if isinstance(args, dict) else default_args.get('overmask', 0)) if isinstance(default_args, dict) else 0
+    OVERMASK = int(args.get('overmask', default_args.get('overmask', 64)) if isinstance(args, dict) else default_args.get('overmask', 64)) if isinstance(default_args, dict) else 64
 
     orig_width, orig_height = await get_image_dimensions(b64_in)
     canvas_width = orig_width + outpaint_params["left"] + outpaint_params["right"]
@@ -1142,7 +1142,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', 6.5) if isinstance(args, dict) else 6.5)
     noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns', 5)) if isinstance(default_args, dict) else 5
-    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 15)) if isinstance(default_args, dict) else 20
+    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 20)) if isinstance(default_args, dict) else 20
     
     if groupid in no_nsfw_groups and check_censored(positive, censored_words):
         return False
