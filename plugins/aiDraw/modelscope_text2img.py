@@ -4,7 +4,7 @@ import asyncio
 import json
 import random
 import time
-
+import re
 import httpx
 
 
@@ -41,14 +41,18 @@ def random_session_hash(random_length):
     # 给gradio一类的api用，生成随机session_hash,避免多任务撞车导致推理出错。这里偷懒套个娃（bushi
     return random_str(random_length, "abcdefghijklmnopqrstuvwxyz1234567890")
 
-#modelscopeTTS V3，对接原神崩铁语音合成器。API用法相较之前发生了变化，参考V2修改而成。
+#modelscope NoobXL绘图
 async def modelscope_drawer(prompt,proxy,args,negative=None,user_cookie=None):
     height = 1600
     width = 1064
+    #正则表达式
+    pattern = r'https://[^\s]+\.webp'
+    
     if proxy:
         proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
+
     # 随机session hash
     session_hash = random_session_hash(11)
     # 请求studio_token
@@ -141,10 +145,10 @@ async def modelscope_drawer(prompt,proxy,args,negative=None,user_cookie=None):
             async for line in event_stream_response.aiter_text():
                 event = line.replace("data:", "").strip()
                 if event:
-                    event_data = json.loads(event)
-                    print(event_data)
-                    if "output" in event_data:
-                        imgurl=event_data["output"]["data"][1]["value"]["url"]
+                    if "output" in event:
+                        #正则匹配URL
+                        matches = re.findall(pattern, event)
+                        imgurl=matches[0]
                         return imgurl
 
 
