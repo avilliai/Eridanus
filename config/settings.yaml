@@ -86,6 +86,7 @@ ai绘画:
     - --nai-cfg 5
     - --ns 5
     - --nf 20
+    - --overmask 64
 抽象检测:
   奶龙检测: false
   奶龙撤回: true

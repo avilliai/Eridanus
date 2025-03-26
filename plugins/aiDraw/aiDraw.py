@@ -1096,30 +1096,36 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     --ns默认是5,代表扩图初始区域与原图边缘的相似度,--nf默认是20,代表离原图边缘越远图像和原图边缘的差异度，两个都是数值越大差异越大
     扩图算法的原理是根据边缘颜色对扩图区域进行延伸，然后利用原图边缘的轮廓信息进行插值填充，并附加噪声作为底图，最后经过蒙版后交给潜空间处理
     扩图可以理解成是从局部重绘拓展而来
+    如果prompt中包含--full且处于扩图模式,直接将扩展后的图像调用SdreDraw进行全图重绘
+    --overmask参数代表扩图对原图的覆盖长度,默认64
     """
     def extract_outpaint_params(prompt):
         patterns = {
             "left": r"--left\s*(\d*)",
             "right": r"--right\s*(\d*)",
             "up": r"--up\s*(\d*)",
-            "down": r"--down\s*(\d*)"
+            "down": r"--down\s*(\d*)",
+            "full": r"--full"  # 新增对 --full 的检测
         }
-        params = {"left": 0, "right": 0, "up": 0, "down": 0}
+        params = {"left": 0, "right": 0, "up": 0, "down": 0, "full": False}
         for direction, pattern in patterns.items():
             match = re.search(pattern, prompt)
-            if match:
+            if direction == "full" and match:
+                params["full"] = True
+                prompt = re.sub(pattern, "", prompt).strip()
+            elif match and direction != "full":
                 params[direction] = int(match.group(1)) if match.group(1) else 0
                 prompt = re.sub(pattern, "", prompt).strip()
         return params, prompt
 
     outpaint_params, cleaned_prompt = extract_outpaint_params(prompt)
 
-    if all(value == 0 for value in outpaint_params.values()):
+    if all(value == 0 for value in list(outpaint_params.values())[:4]):  # 检查 left, right, up, down
         return await SdreDraw(cleaned_prompt, path, config, groupid, b64_in, args)
 
     global round_sd
     url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
-    OVERMASK = 64
+    OVERMASK = int(args.get('overmask', default_args.get('overmask', 64)) if isinstance(args, dict) else default_args.get('overmask', 64)) if isinstance(default_args, dict) else 64
 
     orig_width, orig_height = await get_image_dimensions(b64_in)
     canvas_width = orig_width + outpaint_params["left"] + outpaint_params["right"]
@@ -1130,13 +1136,13 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     steps = min(int(args.get('steps', 15) if isinstance(args, dict) else 15), 35)
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", cleaned_prompt) if isinstance(positive, str) else str(cleaned_prompt)
     positive, _ = await replace_wildcards(positive)
     sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', 6.5) if isinstance(args, dict) else 6.5)
     noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns', 5)) if isinstance(default_args, dict) else 5
-    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 15)) if isinstance(default_args, dict) else 20
+    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 20)) if isinstance(default_args, dict) else 20
     
     if groupid in no_nsfw_groups and check_censored(positive, censored_words):
         return False
@@ -1159,9 +1165,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         for octave in range(octaves):
             freq = 2 ** octave
             scale = persistence ** octave
-            # 生成基础噪声
             noise_base = np.random.uniform(-1, 1, (shape[0] // freq + 1, shape[1] // freq + 1))
-            # 插值到目标尺寸
             y = np.linspace(0, noise_base.shape[0] - 1, shape[0])
             x = np.linspace(0, noise_base.shape[1] - 1, shape[1])
             yv, xv = np.meshgrid(y, x, indexing='ij')
@@ -1179,14 +1183,13 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
                         noise_base[y1, x1] * wy * wx
                     )
             noise_array += noise_interp * scale
-        # 归一化到 [0, 255]
         noise_array = (noise_array - np.min(noise_array)) / (np.max(noise_array) - np.min(noise_array)) * 255
         return noise_array
 
     # 内容感知填充函数
     def content_aware_fill(target_region, ref_region, direction, size):
         h, w, _ = target_region.shape
-        noise_map = generate_fractal_noise((h, w))  # 生成噪声图
+        noise_map = generate_fractal_noise((h, w))
         for y in range(h):
             for x in range(w):
                 if direction == "left":
@@ -1205,14 +1208,10 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
                     dist = y
                     ref_x = x
                     ref_y = -1
-                
-                # 插值颜色
                 base_color = ref_region[ref_y, ref_x]
                 fade_factor = dist / size
                 noise_scale = noise_start + noise_fact * fade_factor
                 noise_value = noise_map[y, x] * noise_scale / 255.0
-                
-                # 混合插值和噪声
                 target_region[y, x] = base_color * (1 - fade_factor) + noise_value * fade_factor
                 target_region[y, x] = np.clip(target_region[y, x] + np.random.normal(0, noise_scale, 4), 0, 255)
 
@@ -1271,13 +1270,17 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         fill_corner(corner, orig_region[-1, -1], outpaint_params["down"], outpaint_params["right"], "down", "right")
         img_array[offset_y + orig_height:canvas_height, offset_x + orig_width:canvas_width] = corner
 
-    # 转换回图像
+    # 转换回图像并编码为 Base64
     canvas = Image.fromarray(img_array.astype(np.uint8))
     buffered = io.BytesIO()
     canvas.save(buffered, format="PNG")
     canvas_data = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    # 生成掩码
+    # 如果有 --full，直接调用 SdreDraw 处理扩展后的图像
+    if outpaint_params["full"]:
+        return await SdreDraw(cleaned_prompt, path, config, groupid, canvas_data, args)
+
+    # 生成蒙版（仅在非 --full 模式下执行）
     mask = Image.new("L", (canvas_width, canvas_height), 0)
     draw = ImageDraw.Draw(mask)
     if outpaint_params["left"] > 0:
