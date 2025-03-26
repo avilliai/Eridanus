@@ -456,12 +456,12 @@ def main(bot,config):
                 await bot.send(event, "请发送要识别的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("tag") or event.sender.user_id in tag_user):
+        if (str(event.pure_text) == ("tag") or event.sender.user_id in tag_user):
             if await get_img(event.processed_message, bot, event):
                 if config.api['ai绘画']['sd审核和反推api'] == "" or config.api['ai绘画']['sd审核和反推api'] == None:
                     await bot.send(event, "未配置审核和反推api")
                     return
-                if (str(event.pure_text).startswith("tag")):
+                if (str(event.pure_text) == ("tag")):
                     tag_user[event.sender.user_id] = []
 
                 # 日志记录
@@ -518,9 +518,9 @@ def main(bot,config):
         global turn
         user_info = await get_user(event.user_id)
 
-        if ((event.pure_text) == ("重绘") or str(event.pure_text).startswith("重绘 ")):
+        if ((event.pure_text) == ("重绘") or (event.pure_text).startswith("重绘 ")):
             if await get_img(event.processed_message, bot, event) == False:
-                prompt = str(event.pure_text).replace("重绘", "").strip()
+                prompt = str(event.pure_text).replace("重绘 ", "").replace("重绘", "").strip()
                 if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
                     bot.logger.info(f"reject text2img request: 权限不足")
                     await bot.send(event,"无绘图功能使用权限",True)
@@ -529,10 +529,10 @@ def main(bot,config):
                 await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("重绘") or event.sender.user_id in UserGet):
+        if ((event.pure_text) == ("重绘") or (event.pure_text).startswith("重绘 ") or event.sender.user_id in UserGet):
             if await get_img(event.processed_message, bot, event):
                 if (str(event.pure_text).startswith("重绘")):
-                    prompt = str(event.pure_text).replace("重绘", "").strip()
+                    prompt = str(event.pure_text).replace("重绘 ", "").replace("重绘", "").strip()
                     UserGet[event.sender.user_id] = [prompt]
 
                 # 日志记录
@@ -676,15 +676,15 @@ def main(bot,config):
 
         if (str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ")):
             if await get_img(event.processed_message, bot, event) == False:
-                prompt = str(event.pure_text).replace("n4re", "").strip()
+                prompt = str(event.pure_text).replace("n4re ", "").replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("n4re") or event.sender.user_id in n4re):
+        if (str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ") or event.sender.user_id in n4re):
             if await get_img(event.processed_message, bot, event):
                 if (str(event.pure_text).startswith("n4re")):
-                    prompt = str(event.pure_text).replace("n4re", "").strip()
+                    prompt = str(event.pure_text).replace("n4re ", "").replace("n4re", "").strip()
                     n4re[event.sender.user_id] = [prompt]
 
                 # 日志记录
@@ -733,15 +733,15 @@ def main(bot,config):
 
         if (str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ")):
             if await get_img(event.processed_message, bot, event) == False:
-                prompt = str(event.pure_text).replace("n3re", "").strip()
+                prompt = str(event.pure_text).replace("n3re ", "").replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
 
         # 处理图片和重绘命令
-        if (str(event.pure_text).startswith("n3re") or event.sender.user_id in n3re):
+        if (str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ") or event.sender.user_id in n3re):
             if await get_img(event.processed_message, bot, event):
                 if (str(event.pure_text).startswith("n3re")):
-                    prompt = str(event.pure_text).replace("n3re", "").strip()
+                    prompt = str(event.pure_text).replace("n3re ", "").replace("n3re", "").strip()
                     n3re[event.sender.user_id] = [prompt]
 
                 # 日志记录
