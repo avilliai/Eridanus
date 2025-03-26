@@ -1133,14 +1133,14 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     # 参数配置
     denoising_strength = float(args.get('d', 0.75) if isinstance(args, dict) else 0.75)
-    steps = min(int(args.get('steps', 15) if isinstance(args, dict) else 15), 35)
+    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
     positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
     negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", cleaned_prompt) if isinstance(positive, str) else str(cleaned_prompt)
     positive, _ = await replace_wildcards(positive)
     sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
-    cfg = float(args.get('cfg', 6.5) if isinstance(args, dict) else 6.5)
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
     noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns', 5)) if isinstance(default_args, dict) else 5
     noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 20)) if isinstance(default_args, dict) else 20
     
