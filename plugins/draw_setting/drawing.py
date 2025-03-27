@@ -1,10 +1,19 @@
+import asyncio
 import random
 import ssl
 from PIL import Image as iMG
 import httpx
+from asyncio import Lock
 from urllib import request
 import json
 import os
+from developTools.message.message_components import Image, Text
+from plugins.random_pic.random_anime import get_text_number
+base_model = {"has":'hassakuXLIllustrious_v21.safetensors',"jru":'jruTheJourneyRemains_v27.safetensors',"obs":'obsessionIllustrious_vPredV11.safetensors',
+              "waiN":'waiNSFWIllustrious_v120.safetensors',"waiS":'waiSHUFFLENOOB_vPred20.safetensors',"mis":'mistoonAnimeNoobai.CS46.safetensors',
+              "alc":'alchemix20illustrious.lAYX.safetensors',"any":'AnythingXL_xl.safetensors'}
+random_model = random.choice(list(base_model.values()))
+model_list = ", ".join(f"{k}: {v}" for k, v in base_model.items())
 prompt_text ='''
 {
   "3": {
@@ -164,7 +173,7 @@ prompt_text ='''
   },
   "17": {
     "inputs": {
-      "model": "wd-vit-tagger-v3",
+      "model": "wd-eva02-large-tagger-v3",
       "threshold": 0.35,
       "character_threshold": 0.85,
       "replace_underscore": true,
@@ -226,8 +235,9 @@ input_path = 'C:/Users/29735/Desktop/project/ComfyUI_windows_portable/ComfyUI/in
 output_path = 'C:/Users/29735/Desktop/project/ComfyUI_windows_portable/ComfyUI/output'
 def get_prompt():
     prompt = json.loads(prompt_text)
-    prompt["3"]["inputs"]["seed"] = random.randint(1,999999999999999)
+    #prompt["17"]["inputs"]["tags"] += (','+random.randint(1,999999999999999))
     return prompt,input_path,output_path
+
 def delete_files(directory):
     file_list = os.listdir(directory)
     for file in file_list:
@@ -275,3 +285,58 @@ async def download_image(url, output_file):
     await extract_first_frame(output_file, output_file)
     width, height = iMG.open(output_file).size
     return width, height
+
+async def draw(bot,config,draw_waiting_queue,draw_group_id,prompt,lock=Lock()):
+  async with lock:
+    info = await draw_waiting_queue.get()
+    group_id = await draw_group_id.get()
+    txt = info.get(Text)[0].text
+    numbers = await get_text_number(bot,config,txt)
+    lst = []
+    if 'random' in txt:
+      prompt["4"]["inputs"]["ckpt_name"] = random_model
+    #绘画模式
+    if txt.startswith('draw'):
+      text = txt.split('-')[2]
+      prompt["6"]["inputs"]["text"] = text + ',' + str(random.randint(1,999999999999999))
+    #重画模式
+    if txt.startswith('重画'):
+      prompt["6"]["inputs"]["text"] =  ["17",0]
+      image_url = info.get(Image)[0].url
+      image_name = image_url.split('/')[-1][-25:]+'.png'
+      image_path = os.path.join(input_path, image_name)
+      lst = [Text('原图：'),Image(file=image_path)]
+      width, height = await download_image(image_url, image_path)
+      #height, width = cv2.imread(image_path+'.png').shape[:2]
+      if 1028< height < 1600:
+        prompt["5"]["inputs"]["height"] = height
+      if 760< width < 1152:
+        prompt["5"]["inputs"]["width"] = width
+      prompt["16"]["inputs"]["image"] = image_name
+    if prompt["4"]["inputs"]["ckpt_name"] == base_model['mis'] or prompt["4"]["inputs"]["ckpt_name"] == base_model['any']:
+      prompt["5"]["inputs"]["height"] = 1000
+      prompt["5"]["inputs"]["width"] = 896
+    bot.logger.info("画图!")            
+    #prompt["4"]["inputs"]["ckpt_name"] = random_model
+    prompt["5"]["inputs"]["batch_size"] = numbers
+    prompt["3"]["inputs"]["seed"] = random.randint(1,999999999999999)
+    #delete_files(output_path)
+    prompt["17"]["inputs"]["tags"] += str(random.randint(1,999999999999999))
+    get_images(prompt)
+    file_list = os.listdir(output_path)
+    ori_file_len = len(file_list)
+    while len(file_list) < ori_file_len + numbers:
+        await asyncio.sleep(0.85)
+        file_list = os.listdir(output_path)
+    asyncio.sleep(0.05)
+    for file in file_list[-1:-numbers-1:-1]:
+        if file.endswith('.png'):
+          img_path = os.path.join(output_path, file)
+          lst.append(Image(file=img_path))
+    bot.logger.info('start sending')
+    #await bot.send_group_message(group_id,Node(content=lst))
+  return lst
+
+async def get_model_list(prompt,model_list=model_list):
+    info = '模型列表：\n'+model_list+'当前模型：'+prompt["4"]["inputs"]["ckpt_name"]+'\n切换模型请按模式：模型切换 模型名(key)'
+    return info, base_model
