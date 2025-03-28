@@ -5,7 +5,7 @@ download:
   Obfuscation: gif
   gifcompress: false
   image:
-    suffix: .png
+    suffix: .jpg
   threading:
     image: 3
     photo: 1
