@@ -282,7 +282,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def collection_draw(event):
         if str(event.pure_text).startswith("画 "):
-            prompt = str(event.pure_text).split("画 ")[1]
+            prompt = str(event.pure_text).replace("画 ", "")
             await call_text2img(bot, event, config, prompt)
 
     
