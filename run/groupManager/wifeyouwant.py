@@ -14,15 +14,57 @@ from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import update_user, add_user, get_user
 from plugins.game_plugin.galgame import get_game_image
 from plugins.game_plugin.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker,\
-    run_async_task,daily_task,today_check_api,query_group_users
+    run_async_task,daily_task,today_check_api,query_group_users,add_or_update_user_collect
 from datetime import datetime
 from asyncio import sleep
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import time
 from urllib.parse import urlparse
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
+from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
+import threading
+
+def queue_check_wait(bot,config):
+    global url_activate,queue_check
+    url_activate=False
+    @bot.on(LifecycleMetaEvent)
+    async def _(event):
+        global url_activate
+        if not url_activate:
+            url_activate=True
+
+            loop = asyncio.get_running_loop()
+            while True:
+                #bot.logger.info("开始写入")
+                try:
+                    with ThreadPoolExecutor() as executor:
+                        await loop.run_in_executor(executor, asyncio.run,queue_check_wait_make(bot,config))
+                    #await check_bili_dynamic(bot,config)
+                except Exception as e:
+                    bot.logger.error(f'wife_you_want数据库出错，可以考虑关掉热门群友以解决此报错：{e}')
+                await asyncio.sleep(600)  #哈哈
+        else:
+            pass
+            bot.logger.error(f'上一次写入时长过长，请酌情考虑')
 
 
+async def queue_check_wait_make(bot,config):
+    #print("LifecycleMetaEvent")
+    global queue_check
+    queue_check_make = []
+    while queue_check:
+        #print('queue_check', queue_check)
+        from_id, target_group, target_team, value = queue_check.popleft()
+        if target_team == 'group_owner_record':
+            queue_check_make.append((from_id, target_group, f'{datetime.now().year}_{datetime.now().month}_{datetime.now().day}', value))
+        queue_check_make.append((from_id, target_group, target_team, value))
+
+    if queue_check_make:
+        await add_or_update_user_collect(queue_check_make)
+        #await manage_group_status(from_id, target_group, target_team, value)
+        #print(f"Updated {from_id}, {target_group},  {target_team} to {value}")
 
 def main(bot,config):
     global last_messages
@@ -38,6 +80,12 @@ def main(bot,config):
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=0))
     scheduler.start()
     today_wife_api,header = config.api["today_wife"]["api"],config.api["today_wife"]["header"]
+    global queue_check
+    queue_check = deque()
+
+    threading.Thread(target=queue_check_wait(bot, config), daemon=True).start()
+
+
 
     @bot.on(GroupMessageEvent)
     async def today_wife(event: GroupMessageEvent):
@@ -182,6 +230,8 @@ def main(bot,config):
                 else:
                     await bot.send(event,'技能冷却ing')
                     bot.logger.info('检测到有人过于勤奋的🦌，跳过')
+                    if membercheck_id in membercheck:
+                        membercheck.pop(membercheck_id)
                     return
             else:
                 membercheck[membercheck_id] = 1
@@ -201,7 +251,7 @@ def main(bot,config):
                     if context_check != '🦌':
                         membercheck.pop(membercheck_id)
                         return
-            flag = random.randint(0, 50)
+            flag = random.randint(0, 100)
             if flag <= 8:
                 await bot.send(event, lu_recall[random.randint(0, len(lu_recall) - 1)])
                 membercheck.pop(membercheck_id)
@@ -212,7 +262,7 @@ def main(bot,config):
                 await bot.send(event, [At(qq=target_id), f' 是个好孩子，才不会给你呢~'])
                 membercheck.pop(membercheck_id)
                 return
-
+            #print('检测是否有贞操锁')
             for context_check in context:
                 if context_check =='🦌':
                     times_add +=1
@@ -223,19 +273,22 @@ def main(bot,config):
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
             await manage_group_status(current_day, current_year_month, target_id,1)
-
+            #print('设置🦌状态')
             times=await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id,times+times_add)
+            #print('设置🦌次数')
+            bot.logger.info(f'进入图片制作')
+            img_url=await PIL_lu_maker(current_date, target_id)
 
-            if await PIL_lu_maker(current_date,target_id):
+            if img_url:
                 bot.logger.info('制作成功，开始发送~~')
                 if int(times + times_add) in {0,1} :
                     times_record = int(await manage_group_status('lu_record', f'lu_others', target_id)) + 1
                     await manage_group_status('lu_record', f'lu_others', target_id, times_record)
-                    recall_id = await bot.send(event,[At(qq=target_id), f' 今天🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                    recall_id = await bot.send(event,[At(qq=target_id), f' 今天🦌了！', Image(file=img_url)])
                 else:
                     recall_id = await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+times_add}次！',
-                                           Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                                           Image(file=img_url)])
                 if config.api["today_wife"]["签🦌撤回"] is True:
                     await sleep(20)
                     await bot.recall(recall_id['data']['message_id'])
@@ -251,10 +304,10 @@ def main(bot,config):
             await manage_group_status(current_day, current_year_month, target_id,2)
             times = await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id, times + 1)
-
-            if await PIL_lu_maker(current_date,target_id):
+            img_url = await PIL_lu_maker(current_date, target_id)
+            if img_url:
                 bot.logger.info('制作成功，开始发送~~')
-                await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file=img_url)])
 
         elif '补🦌' == context:
             bot.logger.info('yes! 补🦌!!!!')
@@ -277,8 +330,9 @@ def main(bot,config):
                         if int(await manage_group_status(day, current_year_month, target_id)) not in {1,2}:
                             await manage_group_status(day, current_year_month, target_id, 1)
                             await manage_group_status('lu_record', f'lu_others', target_id,times_record-3)
-                            await PIL_lu_maker(current_date, target_id)
-                            await bot.send(event, [At(qq=target_id), f' 您已成功补🦌！', Image(file='data/pictures/wife_you_want_img/lulululu.png')])
+                            img_url = await PIL_lu_maker(current_date, target_id)
+
+                            await bot.send(event, [At(qq=target_id), f' 您已成功补🦌！', Image(file=img_url)])
                             break
             except Exception as e:
                 await bot.send(event, [At(qq=target_id), f' 补🦌失败了喵~'])
@@ -299,7 +353,7 @@ def main(bot,config):
                 membercheck.pop(membercheck_id)
 
         if membercheck_id in membercheck:
-            await sleep(10)
+            await sleep(5)
             if membercheck_id in membercheck:
                 membercheck.pop(membercheck_id)
 
@@ -374,6 +428,27 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def wife_you_want(event: GroupMessageEvent):
         async with (aiosqlite.connect("data/dataBase/wifeyouwant.db") as db):
+            friendlist_check_count = 0
+            friendlist=[]
+            if 'group_check' ==event.pure_text:
+                target_group = int(event.group_id)
+                friendlist_check = await query_group_users('group_owner_record', target_group)
+                for friendlist_check_member in friendlist_check:
+                    friendlist_check_count += 1
+                    if friendlist_check_count > 50: break
+                    friendlist.append(friendlist_check_member[0])
+                queue_check.append((1270858640, 674822468,'group_owner_record',20))
+                #print('queue_check', queue_check)
+                for friend in friendlist:
+                    #print(friend)
+                    pass
+                #print(len(friendlist))
+                #await bot.send(event, friendlist)
+
+
+    @bot.on(GroupMessageEvent)  # 透群友合集
+    async def wife_you_want(event: GroupMessageEvent):
+        async with (aiosqlite.connect("data/dataBase/wifeyouwant.db") as db):
             global filepath
             wifePrefix=config.api["today_wife"]["wifePrefix"]
 
@@ -381,12 +456,29 @@ def main(bot,config):
                 target_group = int(event.group_id)
                 from_id = int(event.sender.user_id)
                 if await manage_group_status(from_id, target_group, 'group_owner_record') != 0:
-                    times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
+                    target_data = None
+                    for item in queue_check:
+                        if str(item[0]) == str(from_id):
+                            target_data = item
+                            break
+                    if target_data is not None and str(target_data[1]) == str(target_group):
+                        times=target_data[3]
+                        #print(f'times:{times}')
+                        #print(f'times:{times}, target_data:{target_data[1]},target_group:{target_group}')
+                        queue_check.remove(target_data)
+                    else:
+                        times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
+
                     times += 1
-                    await manage_group_status(from_id, target_group, 'group_owner_record', times)
+                    queue_check.append((from_id, target_group, 'group_owner_record', times))
+                    #await manage_group_status(from_id, target_group, 'group_owner_record', times)
                 else:
+
                     times = 1
-                    await manage_group_status(from_id, target_group, 'group_owner_record', times)
+                    queue_check.append((from_id, target_group, 'group_owner_record', times))
+                    #await manage_group_status(from_id, target_group, 'group_owner_record', times)
+
+
             context = event.pure_text
             if context == '':
                 context = event.raw_message
@@ -695,7 +787,7 @@ def main(bot,config):
         if config.api["today_wife"]["复读开关"] is not True:
             return
         Read_check = ['[', '@', '来点', '随机', '#', '今日', 'gal', '查询', '搜索', '/', '瓶子', '什么', 'minfo', 'id',
-                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表','完成表']
+                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表','完成表','🦌']
         group1 = f'{event.group_id}_1'
         group2 = f'{event.group_id}_2'
         group3 = f'{event.group_id}_3'

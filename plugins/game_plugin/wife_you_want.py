@@ -48,9 +48,11 @@ async def initialize_db():
         await db.commit()
 
 
+
+
 # 添加或更新用户数据
 async def add_or_update_user(category_name, group_name, username, times):
-    async with aiosqlite.connect(DATABASE) as db:
+    async with aiosqlite.connect(DATABASE, timeout=10) as db:
         category = await db.execute('SELECT * FROM categories WHERE name = ?', (category_name,))
         category_row = await category.fetchone()
 
@@ -77,10 +79,50 @@ async def add_or_update_user(category_name, group_name, username, times):
         if user_row:
             await db.execute('UPDATE users SET times =  ? WHERE id = ?', (times, user_row[0]))
         else:
-            await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',
-                             (username, group_id, times))
+            await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',(username, group_id, times))
 
         await db.commit()
+
+
+async def add_or_update_user_collect(queue_check_make):
+    async with aiosqlite.connect(DATABASE, timeout=10) as db:
+
+        for user_info in queue_check_make:
+            category_name, group_name, username, times=user_info[2], user_info[1], user_info[0], user_info[3]
+
+            category = await db.execute('SELECT * FROM categories WHERE name = ?', (category_name,))
+            category_row = await category.fetchone()
+
+            # 如果没有该类别，创建该类别
+            if not category_row:
+                cursor = await db.execute('INSERT INTO categories (name) VALUES (?)', (category_name,))
+                category_id = cursor.lastrowid
+            else:
+                category_id = category_row[0]
+
+            group = await db.execute('SELECT * FROM groups WHERE category_id = ? AND name = ?', (category_id, group_name))
+            group_row = await group.fetchone()
+
+            if not group_row:
+                cursor = await db.execute('INSERT INTO groups (category_id, name) VALUES (?, ?)', (category_id, group_name))
+                group_id = cursor.lastrowid
+            else:
+                group_id = group_row[0]
+
+            # 检查用户是否存在
+            user = await db.execute('SELECT * FROM users WHERE username = ? AND group_id = ?', (username, group_id))
+            user_row = await user.fetchone()
+
+            if user_row:
+                await db.execute('UPDATE users SET times =  ? WHERE id = ?', (times, user_row[0]))
+            else:
+                await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',(username, group_id, times))
+            #print(f"Updated {username}, {group_name},  {category_name} to {times}")
+
+
+        await db.commit()
+
+
 
 
 # 查询某个小组的用户数据，按照次数排序
@@ -223,11 +265,16 @@ async def manage_group_check(target_group,type):
     return times_from,times_target
 
 async def PIL_lu_maker(today , target_id):
+    #print('进入图片制作')
     year, month,day= today.year, today.month ,today.day
     current_year_month = f'{year}_{month}'
     lu_list=await query_group_users(target_id, current_year_month)
+    #print('获取🦌列表')
 
-
+    lu_font_1000 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 15)
+    lu_font_100 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 20)
+    lu_font_10 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)
+    lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)
 
     #print(lu_list)
     month_days = calendar.monthrange(year, month)[1]
@@ -241,6 +288,7 @@ async def PIL_lu_maker(today , target_id):
     canvas_width, canvas_height = 800, 600
     #print(lu_list_lu,lu_list_bulu)
     # 创建画布
+    #print('创建画布')
     canvas = Image.new("RGB", (canvas_width, canvas_height), "white")
     draw = ImageDraw.Draw(canvas)
 
@@ -259,12 +307,13 @@ async def PIL_lu_maker(today , target_id):
     draw.text((title_x, 20), title, fill="black", font=title_font)
 
     # 加载背景图片
+    #print('加载背景图片')
     image_path = "data/pictures/wife_you_want_img/background_LU.jpg"  # 图片文件路径（需确保存在）
     try:
         background = Image.open(image_path)
         background = background.resize((100, 100))
     except IOError:
-        print("背景图片加载失败，使用填充色")
+        #print("背景图片加载失败，使用填充色")
         background = None
 
     image_path_check = 'data/pictures/wife_you_want_img/correct-copy.png'
@@ -281,10 +330,13 @@ async def PIL_lu_maker(today , target_id):
     cell_width = 100
     cell_height = 100
 
+    now = datetime.now()
     # 绘制日历
+    #print('绘制日历')
     for day in range(1, month_days + 1):
         # 计算当前日期的单元格位置
-        now = datetime.now()
+        #print(day)
+
         first_day_of_month = datetime(now.year, now.month, 1)
         day_of_week = first_day_of_month.weekday()
         col = (day - 1 + day_of_week) % 7
@@ -311,6 +363,7 @@ async def PIL_lu_maker(today , target_id):
                     canvas.paste(dui_check, (x_re, y_re), dui_check.convert("RGBA"))
 
         # 绘制日期文字
+
         day_text = str(day)
         text_bbox = draw.textbbox((0, 0), day_text, font=day_font)  # 获取文字边界框
         text_width = text_bbox[2] - text_bbox[0]
@@ -321,20 +374,22 @@ async def PIL_lu_maker(today , target_id):
 
         times = await manage_group_status('lu', f'{year}_{month}_{day}', target_id)
         if times >= 1000:
-            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 15)
+            lu_font = lu_font_1000
         elif times >= 100:
-            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 20)
+            lu_font = lu_font_100
         elif times >= 10:
-            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)
+            lu_font = lu_font_10
         else:
-            lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)
+            lu_font = lu_font
         if times not in {0,1}:
             draw.text((int(x + (cell_width - text_width) // 1.5), int(y + (cell_height - text_height) // 1.2)), f'×{times}', fill="red", font=lu_font)
 
     # 保存并展示日历
+    #print('保存并展示日历')
     #canvas.show()  # 显示图片
-    canvas.save("data/pictures/wife_you_want_img/lulululu.png")  # 保存图片为文件
-    return True
+    path_img=f"data/pictures/cache/lulululu{int(time.time())}.png"
+    canvas.save(path_img)  # 保存图片为文件
+    return path_img
 
 
 async def daily_task():

@@ -1,9 +1,10 @@
-from bilibili_api import login, user, sync
+from bilibili_api import user, sync
 import yaml
 import os
 import urllib.parse
-from bilibili_api.login import login_with_password, login_with_sms, send_sms, PhoneNumber, Check
-from bilibili_api import settings
+from bilibili_api import login_v2, sync
+import time
+
 from bilibili_api.user import get_self_info
 
 from bilibili_api import sync
@@ -73,69 +74,37 @@ async def bilibili_login():
     3. 终端二维码登录
     4. 窗口二维码登录
     请输入 1/2/3/4
-    建议使用二维码喵~
+    现在只能使用二维码喵~
     """))
 
 
-    credential = None
-    settings.geetest_auto_open = True
 
-    if mode == 1:
-        # 密码登录
-        username = input("请输入手机号/邮箱：")
-        password = input("请输入密码：")
-        print("正在登录。")
-        c = login_with_password(username, password)
-        if isinstance(c, Check):
-            # 还需验证
-            phone = print("需要进行验证。请考虑使用二维码登录")
-            exit(1)
-        else:
-            credential = c
-        print("登录成功")
-    elif mode == 2:
-        # 验证码登录
-        phone = input("请输入手机号：")
-        print("正在登录。")
-        send_sms(PhoneNumber(phone, country="+86")) # 默认设置地区为中国大陆
-        code = input("请输入验证码：")
-        c = login_with_sms(PhoneNumber(phone, country="+86"), code)
-        if isinstance(c, Check):
-            # 还需验证
-            phone = print("需要进行验证。请考虑使用二维码登录")
-            exit(1)
-        else:
-            credential = c
-        print("登录成功")
-    elif mode == 3:
-        credential = login.login_with_qrcode_term()  # 在终端扫描二维码登录
-    elif mode == 4:
-        credential = login.login_with_qrcode()  # 使用窗口显示二维码登录
+
+    if mode == 4:
+        qr = login_v2.QrCodeLogin(platform=login_v2.QrCodeLoginChannel.WEB)  # 生成二维码登录实例，平台选择网页端
+        await qr.generate_qrcode()  # 生成二维码
+        print(qr.get_qrcode_terminal())  # 生成终端二维码文本，打印
+        while not qr.has_done():  # 在完成扫描前轮询
+            print(await qr.check_state())  # 检查状态
+            time.sleep(1)
     else:
         print("请输入 有效数字！ ！")
         exit()
 
 
     try:
-        credential.raise_for_no_bili_jct() # 判断是否成功
-        credential.raise_for_no_sessdata() # 判断是否成功
+        cookies=qr.get_credential().get_cookies()
     except:
         print("登陆失败。。。")
         exit()
 
-    if credential != None:
-        if data_file.data["login"].get(f'bili_login') is None:
-            data_file.data['login']['bili_login']={}
-        with open(f'{DATA_DIR}/credential.yaml', 'w') as file:
-            yaml.dump(credential, file)
-        with open(f"{DATA_DIR}/credential.yaml", "r", encoding="utf-8") as file:
-            credential_object = yaml.load(file, Loader=IgnoreUnknownTagsLoader)
-        data_file.data['login']['bili_login']['ac_time_value']=credential_object['ac_time_value']
-        data_file.data['login']['bili_login']['bili_jct'] = credential_object['bili_jct']
-        data_file.data['login']['bili_login']['buvid3'] = credential_object['buvid3']
-        data_file.data['login']['bili_login']['dedeuserid'] = credential_object['dedeuserid']
-        data_file.data['login']['bili_login']['sessdata'] = credential_object['sessdata']
-        name = sync(get_self_info(credential))['name']
+    if cookies != None:
+        data_file.data['login']['bili_login']['ac_time_value']=cookies['ac_time_value']
+        data_file.data['login']['bili_login']['bili_jct'] = cookies['bili_jct']
+        data_file.data['login']['bili_login']['buvid3'] = cookies['buvid3']
+        data_file.data['login']['bili_login']['dedeuserid'] = cookies['dedeuserid']
+        data_file.data['login']['bili_login']['sessdata'] = cookies['sessdata']
+        name = cookies['name']
         print(f"登陆成功，欢迎，{name}!")
     data_file.save()
     if os.path.exists(f'{DATA_DIR}/credential.yaml'):
@@ -280,7 +249,7 @@ async def login_core_select():
     2、抖音ck获取（必要）
     3、小红书ck获取（必要）
     """))
-    settings.geetest_auto_open = True
+
 
     if mode == 1:
         await bilibili_login()

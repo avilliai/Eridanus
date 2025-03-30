@@ -16,6 +16,7 @@ import json
 from io import BytesIO
 from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
 import traceback
+import random
 
 def bili_init():
     BILIBILI_HEADER = {
@@ -322,7 +323,7 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
                 return path
 
 
-async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None):
+async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None,card_url_list=None):
     #print(f'is_opus:{is_opus}')
     #print(json.dumps(dy_info, indent=4))
     try:
@@ -355,6 +356,11 @@ async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None):
             json_dy['card_color'] = card_check['fan']['color']
             json_dy['card_is_fan'] = card_check['fan']['is_fan']
             json_dy['card_path'] = card_path[0]
+
+        if json_dy['card_path'] is False:
+            json_dy['card_path'] = (await asyncio.gather(*[asyncio.create_task(download_img(card_url_list[random.randint(0, len(card_url_list) - 1)], f'{filepath}'))]))[0]
+
+
         return json_dy
     except Exception as e:
         #traceback.print_exc()

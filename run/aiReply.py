@@ -97,6 +97,7 @@ def main(bot,config):
                 return
             if not user_info[6] >= config.controller["core"]["ai_token_limt"]:
                 if user_info[9] >= config.controller["core"]["ai_token_limt_token"]:
+                    bot.logger.info(f"用户{event.user_id}ai对话token已用完，暂停对话")
                     await bot.send(event,"您的ai对话token已用完，请耐心等待下一次刷新～～")
                     return
 
@@ -121,7 +122,7 @@ def main(bot,config):
                         bot=bot,
                         event=current_event,
                     )
-                    if '' == str(reply_message) or 'Maximum recursion depth' in reply_message:
+                    if reply_message is None or '' == str(reply_message) or 'Maximum recursion depth' in reply_message:
                         return
                     #print(f'reply_message:{reply_message}')
                     if "call_send_mface(summary='')" in reply_message:
@@ -130,8 +131,10 @@ def main(bot,config):
                     try:
                         tokens_total=count_tokens_approximate(current_event.processed_message[1]['text'],reply_message,user_info[9])
                         await update_user(user_id=event.user_id, ai_token_record=tokens_total)
+                        bot.logger.info(f"用户{event.user_id}token计数 {tokens_total}，保存至用户数据中")
                     except:
                         pass
+                        bot.logger.error(f"用户{event.user_id}tokens处理失败")
                     await send_text(bot,event,config,reply_message.strip())
 
 
