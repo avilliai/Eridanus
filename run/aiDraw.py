@@ -516,9 +516,9 @@ def main(bot,config):
     async def sdreDrawRun(event):
         global UserGet
         global turn
-        user_info = await get_user(event.user_id)
 
         if ((event.pure_text) == ("重绘") or (event.pure_text).startswith("重绘 ")):
+            user_info = await get_user(event.user_id)
             if await get_img(event.processed_message, bot, event) == False:
                 prompt = str(event.pure_text).replace("重绘 ", "").replace("重绘", "").strip()
                 if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
