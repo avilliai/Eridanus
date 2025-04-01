@@ -527,6 +527,7 @@ def main(bot,config):
                     return
                 UserGet[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
+                return
 
         # 处理图片和重绘命令
         if ((event.pure_text) == ("重绘") or (event.pure_text).startswith("重绘 ") or event.sender.user_id in UserGet):
@@ -541,6 +542,7 @@ def main(bot,config):
                     prompts,log = await replace_wildcards(prompts)
                     if log:
                         await bot.send(event, log, True)
+                user_info = await get_user(event.user_id)
                 if user_info[6] < config.settings["ai绘画"]["ai绘画所需权限等级"]:
                     bot.logger.info(f"reject text2img request: 权限不足")
                     await bot.send(event,"无绘图功能使用权限",True)
