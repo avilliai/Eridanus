@@ -920,7 +920,9 @@ def main(bot,config):
                     await bot.send(event, "正在读图", True)
                     b64_in = await url_to_base64(img_url)
                     tags_str = await get_img_info(b64_in, config.api["ai绘画"]["sdUrl"][0])
-                    await bot.send(event, Text(tags_str), True)
+                    sendMes = [Node(content=[Text(str(event.sender.nickname) + "的图片信息：")])]
+                    sendMes.append(Node(content=[Text(tags_str)]))
+                    await bot.send(event, sendMes)
                 except Exception as e:
                     bot.logger.error(f"读图失败: {e}")
                     await bot.send(event, f"读图失败: {e}", True)
