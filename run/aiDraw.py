@@ -16,13 +16,14 @@ from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
 from plugins.core.userDB import get_user
 from plugins.utils.random_str import random_str
 from plugins.aiDraw.aiDraw import  n4, n3, SdDraw0, SdreDraw, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
-    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint
+    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint, get_img_info
 from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
 from plugins.utils.utils import download_img, url_to_base64, parse_arguments
 
 turn = 0
 UserGet = {}
 tag_user = {}
+info_user = {}
 sd_user_args = {}
 sd_re_args = {}
 UserGet1 = {}
@@ -454,6 +455,7 @@ def main(bot,config):
                     return
                 tag_user[event.sender.user_id] = []
                 await bot.send(event, "请发送要识别的图片")
+                return
 
         # 处理图片和重绘命令
         if (str(event.pure_text) == ("tag") or event.sender.user_id in tag_user):
@@ -681,6 +683,7 @@ def main(bot,config):
                 prompt = str(event.pure_text).replace("n4re ", "").replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
+                return
 
         # 处理图片和重绘命令
         if (str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ") or event.sender.user_id in n4re):
@@ -738,6 +741,7 @@ def main(bot,config):
                 prompt = str(event.pure_text).replace("n3re ", "").replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
+                return
 
         # 处理图片和重绘命令
         if (str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ") or event.sender.user_id in n3re):
@@ -883,3 +887,40 @@ def main(bot,config):
                     bot.logger.info(f"Expected a dictionary for {dict_name}, but got {type(dictionary)}.")
             
             await bot.send(event, "已清除所有输入图片和文本缓存", True)
+            
+    @bot.on(GroupMessageEvent)
+    async def img_info(event):
+        global info_user
+
+        if (str(event.pure_text) == ("imginfo")):
+            if await get_img(event.processed_message, bot, event) == False:
+                if config.api["ai绘画"]["sdUrl"][0] == "" or config.api["ai绘画"]["sdUrl"][0] == None:
+                    await bot.send(event, "sd api未配置，无法读图")
+                    return
+                info_user[event.sender.user_id] = []
+                await bot.send(event, "请发送要读的图片")
+                return
+
+        if (str(event.pure_text) == ("imginfo") or event.sender.user_id in info_user):
+            if await get_img(event.processed_message, bot, event):
+                if config.api["ai绘画"]["sdUrl"][0] == "" or config.api["ai绘画"]["sdUrl"][0] == None:
+                    await bot.send(event, "sd api未配置，无法读图")
+                    return
+                if (str(event.pure_text) == ("imginfo")):
+                    info_user[event.sender.user_id] = []
+
+                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的读图指令")
+
+                path = f"data/pictures/cache/{random_str()}.png"
+                img_url = await get_img(event.processed_message, bot, event)
+                bot.logger.info(f"发起读图请求，path:{path}")
+                info_user.pop(event.sender.user_id)
+
+                try:
+                    await bot.send(event, "正在读图", True)
+                    b64_in = await url_to_base64(img_url)
+                    tags_str = await get_img_info(b64_in, config.api["ai绘画"]["sdUrl"][0])
+                    await bot.send(event, Text(tags_str), True)
+                except Exception as e:
+                    bot.logger.error(f"读图失败: {e}")
+                    await bot.send(event, f"读图失败: {e}", True)
