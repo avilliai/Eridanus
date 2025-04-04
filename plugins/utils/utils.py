@@ -21,7 +21,7 @@ async def delay_recall(bot, msg, interval=20):
     """
     async def recall_task():
         await asyncio.sleep(interval)
-        await bot.recall(msg_id['data']['message_id'])
+        await bot.recall(msg['data']['message_id'])
 
     asyncio.create_task(recall_task())
 
