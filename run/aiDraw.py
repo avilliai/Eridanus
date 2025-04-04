@@ -455,6 +455,7 @@ def main(bot,config):
                     return
                 tag_user[event.sender.user_id] = []
                 await bot.send(event, "请发送要识别的图片")
+                return
 
         # 处理图片和重绘命令
         if (str(event.pure_text) == ("tag") or event.sender.user_id in tag_user):
@@ -682,6 +683,7 @@ def main(bot,config):
                 prompt = str(event.pure_text).replace("n4re ", "").replace("n4re", "").strip()
                 n4re[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
+                return
 
         # 处理图片和重绘命令
         if (str(event.pure_text) == ("n4re") or str(event.pure_text).startswith("n4re ") or event.sender.user_id in n4re):
@@ -739,6 +741,7 @@ def main(bot,config):
                 prompt = str(event.pure_text).replace("n3re ", "").replace("n3re", "").strip()
                 n3re[event.sender.user_id] = [prompt]
                 await bot.send(event, "请发送要重绘的图片")
+                return
 
         # 处理图片和重绘命令
         if (str(event.pure_text) == ("n3re") or str(event.pure_text).startswith("n3re ") or event.sender.user_id in n3re):
