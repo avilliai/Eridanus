@@ -1,6 +1,7 @@
 import base64
 import random
 
+import asyncio
 import httpx
 import base64
 
@@ -9,9 +10,46 @@ from io import BytesIO
 
 from PIL import Image
 
+async def delay_recall(bot, msg, interval=20):
+    """
+    延迟撤回消息的非阻塞封装函数，撤回机器人自身消息可以先msg = await bot.send(event, 'xxx')然后调用await delay_recall(bot, msg, 20)这样来不阻塞的撤回，默认20秒后撤回
+    
+    参数:
+        bot
+        msg: 消息
+        interval: 延迟时间（秒）
+    """
+    async def recall_task():
+        await asyncio.sleep(interval)
+        await bot.recall(msg_id['data']['message_id'])
 
+    asyncio.create_task(recall_task())
 
-
+async def get_img(processed_message, bot, event):
+    """
+    获取消息中或者引用消息中的图片url，如果没有找到返回False
+    """
+    for item in processed_message:
+        if "image" in item or "mface" in item:
+            try:
+                if "mface" in item:
+                    url = item["mface"]["url"]
+                else:
+                    url = item["image"]["url"]
+                return url
+            except Exception as e:
+                bot.logger.warning(f"获取图片失败: {e}")
+                return False
+        elif "reply" in item:
+            try:
+                event_obj = await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await get_img(event_obj.processed_message, bot, event)
+                if message:
+                    return message
+            except Exception as e:
+                bot.logger.warning(f"引用消息解析失败: {e}")
+                return False
+    return False
 
 async def url_to_base64(url):
     async with httpx.AsyncClient(timeout=9000) as client:
