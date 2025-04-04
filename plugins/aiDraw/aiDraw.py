@@ -1363,3 +1363,10 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     image = Image.open(io.BytesIO(base64.b64decode(b64)))
     image.save(f'{path}')
     return path
+
+async def get_img_info(base64, api):
+    async with httpx.AsyncClient(timeout=None) as client:
+        response = await client.post(url=f'{api}/sdapi/v1/png-info', json={"image": base64})
+        data = response.json()
+        formatted_json = json.dumps(data, indent=4, ensure_ascii=False)
+        return formatted_json
