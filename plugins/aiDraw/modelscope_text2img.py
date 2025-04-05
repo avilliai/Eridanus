@@ -29,8 +29,6 @@ ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else Non
 if_save = aiDrawController.get("sd图片是否保存到生图端") if aiDrawController else False
 sd_w = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[0]) if aiDrawController else 1064
 sd_h = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[1]) if aiDrawController else 1600
-sdre_w = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[0]) if aiDrawController else 1064
-sdre_h = int(aiDrawController.get("sd重绘默认分辨率", "1064,1064").split(",")[1]) if aiDrawController else 1064
 configs = aiDrawController.get("其他默认绘图参数",[])
 default_args = {}
 for config in configs:
