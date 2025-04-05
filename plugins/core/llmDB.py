@@ -154,6 +154,7 @@ async def change_folder_chara(file_name, user_id, folder_path='data/system/chara
 async def set_all_users_chara(file_name, folder_path='data/system/chara'):
     """
     将所有用户的chara字段设置为指定的file_name对应的角色信息。
+    从历史记录数据库中读取所有user_id，并写入chara数据库。
     删除所有用户的聊天记录。
     """
     try:
@@ -163,20 +164,25 @@ async def set_all_users_chara(file_name, folder_path='data/system/chara'):
         chara = await use_folder_chara(file_name)
         if chara.startswith("错误"):
             return chara
+
         await clear_all_history()
+
+        async with aiosqlite.connect(DATABASE_FILE) as db:
+            cursor = await db.execute("SELECT user_id FROM conversation_history")
+            history_users = await cursor.fetchall()
 
         async with aiosqlite.connect('data/dataBase/charas.db') as db:
             cursor = await db.execute("SELECT user_id FROM user_chara")
-            all_users = await cursor.fetchall()
+            chara_users = await cursor.fetchall()
 
-            for user in all_users:
-                user_id = user[0]
+            all_user_ids = set(user[0] for user in history_users).union(user[0] for user in chara_users)
+            for user_id in all_user_ids:
                 await db.execute("INSERT OR REPLACE INTO user_chara (user_id, chara) VALUES (?, ?)",
-                                 (user_id, chara))
+                               (user_id, chara))
 
             await db.commit()
 
-        return "所有用户的人设已切换为：" + file_name
+        return "所有用户（包括历史记录中的用户）的人设已切换为：" + file_name
     except Exception as e:
         print(f"发生了一个错误: {e}")
         return f"发生了一个错误: {e}"
