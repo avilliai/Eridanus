@@ -219,7 +219,7 @@ async def clear_user_chara(user_id):
 
 
 async def read_chara(user_id, chara_str):  # 这里的chara_str是一个字符串，表示用户默认的角色
-    """读取用户的角色信息，如果不存在则设置默认值"""
+    """读取用户的角色信息，如果不存在则直接返回默认值，不写入数据库"""
     if not isinstance(chara_str, str):
         raise ValueError("chara_str 必须是字符串类型")
 
@@ -227,9 +227,6 @@ async def read_chara(user_id, chara_str):  # 这里的chara_str是一个字符�
         cursor = await db.execute("SELECT chara FROM user_chara WHERE user_id = ?", (user_id,))
         result = await cursor.fetchone()
         if result is None:
-            await db.execute("INSERT INTO user_chara (user_id, chara) VALUES (?, ?)",
-                             (user_id, chara_str))
-            await db.commit()
             return chara_str
         else:
             return result[0]
