@@ -6,7 +6,7 @@ api_implement:
   send_like: 0    #“赞我”功能所需权限等级
 core:
   ai_reply_group: 0    #群内ai对话所需权限等级
-  ai_reply_private: 9  #私聊ai对话所需权限等级
+  ai_reply_private: 0  #私聊ai对话所需权限等级
   ai_change_character: 0  #ai更换角色所需权限等级
   ai_token_limt: 0 #不限制ai对话token所需权限等级
   ai_token_limt_token: 10000 #一般用户限制ai对话token数量
