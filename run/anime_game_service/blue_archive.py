@@ -15,7 +15,7 @@ from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageSt
 
 def main(bot, config):
     logger=bot.logger
-
+    activated=False
 
 
     @bot.on(GroupMessageEvent)
@@ -36,6 +36,8 @@ def main(bot, config):
 
     @bot.on(LifecycleMetaEvent)
     async def pushAronaData(event: LifecycleMetaEvent):
+        if not activated:
+            return
         while True:
             logger.info_func("检查arona订阅更新")
             with open("data/pictures/blueArchive/aronaSub.yaml", 'r', encoding='utf-8') as f:
