@@ -33,7 +33,7 @@ QQ群：913122269
 - [ ] webui重构，提高兼容性，界面美化。webui与项目本体合并
 - [ ] ai绘画冗余、重复代码优化
 - [ ] 接入petpet
-- [ ] 开发文档优化
+- [ ] 开发文档优化，插件模板
 # 派生项目
 - [Achernar](https://github.com/avilliai/Achernar) cpolar隧道本地反向代理，kaggle自动切换账号运行指定脚本。(用于在kaggle持久化部署ai绘画等服务)
 - [vits api](https://github.com/avilliai/vits_api) 本地部署vits语音合成服务端，已打包。
