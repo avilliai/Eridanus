@@ -267,7 +267,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             self_rep.append({"text": tep_rep_message})
                             await send_text(bot, event, config, tep_rep_message)
                             reply_message = None
-                            if mface_files != []:
+                            if mface_files != [] and mface_files is not None:
                                 for mface_file in mface_files:
                                     await bot.send(event, Image(file=mface_file))
                                 mface_files = []
