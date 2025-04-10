@@ -38,7 +38,7 @@ with open('config/settings.yaml', 'r', encoding='utf-8') as f:
     controller = yaml.load(f)
 aiDrawController = controller.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
-no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
+allow_nsfw_groups = [int(item) for item in aiDrawController.get("allow_nsfw_groups", [])] if aiDrawController else []
 
 async def call_text2img(bot, event, config, prompt):
     tag = prompt
@@ -389,7 +389,7 @@ def main(bot,config):
                     image_url = image_url.replace('180x180', '720x720').replace('360x360', '720x720').replace('.jpg', '.webp')
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id in no_nsfw_groups:
+                        if event.group_id not in allow_nsfw_groups and config.settings['ai绘画']["禁止nsfw"]:
                             if config.api['ai绘画']['sd审核和反推api']:
                                 try:
                                     audit_result = await pic_audit_standalone(base64_image, return_none=True,url=config.api["ai绘画"]["sd审核和反推api"])

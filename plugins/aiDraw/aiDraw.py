@@ -38,7 +38,7 @@ try:
         sd_max_size = int(resolution_str)
 except (ValueError, IndexError, TypeError):
     sd_max_size = 1600 * 1600
-no_nsfw_groups = [int(item) for item in aiDrawController.get("no_nsfw_groups", [])] if aiDrawController else []
+allow_nsfw_groups = [int(item) for item in aiDrawController.get("allow_nsfw_groups", [])] if aiDrawController else []
 censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
 positives = '{},rating:general, best quality, very aesthetic, absurdres'
 negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts'
@@ -166,7 +166,7 @@ async def n4(prompt, path, groupid, config, args):
     nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
     nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
     
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
 
@@ -238,7 +238,7 @@ async def n4(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     if config.api["proxy"]["http_proxy"]:
@@ -262,7 +262,7 @@ async def n4(prompt, path, groupid, config, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
                 try:
                     check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
                     if check:
@@ -302,7 +302,7 @@ async def n3(prompt, path, groupid, config, args):
     nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
     nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
 
@@ -359,7 +359,7 @@ async def n3(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     if config.api["proxy"]["http_proxy"]:
@@ -383,7 +383,7 @@ async def n3(prompt, path, groupid, config, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
                 try:
                     check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
                     if check:
@@ -434,7 +434,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
 
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
     
@@ -469,7 +469,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
@@ -483,7 +483,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
         try:
             check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
             if check:
@@ -534,7 +534,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
 
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
     
@@ -568,7 +568,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
@@ -580,7 +580,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
     r = response.json()
 
     b64 = r['images'][0]
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
         try:
             check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
             if check:
@@ -667,7 +667,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     positive, _ = await replace_wildcards(positive)
     nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
 
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
 
@@ -747,7 +747,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
@@ -767,7 +767,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
                 try:
                     check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
                     if check:
@@ -814,7 +814,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
     positive, _ = await replace_wildcards(positive)
 
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
 
@@ -880,7 +880,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
@@ -900,7 +900,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
                 try:
                     check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
                     if check:
@@ -950,7 +950,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
     cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
 
-    if groupid in no_nsfw_groups:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
 
@@ -990,7 +990,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     headers = {
         "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
     }
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
@@ -1004,7 +1004,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
         try:
             check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
             if check:
@@ -1144,7 +1144,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns', 5)) if isinstance(default_args, dict) else 5
     noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 20)) if isinstance(default_args, dict) else 20
     
-    if groupid in no_nsfw_groups and check_censored(positive, censored_words):
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and check_censored(positive, censored_words):
         return False
 
     # 初始化画布
@@ -1333,7 +1333,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         "override_settings_restore_afterwards": False,
     }
 
-    if groupid in no_nsfw_groups and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
 
@@ -1351,7 +1351,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     b64 = r['images'][0]
 
-    if groupid in no_nsfw_groups and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
         try:
             check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
             if check:

@@ -267,7 +267,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             self_rep.append({"text": tep_rep_message})
                             await send_text(bot, event, config, tep_rep_message)
                             reply_message = None
-                            if mface_files != []:
+                            if mface_files != [] and mface_files is not None:
                                 for mface_file in mface_files:
                                     await bot.send(event, Image(file=mface_file))
                                 mface_files = []
@@ -277,6 +277,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await add_to_group(event.group_id, self_message)
                     reply_message = None
             except Exception as e:
+                traceback.print_exc()
                 logger.error(f"Error occurred when processing gemini response2: {e}")
             # 检查是否存在函数调用，如果还有提示词就发
             status = False
@@ -492,12 +493,12 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
 
         logger.info(f"mface 处理后的文本: {cleaned_text}")
         if matched_files==[]:
-            return cleaned_text, None
+            return cleaned_text, []
         return cleaned_text, matched_files
     except Exception as e:
         logger.error(f"Error occurred when removing mface filenames: {e}")
         traceback.print_exc()
-        return reply_message, None
+        return reply_message, []
 
 
 
