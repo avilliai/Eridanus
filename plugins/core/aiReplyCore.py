@@ -277,6 +277,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                         await add_to_group(event.group_id, self_message)
                     reply_message = None
             except Exception as e:
+                traceback.print_exc()
                 logger.error(f"Error occurred when processing gemini response2: {e}")
             # 检查是否存在函数调用，如果还有提示词就发
             status = False
