@@ -1,7 +1,6 @@
 from developTools.event.events import GroupMessageEvent
 from plugins.core.Group_Message_DB import add_to_group
 
-
 def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def add_message_to_db(event: GroupMessageEvent):
@@ -16,4 +15,3 @@ def main(bot,config):
             await add_to_group(event.group_id,message)
         except Exception as e:
             bot.logger.error(f"group_mes database error {e}")
-            
