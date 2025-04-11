@@ -76,12 +76,12 @@ ai绘画:
     - --d 0.7
     - --p {},rating:general, best quality, very aesthetic, absurdres
     - --n blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts
-    - --steps 15
-    - --sampler Restart
-    - --scheduler Align Your Steps
+    - --steps 28
+    - --sampler Euler a
+    - --scheduler Automatic
     - --nai-sampler k_euler_ancestral
     - --nai-scheduler karras
-    - --cfg 6.5
+    - --cfg 4.5
     - --nai-cfg 5
     - --ns 5
     - --nf 20
