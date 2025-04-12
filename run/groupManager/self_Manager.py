@@ -101,7 +101,8 @@ async def garbage_collection(bot,event,config):
               "data/pictures/galgame",
               "data/video/cache",
               "data/voice/cache",
-              "plugins/streaming_media_service/Link_parsing/data"
+              "plugins/streaming_media_service/Link_parsing/data",
+             "data/pictures/benzi"
               ]
     async def safe_delete(folder):
         try:
@@ -218,7 +219,7 @@ def main(bot,config):
         if event.sub_type == "invite":
             if event.group_id in config.censor_group["blacklist"]:
                 bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
-                await bot.send(event, f"该群已被加入黑名单，无法加入")
+                await bot.send_friend_message(event.user_id, f"该群已被加入黑名单，无法加入")
                 await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id})的群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
             else:
                 user_info = await get_user(event.user_id)
@@ -228,7 +229,7 @@ def main(bot,config):
                     await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 同意")
                 else:
                     bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 拒绝")
-                    await bot.send(event, f"你没有足够权限邀请bot加入该群")
+                    await bot.send_friend_message(event.user_id, f"你没有足够权限邀请bot加入该群")
                     await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 拒绝（用户权限不足）")
         elif event.sub_type == "add":
             if event.group_id in config.censor_group["blacklist"]:
