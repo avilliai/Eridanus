@@ -8,6 +8,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def search_image(event):
         if str(event.pure_text).startswith("iwara下载"):
+            user_info = await get_user(event.user_id)
             if not user_info[6] >= config.controller["resource_search"]["iwara"]["iwara_download_level"]:
                 return
             videoid = str(event.pure_text).replace("iwara下载", "")
