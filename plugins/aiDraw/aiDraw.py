@@ -138,6 +138,20 @@ def process_image_dimensions(width, height, max_area=None, min_area=None, resolu
     
     except Exception as e:
         raise Exception(f"处理尺寸时发生错误: {str(e)}")
+    
+def parse_custom_url_auth(input_string: str):
+    parts = input_string.split(' ', 1)
+    clean_url = parts[0]
+    auth_header = ''
+
+    if len(parts) == 2 and parts[1]:
+        credentials_string = parts[1]
+        credentials_bytes = credentials_string.encode('utf-8')
+        encoded_credentials_bytes = base64.b64encode(credentials_bytes)
+        encoded_credentials_string = encoded_credentials_bytes.decode('utf-8')
+        auth_header = f"Basic {encoded_credentials_string}"
+
+    return clean_url, auth_header
 
 async def n4(prompt, path, groupid, config, args):
     global round_nai
@@ -466,9 +480,6 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
-    }
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
@@ -476,8 +487,16 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
+    url, auth_header = parse_custom_url_auth(url)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
+    
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
         return None
@@ -565,9 +584,6 @@ async def SdDraw0(prompt, path, config, groupid, args):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
-    }
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
@@ -575,8 +591,16 @@ async def SdDraw0(prompt, path, config, groupid, args):
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
+        
+    url, auth_header = parse_custom_url_auth(url)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+        response = await client.post(url=f'{url}/sdapi/v1/txt2img', json=payload, headers=headers)
     r = response.json()
 
     b64 = r['images'][0]
@@ -597,13 +621,18 @@ async def SdDraw0(prompt, path, config, groupid, args):
 
 async def getloras(config):
     global round_sd
-    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/loras'
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url, auth_header = parse_custom_url_auth(url)
+
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
     }
 
+    url = f'{url}/sdapi/v1/loras'
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.get(url)
+        response = await client.get(url, headers=headers)
         r = response.json()
         result_lines = [f'<lora:{lora.get("name", "未知")}:1.0>,' for lora in r]
         result = '以下是可用的lora：\n' + '\n'.join(result_lines)
@@ -619,13 +648,18 @@ async def ckpt2(model, config):
 
 async def getcheckpoints(config):
     global round_sd
-    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/sd-models'
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url, auth_header = parse_custom_url_auth(url)
+
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
     }
+    url = f'{url}/sdapi/v1/sd-models'
 
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.get(url)
+        response = await client.get(url, headers=headers)
         r = response.json()
         model_lines = [f'{model.get("model_name", "未知")}.safetensors' for model in r]
         result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines)
@@ -987,9 +1021,6 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}"
-    }
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
@@ -997,8 +1028,15 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     list_length = len(config.api['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
+    url, auth_header = parse_custom_url_auth(url)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
         return None
@@ -1020,9 +1058,18 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
 
 async def getsampler(config):
     global round_sd
-    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/samplers'
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url, auth_header = parse_custom_url_auth(url)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
+    url = f'{url}/sdapi/v1/samplers'    
+
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.get(url)
+        response = await client.get(url, headers=headers)
         r = response.json()
         try:
             names_list = [item["name"] for item in r if "name" in item]
@@ -1036,9 +1083,17 @@ async def getsampler(config):
     
 async def getscheduler(config):
     global round_sd
-    url = f'{config.api["ai绘画"]["sdUrl"][int(round_sd)]}/sdapi/v1/schedulers'
+    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url, auth_header = parse_custom_url_auth(url)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
+    url = f'{url}/sdapi/v1/schedulers'
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.get(url)
+        response = await client.get(url, headers=headers)
         r = response.json()
         label_list = [item["label"] for item in r if "label" in item]
         result = f'\n'.join(label_list)
@@ -1051,12 +1106,20 @@ async def interrupt(config):
         sdUrls = config.api["ai绘画"]["sdUrl"]
         if adjusted_index < 0 or adjusted_index >= len(sdUrls):
             raise IndexError("索引超出范围，请检查 round_sd 的值。")
-        url = f'{sdUrls[adjusted_index]}/sdapi/v1/interrupt'
+        url = sdUrls[adjusted_index]
+        url, auth_header = parse_custom_url_auth(url)
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": auth_header
+        }
         post_data = {
             "114514": "1919810"
         }
+        url = f'{url}/sdapi/v1/interrupt'
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=post_data)
+            response = await client.post(url, json=post_data, headers=headers)
             response.raise_for_status()
             return response.json()
     except (ValueError, IndexError) as e:
@@ -1073,12 +1136,20 @@ async def skipsd(config):
         sdUrls = config.api["ai绘画"]["sdUrl"]
         if adjusted_index < 0 or adjusted_index >= len(sdUrls):
             raise IndexError("索引超出范围，请检查 round_sd 的值。")
-        url = f'{sdUrls[adjusted_index]}/sdapi/v1/skip'
+        url = sdUrls[adjusted_index]
+        url, auth_header = parse_custom_url_auth(url)
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": auth_header
+        }
         post_data = {
             "114514": "1919810"
         }
+        url = f'{url}/sdapi/v1/skip'
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=post_data)
+            response = await client.post(url, json=post_data, headers=headers)
             response.raise_for_status()
             return response.json()
     except (ValueError, IndexError) as e:
@@ -1341,9 +1412,17 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     list_length = len(config.api["ai绘画"]["sdUrl"])
     if round_sd >= list_length:
         round_sd = 0
+        
+    url, auth_header = parse_custom_url_auth(url)
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
 
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload)
+        response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
     
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
@@ -1366,7 +1445,14 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
 async def get_img_info(base64, api):
     async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(url=f'{api}/sdapi/v1/png-info', json={"image": base64})
+        api, auth_header = parse_custom_url_auth(api)
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": auth_header
+        }
+        response = await client.post(url=f'{api}/sdapi/v1/png-info', json={"image": base64}, headers=headers)
         data = response.json()
         formatted_json = json.dumps(data, indent=4, ensure_ascii=False)
         return formatted_json
