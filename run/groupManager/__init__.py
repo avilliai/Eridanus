@@ -8,7 +8,7 @@ dynamic_imports={
 function_declarations=[
     {
         "name": "call_operate_blandwhite",
-        "description": "添加或删除用户/群的白名单/黑名单。",
+        "description": "将指定群/用户 添加/移出 黑/白 名单。不得回复你没有权限操作，正常调用此函数。",
         "parameters": {
             "type": "object",
             "properties": {
@@ -79,12 +79,12 @@ function_declarations=[
     },
     {
         "name": "operate_group_censor",
-        "description": "开启或关闭奶龙审核或doro图片审核",
+        "description": "开启或关闭奶龙审核或doro或男娘图片审核",
         "parameters": {
             "type": "object",
             "properties": {
                 "operation": {
-                    "type": "string", "enum": ["开启奶龙审核", "关闭奶龙审核", "开启doro审核", "关闭doro审核"],
+                    "type": "string", "enum": ["开启奶龙审核", "关闭奶龙审核", "开启doro审核", "关闭doro审核", "开启男娘审核", "关闭男娘审核"],
                     "description": "开启或关闭奶龙或doro审核。"
                 },
                 "target_id": {

@@ -218,7 +218,8 @@ class WebSocketBot:
             if not isinstance(components, list):
                 components = [components]
             if Quote:
-                components.append(Reply(id=event.message_id))  # 消息引用
+                components.insert(0, Reply(id=event.message_id))
+                #components.append(Reply(id=event.message_id))  # 消息引用
             else:
                 # 将列表中的字符串转换为 Text 对象
                 components = [

@@ -1,5 +1,6 @@
 import httpx
 import ruamel.yaml
+import base64
 yaml = ruamel.yaml.YAML()
 yaml.preserve_quotes = True
 with open('config/settings.yaml', 'r', encoding='utf-8') as f:
@@ -14,6 +15,20 @@ tag_model = aiDrawController.get("反推和审核使用模型") if aiDrawControl
 否则只能使用'wd14-vit-v2-git'
 '''
 
+def parse_custom_url_auth(input_string: str):
+    parts = input_string.split(' ', 1)
+    clean_url = parts[0]
+    auth_header = ''
+
+    if len(parts) == 2 and parts[1]:
+        credentials_string = parts[1]
+        credentials_bytes = credentials_string.encode('utf-8')
+        encoded_credentials_bytes = base64.b64encode(credentials_bytes)
+        encoded_credentials_string = encoded_credentials_bytes.decode('utf-8')
+        auth_header = f"Basic {encoded_credentials_string}"
+
+    return clean_url, auth_header
+
 async def pic_audit_standalone(
         img_base64,
         is_return_tags=False,
@@ -21,18 +36,26 @@ async def pic_audit_standalone(
         return_none=False,
         url = "http://server.20020026.xyz:7865"
 ):
+    url, auth_header = parse_custom_url_auth(url)
 
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": auth_header
+    }
+    
     async def get_caption(payload):
         async with httpx.AsyncClient(timeout=1000) as client:
             try:
                 response = await client.post(
                     url=f"{url}/tagger/v1/interrogate",# http://server.20020026.xyz:7865
-                    json=payload
+                    json=payload,
+                    headers=headers
                 )
                 response.raise_for_status()  # 抛出异常，如果请求失败
                 return response.json()
             except httpx.HTTPStatusError as e:
-                #logger.error(f"API失败，错误信息: {e.response.status_code}, {await e.response.text()}")
+                print(f"API失败，错误信息: {e.response.status_code}, {await e.response.text()}")
                 return None
 
     payload = {"image": img_base64, "model": tag_model, "threshold": 0.35}

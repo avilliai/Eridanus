@@ -34,8 +34,8 @@ function_declarations=[
                     "description": "图片的url"
                 },
                 "model_name": {
-                    "type": "string", "enum": ["anime_model_lovelive", "game_model_kirakira"],
-                    "description": "game_model_kirakira为galgame游戏角色识别，anime_model_lovelive为动漫角色识别"
+                    "type": "string", "enum": ["anime_model_lovelive", "full_game_model_kira"],
+                    "description": "full_game_model_kira为galgame游戏角色识别，anime_model_lovelive为动漫角色识别"
                 }
             },
             "required": [

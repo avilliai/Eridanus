@@ -1,3 +1,4 @@
+
 import os
 import random
 
@@ -61,6 +62,8 @@ def main(bot,config):
             await bot.send(event,"退出聊天~")
         elif event.pure_text=="/clear" or t=="/clear":
             await delete_user_history(event.user_id)
+            await clear_group_messages(event.group_id)
+
             await bot.send(event,"历史记录已清除",True)
         elif event.pure_text=="/clear group":
             await clear_group_messages(event.group_id)
@@ -97,7 +100,6 @@ def main(bot,config):
                 return
             if not user_info[6] >= config.controller["core"]["ai_token_limt"]:
                 if user_info[9] >= config.controller["core"]["ai_token_limt_token"]:
-                    bot.logger.info(f"用户{event.user_id}ai对话token已用完，暂停对话")
                     await bot.send(event,"您的ai对话token已用完，请耐心等待下一次刷新～～")
                     return
 
@@ -131,10 +133,8 @@ def main(bot,config):
                     try:
                         tokens_total=count_tokens_approximate(current_event.processed_message[1]['text'],reply_message,user_info[9])
                         await update_user(user_id=event.user_id, ai_token_record=tokens_total)
-                        bot.logger.info(f"用户{event.user_id}token计数 {tokens_total}，保存至用户数据中")
                     except:
                         pass
-                        bot.logger.error(f"用户{event.user_id}tokens处理失败")
                     await send_text(bot,event,config,reply_message.strip())
 
 
@@ -185,3 +185,4 @@ def main(bot,config):
                   # reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
                   if reply_message is not None:
                       await send_text(bot,event,config,reply_message.strip())
+

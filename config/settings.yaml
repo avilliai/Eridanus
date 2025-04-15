@@ -15,6 +15,7 @@ acg_information:
 basic_plugin:
   setu:
     r18mode: true
+    download: true #关掉的话就是直接发送url，灰度图不生效。
     gray_layer: true #是否开启灰度图功能
   tarot:
     lock: false #是否开启卡片锁定功能，现在没写锁定，开了也没用
@@ -66,24 +67,26 @@ ai绘画:
   sd图片是否保存到生图端: true   #是否将生成的图片保存在webui的outputs里
   novel_ai画图: false
   sd画图默认分辨率: '1024,1536' # 宽,高（别带空格）
-  sd重绘默认分辨率: '1064,1064'
+  sd最大分辨率: '1600,1600'
   sd队列长度限制: 6     #防止有人刷绘图指令。
   ai绘画所需权限等级: 0
-  no_nsfw_groups:               #禁止色图的群号
-  - '111'
-  - '222'
-  - '333'
-  其他默认绘图参数: # 各参数见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB
+  禁止nsfw: false
+  allow_nsfw_groups:               #允许色图的群号，禁止nsfw开启时有效
+  - 123
+  其他默认绘图参数: # 各参数见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB#%E6%89%80%E6%9C%89%E5%8F%AF%E8%B0%83%E8%8A%82%E5%8F%82%E6%95%B0%E5%88%97%E8%A1%A8
     - --d 0.7
     - --p {},rating:general, best quality, very aesthetic, absurdres
     - --n blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts
-    - --steps 15
-    - --sampler Restart
-    - --scheduler Align Your Steps
+    - --steps 28
+    - --sampler Euler a
+    - --scheduler Automatic
     - --nai-sampler k_euler_ancestral
     - --nai-scheduler karras
-    - --cfg 6.5
+    - --cfg 4.5
     - --nai-cfg 5
+    - --ns 5
+    - --nf 20
+    - --overmask 64
 抽象检测:
   奶龙检测: false
   奶龙撤回: true
@@ -97,6 +100,11 @@ ai绘画:
   - doro是你🐴？这么喜欢发你🐴的遗照？ #自己添加
   - 粉色奶龙
   - 唐
+  男娘检测: false
+  男娘撤回: true
+  男娘禁言: true
+  骂男娘:
+  - 发男娘图给你超市
 scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
   早安问候:         #晨间推送
     enable: true  #向信任用户推送天气信息

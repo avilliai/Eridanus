@@ -5,7 +5,7 @@ import httpx
 import yaml
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
-from developTools.message.message_components import Image
+from developTools.message.message_components import Image,Text
 from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageStrategy
 
 
@@ -15,7 +15,7 @@ from plugins.onlineGameData_Service_plugin.blue_archive.arona_api import stageSt
 
 def main(bot, config):
     logger=bot.logger
-
+    activated=False
 
 
     @bot.on(GroupMessageEvent)
@@ -36,6 +36,8 @@ def main(bot, config):
 
     @bot.on(LifecycleMetaEvent)
     async def pushAronaData(event: LifecycleMetaEvent):
+        if not activated:
+            return
         while True:
             logger.info_func("检查arona订阅更新")
             with open("data/pictures/blueArchive/aronaSub.yaml", 'r', encoding='utf-8') as f:
@@ -60,7 +62,7 @@ def main(bot, config):
                                 if iss in alreadySend:
                                     continue
                                 try:
-                                    await bot.send_group_message(int(iss), (ia + "数据更新", Image(file=p)))
+                                    await bot.send_group_message(int(iss), [Text(f"{ia}数据更新"), Image(file=p)])
                                     alreadySend.append(iss)
                                 except:
                                     logger.error("向" + str(iss) + "推送更新失败")

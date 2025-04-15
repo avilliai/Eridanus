@@ -373,7 +373,7 @@ async def bilibili(url,filepath=None,is_twice=None):
             ar = ar.turn_to_note()
         # 加载内容
         await ar.fetch_content()
-        print(ar.markdown())
+        #print(ar.markdown())
         markdown_path = f'{filepath}{read_id}.md'
         with open(markdown_path, 'w', encoding='utf8') as f:
             f.write(ar.markdown())
@@ -848,7 +848,7 @@ async def Galgame_manshuo(url,filepath=None):
     if link =="https://gal.manshuo.ink":return
     context = await html_read(link)
     if '请求发生错误：' in context:
-        print(context)
+        #print(context)
         json_check['status'] = False
         return json_check
     context = context.split("\n")
@@ -887,6 +887,7 @@ async def Galgame_manshuo(url,filepath=None):
             links_url = None
             traceback.print_exc()
             print(f"链接获取失败，错误: {e}")
+
 
     for context_check in context:
         #print(context_check)

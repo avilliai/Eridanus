@@ -148,7 +148,7 @@ function_declarations=[
     },
     {
         "name": "call_change_city",
-        "description": "修改用户数据中，所在城市信息。eg：修改城市为新乡",
+        "description": "调整所在城市信息。eg：修改城市为新乡",
         "parameters": {
             "type": "object",
             "properties": {
@@ -164,13 +164,13 @@ function_declarations=[
     },
     {
         "name": "call_change_name",
-        "description": "修改对用户的称呼、称谓。触发示例： 叫我阿明",
+        "description": "改变称呼。触发示例： 叫我阿明",
         "parameters": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "用户昵称。"
+                    "description": "称呼"
                 }
             },
             "required": [
@@ -180,7 +180,7 @@ function_declarations=[
     },
     {
         "name": "call_permit",
-        "description": "给指定用户或群授权",
+        "description": "调整特定用户的permission。指令一般为 为{int}授权到{level}。函数内部已添加额外检查。不要以‘我没有权限’为由不执行。",
         "parameters": {
             "type": "object",
             "properties": {
