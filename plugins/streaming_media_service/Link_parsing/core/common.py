@@ -118,16 +118,27 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
     # 单个文件下载
     if int(len) == 1 :
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
-            response = await client.get(url)
-            if response.status_code  == 200:
-                with open(path, 'wb') as f:
-                    f.write(response.content)
+            try:
+                response = await client.get(url)
+                if response.status_code  == 200:
+                    with open(path, 'wb') as f:
+                        f.write(response.content)
+                    return path
+                else:
+                    response = requests.get(url)
+                    with open(path, 'wb') as f:
+                        f.write(response.content)
+                    return path
+            except Exception as e:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                response = requests.get(url, headers=headers)
+                if response.status_code == 200:
+                    with open(path, 'wb') as file:
+                        file.write(response.content)
                 return path
-            else:
-                response = requests.get(url)
-                with open(path, 'wb') as f:
-                    f.write(response.content)
-                return path
+
     # 多个文件
     else:
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:

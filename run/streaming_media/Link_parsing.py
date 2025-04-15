@@ -71,6 +71,7 @@ def main(bot,config):
         global teamlist
         proxy = config.api["proxy"]["http_proxy"]
         url=event.pure_text
+        #print(url)
         if url == '' and 'json' in event.processed_message[0]:
             url = event.processed_message[0]['json']['data']
         if url == '' :
@@ -80,7 +81,7 @@ def main(bot,config):
                     url = "QQ小程序"+event_context['meta']['detail_1']['qqdocurl']
             except:
                 pass
-
+        #print(url)
         if event.group_id in teamlist:
             json=teamlist[event.group_id]
             if event.get("text") is not None and event.get("text")[0]=="下载视频":

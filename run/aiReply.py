@@ -1,3 +1,4 @@
+
 import os
 import random
 
@@ -184,3 +185,4 @@ def main(bot,config):
                   # reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
                   if reply_message is not None:
                       await send_text(bot,event,config,reply_message.strip())
+

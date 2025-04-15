@@ -83,6 +83,10 @@ today_wife:
   header: 'https://weibo.com/'          #知道的自己改，不知道的不要动
   wifePrefix: '/'                       #透群友的指令前缀
   复读开关: True
+  签🦌撤回: True
+  透群友撤回: True
+  透热门群友: True #只会透到最近发言较多的群友
+
 
 ai绘画:
   sdUrl: # 你自己搭建的sd，地址，示例http://127.0.0.1:17858（示例≠你能直接填示例用），免费云部署见文档，本地部署https://www.bilibili.com/video/BV1iM4y1y7oA/

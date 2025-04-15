@@ -278,7 +278,11 @@ def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=No
             else:                                           # 不能正常渲染则加载默认字体渲染
                 bbox = font.getbbox(char)
                 char_height = bbox[3] - bbox[1]
-                if char_height == 0: continue
+                if char_height == 0:
+                    bbox = font.getbbox(' ')
+                    char_width = bbox[2] - bbox[0]
+                    x += char_width + spacing
+                    continue
                 font_restore = ImageFont.load_default(char_height - 1)
                 if can_render_character(font_restore, char):
                     bbox = font_restore.getbbox(char)
@@ -294,7 +298,10 @@ def draw_text_step(image, position, text, font, text_color=(0, 0, 0), spacing=No
                         x += text_emoji_width + spacing + 3
                         continue
                     except Exception as e:
-                        continue
+                        #continue
+                        pass
+                        bbox = font.getbbox(' ')
+                        char_width = bbox[2] - bbox[0]
             x += char_width + spacing
     return image
 
@@ -606,6 +613,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
             #print(content)
             draw = ImageDraw.Draw(canvas)
             check_number=0
+
             if len(content) == 1:
                 line = content[0][0]
                 pattern = r'#.*?#'
@@ -721,8 +729,6 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     else:
         layer = None
 
-
-
     # 文本自动换行
     (processed_contents,introduce_content,introduce_height,total_height) = handle_context(contents,font, content_width,
                                 total_height, padding, type_check, introduce, font_tx_introduce,header_height,
@@ -743,7 +749,6 @@ def draw_adaptive_graphic_and_textual(contents, canvas_width=1000, padding=25, f
     #print(total_height)
     canvas = create_gradient_background((canvas_width, total_height), color1=(191, 202, 255), color2=(185, 246, 236))
     draw = ImageDraw.Draw(canvas)
-
 
 
     canvas,current_y=handle_img(canvas, padding, padding_x,padding_x, avatar_path, font_size, name, Time, header_height,

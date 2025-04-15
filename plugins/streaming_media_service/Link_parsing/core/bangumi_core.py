@@ -2,6 +2,8 @@ import json
 import requests
 import httpx
 import asyncio
+import datetime
+
 
 async def claendar_bangumi_get_json():
     async with httpx.AsyncClient() as client:
@@ -9,9 +11,11 @@ async def claendar_bangumi_get_json():
         response = await client.get(url)
         if response.status_code:
             data = response.json()
-            week=data[0]['weekday']['cn']
-            calendar_json_init=data[0]['items']
-            #print(json.dumps(calendar_json_init, indent=4))
+            weekday = datetime.datetime.today().weekday()
+            week=data[weekday]['weekday']['cn']
+            calendar_json_init=data[weekday]['items']
+            #print(week)
+            #print(json.dumps(data, indent=4))
         return calendar_json_init,week
 
 async def bangumi_subject_post_json(type=None,target=None):
@@ -77,8 +81,9 @@ async def bangumi_subjects_get_json_PIL(subject_id=None):
 
 async def main():
     #data = await bangumi_subject_post_json(target='败犬女主太多了',type=2)
-    await bangumi_subjects_get_json_PIL(subject_id=464376)
-    #print(data)
+    calendar_json_init,week=await claendar_bangumi_get_json()
+    print(week)
+    print(json.dumps(calendar_json_init, indent=4))
 
 # 运行异步任务
 if __name__ == "__main__":

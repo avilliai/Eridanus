@@ -22,7 +22,7 @@ basic_plugin:
     mode: "blueArchive" #牌面。可填 blueArchive,bilibili,AbstractImages
     彩蛋牌:
       enable: true #是否开启彩蛋牌
-      probability: 10 #彩蛋牌出现概率
+      probability: 5 #彩蛋牌出现概率
       card_index:
         - data/pictures/tarot/hidden_tarot/dio.jpg: ""
         - data/pictures/tarot/hidden_tarot/GIOGIO.jpg: ""
@@ -36,6 +36,7 @@ basic_plugin:
     soutu_bot: true       #搜本子
   绘图框架:
     gal_recommend: True   #galgame推荐是否接入绘图框架，若false则聊天记录发送
+    majsoul_search: True  #雀魂搜索功能是否接入绘图框架，若false则文字发送
 
 JMComic:                  #禁漫相关功能设置
   anti_nsfw: black_and_white   #防吞策略，可选gif、black_and_white、no_censor
