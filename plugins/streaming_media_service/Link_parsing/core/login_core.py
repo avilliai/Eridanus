@@ -2,7 +2,7 @@ from bilibili_api import user, sync
 import yaml
 import os
 import urllib.parse
-from bilibili_api import login_v2, sync
+
 import time
 
 from bilibili_api.user import get_self_info
@@ -81,6 +81,7 @@ async def bilibili_login():
 
 
     if mode == 4:
+        from bilibili_api import login_v2
         qr = login_v2.QrCodeLogin(platform=login_v2.QrCodeLoginChannel.WEB)  # 生成二维码登录实例，平台选择网页端
         await qr.generate_qrcode()  # 生成二维码
         print(qr.get_qrcode_terminal())  # 生成终端二维码文本，打印

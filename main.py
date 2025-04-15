@@ -48,7 +48,7 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
                     plugin_modules.append((plugin_name, module_name))
                 else:
                     if plugin_name!="nailong_get" and plugin_name!="func_collection":
-                        bot1.logger.info(f"⚠️ The plugin `{plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
+                        bot1.logger.info(f"⚠️ The plugin `{module_path}.{plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
     return plugin_modules
 
@@ -57,11 +57,14 @@ def check_has_main(module_name):
     try:
         spec = importlib.util.find_spec(module_name)
         if spec is None:
+            bot1.logger.warning(f"⚠️ 未找到模块 {module_name}")
             return False
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return hasattr(module, "main")
     except Exception:
+        bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
+        traceback.print_exc()
         return False
 
 

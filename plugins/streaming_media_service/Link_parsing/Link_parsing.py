@@ -30,11 +30,15 @@ from plugins.streaming_media_service.Link_parsing.core.xhs import XHS_REQ_LINK
 from plugins.streaming_media_service.Link_parsing.core.bangumi_core import claendar_bangumi_get_json,bangumi_subject_post_json,bangumi_subjects_get_json_PIL
 import inspect
 from asyncio import sleep
-
-from bilibili_api import select_client
+try:
+    from bilibili_api import select_client
+    select_client("httpx")
+except ImportError:
+    #旧版本兼容问题，整合包更新后删除此部分代码
+    pass
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-select_client("httpx")
+
 
 import random
 import os
