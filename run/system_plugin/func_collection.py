@@ -21,7 +21,7 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                 config.save_yaml("scheduledTasks_push_groups")
                 await bot.send(event,"订阅成功")
         else:
-            if event.group_id in config.scheduledTasks_push_groups.yaml["latest_asmr_push"]["groups"]:
+            if event.group_id in config.scheduledTasks_push_groups["latest_asmr_push"]["groups"]:
                 config.scheduledTasks_push_groups["latest_asmr_push"]["groups"].remove(event.group_id)
                 config.save_yaml("scheduledTasks_push_groups")
                 await bot.send(event,"取消订阅成功")
