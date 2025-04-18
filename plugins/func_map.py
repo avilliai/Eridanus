@@ -40,6 +40,7 @@ for module_name, functions in dynamic_imports.items():
                 logger.warning(f"⚠️ {module_name} 中不存在 {func}")
     except Exception as e:
         logger.error(f"❌ 无法导入模块 {module_name}: {e}")
+        traceback.print_exc()
 
 async def call_quit_chat(bot, event, config):
     return False
