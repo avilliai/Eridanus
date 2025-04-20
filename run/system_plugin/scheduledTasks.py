@@ -15,6 +15,7 @@ from plugins.basic_plugin.weather_query import weather_query, free_weather_query
 from plugins.core.aiReplyCore import aiReplyCore
 from plugins.core.userDB import get_users_with_permission_above, get_user
 from run.system_plugin.func_collection import trigger_tasks
+from plugins.streaming_media_service.Link_parsing.Link_parsing import bangumi_PILimg
 
 
 def main(bot,config):
@@ -119,14 +120,21 @@ def main(bot,config):
             logger.info_func("单向历推送执行完毕")
 
         elif task_name == "bangumi":
-            url = "https://www.bangumi.app/calendar/today"
-            path = "data/pictures/cache/today-"
-            today = datetime.datetime.now().strftime("%Y-%m-%d")
-            path = path + today + ".png"
-            #await screenshot_to_pdf_and_png(url, path, 1080, 3000)
-            """
-            未完成
-            """
+            logger.info_func("获取bangumi每日推送")
+            weekday = datetime.datetime.today().weekday()
+            weekdays = ["一", "二", "三", "四", "五", "六", "日"]
+            bangumi_json = await bangumi_PILimg(filepath='data/pictures/cache/', type_soft=f'bangumi 周{weekdays[weekday]}放送',name=f'bangumi 周{weekdays[weekday]}放送',type='calendar')
+            if bangumi_json['status']:
+                logger.info_func("推送bangumi每日番剧")
+                for group_id in config.sheduled_tasks_push_groups_ordinary["bangumi"]["groups"]:
+                    text=config.settings['scheduledTasks']['bangumi']['text']
+                    if group_id == 0: continue
+                    try:
+                        await bot.send_group_message(group_id, [Text(text),Image(file=bangumi_json['pic_path'])])
+                    except Exception as e:
+                        logger.error(f"向群{group_id}推送单向历失败，原因：{e}")
+                    await sleep(6)
+            logger.info_func("bangumi推送执行完毕")
         elif task_name == "nightASMR":
             logger.info_func("获取晚安ASMR")
             """

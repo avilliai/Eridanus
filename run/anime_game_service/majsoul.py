@@ -113,7 +113,8 @@ def main(bot, config):
 
         if check_flag in [2,4,5]:canvas_width=1400
         else:canvas_width=1200
-        majsoul_pil_json=await majsoul_PILimg(text=majsoul_json["text"],filepath='data/pictures/cache/',type_soft=majsoul_json["type"],canvas_width=canvas_width)
+        majsoul_pil_context=f'{majsoul_json["text"]}\n#”雀魂查询“ 指令菜单：#\n雀魂信息、雀魂记录、雀魂注册\n雀魂四麻查询、雀魂三麻查询、雀魂四麻记录、雀魂三麻记录'
+        majsoul_pil_json=await majsoul_PILimg(text=majsoul_pil_context,filepath='data/pictures/cache/',type_soft=majsoul_json["type"],canvas_width=canvas_width)
         if majsoul_pil_json['status']:
             bot.logger.info('雀魂图片制作成功，开始推送~~~')
             await bot.send(event, Image(file=majsoul_pil_json['pic_path']))

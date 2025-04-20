@@ -73,14 +73,14 @@ def main(bot,config):
         url=event.pure_text
         #print(url)
         if url == '' and 'json' in event.processed_message[0]:
-            url = event.processed_message[0]['json']['data']
-        if url == '' :
             try:
+                url = event.processed_message[0]['json']['data']
                 event_context=json_handle.loads(event.message_chain[0].data)
                 if 'meta' in event_context:
                     url = "QQ小程序"+event_context['meta']['detail_1']['qqdocurl']
             except:
                 pass
+        if 'http' not in url:url=event.raw_message
         #print(url)
         if event.group_id in teamlist:
             json=teamlist[event.group_id]

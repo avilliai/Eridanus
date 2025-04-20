@@ -43,6 +43,7 @@ async def banguimiList(year, month, top):
         page += 1  # 向上取整
     for i in range(1, page + 1):
         url = f"https://bgm.tv/anime/browser/airtime/{year}-{month}?sort=rank&page={i}"  # 构造请求网址，page参数为第i页
+        #print(url)
         async with httpx.AsyncClient(timeout=20, headers=get_headers()) as client:  # 100s超时
             response = await client.get(url)  # 发起请求
         soup = BeautifulSoup(response.content, "html.parser")
@@ -69,9 +70,10 @@ async def banguimiList(year, month, top):
             if rank == top:  # 达到显示上限
                 break
             rank += 1
-        if rank % 24 != 1 and rank < top:  # 到底了
+        if rank >= top:  # 到底了
             isbottom = 1
             break
+        #print(rank,top)
     return fiNal_Text, finNal_Cover, isbottom
 
 
