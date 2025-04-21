@@ -96,9 +96,11 @@ def main(bot,config):
 
         try:
             finalT, finalC, isbottom = await banguimiList(year, month, top)
+            #print(finalT, finalC, isbottom)
             if finalT == [] or finalC == [] or isbottom == 0:
                 month_check=int(month)-1
                 finalT, finalC, isbottom = await banguimiList(year, month_check, top)
+            #print(finalT, finalC, isbottom)
             title = f'{year}年{month}月 | Bangumi 番组计划\n'
             if year == "":
                 title = "| Bangumi 番组计划\n"

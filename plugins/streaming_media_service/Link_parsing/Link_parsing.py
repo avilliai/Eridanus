@@ -110,7 +110,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         url: str = str(resp.url)
         #print(f'url:{url}')
     # AV/BV处理
-    #if "av" in url:url= 'https://www.bilibili.com/video/' + av_to_bv(url)
+    if "av" in url:url= 'https://www.bilibili.com/video/' + av_to_bv(url)
     if re.match(r'^BV[1-9a-zA-Z]{10}$', url):
         url = 'https://www.bilibili.com/video/' + url
     json_check['url'] = url
@@ -221,7 +221,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                         text_list_check = ''
                         number=0
                         pics_context=[]
-                        #print(json.dumps(dynamic_info['item']['modules']['module_dynamic']['major'], indent=4))
+                        print(json.dumps(opus_paragraphs, indent=4))
 
 
                         for text_check in opus_paragraphs['summary']['rich_text_nodes']:
@@ -243,6 +243,9 @@ async def bilibili(url,filepath=None,is_twice=None):
                             contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(pics_context))) for item in pics_context]))
                         else:
                             contents.append(text_list_check)
+                            for pic_check in opus_paragraphs['pics']:
+                                pics_context.append(pic_check['url'])
+                            contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(pics_context))) for item in pics_context]))
                     elif 'live_rcmd' in dynamic_info['item']['modules']['module_dynamic']['major']:
                         live_paragraphs = dynamic_info['item']['modules']['module_dynamic']['major']['live_rcmd']
                         content = json.loads(live_paragraphs['content'])
@@ -252,6 +255,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                         pub_time = datetime.fromtimestamp(pub_time).astimezone().strftime("%Y-%m-%d %H:%M:%S")
                         type_software = 'BiliBili 直播'
                     else:
+
                         paragraphs = dynamic_info['item']['modules']['module_dynamic']['major']['archive']
                         title,desc,cover,bvid=paragraphs['title'],paragraphs['desc'],paragraphs['cover'],paragraphs['bvid']
                         contents.append((await asyncio.gather(*[asyncio.create_task(download_img(cover, f'{filepath}'))]))[0])
@@ -1104,6 +1108,7 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
         text_add=''
         words = text.split("\n")  # 按换行符分割文本，逐行处理
         for line in words:  # 遍历每一行（处理换行符的部分）
+            #print(line)
             count+=1
             text_add+=f'{line}\n'
             if count == len(words):break
@@ -1131,11 +1136,19 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
             name_bangumi = calendar_item['name_cn']
             if '' == name_bangumi:
                 name_bangumi = calendar_item['name']
-            if 'rating' in calendar_item:
-                text_total += f"{count}、 {name_bangumi}----{calendar_item['rating']['score']}☆\n"
-            else:
-                text_total += f"{count}、 {name_bangumi}\n"
-            img_context.append(calendar_item['images']['common'].replace('http','https'))
+
+
+            try:
+                img_context.append(calendar_item['images']['common'].replace('http','https'))
+
+                if 'rating' in calendar_item:
+                    text_total += f"{count}、 {name_bangumi}----{calendar_item['rating']['score']}☆\n"
+                else:
+                    text_total += f"{count}、 {name_bangumi}\n"
+            except:
+                count -= 1
+                pass
+
 
         count=0
         count_1=0
@@ -1358,7 +1371,10 @@ async def link_prising(url,filepath=None,proxy=None,type=None):
     json_check = copy.deepcopy(json_init)
     link_prising_json=None
     try:
-        url = (re.findall(r"https?:[^\s\]\)]+", url))[0]
+        url_list = (re.findall(r"https?:[^\s\]\)]+", url))
+        for url_check in url_list:
+            url=url_check
+            if 'b23' in url_check: break
         #print(url)
     except Exception as e:
         json_check['status'] = False
@@ -1453,7 +1469,7 @@ if __name__ == "__main__":#测试用，不用管
     url = 'https://www.hikarinagi.com/p/21338'
     url='https://live.bilibili.com/26178650'
     url='https://gal.manshuo.ink/archives/451/'
-    url='0.28 复制打开抖音，看看【空空子SAMA✨的作品】说你喜不喜欢玩抽象！ # 精神状态belike #... https://v.douyin.com/DwN6YB4s8pk/ qEh:/ 04/23 G@i.Cu '
+    url='https://t.bilibili.com/1056778966646390806'
 
     asyncio.run(link_prising(url))
     #asyncio.run(youxi_pil_new_text())

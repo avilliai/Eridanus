@@ -155,7 +155,7 @@ def main(bot,config):
             global filepath
             if str(event.pure_text).startswith("今"):
                 if ('今日' in str(event.pure_text) or '今天' in str(event.pure_text) or '今日' in str(
-                        event.pure_text)) and '老公' in str(event.pure_text):
+                        event.pure_text)) and '萝莉' in str(event.pure_text):
                     bot.logger.info("今日萝莉开启！")
                     params = {
                         "format": "json",

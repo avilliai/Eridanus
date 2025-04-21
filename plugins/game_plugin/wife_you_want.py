@@ -389,6 +389,14 @@ async def PIL_lu_maker(today , target_id):
     #canvas.show()  # 显示图片
     path_img=f"data/pictures/cache/lulululu{int(time.time())}.png"
     canvas.save(path_img)  # 保存图片为文件
+
+    try:
+        canvas.close()
+        del canvas
+        import gc
+        gc.collect()
+    except:
+        pass
     return path_img
 
 
@@ -419,7 +427,7 @@ def today_check_api(today_wife_api,header,num_check=None):
         response=requests.get(today_wife_api[num_check], headers=headers)
         return response
     except:
-        return today_check_api(today_wife_api,header,                                                                                                                                                                                                                                num_check=num_check+1)
+        return today_check_api(today_wife_api,header,num_check=num_check+1)
 
 
 if __name__ == '__main__':
