@@ -135,7 +135,7 @@ async def update_user(user_id, **kwargs):
 
 # 获取用户信息（添加缓存）
 @async_cache()
-async def get_user(user_id, nickname=""):
+async def get_user(user_id, nickname="") -> User:
     try:
         default_user = {
             "user_id": user_id,
