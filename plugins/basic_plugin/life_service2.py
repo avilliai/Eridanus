@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
-import random
 from bs4 import BeautifulSoup as bs
 import httpx
 import os
@@ -14,8 +12,8 @@ import requests
 import yaml
 from bs4 import BeautifulSoup  # 用于解析 HTML
 
-from plugins.utils.random_str import random_str
-from plugins.utils.utils import get_headers
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import get_headers
 
 
 async def emojimix(emoji1, emoji2):

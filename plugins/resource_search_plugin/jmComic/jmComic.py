@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-import copy
 import os.path
 import shutil
 
@@ -10,8 +9,8 @@ import asyncio
 from jmcomic import *
 
 
-from plugins.utils.random_str import random_str
-from plugins.aiDraw.antiSFW import process_folder ,compress_gifs
+from framework_common.utils.random_str import random_str
+from run.ai_generated_art.service.antiSFW import process_folder, compress_gifs
 
 
 class MyDownloader(jmcomic.JmDownloader):

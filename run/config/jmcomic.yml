@@ -1,0 +1,11 @@
+dir_rule:
+  base_dir: data/pictures/benzi/temp184712
+  rule: Bd
+download:
+  Obfuscation: gif
+  gifcompress: false
+  image:
+    suffix: .jpg
+  threading:
+    image: 3
+    photo: 1

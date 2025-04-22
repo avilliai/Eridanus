@@ -4,14 +4,13 @@ from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import File, Image, Video, Card, Node, Text
+from developTools.message.message_components import File, Image, Video, Node, Text
 from plugins.core.userDB import get_user
-from plugins.resource_search_plugin.asmr.asmr import get_audio
 from plugins.resource_search_plugin.asmr.asmr100 import parse_from_asmr_id
 from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising, download_video_link_prising
 from plugins.streaming_media_service.youtube.youtube_tools import get_img, audio_download, video_download
-from plugins.utils.random_str import random_str
-from plugins.utils.utils import download_img, download_file, merge_audio_files
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import download_img, download_file, merge_audio_files
 
 
 async def download_video(bot,event,config,url,type="audio",platform="youtube"):

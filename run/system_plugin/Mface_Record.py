@@ -1,10 +1,7 @@
-import os
-import random
-
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Mface, Image, At
 
-from plugins.utils.utils import download_img
+from framework_common.utils.utils import download_img
 
 async def call_send_mface(bot,event,config,summary):
     await bot.send(event,Image(file=f"data/pictures/Mface/{summary}"))

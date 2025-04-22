@@ -1,7 +1,6 @@
 import concurrent.futures
 import importlib
 import os
-import subprocess
 import sys
 import asyncio
 import threading
@@ -10,23 +9,12 @@ import traceback
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from plugins.core.yamlLoader import YAMLManager
+from framework_common.framework_util.yamlLoader import YAMLManager
 if sys.platform == 'win32':
   asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-from plugins.utils.websocket_fix import ExtendBot
+from framework_common.framework_util.websocket_fix import ExtendBot
 
-config = YAMLManager(["config/settings.yaml",
-                      "config/basic_config.yaml",
-                      "config/api.yaml",
-                      "config/controller.yaml",
-                      "data/censor/censor_group.yaml",
-                      "data/censor/censor_user.yaml",
-                      "data/media_service/bilibili/bili_dynamic.yaml",
-                      "data/tasks/sheduled_tasks_push_groups_ordinary.yaml",
-                      "data/tasks/scheduledTasks_push_groups.yaml",
-                      "data/recognize/doro.yaml",
-                      "data/recognize/nailong.yaml",
-                      "data/recognize/nanniang.yaml",]) #这玩意用来动态加载和修改配置文件
+config = YAMLManager("run").config #这玩意用来动态加载和修改配置文件
 #from developTools.adapters.http_adapter import HTTPBot
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
@@ -47,8 +35,8 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
                 if check_has_main(module_name) and plugin_name!="nailong_get":
                     plugin_modules.append((plugin_name, module_name))
                 else:
-                    if plugin_name!="nailong_get" and plugin_name!="func_collection":
-                        bot1.logger.info(f"⚠️ The plugin `{module_path}.{plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
+                    if plugin_name!="nailong_get" and plugin_name!="func_collection" and "service" not in module_name:
+                        bot1.logger.info(f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
     return plugin_modules
 
@@ -110,18 +98,7 @@ try:
 except:
   enable_webui=False
 if enable_webui and os.path.exists("../server.exe"):
-    config_copy = YAMLManager(["config/settings.yaml",
-                      "config/basic_config.yaml",
-                      "config/api.yaml",
-                      "config/controller.yaml",
-                      "data/censor/censor_group.yaml",
-                      "data/censor/censor_user.yaml",
-                      "data/media_service/bilibili/bili_dynamic.yaml",
-                      "data/tasks/sheduled_tasks_push_groups_ordinary.yaml",
-                      "data/tasks/scheduledTasks_push_groups.yaml",
-                      "data/recognize/doro.yaml",
-                      "data/recognize/nailong.yaml",
-                      "data/recognize/nanniang.yaml",]) # 这玩意用来动态加载和修改配置文件
+    config_copy = YAMLManager("run").config # 这玩意用来动态加载和修改配置文件
     def config_fix(config_copy):
         config_copy.settings["JMComic"]["anti_nsfw"] = "no_censor"
         config_copy.settings["asmr"]["gray_layer"] = False

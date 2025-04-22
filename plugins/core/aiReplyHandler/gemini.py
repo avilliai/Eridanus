@@ -8,7 +8,7 @@ from PIL import Image
 
 from developTools.utils.logger import get_logger
 from plugins.core.llmDB import get_user_history, update_user_history
-from plugins.utils.random_str import random_str
+from framework_common.utils.random_str import random_str
 
 logger=get_logger()
 async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None,temperature=0.7,maxOutputTokens=2048):

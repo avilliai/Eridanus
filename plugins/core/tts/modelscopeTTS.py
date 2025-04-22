@@ -1,10 +1,6 @@
-import asyncio
-import json
-import os
-
 import httpx
 
-from plugins.utils.random_str import random_str
+from framework_common.utils.random_str import random_str
 
 datap = {"speaker":"宫子（泳装）","text":"上午好"}
 

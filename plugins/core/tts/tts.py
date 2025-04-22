@@ -3,7 +3,6 @@ import asyncio
 import random
 import re
 import threading
-import time
 
 import httpx
 import requests
@@ -16,8 +15,8 @@ from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from plugins.core.tts.online_vits import huggingface_online_vits
 from plugins.core.tts.online_vits2 import huggingface_online_vits2
 from plugins.core.tts.vits import vits
-from plugins.utils.random_str import random_str
-from plugins.utils.translate import translate
+from framework_common.utils.random_str import random_str
+from framework_common.utils.translate import translate
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:
@@ -149,7 +148,7 @@ async def acgn_ai_tts(token, config, text, speaker,inclination="中立_neutral")
     return p
 
 if __name__ == '__main__':
-    from plugins.core.yamlLoader import YAMLManager
+    from framework_common.framework_util.yamlLoader import YAMLManager
     config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                           "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
     # http_server地址，access_token

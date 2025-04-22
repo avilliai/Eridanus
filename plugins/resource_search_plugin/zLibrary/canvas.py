@@ -1,10 +1,9 @@
 from io import BytesIO
-from time import sleep
 
 import requests
 from PIL import Image, ImageFont, ImageDraw
 
-from plugins.utils.random_str import random_str
+from framework_common.utils.random_str import random_str
 
 texture_path = "plugins/resource_search_plugin/zLibrary/img.png"
 def create_book_image(data):

@@ -1139,7 +1139,7 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
 
 
             try:
-                img_context.append(calendar_item['images']['common'].replace('http','https'))
+                img_context.append(calendar_item['images']['common_utils'].replace('http','https'))
 
                 if 'rating' in calendar_item:
                     text_total += f"{count}、 {name_bangumi}----{calendar_item['rating']['score']}☆\n"
@@ -1219,7 +1219,7 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
             if int(search_json_init['results']) <= 5:
                 img_context.append(search_item['images']['large'].replace('http', 'https'))
             else:
-                img_context.append(search_item['images']['common'].replace('http', 'https'))
+                img_context.append(search_item['images']['common_utils'].replace('http', 'https'))
 
         count = 0
         count_1 = 0

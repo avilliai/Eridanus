@@ -1,12 +1,9 @@
-import json
 import sys
-import time
-import aiohttp
 import asyncio
 import httpx
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright
 from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising
-from plugins.utils.random_str import random_str
+from framework_common.utils.random_str import random_str
 from plugins.streaming_media_service.Link_parsing.core.bili import fetch_latest_dynamic_id_api
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -131,7 +128,7 @@ async def fetch_latest_dynamic(uid, config):
 
 
 if __name__ == '__main__':
-    from plugins.core.yamlLoader import YAMLManager
+    from framework_common.framework_util.yamlLoader import YAMLManager
 
     config = YAMLManager(["config/settings.yaml",
                           "config/basic_config.yaml",

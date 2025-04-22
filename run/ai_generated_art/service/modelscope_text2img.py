@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
-import asyncio
-import json
-import random
 import time
 import re
 import httpx
 
 
 from developTools.utils.logger import get_logger
-from plugins.utils.random_str import random_str
-import ruamel.yaml
-from plugins.utils.utils import parse_arguments
-from plugins.aiDraw.wildcard import get_available_wildcards, replace_wildcards
+from framework_common.framework_util.yamlLoader import YAMLManager
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import parse_arguments
+from run.ai_generated_art.service.wildcard import replace_wildcards
 
 logger=get_logger()
 
@@ -20,11 +17,11 @@ positives = '{},rating:general, best quality, very aesthetic, absurdres'
 negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts'
 #positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
 
-yaml = ruamel.yaml.YAML()
-yaml.preserve_quotes = True
-with open('config/settings.yaml', 'r', encoding='utf-8') as f:
-    controller = yaml.load(f)
-aiDrawController = controller.get("ai绘画")
+
+manager = YAMLManager("run")
+same_manager = YAMLManager.get_instance()
+#print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
+aiDrawController = same_manager.ai_generated_art.config.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 if_save = aiDrawController.get("sd图片是否保存到生图端") if aiDrawController else False
 sd_w = int(aiDrawController.get("sd画图默认分辨率", "1024,1536").split(",")[0]) if aiDrawController else 1064

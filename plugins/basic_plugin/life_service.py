@@ -1,14 +1,13 @@
 import asyncio
 import datetime
 import os.path
-import random
 from io import BytesIO
 
 import httpx
 from PIL import Image
 
-from plugins.utils.random_str import random_str
-from plugins.utils.utils import get_headers
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import get_headers
 
 
 async def news():

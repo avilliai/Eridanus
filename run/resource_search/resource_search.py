@@ -1,22 +1,19 @@
-import os
-
 import asyncio
 import random
 import shutil
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
-from developTools.message.message_components import Image, Node, Text, File, Music, Record, Card
+from developTools.message.message_components import Image, Node, Text, File, Card
 from plugins.core.userDB import get_user
-from plugins.resource_search_plugin.asmr.asmr import ASMR_random, get_img, get_audio
 from plugins.resource_search_plugin.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
     choose_from_hotest_asmr_100
 from plugins.resource_search_plugin.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
     downloadALLAndToPdf
 from plugins.resource_search_plugin.zLibrary.zLib import search_book, download_book
 from plugins.resource_search_plugin.zLibrary.zLibrary import Zlibrary
-from plugins.utils.random_str import random_str
-from plugins.utils.utils import download_file, merge_audio_files, download_img
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import download_file, merge_audio_files, download_img
 
 global Z
 

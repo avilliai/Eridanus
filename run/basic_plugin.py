@@ -1,13 +1,9 @@
-import os
 import random
-import re
 import traceback
-
-from asyncio import sleep
 
 import asyncio
 
-from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
+from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image, Music
 from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
 from plugins.basic_plugin.cloudMusic import cccdddm
@@ -23,8 +19,8 @@ from plugins.core.tts.vits import get_vits_speakers
 from plugins.core.userDB import get_user
 
 
-from plugins.utils.utils import download_img
-from plugins.utils.random_str import random_str
+from framework_common.utils.utils import download_img
+from framework_common.utils.random_str import random_str
 
 
 

@@ -1,0 +1,42 @@
+
+sightengine:       #ai创作图片鉴别，自己去申请https://dashboard.sightengine.com/api-credentials
+  api_user: ''
+  api_secret: ''
+
+ai绘画:
+  sdUrl: # 你自己搭建的sd，地址，示例http://127.0.0.1:17858（示例≠你能直接填示例用），免费云部署见文档，本地部署https://www.bilibili.com/video/BV1iM4y1y7oA/
+    - ''
+  sd审核和反推api: '' # 如果你的sd有反推插件https://github.com/spawner1145/stable-diffusion-webui-wd14-tagger.git，可以直接使用你的sdurl的api
+  nai_key:
+    - ''
+  sd画图: true
+  sd默认启动模型: 'miaomiao_1_4.safetensors'
+  反推和审核使用模型: 'wd14-vit-v2-git' # 可填的选项见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB
+  sd图片是否保存到生图端: true   #是否将生成的图片保存在webui的outputs里
+  novel_ai画图: false
+  sd画图默认分辨率: '1024,1536' # 宽,高（别带空格）
+  sd最大分辨率: '1600,1600'
+  sd队列长度限制: 6     #防止有人刷绘图指令。
+  ai绘画所需权限等级: 0 # sd绘图权限
+  内置ai绘画1开关: true  #聚合接口
+  内置ai绘画2开关: true  #NoobXL-V-pred-v1.0，来自modelscope。
+  内置ai绘画1所需权限等级: 0  #默认聚合绘图功能所需等级
+  内置ai绘画2所需权限等级: 0  #NoobXL-V-pred-v1.0
+
+  禁止nsfw: false
+  allow_nsfw_groups:               #允许色图的群号，禁止nsfw开启时有效
+  - 123
+  其他默认绘图参数: # 各参数见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB#%E6%89%80%E6%9C%89%E5%8F%AF%E8%B0%83%E8%8A%82%E5%8F%82%E6%95%B0%E5%88%97%E8%A1%A8
+    - --d 0.7
+    - --p {},rating:general, best quality, very aesthetic, absurdres
+    - --n blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts
+    - --steps 28
+    - --sampler Euler a
+    - --scheduler Automatic
+    - --nai-sampler k_euler_ancestral
+    - --nai-scheduler karras
+    - --cfg 4.5
+    - --nai-cfg 5
+    - --ns 5
+    - --nf 20
+    - --overmask 64

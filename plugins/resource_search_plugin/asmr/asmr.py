@@ -4,7 +4,7 @@ from pytubefix import Channel, YouTube
 from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
-from plugins.utils.utils import get_headers
+from framework_common.utils.utils import get_headers
 
 yaml = YAML(typ='safe')
 with open('config/api.yaml', 'r', encoding='utf-8') as f:

@@ -1,5 +1,4 @@
 import asyncio
-from asyncio import sleep
 from typing import Optional, Tuple, List, Dict, Any
 
 
@@ -9,7 +8,7 @@ from developTools.utils.logger import get_logger
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
-from plugins.utils.random_str import random_str
+from framework_common.utils.random_str import random_str
 
 # proxies =
 #proxies = "http://127.0.0.1:10809"

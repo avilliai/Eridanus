@@ -2,14 +2,11 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
-import random
-import time
 
 import httpx
-import requests
 
 from developTools.utils.logger import get_logger
-from plugins.utils.random_str import random_str
+from framework_common.utils.random_str import random_str
 
 logger=get_logger()
 

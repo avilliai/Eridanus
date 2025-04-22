@@ -1,6 +1,6 @@
 import httpx
 
-from plugins.utils.utils import download_img
+from framework_common.utils.utils import download_img
 
 async def get_nasa_apod(apikey,proxy):
     dataa = {"api_key": apikey}

@@ -1,15 +1,10 @@
-import base64
 import re
 import traceback
-from io import BytesIO
-from urllib.parse import quote
 
-from PIL import Image as Image1
 from httpx import AsyncClient
 
 from developTools.event.events import GroupMessageEvent
-from developTools.message.message_components import Node, Text, Image
-from plugins.utils.random_str import random_str
+from developTools.message.message_components import Node, Text
 
 
 async def call_character_identify(bot, event,config,image_url,model_name):
