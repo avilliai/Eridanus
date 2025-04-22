@@ -1,0 +1,11 @@
+api_implements: #花里胡哨
+   nudge:               #戳一戳设置。
+     counter_probability: 100 #反击概率
+     replylist:       #如果开启aiReplyCore，将不使用此处配置回复
+       - "戳我干嘛呀！"
+   send_like: 0    #“赞我”功能所需权限等级
+   recall_level: 3 #撤回？
+user_data:
+  auto_register: true  #自动为发送消息的用户注册。确保所有人都在数据库中，不建议关。
+  change_info_operate_level: 0     #相关指令所需操作权限等级。默认0级最低，数字越大等级越高
+  permit_user_operate_level: 998   #允许使用授权#{目标QQ}#{level} 指令的操作权限等级

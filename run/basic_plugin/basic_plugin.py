@@ -40,7 +40,7 @@ async def call_weather_query(bot,event,config,location=None):
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
 
-    if user_info[6] >= config.controller["basic_plugin"]["setu_operate_level"]:
+    if user_info.permission >= config.controller["basic_plugin"]["setu_operate_level"]:
         try:
             r=await anime_setu(tags,num,config.settings["basic_plugin"]["setu"]["r18mode"])
             fordMes=[]
@@ -103,7 +103,7 @@ async def call_image_search(bot,event,config,image_url=None):
         await bot.send(event, "没有开启搜图功能")
         return
     await bot.send(event, "正在搜索图片，请等待结果返回.....")
-    if user_info[6] >= config.controller["basic_plugin"]["search_image_resource_operate_level"]:
+    if user_info.permission >= config.controller["basic_plugin"]["search_image_resource_operate_level"]:
         if not image_url:
             img_url = event.get("image")[0]["url"]
         else:

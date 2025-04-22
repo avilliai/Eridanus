@@ -35,8 +35,7 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
 
     text=text.replace('```', '').strip()
     if config is None:
-        config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
-                              "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
+        config = yamlmanager
     if len(text) > config.ai_voice.config["tts"]["length_limit"]:
         raise ValueError("文本长度超出限制")
     """
@@ -147,10 +146,4 @@ async def acgn_ai_tts(token, config, text, speaker,inclination="中立_neutral")
         f.write(r.content)
     return p
 
-if __name__ == '__main__':
-    from framework_common.framework_util.yamlLoader import YAMLManager
-    config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
-                          "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
-    # http_server地址，access_token
-    r=asyncio.run(tts("你好，欢迎使用语音合成服务，请说出你想说的话。", "玲可【星穹铁道】", config))
-    print(r)
+

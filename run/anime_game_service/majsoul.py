@@ -6,7 +6,6 @@ from run.streaming_media.service.Link_parsing.Link_parsing import majsoul_PILimg
 
 def main(bot, config):
     logger=bot.logger
-    logger.info("雀魂查询插件加载中...")
 
     @bot.on(GroupMessageEvent)
     async def majsoul_personal_info_regiter(event: GroupMessageEvent):

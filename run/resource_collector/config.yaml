@@ -21,4 +21,10 @@ jmcomic:
 iwara:
   iwara_search_level: 0  #iwara搜索功能所需权限等级
   iwara_download_level: 998  #iwara下载功能所需权限等级
+JMComic:                  #禁漫相关功能设置
+  anti_nsfw: black_and_white   #防吞策略，可选gif、black_and_white、no_censor
+  gif_compress: false     #gif模式下是否压缩
+  previewPages: 6         #验车预览页数
+  autoClearPDF: True      #下载后自动清除pdf
+  savePath: "data/pictures/benzi"  #下载为pdf的默认保存路径
 

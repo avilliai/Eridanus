@@ -1,0 +1,5 @@
+绘图框架:
+  gal_recommend: True   #galgame推荐是否接入绘图框架，若false则聊天记录发送
+  majsoul_search: True  #雀魂搜索功能是否接入绘图框架，若false则文字发送
+acg_information:
+  bangumi_query_prefix: "/" #番剧查询类命令前缀

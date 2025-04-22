@@ -130,14 +130,12 @@ if __name__ == "__main__":
     # 获取 YAMLManager 实例
     manager = YAMLManager.get_instance()
 
-    # 假设 run/api.yaml 存在（直接在 run 目录下）
     print(manager.api["llm"]["apikey"])
 
-    # 修改 run/api.yaml 的数据
+
     manager.api["llm"]["apikey"] = "new-api-key"
 
-    # 假设 run/plugin1/config.yaml 存在
+
     print(manager.plugin1.config["setting"]["value"])
 
-    # 修改 run/plugin1/config.yaml 的数据
     manager.plugin1.config["setting"]["value"] = "new-value"

@@ -126,19 +126,3 @@ async def fetch_latest_dynamic(uid, config):
     else:
         return None
 
-
-if __name__ == '__main__':
-    from framework_common.framework_util.yamlLoader import YAMLManager
-
-    config = YAMLManager(["config/settings.yaml",
-                          "config/basic_config.yaml",
-                          "config/api.yaml",
-                          "config/controller.yaml",
-                          "data/censor/censor_group.yaml",
-                          "data/censor/censor_user.yaml",
-                          "data/media_service/bilibili/bili_dynamic.yaml",
-                          "data/tasks/scheduledTasks.yaml",
-                          "data/tasks/scheduledTasks_push_groups.yaml"])  # 这玩意用来动态加载和修改配置文件
-
-    r = asyncio.run(fetch_latest_dynamic(123456, config))
-    print(r)
