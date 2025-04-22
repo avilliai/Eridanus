@@ -68,7 +68,7 @@ async def call_func(bot, event, config, func_name, params):
     if not callable(func):
         raise TypeError(f"'{func_name}' is not callable.")
 
-    # 检查是否为异步函数
+
     if not inspect.iscoroutinefunction(func):
         raise TypeError(f"'{func_name}' is not an async function.")
 
