@@ -115,7 +115,7 @@ def main(bot,config):
                 await bot.send(event, "请输入正确的权限值。\n指令为\n授权#{target_qq}#{level}\n如授权#1223434343#1")
         if event.raw_message.startswith("授权"):
             match = re.search(r"qq=(\d+)", event.raw_message)
-            if match:
+            if match: #f
                 target_qq = match.group(1)
                 if '用户' in event.raw_message:
                     await call_permit(bot, event, config, target_qq, 1)
