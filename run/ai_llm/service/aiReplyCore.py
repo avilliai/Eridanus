@@ -36,7 +36,7 @@ async def judge_trigger(processed_message,user_id,config,tools=None,bot=None,eve
     trigger = False
     if event.user_id in last_trigger_time:
         bot.logger.info(f"last_trigger_time: {last_trigger_time.get(event.user_id)}")
-        if (time.time() - last_trigger_time.get(event.user_id)) <= config.api["llm"]["focus_time"]:
+        if (time.time() - last_trigger_time.get(event.user_id)) <= config.ai_llm.config["llm"]["focus_time"]:
             trigger = True
         else:
             last_trigger_time.pop(event.user_id)
@@ -54,37 +54,37 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
     """
     递归深度约束
     """
-    if recursion_times > config.api["llm"]["recursion_limit"]:
+    if recursion_times > config.ai_llm.config["llm"]["recursion_limit"]:
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
         return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
     mface_files=None
-    if tools is not None and config.api["llm"]["表情包发送"]:
+    if tools is not None and config.ai_llm.config["llm"]["表情包发送"]:
         tools=await add_send_mface(tools,config)
     if not system_instruction:
-        if config.api["llm"]["system"]:
-            system_instruction = await read_chara(user_id, config.api["llm"]["system"])
+        if config.ai_llm.config["llm"]["system"]:
+            system_instruction = await read_chara(user_id, config.ai_llm.config["llm"]["system"])
         else:
-            system_instruction = await read_chara(user_id, await use_folder_chara(config.api["llm"]["chara_file_name"]))
+            system_instruction = await read_chara(user_id, await use_folder_chara(config.ai_llm.config["llm"]["chara_file_name"]))
         user_info=await get_user(user_id)
-        system_instruction=system_instruction.replace("{用户}",user_info[1]).replace("{bot_name}",config.basic_config["bot"]["name"])
+        system_instruction=system_instruction.replace("{用户}",user_info.nickname).replace("{bot_name}",config.basic_config["bot"]["name"])
     try:
         if recursion_times==0 and processed_message:
             last_trigger_time[user_id] = time.time()
-        if config.api["llm"]["model"]=="default":
+        if config.ai_llm.config["llm"]["model"]=="default":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
                                                                               user_id)
             response_message = await defaultModelRequest(
                 prompt,
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"]["enable_proxy"] else None,
             )
             reply_message = response_message['content']
             await prompt_database_updata(user_id,response_message,config)
 
-        elif config.api["llm"]["model"]=="openai":
+        elif config.ai_llm.config["llm"]["model"]=="openai":
             if processed_message:
-                if config.api["llm"]["openai"]["使用旧版prompt结构"]:
+                if config.ai_llm.config["llm"]["openai"]["使用旧版prompt结构"]:
                     prompt, original_history = await construct_openai_standard_prompt_old_version(processed_message,
                                                                                       system_instruction, user_id, bot,
                                                                                       func_result, event)
@@ -103,16 +103,16 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                     prompt = p
             kwargs = {
                 "ask_prompt": prompt,
-                "url": config.api["llm"]["openai"].get("quest_url") or config.api["llm"]["openai"].get("base_url"),
-                "apikey": random.choice(config.api["llm"]["openai"]["api_keys"]),
-                "model":config.api["llm"]["openai"]["model"],
+                "url": config.ai_llm.config["llm"]["openai"].get("quest_url") or config.ai_llm.config["llm"]["openai"].get("base_url"),
+                "apikey": random.choice(config.ai_llm.config["llm"]["openai"]["api_keys"]),
+                "model":config.ai_llm.config["llm"]["openai"]["model"],
                 "stream":False,
-                "proxy": config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                "proxy": config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"]["enable_proxy"] else None,
                 "tools": tools,
-                "temperature": config.api["llm"]["openai"]["temperature"],
-                "max_tokens": config.api["llm"]["openai"]["max_tokens"]
+                "temperature": config.ai_llm.config["llm"]["openai"]["temperature"],
+                "max_tokens": config.ai_llm.config["llm"]["openai"]["max_tokens"]
             }
-            if config.api["llm"]["openai"]["enable_official_sdk"]:
+            if config.ai_llm.config["llm"]["openai"]["enable_official_sdk"]:
                 response_message = await openaiRequest_official(**kwargs)
             else:
                 response_message = await openaiRequest(**kwargs)
@@ -125,7 +125,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 
                     if match_think:
                         think_text = match_think.group(1)
-                        if config.api["llm"]["openai"]["CoT"]:
+                        if config.ai_llm.config["llm"]["openai"]["CoT"]:
                             await bot.send(event,[Node(content=[Text(think_text)])])
                         pattern_rest = r"</think>\n\n(.*?)$"
                         match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
@@ -133,7 +133,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                             reply_message = match_rest.group(1)
                     else:
                         if "reasoning_content" in response_message:
-                            if config.api["llm"]["openai"]["CoT"]:
+                            if config.ai_llm.config["llm"]["openai"]["CoT"]:
                                 await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
                             response_message.pop("reasoning_content")
             else:
@@ -215,7 +215,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                 return final_response
 
             #print(response_message)
-        elif config.api["llm"]["model"] == "gemini":
+        elif config.ai_llm.config["llm"]["model"] == "gemini":
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
                                                                                   func_result, event)
@@ -234,14 +234,14 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             #这里是需要完整报错的，不用try catch，否则会影响自动重试。
             response_message = await geminiRequest(
                 prompt,
-                config.api["llm"]["gemini"]["base_url"],
-                random.choice(config.api["llm"]["gemini"]["api_keys"]),
-                config.api["llm"]["gemini"]["model"],
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                config.ai_llm.config["llm"]["gemini"]["base_url"],
+                random.choice(config.ai_llm.config["llm"]["gemini"]["api_keys"]),
+                config.ai_llm.config["llm"]["gemini"]["model"],
+                config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"]["enable_proxy"] else None,
                 tools=tools,
                 system_instruction=system_instruction,
-                temperature=config.api["llm"]["gemini"]["temperature"],
-                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+                temperature=config.ai_llm.config["llm"]["gemini"]["temperature"],
+                maxOutputTokens=config.ai_llm.config["llm"]["gemini"]["maxOutputTokens"]
             )
 
             # print(response_message)
@@ -283,7 +283,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
             status = False
 
             for part in response_message["parts"]:
-                if "functionCall" in part and config.api["llm"]["func_calling"]:
+                if "functionCall" in part and config.ai_llm.config["llm"]["func_calling"]:
                     status = True
 
             if status and reply_message is not None:  # 有函数调用且有回复，就发回复和语音
@@ -338,12 +338,12 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                                    system_instruction=system_instruction, func_result=True)
                 return final_response
 
-        elif config.api["llm"]["model"]=="腾讯元器":
+        elif config.ai_llm.config["llm"]["model"]=="腾讯元器":
             prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
                 prompt,
-                config.api["llm"]["腾讯元器"]["智能体ID"],
-                config.api["llm"]["腾讯元器"]["token"],
+                config.ai_llm.config["llm"]["腾讯元器"]["智能体ID"],
+                config.ai_llm.config["llm"]["腾讯元器"]["token"],
                 user_id,
             )
             reply_message = response_message["content"]
@@ -365,10 +365,10 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         traceback.print_exc()
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
         await update_user_history(user_id, original_history)
-        if recursion_times<=config.api["llm"]["recursion_limit"]:
+        if recursion_times<=config.ai_llm.config["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
-            if recursion_times+3==config.api["llm"]["recursion_limit"] and config.api["llm"]["auto_clear_when_recursion_failed"]:
+            if recursion_times+3==config.ai_llm.config["llm"]["recursion_limit"] and config.ai_llm.config["llm"]["auto_clear_when_recursion_failed"]:
                 logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1,do_not_read_context=True)
@@ -377,13 +377,13 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
 async def send_text(bot,event,config,text):
     text = re.sub(r'```tool_code.*?```', '', text, flags=re.DOTALL)
     text=text.replace('```', '').strip()
-    if random.randint(0, 100) < config.api["llm"]["语音回复几率"]:
-        if config.api["llm"]["语音回复附带文本"]:
-            await bot.send(event, text.strip(), config.api["llm"]["Quote"])
+    if random.randint(0, 100) < config.ai_llm.config["llm"]["语音回复几率"]:
+        if config.ai_llm.config["llm"]["语音回复附带文本"]:
+            await bot.send(event, text.strip(), config.ai_llm.config["llm"]["Quote"])
 
         await tts_and_send(bot, event, config, text)
     else:
-        await bot.send(event, text.strip(), config.api["llm"]["Quote"])
+        await bot.send(event, text.strip(), config.ai_llm.config["llm"]["Quote"])
 async def tts_and_send(bot,event,config,reply_message):
     async def _tts_and_send():
         try:
@@ -396,14 +396,14 @@ async def tts_and_send(bot,event,config,reply_message):
     asyncio.create_task(_tts_and_send())
 async def prompt_database_updata(user_id,response_message,config):
     history = await get_user_history(user_id)
-    if len(history) > config.api["llm"]["max_history_length"]:
+    if len(history) > config.ai_llm.config["llm"]["max_history_length"]:
         del history[0]
         del history[0]
     history.append(response_message)
     await update_user_history(user_id, history)
 async def prompt_length_check(user_id,config):
     history = await get_user_history(user_id)
-    if len(history) > config.api["llm"]["max_history_length"]:
+    if len(history) > config.ai_llm.config["llm"]["max_history_length"]:
         while history[0]["role"]!="user":
             del history[0]
     await update_user_history(user_id, history)
@@ -412,24 +412,24 @@ async def read_context(bot,event,config,prompt):
     try:
         if event is None:
             return None
-        if config.api["llm"]["读取群聊上下文"]==False or not hasattr(event, "group_id"):
+        if config.ai_llm.config["llm"]["读取群聊上下文"]==False or not hasattr(event, "group_id"):
             return None
-        if config.api["llm"]["model"]=="gemini":
-            group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.api["llm"]["可获取的群聊上下文长度"],"gemini",bot)
-        elif config.api["llm"]["model"]=="openai":
-            if config.api["llm"]["openai"]["使用旧版prompt结构"]:
+        if config.ai_llm.config["llm"]["model"]=="gemini":
+            group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,config.ai_llm.config["llm"]["可获取的群聊上下文长度"],"gemini",bot)
+        elif config.ai_llm.config["llm"]["model"]=="openai":
+            if config.ai_llm.config["llm"]["openai"]["使用旧版prompt结构"]:
                 group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,
-                                                                            config.api["llm"]["可获取的群聊上下文长度"],
+                                                                            config.ai_llm.config["llm"]["可获取的群聊上下文长度"],
                                                                             "old_openai", bot)
             else:
                 group_messages_bg = await get_last_20_and_convert_to_prompt(event.group_id,
-                                                                            config.api["llm"]["可获取的群聊上下文长度"],
+                                                                            config.ai_llm.config["llm"]["可获取的群聊上下文长度"],
                                                                             "new_openai", bot)
         else:
             return None
         bot.logger.info(f"群聊上下文消息：已读取")
         insert_pos = max(len(prompt) - 2, 0)  # 保证插入位置始终在倒数第二个元素之前
-        if config.api["llm"]["model"]=="openai":  #必须交替出现
+        if config.ai_llm.config["llm"]["model"]=="openai":  #必须交替出现
             while prompt[insert_pos-1]["role"]!= "assistant":
                 insert_pos += 1
         prompt = prompt[:insert_pos] + group_messages_bg + prompt[insert_pos:]
@@ -440,7 +440,7 @@ async def read_context(bot,event,config,prompt):
 async def add_self_rep(bot,event,config,reply_message):
     if event is None or reply_message is None:
         return None
-    if not config.api["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
+    if not config.ai_llm.config["llm"]["读取群聊上下文"] and not hasattr(event, "group_id"):
         return None
     try:
         self_rep = [{"text":reply_message.strip()}]
@@ -488,7 +488,7 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
         cleaned_text = re.sub(pattern, replace_match, reply_message).strip()
 
         if matched_files:
-            matched_files = matched_files[:config.api["llm"]["单次发送表情包数量"]]
+            matched_files = matched_files[:config.ai_llm.config["llm"]["单次发送表情包数量"]]
             logger.info(f"mface 匹配到的文件名: {matched_files}")
 
         logger.info(f"mface 处理后的文本: {cleaned_text}")
@@ -505,7 +505,7 @@ def remove_mface_filenames(reply_message, config,directory="data/pictures/Mface"
 
 async def add_send_mface(tools,config):
     mface_list = os.listdir("data/pictures/Mface")
-    if config.api["llm"]["model"] == "gemini":
+    if config.ai_llm.config["llm"]["model"] == "gemini":
         tools["function_declarations"] = [
             func for func in tools["function_declarations"]
             if func.get("name") != "call_send_mface"
@@ -579,14 +579,14 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
     """
     递归深度约束
     """
-    if recursion_times > config.api["llm"]["recursion_limit"]:
+    if recursion_times > config.ai_llm.config["llm"]["recursion_limit"]:
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
         return "Maximum recursion depth exceeded.Please try again later."
     reply_message = ""
     original_history = []
     mface_files=None
     system_instruction = await use_folder_chara('喷子.txt')
-    if tools is not None and config.api["llm"]["表情包发送"]:
+    if tools is not None and config.ai_llm.config["llm"]["表情包发送"]:
         tools=await add_send_mface(tools,config)
         system_instruction = await use_folder_chara('喷子.txt')
         user_info=await get_user(user_id)
@@ -594,19 +594,19 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
     try:
         if recursion_times==0 and processed_message:
             last_trigger_time[user_id] = time.time()
-        if config.api["llm"]["model"]=="default":
+        if config.ai_llm.config["llm"]["model"]=="default":
             prompt, original_history = await construct_openai_standard_prompt(processed_message, system_instruction,
                                                                               user_id)
             response_message = await defaultModelRequest(
                 prompt,
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"]["enable_proxy"] else None,
             )
             reply_message = response_message['content']
             await prompt_database_updata(user_id,response_message,config)
 
-        elif config.api["llm"]["model"]=="openai":
+        elif config.ai_llm.config["llm"]["model"]=="openai":
             if processed_message:
-                if config.api["llm"]["openai"]["使用旧版prompt结构"]:
+                if config.ai_llm.config["llm"]["openai"]["使用旧版prompt结构"]:
                     prompt, original_history = await construct_openai_standard_prompt_old_version(processed_message,
                                                                                       system_instruction, user_id, bot,
                                                                                       func_result, event)
@@ -625,16 +625,16 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                     prompt = p
             kwargs = {
                 "ask_prompt": prompt,
-                "url": config.api["llm"]["openai"].get("quest_url") or config.api["llm"]["openai"].get("base_url"),
-                "apikey": random.choice(config.api["llm"]["openai"]["api_keys"]),
-                "model":config.api["llm"]["openai"]["model"],
+                "url": config.ai_llm.config["llm"]["openai"].get("quest_url") or config.ai_llm.config["llm"]["openai"].get("base_url"),
+                "apikey": random.choice(config.ai_llm.config["llm"]["openai"]["api_keys"]),
+                "model":config.ai_llm.config["llm"]["openai"]["model"],
                 "stream":False,
-                "proxy": config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                "proxy": config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"]["enable_proxy"] else None,
                 "tools": tools,
                 "temperature": 1.8,
-                "max_tokens": config.api["llm"]["openai"]["max_tokens"]
+                "max_tokens": config.ai_llm.config["llm"]["openai"]["max_tokens"]
             }
-            if config.api["llm"]["openai"]["enable_official_sdk"]:
+            if config.ai_llm.config["llm"]["openai"]["enable_official_sdk"]:
                 response_message = await openaiRequest_official(**kwargs)
             else:
                 response_message = await openaiRequest(**kwargs)
@@ -647,7 +647,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
 
                     if match_think:
                         think_text = match_think.group(1)
-                        if config.api["llm"]["openai"]["CoT"]:
+                        if config.ai_llm.config["llm"]["openai"]["CoT"]:
                             await bot.send(event,[Node(content=[Text(think_text)])])
                         pattern_rest = r"</think>\n\n(.*?)$"
                         match_rest = re.search(pattern_rest, reply_message, re.DOTALL)
@@ -655,7 +655,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                             reply_message = match_rest.group(1)
                     else:
                         if "reasoning_content" in response_message:
-                            if config.api["llm"]["openai"]["CoT"]:
+                            if config.ai_llm.config["llm"]["openai"]["CoT"]:
                                 await bot.send(event, [Node(content=[Text(response_message["reasoning_content"])])])
                             response_message.pop("reasoning_content")
             else:
@@ -737,7 +737,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                 return final_response
 
             #print(response_message)
-        elif config.api["llm"]["model"] == "gemini":
+        elif config.ai_llm.config["llm"]["model"] == "gemini":
             if processed_message:
                 prompt, original_history = await construct_gemini_standard_prompt(processed_message, user_id, bot,
                                                                                   func_result, event)
@@ -756,14 +756,14 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
             #这里是需要完整报错的，不用try catch，否则会影响自动重试。
             response_message = await geminiRequest(
                 prompt,
-                config.api["llm"]["gemini"]["base_url"],
-                random.choice(config.api["llm"]["gemini"]["api_keys"]),
-                config.api["llm"]["gemini"]["model"],
-                config.api["proxy"]["http_proxy"] if config.api["llm"]["enable_proxy"] else None,
+                config.ai_llm.config["llm"]["gemini"]["base_url"],
+                random.choice(config.ai_llm.config["llm"]["gemini"]["api_keys"]),
+                config.ai_llm.config["llm"]["gemini"]["model"],
+                config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"]["enable_proxy"] else None,
                 tools=tools,
                 system_instruction=system_instruction,
                 temperature=1.8,
-                maxOutputTokens=config.api["llm"]["gemini"]["maxOutputTokens"]
+                maxOutputTokens=config.ai_llm.config["llm"]["gemini"]["maxOutputTokens"]
             )
 
             # print(response_message)
@@ -804,7 +804,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
             status = False
 
             for part in response_message["parts"]:
-                if "functionCall" in part and config.api["llm"]["func_calling"]:
+                if "functionCall" in part and config.ai_llm.config["llm"]["func_calling"]:
                     status = True
 
             if status and reply_message is not None:  # 有函数调用且有回复，就发回复和语音
@@ -859,12 +859,12 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                                                    system_instruction=system_instruction, func_result=True)
                 return final_response
 
-        elif config.api["llm"]["model"]=="腾讯元器":
+        elif config.ai_llm.config["llm"]["model"]=="腾讯元器":
             prompt, original_history = await construct_tecent_standard_prompt(processed_message,user_id,bot,event)
             response_message = await YuanQiTencent(
                 prompt,
-                config.api["llm"]["腾讯元器"]["智能体ID"],
-                config.api["llm"]["腾讯元器"]["token"],
+                config.ai_llm.config["llm"]["腾讯元器"]["智能体ID"],
+                config.ai_llm.config["llm"]["腾讯元器"]["token"],
                 user_id,
             )
             reply_message = response_message["content"]
@@ -887,7 +887,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
         logger.error(f"Error occurred: {e}")
         traceback.print_exc()
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
-        if recursion_times<=config.api["llm"]["recursion_limit"]:
+        if recursion_times<=config.ai_llm.config["llm"]["recursion_limit"]:
 
             logger.warning(f"Recursion times: {recursion_times}")
             return await aiReplyCore(processed_message,user_id,config,tools=tools,bot=bot,event=event,system_instruction=system_instruction,func_result=func_result,recursion_times=recursion_times+1,do_not_read_context=True)

@@ -34,15 +34,15 @@ async def call_quit_chat(bot,event,config):
 async def call_weather_query(bot,event,config,location=None):
     user_info = await get_user(event.user_id, event.sender.nickname)
     if location is None:
-        location = user_info[5]
-    r=await weather_query(config.api["proxy"]["http_proxy"],config.api["心知天气"]["api_key"],location)
+        location = user_info.city
+    r=await weather_query(config.common_config.basic_config["proxy"]["http_proxy"],config.basic_plugin.config["心知天气"]["api_key"],location)
     return  {"result": r}
 async def call_setu(bot,event,config,tags,num=3):
     user_info = await get_user(event.user_id, event.sender.nickname)
 
-    if user_info.permission >= config.controller["basic_plugin"]["setu_operate_level"]:
+    if user_info.permission >= config.basic_plugin.config["setu"]["setu_operate_level"]:
         try:
-            r=await anime_setu(tags,num,config.settings["basic_plugin"]["setu"]["r18mode"])
+            r=await anime_setu(tags,num,config.basic_plugin.config["setu"]["r18mode"])
             fordMes=[]
             for i in r:
                 try:
@@ -53,8 +53,8 @@ async def call_setu(bot,event,config,tags,num=3):
                     tags=i["tags"]
                     path=f"data/pictures/cache/{random_str()}.png"
                     bot.logger.info(f"Downloading {url} to {path}")
-                    if config.settings["basic_plugin"]["setu"]["download"]:
-                        p=await download_img(url,path,config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    if config.basic_plugin.config["setu"]["download"]:
+                        p=await download_img(url,path,config.basic_plugin.config["setu"]["gray_layer"],proxy=config.common_config.basic_config["proxy"]["http_proxy"])
                     else:
                         p=url
                     r = Node(content=[Text(f"link：{page}\n作者：{author}\nUID：{author_uid}\n标签：{tags}\n"),Image(file=p)])
@@ -67,7 +67,7 @@ async def call_setu(bot,event,config,tags,num=3):
             fordMes=[]
         if fordMes==[]:
             bot.logger.warning("No setu found.Change resource")
-            r=await anime_setu1(tags,num,config.settings["basic_plugin"]["setu"]["r18mode"])
+            r=await anime_setu1(tags,num,config.basic_plugin.config["setu"]["r18mode"])
             for i in r:
                 try:
                     url=i["urls"]["regular"]
@@ -76,8 +76,8 @@ async def call_setu(bot,event,config,tags,num=3):
                     tags=i["tags"]
                     path = f"data/pictures/cache/{random_str()}.png"
                     bot.logger.info(f"Downloading {url} to {path}")
-                    if config.settings["basic_plugin"]["setu"]["download"]:
-                        p = await download_img(url, path, config.settings["basic_plugin"]["setu"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    if config.basic_plugin.config["setu"]["download"]:
+                        p = await download_img(url, path, config.basic_plugin.config["setu"]["gray_layer"],proxy=config.common_config.basic_config["proxy"]["http_proxy"])
                     else:
                         p=url
                     r = Node(content=[Text(f"标题：{title}\n作者：{author}\n标签：{tags}\nurl：{url}"), Image(file=p)])
@@ -99,11 +99,11 @@ async def call_setu(bot,event,config,tags,num=3):
 async def call_image_search(bot,event,config,image_url=None):
     user_info = await get_user(event.user_id, event.sender.nickname)
     bot.logger.info("接收来自 用户：" + str(event.sender.user_id) + " 的搜图指令")
-    if not config.settings["basic_plugin"]["搜图"]["聚合搜图"] and not config.settings["basic_plugin"]["搜图"]["soutu_bot"]:
+    if not config.basic_plugin.config["搜图"]["聚合搜图"] and not config.basic_plugin.config["搜图"]["soutu_bot"]:
         await bot.send(event, "没有开启搜图功能")
         return
     await bot.send(event, "正在搜索图片，请等待结果返回.....")
-    if user_info.permission >= config.controller["basic_plugin"]["search_image_resource_operate_level"]:
+    if user_info.permission >= config.basic_plugin.config["搜图"]["search_image_resource_operate_level"]:
         if not image_url:
             img_url = event.get("image")[0]["url"]
         else:
@@ -126,18 +126,18 @@ async def call_image_search(bot,event,config,image_url=None):
     else:
         await bot.send(event, "权限不够呢.....")
 async def call_image_search1(bot,event,config,img_url):
-    if not config.settings["basic_plugin"]["搜图"]["聚合搜图"]:
+    if not config.basic_plugin.config["搜图"]["聚合搜图"]:
         return
     bot.logger.info("调用聚合接口搜索图片")
-    results = await fetch_results(config.api["proxy"]["http_proxy"], img_url,
-                                  config.api["image_search"]["sauceno_api_key"])
+    results = await fetch_results(config.common_config.basic_config["proxy"]["http_proxy"], img_url,
+                                  config.basic_plugin.config["image_search"]["sauceno_api_key"])
     forMeslist = []
     for name, result in results.items():
         if result and result[0] != "":
             bot.logger.info(f"{name} 成功返回: {result}")
             try:
                 path = "data/pictures/cache/" + random_str() + ".png"
-                imgpath = await download_img(result[0], path, proxy=config.api["proxy"]["http_proxy"])
+                imgpath = await download_img(result[0], path, proxy=config.common_config.basic_config["proxy"]["http_proxy"])
                 forMeslist.append(Node(content=[Text(result[1]), Image(file=imgpath)]))
 
             except Exception as e:
@@ -148,7 +148,7 @@ async def call_image_search1(bot,event,config,img_url):
             forMeslist.append(Node(content=[Text(f"{name} 返回失败或无结果")]))
     await bot.send(event, forMeslist)
 async def call_image_search2(bot,event,config,img_url):
-    if not config.settings["basic_plugin"]["搜图"]["soutu_bot"]:
+    if not config.basic_plugin.config["搜图"]["soutu_bot"]:
         return
     bot.logger.info("调用soutu.bot搜索图片")
     img_path = "data/pictures/cache/" + random_str() + ".png"
@@ -168,7 +168,7 @@ async def call_image_search2(bot,event,config,img_url):
         try:
             sst=f"标题:{item['title']}\n相似度:{item['similarity']}\n链接:{item['detail_page_url']}"
             sst_img=f"data/pictures/cache/{random_str()}.png"
-            await download_img(item['image_url'], sst_img, True,proxy=config.api["proxy"]["http_proxy"])
+            await download_img(item['image_url'], sst_img, True,proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             forMeslist.append(Node(content=[Text(sst), Image(file=sst_img)]))
         except:
             bot.logger.error("图片下载失败")
@@ -180,9 +180,9 @@ async def call_image_search2(bot,event,config,img_url):
 
 
 async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
-    mode = config.api["tts"]["tts_engine"]
+    mode = config.ai_voice.config["tts"]["tts_engine"]
     if speaker is None:
-        speaker=config.api["tts"][mode]["speaker"]
+        speaker=config.ai_voice.config["tts"][mode]["speaker"]
     all_speakers=await call_all_speakers(bot,event,config)
     all_speakers=all_speakers["speakers"]
     ncspk=all_speakers[0]
@@ -232,8 +232,8 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
             mode="online_vits2"
             lock = True
     if not lock:
-        mode=config.api["tts"]["tts_engine"]
-        speaker=config.api["tts"][mode]["speaker"]
+        mode=config.ai_voice.config["tts"]["tts_engine"]
+        speaker=config.ai_voice.config["tts"][mode]["speaker"]
     try:
         p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
         await bot.send(event, Record(file=p))
@@ -255,7 +255,7 @@ async def call_all_speakers(bot,event,config):
         acgn_ai_speakers=None
     modelscope_speakers=get_modelscope_tts_speakers()
     try:
-        vits_speakers=await get_vits_speakers(config.api["tts"]["vits"]["base_url"],None)
+        vits_speakers=await get_vits_speakers(config.ai_voice.config["tts"]["vits"]["base_url"],None)
     except Exception as e:
         bot.logger.error(f"Error in get_vits_speakers: {e}")
         vits_speakers=None
@@ -266,15 +266,15 @@ async def call_all_speakers(bot,event,config):
         online_vits2_speakers=None
     return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers,vits_speakers,online_vits2_speakers]}
 async def call_tarot(bot,event,config):
-    if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1, 100) < \
-            config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["probability"]:
-        cards_ = config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["card_index"]
+    if config.basic_plugin.config["tarot"]["彩蛋牌"] and random.randint(1, 100) < \
+            config.basic_plugin.config["tarot"]["彩蛋牌"]["probability"]:
+        cards_ = config.basic_plugin.config["tarot"]["彩蛋牌"]["card_index"]
         card = random.choice(cards_)
         card_path, text = list(card.items())[0]
         if text=="": text="no description"
         await bot.send(event, [Text(f"{text}"), Image(file=card_path)])
         return {"text": "开出彩蛋牌，来源：jojo的奇妙冒险", "img": card_path}
-    txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
+    txt, img = tarotChoice(config.basic_plugin.config["tarot"]["mode"])
     await bot.send(event,[Text(txt),Image(file=img)])
     return {"text": txt,"img":img}
 async def call_fortune(bot,event,config):
@@ -377,15 +377,15 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
         if event.pure_text=="今日塔罗":
-            if config.settings["basic_plugin"]["tarot"]["彩蛋牌"] and random.randint(1,100)<config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["probability"]:
-                cards_=config.settings["basic_plugin"]["tarot"]["彩蛋牌"]["card_index"]
+            if config.basic_plugin.config["tarot"]["彩蛋牌"] and random.randint(1,100)<config.basic_plugin.config["tarot"]["彩蛋牌"]["probability"]:
+                cards_=config.basic_plugin.config["tarot"]["彩蛋牌"]["card_index"]
                 card=random.choice(cards_)
                 card_path, text = list(card.items())[0]
                 if text=="": text="no description"
                 await bot.send(event, [Text(f"{text}"), Image(file=card_path)])
                 return
 
-            txt, img = tarotChoice(config.settings["basic_plugin"]["tarot"]["mode"])
+            txt, img = tarotChoice(config.basic_plugin.config["tarot"]["mode"])
             await bot.send(event, [Text(txt), Image(file=img)]) #似乎没必要让这个也走ai回复调用
         elif event.pure_text=="抽象塔罗":
             txt, img = tarotChoice('AbstractImages')

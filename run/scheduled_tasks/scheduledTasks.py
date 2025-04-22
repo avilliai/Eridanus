@@ -65,7 +65,7 @@ def main(bot,config):
             for user in filtered_users:
                 try:
                     user_info = await get_user(int(user["user_id"]))
-                    location = user_info[5]
+                    location = user_info.city
                     weather = await free_weather_query(location)
                     r = await aiReplyCore([{"text": f"播报今天的天气，保持你的角色，根据天气给出建议，直接发送结果，不要发送'好的'之类的命令应答提示。今天的天气信息如下{weather}"}], int(user["user_id"]),
                                           config, bot=bot, tools=None)

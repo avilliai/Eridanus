@@ -1,6 +1,10 @@
 # coding=utf-8
 import asyncio
 
+from run.acg_infromation.service.majsoul.majsoul_info.majsoul_Spider import getID, gettriID
+from run.acg_infromation.service.majsoul.majsoul_info.processData import printBasicInfo, printExtendInfo, \
+    printRecordInfo
+
 
 #@sv.on_prefix(('雀魂信息','雀魂查询'))
 async def majsoulInfo(context):

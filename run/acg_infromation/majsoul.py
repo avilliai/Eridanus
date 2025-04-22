@@ -99,7 +99,7 @@ def main(bot, config):
         if majsoul_json["status"] is False:
             await bot.send(event, majsoul_json["text"])
             return
-        if config.settings["basic_plugin"]["绘图框架"]['majsoul_search'] is False:
+        if config.acg_infromation.config["绘图框架"]['majsoul_search'] is False:
             await bot.send(event, majsoul_json["text"])
             return
 

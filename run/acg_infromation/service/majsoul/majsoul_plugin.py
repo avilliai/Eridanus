@@ -1,4 +1,6 @@
 import asyncio
+
+from run.acg_infromation.service.majsoul.majsoul_info.init import majsoulInfo, TrimajsoulInfo, RecordInfo, TriRecordInfo
 from run.group_fun.service.wife_you_want import manage_group_status
 import copy
 

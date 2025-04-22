@@ -5,7 +5,7 @@ from run.resource_collector.service.engine_search import baidu_search, searx_sea
 
 async def read_html(bot,event,config,url):
     bot.logger.info(f"正在阅读网页:{url}")
-    if config.api["llm"]["联网搜索显示原始数据"]:
+    if config.ai_llm.config["llm"]["联网搜索显示原始数据"]:
         await bot.send(event, f"正在阅读网页:{url}")
     html_content = await html_read(url, config)
     return  {"result": html_content}
@@ -27,7 +27,7 @@ async def search_net(bot,event,config,query):
                 final += result + '\n'
         except Exception as e:
             bot.logger.error(f"{e}")
-    if config.api["llm"]["联网搜索显示原始数据"]:
+    if config.ai_llm.config["llm"]["联网搜索显示原始数据"]:
         await bot.send(event, sendMes)
     return  {"result": final}
 

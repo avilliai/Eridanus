@@ -23,9 +23,9 @@ def main(bot, config):
     attack2=sets["骂doro"]
     if_nailong = sets["奶龙检测"]
     if_doro = sets["doro检测"]
-    nailong_groups = config.nailong['whitelist']
-    doro_groups = config.doro['whitelist']
-    nanniang_groups = config.nanniang['whitelist']
+    nailong_groups = config.character_detection.nailong['whitelist']
+    doro_groups = config.character_detection.doro['whitelist']
+    nanniang_groups = config.character_detection.nanniang['whitelist']
     if_nanniang = sets["男娘检测"]
     chehui3 = sets["男娘撤回"]
     mute3=sets["男娘禁言"]
@@ -98,7 +98,7 @@ def main(bot, config):
                             event_dict = json.loads(msg)
                             Source_id = event_dict['message_id']
                             await bot.recall(Source_id)
-                            if config.api["llm"]["aiReplyCore"]:
+                            if config.ai_llm.config["llm"]["aiReplyCore"]:
                                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                                 name = data["data"]["nickname"]
                                 reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
@@ -110,7 +110,7 @@ def main(bot, config):
                         except:
                             await bot.send(event, random.choice(attack1),True)
                     else:
-                        if config.api["llm"]["aiReplyCore"]:
+                        if config.ai_llm.config["llm"]["aiReplyCore"]:
                             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                             name = data["data"]["nickname"]
                             reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
@@ -138,7 +138,7 @@ def main(bot, config):
                             event_dict = json.loads(msg)
                             Source_id = event_dict['message_id']
                             await bot.recall(Source_id)
-                            if config.api["llm"]["aiReplyCore"]:
+                            if config.ai_llm.config["llm"]["aiReplyCore"]:
                                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                                 name = data["data"]["nickname"]
                                 reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
@@ -150,7 +150,7 @@ def main(bot, config):
                         except:
                             await bot.send(event, random.choice(attack2),True)
                     else:
-                        if config.api["llm"]["aiReplyCore"]:
+                        if config.ai_llm.config["llm"]["aiReplyCore"]:
                             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                             name = data["data"]["nickname"]
                             reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
@@ -178,7 +178,7 @@ def main(bot, config):
                             event_dict = json.loads(msg)
                             Source_id = event_dict['message_id']
                             await bot.recall(Source_id)
-                            if config.api["llm"]["aiReplyCore"]:
+                            if config.ai_llm.config["llm"]["aiReplyCore"]:
                                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                                 name = data["data"]["nickname"]
                                 reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
@@ -190,7 +190,7 @@ def main(bot, config):
                         except:
                             await bot.send(event, random.choice(attack3),True)
                     else:
-                        if config.api["llm"]["aiReplyCore"]:
+                        if config.ai_llm.config["llm"]["aiReplyCore"]:
                             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                             name = data["data"]["nickname"]
                             reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)

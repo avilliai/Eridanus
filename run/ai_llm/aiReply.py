@@ -64,10 +64,10 @@ def main(bot,config):
         elif event.pure_text=="/clear group":
             await clear_group_messages(event.group_id)
             await bot.send(event,"本群消息已清除",True)
-        elif event.pure_text=="/clearall" and event.user_id == config.config.basic_config["master"]["id"]:
+        elif event.pure_text=="/clearall" and event.user_id == config.common_config.basic_config["master"]["id"]:
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
-        elif event.pure_text.startswith("/clear") and event.user_id == config.config.basic_config["master"]["id"] and event.get("at"):
+        elif event.pure_text.startswith("/clear") and event.user_id == config.common_config.basic_config["master"]["id"] and event.get("at"):
             await delete_user_history(event.get("at")[0]["qq"])
             await bot.send(event, [Text("已清理"),At(event.get('at')[0]['qq']),Text(" 的对话记录")])
         elif event.pure_text.startswith("/切人设 ") and user_info.permission >= config.ai_llm.config["core"]["ai_change_character"]:
@@ -77,7 +77,7 @@ def main(bot,config):
             else:
                 reply = await change_folder_chara(chara_file, event.user_id)
             await bot.send(event, reply, True)
-        elif event.pure_text.startswith("/全切人设 ") and event.user_id == config.config.basic_config["master"]["id"]:
+        elif event.pure_text.startswith("/全切人设 ") and event.user_id == config.common_config.basic_config["master"]["id"]:
             chara_file = str(event.pure_text).replace("/全切人设 ", "")
             if chara_file == "0":
                 reply = await clear_all_users_chara()
@@ -149,7 +149,7 @@ def main(bot,config):
       if event.pure_text == "/clear":
           await delete_user_history(event.user_id)
           await bot.send(event, "历史记录已清除", True)
-      elif event.pure_text == "/clearall" and event.user_id == config.config.basic_config["master"]["id"]:
+      elif event.pure_text == "/clearall" and event.user_id == config.common_config.basic_config["master"]["id"]:
           await clear_all_history()
           await bot.send(event, "已清理所有用户的对话记录")
       else:

@@ -1,5 +1,10 @@
 # coding=utf-8
 import json,os
+import time
+import urllib
+
+from run.acg_infromation.service.majsoul.majsoul_info.majsoul_Spider import selectInfo, select_triInfo, \
+    select_triRecord, selectRecord
 
 FILE_PATH = os.path.dirname(os.path.dirname(__file__))
 #print(FILE_PATH)

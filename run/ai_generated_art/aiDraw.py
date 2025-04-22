@@ -73,18 +73,18 @@ async def call_text2img3(bot, event, config, prompt):
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画2所需权限等级"] and config.ai_generated_art.config["ai绘画"]["内置ai绘画2开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
-        img=await modelscope_drawer(prompt,config.api["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+        img=await modelscope_drawer(prompt,config.common_config.basic_config["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
         bot.logger.info(f"NoobXL-EPS-v1.1：{img}")
         if img:
             await bot.send(event,[Text(f"NoobXL-EPS-v1.1："),Image(file=img)])
 
 async def call_text2img4(bot, event, config, prompt):
-    if config.api["proxy"]["http_proxy"]:
+    if config.common_config.basic_config:
         try:
             user: User = await get_user(event.user_id)
             if user.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画2所需权限等级"] and config.ai_generated_art.config["ai绘画"]["内置ai绘画2开关"]:
                 bot.logger.info(f"Received text2img prompt: {prompt}")
-                img=await hf_drawer(prompt,config.api["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+                img=await hf_drawer(prompt,config.common_config.basic_config["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
                 bot.logger.info(f"ani4：{img}")
                 if img:
                     await bot.send(event,[Text(f"ani4："),Image(file=img)])
@@ -97,7 +97,7 @@ async def call_text2img2(bot, event, config, tag):
 
     if user_info.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画1所需权限等级"] and config.ai_generated_art.config["ai绘画"]["内置ai绘画1开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
-        proxy = config.api["proxy"]["http_proxy"]
+        proxy = config.common_config.basic_config
 
         functions = [
             bing_dalle3(prompt, proxy),
@@ -140,7 +140,7 @@ async def call_text2img1(bot,event,config,tag):
         bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
         try:
             if turn!=0:
-                if turn>config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id!=config.basic_config["master"]["id"]:
+                if turn>config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id!=config.common_config.basic_config["master"]["id"]:
                     msg = await bot.send(event,"服务端任务队列已满，稍后再试")
                     await delay_recall(bot, msg)
                     return
@@ -181,7 +181,7 @@ async def call_text2img1(bot,event,config,tag):
 async def call_aiArtModerate(bot,event,config,img_url):
     try:
         r=await aiArtModerate(img_url,config.ai_generated_art.config["sightengine"]["api_user"],config.ai_generated_art.config["sightengine"]["api_secret"])
-        if config.api["llm"]["aiReplyCore"]:
+        if config.ai_llm.config["llm"]["aiReplyCore"]:
             return {"msg":f"图片为ai创作的可能性为{r}%"}
         else:
             await bot.send(event, f"图片为ai创作的可能性为{r}%", True)
@@ -302,8 +302,8 @@ def main(bot,config):
             msg = await bot.send(event, f'正在搜索词条{tag}')
             await delay_recall(bot, msg)
             limit = 5
-            if config.api["proxy"]["http_proxy"]:
-                proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+            if config.common_config.basic_config["proxy"]["http_proxy"]:
+                proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
             else:
                 proxies = None
 
@@ -561,7 +561,7 @@ def main(bot,config):
                 bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
                 prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
                 UserGet.pop(event.sender.user_id)
-                if turn>config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id!=config.basic_config["master"]["id"]:
+                if turn>config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id!=config.common_config.basic_config["master"]["id"]:
                         msg = await bot.send(event,"服务端任务队列已满，稍后再试")
                         await delay_recall(bot, msg)
                         return 
@@ -620,7 +620,7 @@ def main(bot,config):
         if str(event.pure_text).startswith("ckpt2 ") and config.ai_generated_art.config["ai绘画"]["sd画图"]:
             tag = str(event.pure_text).replace("ckpt2 ", "")
             bot.logger.info('切换ckpt中')
-            if event.user_id == config.basic_config["master"]["id"]:
+            if event.user_id == config.common_config.basic_config["master"]["id"]:
                 try:
                     await ckpt2(tag,config)
                     msg = await bot.send(event, "切换成功喵~第一次会慢一点~", True)
@@ -654,7 +654,7 @@ def main(bot,config):
             except Exception as e:
                 bot.logger.error(e)
                 
-        if str(event.pure_text) == "interrupt" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+        if str(event.pure_text) == "interrupt" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == config.common_config.basic_config["master"]["id"]:
             global turn
             try:
                 await interrupt(config)
@@ -665,7 +665,7 @@ def main(bot,config):
                 msg = await bot.send(event, f"中断任务失败: {e}")
                 await delay_recall(bot, msg, 20)
                 
-        if str(event.pure_text) == "skip" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == config.basic_config["master"]["id"]:
+        if str(event.pure_text) == "skip" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == config.common_config.basic_config["master"]["id"]:
             global turn
             try:
                 await skipsd(config)

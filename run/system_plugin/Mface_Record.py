@@ -11,10 +11,10 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def record_mface(event: GroupMessageEvent):
         # 检查配置中是否允许收集表情包
-        if not config.settings["bot_config"].get("record_mface", False):
+        if not config.common_config.basic_config.get("record_mface", False):
             return
             
-        if event.user_id==config.basic_config["master"]["id"]:
+        if event.user_id==config.common_config.basic_config["master"]["id"]:
             if event.message_chain.has(Image) and event.message_chain.get(Image)[0].summary!="":
                 summary = event.message_chain.get(Image)[0].summary
                 url = event.message_chain.get(Image)[0].url

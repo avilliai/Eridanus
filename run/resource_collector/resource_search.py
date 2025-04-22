@@ -36,7 +36,7 @@ async def search_book_info(bot,event,config,info):
         await bot.send(event, "你没有权限使用该功能")
 async def call_download_book(bot,event,config,book_id: str,hash:str):
     user_info = await get_user(event.user_id)
-    if user_info.permission >= config.controller["resource_search"]["z_library"]["download_operate_level"]:
+    if user_info.permission >= config.resource_collector.config["z_library"]["download_operate_level"]:
         await bot.send(event, "正在下载中，请稍候...")
         loop = asyncio.get_running_loop()
         try:
@@ -52,20 +52,20 @@ async def call_download_book(bot,event,config,book_id: str,hash:str):
 
 async def call_asmr(bot,event,config,try_again=False,mode="random"):
     user_info = await get_user(event.user_id)
-    if user_info.permission >= config.controller["resource_search"]["asmr"]["asmr_level"]:
+    if user_info.permission >= config.resource_collector.config["asmr"]["asmr_level"]:
         bot.logger.info("asmr start")
         try:
             if mode=="random":
-                r=await random_asmr_100(proxy=config.common_config.network["proxy"]["http_proxy"])
+                r=await random_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             elif mode=="latest":
-                r=await choose_from_latest_asmr_100(proxy=config.common_config.network["proxy"]["http_proxy"])
+                r=await choose_from_latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             elif mode=="hotest":
-                r = await choose_from_hotest_asmr_100(proxy=config.common_config.network["proxy"]["http_proxy"])
+                r = await choose_from_hotest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             i = random.choice(r['media_urls'])
 
             await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
             try:
-                img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",config.resource_collector.config["asmr"]["gray_layer"],proxy=config.common_config.network["proxy"]["http_proxy"])
+                img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",config.resource_collector.config["asmr"]["gray_layer"],proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             except Exception as e:
                 bot.logger.error(f"download_img error:{e}")
                 img=r['mainCoverUrl']
@@ -85,7 +85,7 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
                     break
                 if config.resource_collector.config["asmr"]["with_file"]:
                     path=f"data/voice/cache/{i[1]}"
-                    file=await download_file(i[0],path,config.common_config.network["proxy"]["http_proxy"])
+                    file=await download_file(i[0],path,config.common_config.basic_config["proxy"]["http_proxy"])
                     file_paths.append(file)
                 text=f"音频名称: {i[1]}\n音频url: {i[0]}"
                 forward_list.append(Node(content=[Text(text)]))
@@ -115,17 +115,17 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
 async def check_latest_asmr(bot,event,config):
     bot.logger.info_func("开始监测 asmr.one 更新")
     try:
-        r=await latest_asmr_100(proxy=config.common_config.network["proxy"]["http_proxy"])
-        if r["id"]!=config.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]:
+        r=await latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+        if r["id"]!=config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]:
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 开始推送")
-            group_list = config.scheduledTasks_push_groups["latest_asmr_push"]["groups"]
+            group_list = config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["groups"]
             for group_id in group_list:
                 try:
                     i = random.choice(r['media_urls'])
                     await bot.send_group_message(group_id, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
                     try:
                         img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png", config.resource_collector.config["asmr"]["gray_layer"],
-                                                 proxy=config.common_config.network["proxy"]["http_proxy"])
+                                                 proxy=config.common_config.basic_config["proxy"]["http_proxy"])
                     except Exception as e:
                         bot.logger.error(f"download_img error:{e}")
                         img = r['mainCoverUrl']
@@ -143,7 +143,7 @@ async def check_latest_asmr(bot,event,config):
                     for i in r['media_urls']:
                         if config.resource_collector.config["asmr"]["with_file"]:
                             path = f"data/voice/cache/{i[1]}"
-                            file = await download_file(i[0], path, config.common_config.network["proxy"]["http_proxy"])
+                            file = await download_file(i[0], path, config.common_config.basic_config["proxy"]["http_proxy"])
                             file_paths.append(file)
                         text = f"音频名称: {i[1]}\n音频url: {i[0]}"
                         forward_list.append(Node(content=[Text(text)]))
@@ -163,7 +163,7 @@ async def check_latest_asmr(bot,event,config):
                 except Exception as e:
                     bot.logger.error(f"latest_asmr_push error:{e}")
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
-            config.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
+            config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
             config.save_yaml("scheduledTasks_push_groups")
         else:
             bot.logger.info_func("asmr.one 无更新")

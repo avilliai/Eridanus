@@ -231,7 +231,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def bangumi_search_detail(event: GroupMessageEvent):
         global searchtask, recall_id
-        botname = config.basic_config["bot"]["name"]
+        botname = config.common_config.basic_config["bot"]
         if event.sender.user_id in searchtask:
             try:
                 if str(event.pure_text) == "退出":

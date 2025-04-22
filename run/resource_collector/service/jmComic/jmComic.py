@@ -111,11 +111,11 @@ def JM_search_comic_id():
 
 
 def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compress=False):
-    with open("config/jmcomic.yml", 'r', encoding='utf-8') as f: #不知道他这个options咋传的，我就修改配置文件得了。
+    with open("run/resource_collector/jmcomic.yml", 'r', encoding='utf-8') as f: #不知道他这个options咋传的，我就修改配置文件得了。
         result = yaml.load(f.read(), Loader=yaml.FullLoader)
     result["dir_rule"]["base_dir"]=f"data/pictures/benzi/temp{comic_id}"
     #临时修改
-    with open("config/jmcomic.yml", 'w', encoding="utf-8") as file:
+    with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
     option = jmcomic.create_option_by_file('config/jmcomic.yml')
 
@@ -165,7 +165,7 @@ def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compr
 
 
 def downloadALLAndToPdf(comic_id, savePath):
-    with open("config/jmcomic.yml", 'r', encoding='utf-8') as f:  # 不知道他这个options咋传的，我就修改配置文件得了。
+    with open("run/resource_collector/jmcomic.yml", 'r', encoding='utf-8') as f:  # 不知道他这个options咋传的，我就修改配置文件得了。
         result = yaml.load(f.read(), Loader=yaml.FullLoader)
     tempResult = copy.deepcopy(result)
     tempResult["dir_rule"]["base_dir"] = f"{savePath}/{comic_id}"
@@ -178,11 +178,11 @@ def downloadALLAndToPdf(comic_id, savePath):
         tempResult["plugins"]["after_photo"] = []
     tempResult["plugins"]["after_photo"].append(
         {"plugin": "img2pdf", "kwargs": {"filename_rule": "Pid", "pdf_dir": str(savePath)}})
-    with open("config/jmcomic.yml", 'w', encoding="utf-8") as file:
+    with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(tempResult, file, allow_unicode=True)
     # 创建配置对象
     option = jmcomic.create_option_by_file('config/jmcomic.yml')
-    with open("config/jmcomic.yml", 'w', encoding="utf-8") as file:
+    with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
     # 这里需要再设置一下类变量，不然本子下载不全
     MyDownloader.start = 0

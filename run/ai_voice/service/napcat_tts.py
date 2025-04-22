@@ -14,7 +14,7 @@ async def napcat_tts_speakers(bot):
         return None
 async def napcat_tts_speak(bot,config, text, speaker_id):
     try:
-        s = await bot.get_ai_record(config.basic_config["group"]["test_group"],speaker_id, text=text)
+        s = await bot.get_ai_record(config.common_config.basic_config["group"],speaker_id, text=text)
         return s["data"]
     except Exception as e:
         return None

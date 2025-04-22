@@ -278,13 +278,13 @@ def main(bot,config):
                     gid=data["gid"]
                     introduction = await get_introduction(gid)
                     mainImg_state = 'https://store.ymgal.games/'+data["mainImg"]
-                    if config.settings["basic_plugin"]["绘图框架"]['gal_recommend'] is False:
+                    if config.acg_infromation.config["绘图框架"]['gal_recommend'] is False:
                         img_path = await get_game_image(mainImg_state, filepath)
                         cmList.append(Node(content=[Image(file=img_path)]))
                         cmList.append(Node(content=[Text(f'{context}')]))
                         cmList.append(Node(content=[Text(f'{introduction}')]))
 
-                    elif config.settings["basic_plugin"]["绘图框架"]['gal_recommend'] is True:
+                    elif config.acg_infromation.config["绘图框架"]['gal_recommend'] is True:
                         text=f"{context}\n{introduction}"
                         bangumi_json = await gal_PILimg(text, [mainImg_state], 'data/pictures/cache/',type_soft=f'Galgame 推荐')
                         if bangumi_json['status']:

@@ -20,7 +20,7 @@ async def call_bili_download_video(bot,event,config):
     if json['soft_type'] not in {'bilibili', 'dy', 'wb', 'xhs', 'x'}:
         await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
         return
-    proxy = config.common_config.network["proxy"]["http_proxy"]
+    proxy = config.common_config.basic_config["proxy"]["http_proxy"]
     try:
         video_json = await download_video_link_prising(json, filepath='data/pictures/cache/', proxy=proxy)
         if 'video' in video_json['type']:
@@ -67,7 +67,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Link_Prising_search(event: GroupMessageEvent):
         global teamlist
-        proxy = config.common_config.network["proxy"]["http_proxy"]
+        proxy = config.common_config.basic_config["proxy"]["http_proxy"]
         url=event.pure_text
         #print(url)
         if url == '' and 'json' in event.processed_message[0]:

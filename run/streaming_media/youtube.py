@@ -25,7 +25,7 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                 bot.logger.info(f"Video ID from url1: {match1.group(1)}")
                 if type == "audio":
 
-                    if user_info[6] < config.controller["流媒体"]["youtube"]["download_audio_level"]:
+                    if user_info.permission < config.streaming_media.config["流媒体"]["youtube"]["download_audio_level"]:
                         await bot.send(event,"您的权限不足，无法下载音频")
                         return
                     await bot.send(event,"正在下载音频，请稍后...")
@@ -35,7 +35,7 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                         path = await loop.run_in_executor(executor,audio_download , video_id)
                     await bot.send(event,[Image(file=imgurl)],True)
                 elif type == "video":
-                    if user_info[6] < config.controller["流媒体"]["youtube"]["download_video_level"]:
+                    if user_info.permission < config.streaming_media.config["流媒体"]["youtube"]["download_video_level"]:
                         await bot.send(event,"您的权限不足，无法下载音频")
                         return
                     await bot.send(event,"正在下载视频，请稍后...")
@@ -46,13 +46,13 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
             else:
                 await bot.send(event,"Invalid URL")
         elif platform == "bilibili":
-            proxy = config.api["proxy"]["http_proxy"]
+            proxy = config.common_config.basic_config["proxy"]["http_proxy"]
             link_prising_json = await link_prising(url, filepath='data/pictures/cache/',proxy=proxy)
             #print(link_prising_json)
             if link_prising_json['status']:
                 bot.logger.info('链接解析成功，开始推送~~')
                 if link_prising_json['video_url']:
-                    if "QQ小程序" in url and config.settings["bili_dynamic"]["is_QQ_chek"] is not True:
+                    if "QQ小程序" in url and config.streaming_media.config["bili_dynamic"]["is_QQ_chek"] is not True:
                         return {"status": False, "reason": "QQ小程序动态暂不支持下载"}
                 if link_prising_json['soft_type'] not in {'bilibili', 'dy', 'wb', 'xhs', 'x'}:
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
@@ -76,17 +76,17 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                     return {"status": False, "reason": link_prising_json['reason']}
         elif platform == "asmr100":
             user_info = await get_user(event.user_id)
-            if user_info[6] < config.controller["流媒体"]["asmr"]["download_audio_level"]:
+            if user_info.permission < config.streaming_media.config["流媒体"]["asmr"]["download_audio_level"]:
                 await bot.send(event, "您的权限不足，无法下载音频")
                 return
             match = re.search(r"RJ(\d+)", url)
             if match:
                 bot.logger.info(f"Asmr ID from url1: {match.group(1)}")
-                proxy = config.api["proxy"]["http_proxy"]
+                proxy = config.common_config.basic_config["proxy"]["http_proxy"]
                 r=await parse_from_asmr_id(match.group(1), proxy=proxy)
                 bot.logger.info(f"Asmr titile:{r['title']}  nsfw:{r['nsfw']}  source_url:{r['source_url']}")
                 try:
-                    img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",config.settings["asmr"]["gray_layer"],proxy=config.api["proxy"]["http_proxy"])
+                    img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",config.resource_collector.config["asmr"]["gray_layer"],proxy=config.common_config.basic_config["proxy"]["http_proxy"])
                 except Exception as e:
                     bot.logger.error(f"download_img error:{e}")
                     img=r['mainCoverUrl']
@@ -98,11 +98,11 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                 main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
                 metype=r['media_urls'][0][1].split('.')[-1]
                 for i in r['media_urls']:
-                    if i[1].split('.')[-1]!= metype or len(file_paths)>=config.settings["asmr"]["max_merge_file_num"]:
+                    if i[1].split('.')[-1]!= metype or len(file_paths)>=config.resource_collector.config["asmr"]["max_merge_file_num"]:
                         bot.logger.error(f"audio type change:{i[1]}")
                         break
                     path=f"data/voice/cache/{i[1]}"
-                    file=await download_file(i[0],path,config.api["proxy"]["http_proxy"])
+                    file=await download_file(i[0],path,config.common_config.basic_config["proxy"]["http_proxy"])
                     file_paths.append(file)
                     bot.logger.info(f"download_file success:{file}")
 

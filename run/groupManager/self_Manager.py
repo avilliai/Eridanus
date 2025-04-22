@@ -29,15 +29,15 @@ async def call_operate_blandwhite(bot,event,config,target_id,type):
 
 async def call_operate_user_blacklist(bot,event,config,target_user_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.settings["bot_config"]["user_handle_logic_operate_level"]:
+    if user_info.permission >= config.common_config.basic_config["user_handle_logic_operate_level"]:
         if status:
-            if target_user_id not in config.censor_user["blacklist"]:
-                config.censor_user["blacklist"].append(target_user_id)
+            if target_user_id not in config.common_config.censor_user["blacklist"]:
+                config.common_config.censor_user["blacklist"].append(target_user_id)
                 config.save_yaml(str("censor_user"))
             await bot.send(event, f"已将{target_user_id}加入黑名单")
         else:
             try:
-                config.censor_user["blacklist"].remove(target_user_id)
+                config.common_config.censor_user["blacklist"].remove(target_user_id)
                 config.save_yaml(str("censor_user"))
                 await bot.send(event,f"{target_user_id} 已被移出黑名单")
             except ValueError:
@@ -46,15 +46,15 @@ async def call_operate_user_blacklist(bot,event,config,target_user_id,status):
         await bot.send(event, f"你没有足够权限执行此操作")
 async def call_operate_user_whitelist(bot,event,config,target_user_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.settings["bot_config"]["user_handle_logic_operate_level"]:
+    if user_info.permission >= config.common_config.basic_config["user_handle_logic_operate_level"]:
         if status:
-            if target_user_id not in config.censor_user["whitelist"]:
-                config.censor_user["whitelist"].append(target_user_id)
+            if target_user_id not in config.common_config.censor_user["whitelist"]:
+                config.common_config.censor_user["whitelist"].append(target_user_id)
                 config.save_yaml(str("censor_user"))
             await bot.send(event, f"已将{target_user_id}加入白名单")
         else:
             try:
-                config.censor_user["whitelist"].remove(target_user_id)
+                config.common_config.censor_user["whitelist"].remove(target_user_id)
                 config.save_yaml(str("censor_user"))
                 await bot.send(event,f"{target_user_id} 已被移出白名单")
             except ValueError:
@@ -63,15 +63,15 @@ async def call_operate_user_whitelist(bot,event,config,target_user_id,status):
         await bot.send(event, f"你没有足够权限执行此操作")
 async def call_operate_group_blacklist(bot,event,config,target_group_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.settings["bot_config"]["group_handle_logic_operate_level"]:
+    if user_info.permission >= config.common_config.basic_config["group_handle_logic_operate_level"]:
         if status:
-            if target_group_id not in config.censor_group["blacklist"]:
-                config.censor_group["blacklist"].append(target_group_id)
+            if target_group_id not in config.common_config.censor_group["blacklist"]:
+                config.common_config.censor_group["blacklist"].append(target_group_id)
                 config.save_yaml(str("censor_group"))
             await bot.send(event, f"已将群{target_group_id}加入黑名单")
         else:
             try:
-                config.censor_group["blacklist"].remove(target_group_id)
+                config.common_config.censor_group["blacklist"].remove(target_group_id)
                 config.save_yaml(str("censor_group"))
                 await bot.send(event, f"已将群{target_group_id}移出黑名单")
             except ValueError:
@@ -80,15 +80,15 @@ async def call_operate_group_blacklist(bot,event,config,target_group_id,status):
         await bot.send(event, f"你没有足够权限执行此操作")
 async def call_operate_group_whitelist(bot,event,config,target_group_id,status):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.settings["bot_config"]["group_handle_logic_operate_level"]:
+    if user_info.permission >= config.common_config.basic_config["group_handle_logic_operate_level"]:
         if status:
-            if target_group_id not in config.censor_group["whitelist"]:
-                config.censor_group["whitelist"].append(target_group_id)
+            if target_group_id not in config.common_config.censor_group["whitelist"]:
+                config.common_config.censor_group["whitelist"].append(target_group_id)
                 config.save_yaml(str("censor_group"))
             await bot.send(event, f"已将群{target_group_id}加入白名单")
         else:
             try:
-                config.censor_group["whitelist"].remove(target_group_id)
+                config.common_config.censor_group["whitelist"].remove(target_group_id)
                 config.save_yaml(str("censor_group"))
                 await bot.send(event, f"已将群{target_group_id}移出白名单")
             except ValueError:
@@ -134,7 +134,7 @@ async def report_to_master(bot,event,config):
             node_li.append(Node(content=[Image(file=i["image"])]))
         else:
             node_li.append(Node(content=[Text(str(i))]))
-    await bot.send_friend_message(config.basic_config["master"]['id'], node_li)
+    await bot.send_friend_message(config.common_config.basic_config["master"]['id'], node_li)
 
 async def send(bot,event,config,message):
     message_list=[]
@@ -162,7 +162,7 @@ async def send(bot,event,config,message):
                 message_list.append(File(file=i["video"]))
     await bot.send(event,message_list)
 async def send_contract(bot,event,config):
-    return {"管理员id": config.basic_config["master"]['id']}
+    return {"管理员id": config.common_config.basic_config["master"]['id']}
 def main(bot,config):
     @bot.on(LifecycleMetaEvent)
     async def _(event):
@@ -196,45 +196,45 @@ def main(bot,config):
     async def _(event):
         if event.pure_text=="/gc":
             user_info = await get_user(event.user_id, event.sender.nickname)
-            if user_info[6] >= 3:
+            if user_info.permission >= 3:
                 r=await garbage_collection(bot,event,config)
                 await bot.send(event,r)
     @bot.on(FriendRequestEvent)
     async def FriendRequestHandler(event: FriendRequestEvent):
-        if event.user_id in config.censor_user["blacklist"]:
+        if event.user_id in config.common_config.censor_user["blacklist"]:
             bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 用户被加入黑名单，拒绝添加")
             await bot.handle_friend_request(event.flag,False,"拒绝添加好友")
-            await bot.send_friend_message(config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 用户被加入黑名单，拒绝添加")
+            await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 用户被加入黑名单，拒绝添加")
         else:
             user_info = await get_user(event.user_id)
-            if user_info[6] >= config.settings["bot_config"]["申请bot好友所需权限"]:
+            if user_info.permission >= config.common_config.basic_config["申请bot好友所需权限"]:
                 bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 同意")
                 await bot.handle_friend_request(event.flag,True,"")
-                await bot.send_friend_message(config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 同意")
+                await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 同意")
             else:
                 bot.logger.info_func(f"收到好友请求，{event.user_id}({event.comment}) 拒绝")
                 await bot.handle_friend_request(event.flag,False,"你没有足够权限添加好友")
-                await bot.send_friend_message(config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 拒绝（用户权限不足）")
+                await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"收到好友请求，{event.user_id}({event.comment}) 拒绝（用户权限不足）")
 
     @bot.on(GroupRequestEvent)
     async def GroupRequestHandler(event: GroupRequestEvent):
         if event.sub_type == "invite":
-            if event.group_id in config.censor_group["blacklist"]:
+            if event.group_id in config.common_config.censor_group["blacklist"]:
                 bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
                 await bot.send_friend_message(event.user_id, f"该群已被加入黑名单，无法加入")
-                await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id})的群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
+                await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"收到来自{event.user_id})的群邀请，{event.group_id}({event.comment}) 群被加入黑名单，拒绝邀请")
             else:
                 user_info = await get_user(event.user_id)
-                if user_info[6] >= config.settings["bot_config"]["邀请bot加群所需权限"]:
+                if user_info.permission >= config.common_config.basic_config["邀请bot加群所需权限"]:
                     bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 同意")
                     await bot.set_group_add_request(event.flag,True,"allow")
-                    await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 同意")
+                    await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 同意")
                 else:
                     bot.logger.info_func(f"收到群邀请，{event.group_id}({event.comment}) 拒绝")
                     await bot.send_friend_message(event.user_id, f"你没有足够权限邀请bot加入该群")
-                    await bot.send_friend_message(config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 拒绝（用户权限不足）")
+                    await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"收到来自{event.user_id}的群邀请，{event.group_id}({event.comment}) 拒绝（用户权限不足）")
         elif event.sub_type == "add":
-            if event.group_id in config.censor_group["blacklist"]:
+            if event.group_id in config.common_config.censor_group["blacklist"]:
                 pass
             else:
                 bot.logger.info_func(f"收到加群申请，{event.group_id} {event.comment}同意")

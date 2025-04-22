@@ -23,21 +23,21 @@ async def call_user_data_sign(bot,event,config):
     await bot.send(event, r)
 async def call_change_city(bot,event,config,city):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6]>=config.controller["user_data"]["change_info_operate_level"]:
+    if user_info.permission>=config.system_plugin.config["user_data"]["change_info_operate_level"]:
         r = await update_user(event.user_id, city=city)
         await bot.send(event, r)
     else:
         await bot.send(event,"权限好像不够呢.....")
 async def call_change_name(bot,event,config,name):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6]>=config.controller["user_data"]["change_info_operate_level"]:
+    if user_info.permission>=config.system_plugin.config["user_data"]["change_info_operate_level"]:
         await update_user(event.user_id, nickname=name)
         await bot.send(event, f"已将你的昵称改为{name}")
     else:
         await bot.send(event,"权限好像不够呢.....")
 async def call_permit(bot,event,config,target_id,level,type="user"):
     user_info = await get_user(event.user_id, event.sender.nickname)
-    if user_info[6] >= config.controller["user_data"]["permit_user_operate_level"]:
+    if user_info.permission >= config.system_plugin.config["user_data"]["permit_user_operate_level"]:
         if type == "user":
             await update_user(user_id=target_id, permission=level)
             await bot.send(event, f"已将{target_id}的权限设置为{level}")
@@ -46,7 +46,7 @@ async def call_permit(bot,event,config,target_id,level,type="user"):
             bot.logger.info(f"number of members in group {target_id}: {len(groupmemberlist_get['data'])}")
             for member in groupmemberlist_get["data"]:
                 try:
-                    if config.basic_config["master"]["id"] == member["user_id"]:
+                    if config.common_config.basic_config["master"]["id"] == member["user_id"]:
                         continue
                     #bot.logger.info(f"Setting permission of {member['user_id']} to {level}")
                     await update_user(user_id=member["user_id"], permission=level)
@@ -59,7 +59,7 @@ async def call_delete_user_history(bot,event,config):
     await delete_user_history(event.user_id)
     await bot.send(event, "已清理对话记录")
 async def call_clear_all_history(bot,event,config):
-    if event.user_id==config.basic_config["master"]["id"]:
+    if event.user_id==config.common_config.basic_config["master"]["id"]:
         await clear_all_history()
         await bot.send(event, "已清理所有用户的对话记录")
     else:
@@ -102,7 +102,7 @@ def main(bot,config):
         elif event.pure_text.startswith("修改城市"):
             city=event.pure_text.split("修改城市")[1]
             await call_change_city(bot,event,config,city)
-        elif event.pure_text.startswith("叫我") and user_info[6]>=config.controller["user_data"]["change_info_operate_level"]:
+        elif event.pure_text.startswith("叫我") and user_info.permission>=config.system_plugin.config["user_data"]["change_info_operate_level"]:
             nickname=event.pure_text.split("叫我")[1]
             await call_change_name(bot,event,config,nickname)
 

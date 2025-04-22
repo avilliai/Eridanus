@@ -8,11 +8,19 @@ import urllib.parse
 
 from PIL import Image
 
+from framework_common.framework_util.yamlLoader import YAMLManager
+
 # 全局变量
 DOWNLOAD_LIMIT = 5  # 获取到的视频数量，或者信息条数
 API_BASE_URL = "https://api.iwara.tv/videos"
 RATING = "all"  # ecchi(r18), all（没啥用，因为就没有不是r18的）
 DOWNLOAD_DIR = "data/pictures/cache"  # 视频下载目录
+
+manager = YAMLManager("run")
+yaml_manager = YAMLManager.get_instance()
+
+local_config = yaml_manager.common_config.basic_config
+proxy = local_config.get("proxy").get("http_proxy")
 
 def sanitize_filename(filename):
     return re.sub(r'[\\/*?:"<>|]', "", filename)
@@ -74,8 +82,8 @@ async def download_video(client, video_id):
 
 async def fetch_video_info(sort,config):
     url = f"{API_BASE_URL}?rating={RATING}&sort={sort}&limit={DOWNLOAD_LIMIT}"
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if proxy:
+        proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
     async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
@@ -182,8 +190,8 @@ async def download_thumbnail(client, item):
 
 async def rank_videos(sort,config):
     url = f"{API_BASE_URL}?rating={RATING}&sort={sort}&limit={DOWNLOAD_LIMIT}"
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if proxy:
+        proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
     async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
@@ -208,8 +216,8 @@ async def rank_videos(sort,config):
             #print(video_info)
 
 async def download_specific_video(videoid,config):
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if proxy:
+        proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
     async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
@@ -225,8 +233,8 @@ async def download_specific_video(videoid,config):
 async def search_videos(word,config):
     query = urllib.parse.quote(word)
     url = f"https://api.iwara.tv/search?type=video&page=0&query={query}&limit={DOWNLOAD_LIMIT}"
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if proxy:
+        proxies = {"http://": proxy, "https://": proxy}
     else:
         proxies = None
     async with httpx.AsyncClient(timeout=None,proxies=proxies) as client:
