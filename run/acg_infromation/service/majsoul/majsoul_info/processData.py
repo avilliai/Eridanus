@@ -1,5 +1,4 @@
 # coding=utf-8
-from run.anime_game_service.service.majsoul.majsoul_info.majsoul_Spider import *
 import json,os
 
 FILE_PATH = os.path.dirname(os.path.dirname(__file__))

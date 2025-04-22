@@ -36,8 +36,7 @@ async def call_bili_download_video(bot,event,config):
         await bot.send(event, f'下载失败\n{e}')
 
 def main(bot,config):
-    botname=config.common_config.basic_config["bot"]["name"]
-
+    botname=config.common_config.basic_config["bot"]
     bili_login_check,douyin_login_check,xhs_login_check=ini_login_Link_Prising(type=0)
     if bili_login_check and douyin_login_check and xhs_login_check:
         bot.logger.info('✅ 链接解析功能已上线！')

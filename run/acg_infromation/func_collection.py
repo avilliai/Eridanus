@@ -3,8 +3,8 @@
 供函数调用的同类接口集合
 """
 from developTools.message.message_components import Image
-from run.anime_game_service.service.arona_api import stageStrategy
-from run.anime_game_service.service.steam import steam_query_game
+from run.acg_infromation.service.arona_api import stageStrategy
+from run.acg_infromation.service.steam import steam_query_game
 
 
 async def anime_game_service_func_collection(bot,event,config,m_type,query_target):

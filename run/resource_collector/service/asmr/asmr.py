@@ -12,7 +12,7 @@ from framework_common.utils.utils import get_headers
 manager = YAMLManager("run")
 yaml_manager = YAMLManager.get_instance()
 
-local_config = yaml_manager.common_config.network
+local_config = yaml_manager.common_config.basic_config
 proxy = local_config.get("proxy").get("http_proxy")
 
 

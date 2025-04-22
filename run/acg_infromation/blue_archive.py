@@ -6,7 +6,7 @@ import yaml
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image,Text
-from run.anime_game_service.service.arona_api import stageStrategy
+from run.acg_infromation.service.arona_api import stageStrategy
 
 
 

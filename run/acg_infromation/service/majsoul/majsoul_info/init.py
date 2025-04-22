@@ -1,5 +1,4 @@
 # coding=utf-8
-from run.anime_game_service.service.majsoul.majsoul_info.processData import *
 import asyncio
 
 

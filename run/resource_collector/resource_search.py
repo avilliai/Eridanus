@@ -283,7 +283,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
     asyncio.create_task(_call_jm())
     return {"status": "running", "message": "任务已在后台启动，请耐心等待结果"}
 def main(bot,config):
-    proxy = config.common_config.network["proxy"]["http_proxy"]
+    proxy = config.common_config.basic_config["proxy"]["http_proxy"]
     if proxy!= "":
         proxies = {
             "http": proxy,

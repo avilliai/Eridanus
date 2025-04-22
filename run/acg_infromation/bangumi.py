@@ -170,9 +170,9 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
-        botname = config.basic_config["bot"]["name"]
+        botname = config.common_config.basic_config["bot"]["name"]
         context=event.pure_text
-        if not event.pure_text.startswith(config.settings["acg_information"]["bangumi_query_prefix"]):
+        if not event.pure_text.startswith(config.acg_information.config["acg_information"]["bangumi_query_prefix"]):
             return
         if "bangumi查询" in context :
                 #url="https://api.bgm.tv/search/subject/"+str(event.message_chain).split(" ")[1]

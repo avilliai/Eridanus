@@ -8,7 +8,7 @@ from framework_common.framework_util.yamlLoader import YAMLManager
 manager = YAMLManager("run")
 yamlmanager = YAMLManager.get_instance()
 
-proxy = yamlmanager.common_config.network.get("proxy").get("http_proxy")
+proxy = yamlmanager.common_config.basic_config.get("proxy").get("http_proxy")
 
 
 proxies = {

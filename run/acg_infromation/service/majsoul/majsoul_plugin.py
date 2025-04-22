@@ -1,4 +1,3 @@
-from run.anime_game_service.service.majsoul.majsoul_info.init import *
 import asyncio
 from run.group_fun.service.wife_you_want import manage_group_status
 import copy
