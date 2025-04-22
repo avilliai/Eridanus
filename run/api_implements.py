@@ -1,10 +1,10 @@
 import random
 
-from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
-    ProfileLikeEvent, PokeNotifyEvent, GroupRequestEvent,GroupBanNoticeEvent
-from developTools.message.message_components import Record, Node, Text, Image, File, Video
+from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, startUpMetaEvent, \
+    ProfileLikeEvent, PokeNotifyEvent, GroupBanNoticeEvent
+from developTools.message.message_components import Record, Node, Text
 from plugins.core.aiReplyCore import aiReplyCore
-from plugins.core.userDB import update_user, add_user, get_user
+from framework_common.database_util.User import update_user, add_user, get_user
 
 
 def main(bot,config):

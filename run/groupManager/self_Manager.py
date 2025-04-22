@@ -5,7 +5,7 @@ import random
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     LifecycleMetaEvent
 from developTools.message.message_components import Record, Text, Image, File, Node
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 from framework_common.utils.GCTool import delete_old_files_async
 
 
@@ -180,11 +180,13 @@ def main(bot,config):
             decoded_bytes = base64.b64decode(s)
             decoded_string = decoded_bytes.decode('utf-8')
             return decoded_string[5:-5]
-
-        bot.logger.info(f"{decode_string(encoded_strings[0])}: {len(group_list)}")
-        bot.logger.info(f"{decode_string(encoded_strings[1])} {len(friend_list)}")
-        await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
-        if random.randint(1, 100)<20:
+        try:
+            bot.logger.info(f"{decode_string(encoded_strings[0])}: {len(group_list)}")
+            bot.logger.info(f"{decode_string(encoded_strings[1])} {len(friend_list)}")
+            await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
+        except:
+            pass
+        if random.randint(1, 100)<10:
             await bot.send_friend_message(config.basic_config["master"]['id'], Record(file=f"{decode_string(encoded_strings[5])}"))
         await bot.send_friend_message(config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
         while True:

@@ -35,7 +35,7 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
                 if check_has_main(module_name) and plugin_name!="nailong_get":
                     plugin_modules.append((plugin_name, module_name))
                 else:
-                    if plugin_name!="nailong_get" and plugin_name!="func_collection" and "service" not in module_name:
+                    if plugin_name!="nailong_get" and plugin_name!="func_collection" and f"service" not in module_name:
                         bot1.logger.info(f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
     return plugin_modules

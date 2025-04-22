@@ -14,14 +14,14 @@ from developTools.utils.logger import get_logger
 from plugins.core.Group_Message_DB import get_last_20_and_convert_to_prompt, add_to_group
 from plugins.core.aiReplyHandler.default import defaultModelRequest
 from plugins.core.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
-    add_gemini_standard_prompt, get_current_gemini_prompt, query_and_insert_gemini
+    get_current_gemini_prompt
 from plugins.core.aiReplyHandler.openai import openaiRequest, construct_openai_standard_prompt, \
-    get_current_openai_prompt, add_openai_standard_prompt, construct_openai_standard_prompt_old_version, \
+    get_current_openai_prompt, construct_openai_standard_prompt_old_version, \
     openaiRequest_official
 from plugins.core.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
-from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, clear_all_history, change_folder_chara, read_chara, use_folder_chara
+from plugins.core.llmDB import get_user_history, update_user_history, delete_user_history, read_chara, use_folder_chara
 from plugins.core.tts.tts import tts
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 import importlib
 
 def call_func(*args, **kwargs):

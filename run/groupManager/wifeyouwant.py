@@ -6,21 +6,13 @@ import asyncio
 import httpx
 import requests
 import re
-import json
-from developTools.event.events import GroupMessageEvent, FriendRequestEvent, PrivateMessageEvent, startUpMetaEvent, \
-    ProfileLikeEvent, PokeNotifyEvent
-from developTools.message.message_components import Record, Node, Text, Image,At
-from plugins.core.aiReplyCore import aiReplyCore
-from plugins.core.userDB import update_user, add_user, get_user
-from plugins.game_plugin.galgame import get_game_image
+from developTools.message.message_components import Node, Text, Image,At
 from plugins.game_plugin.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker,\
-    run_async_task,daily_task,today_check_api,query_group_users,add_or_update_user_collect
+    run_async_task, today_check_api,query_group_users,add_or_update_user_collect
 from datetime import datetime
 from asyncio import sleep
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-import time
-from urllib.parse import urlparse
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent

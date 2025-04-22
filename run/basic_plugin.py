@@ -16,7 +16,7 @@ from plugins.core.tts.online_vits2 import get_huggingface_online_vits2_speakers
 from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
 from plugins.core.tts.vits import get_vits_speakers
 
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 
 
 from framework_common.utils.utils import download_img

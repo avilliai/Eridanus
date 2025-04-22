@@ -1,9 +1,6 @@
-import re
-
 from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
-from developTools.message.message_components import Node, Text
 from plugins.core.aiReplyCore import aiReplyCore
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 
 def main(bot,config):
     @bot.on(GroupMessageEvent)

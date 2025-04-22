@@ -13,7 +13,7 @@ from run.ai_generated_art.service.modelscope_text2img import modelscope_drawer
 from run.ai_generated_art.service.hf_t2i import hf_drawer
 from run.ai_generated_art.service.setu_moderate import pic_audit_standalone
 from plugins.basic_plugin.ai_text2img import bing_dalle3, flux_ultra
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 from framework_common.utils.random_str import random_str
 from run.ai_generated_art.service.aiDraw import  n4, n3, SdDraw0, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
     SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint, get_img_info

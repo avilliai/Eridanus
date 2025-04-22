@@ -3,7 +3,6 @@ import datetime
 import random
 from asyncio import sleep
 
-import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
@@ -11,9 +10,9 @@ from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Text
 from plugins.basic_plugin.life_service import bingEveryDay, danxianglii
 from plugins.basic_plugin.nasa_api import get_nasa_apod
-from plugins.basic_plugin.weather_query import weather_query, free_weather_query
+from plugins.basic_plugin.weather_query import free_weather_query
 from plugins.core.aiReplyCore import aiReplyCore
-from plugins.core.userDB import get_users_with_permission_above, get_user
+from framework_common.database_util.User import get_users_with_permission_above, get_user
 from run.system_plugin.func_collection import trigger_tasks
 from plugins.streaming_media_service.Link_parsing.Link_parsing import bangumi_PILimg
 

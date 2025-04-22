@@ -1,7 +1,7 @@
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text, File
 from plugins.resource_search_plugin.iwara.iwara1 import download_specific_video, search_videos, fetch_video_info
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 
 def main(bot,config):
     @bot.on(GroupMessageEvent)

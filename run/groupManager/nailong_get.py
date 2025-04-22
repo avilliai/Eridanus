@@ -5,7 +5,7 @@ import base64
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 from developTools.event.events import GroupMessageEvent
 from plugins.core.aiReplyCore import aiReplyCore_fuck
 

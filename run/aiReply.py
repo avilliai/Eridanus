@@ -5,7 +5,7 @@ from plugins.core.Group_Message_DB import clear_group_messages
 from plugins.core.aiReplyCore import aiReplyCore, end_chat, judge_trigger, send_text ,count_tokens_approximate
 from plugins.core.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 
-from plugins.core.userDB import get_user,update_user
+from framework_common.database_util.User import get_user,update_user
 
 from framework_common.framework_util.func_map_loader import gemini_func_map, openai_func_map
 from developTools.message.message_components import Text, At

@@ -4,7 +4,7 @@ import asyncio
 import re
 from developTools.event.events import GroupMessageEvent
 from plugins.core.llmDB import delete_user_history, clear_all_history
-from plugins.core.userDB import add_user, get_user, record_sign_in, update_user
+from framework_common.database_util.User import add_user, get_user, record_sign_in, update_user
 async def call_user_data_register(bot,event,config):
     data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
     r = await add_user(

@@ -5,7 +5,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Node, Text, File, Card
-from plugins.core.userDB import get_user
+from framework_common.database_util.User import get_user
 from plugins.resource_search_plugin.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
     choose_from_hotest_asmr_100
 from plugins.resource_search_plugin.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
