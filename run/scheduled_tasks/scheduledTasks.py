@@ -8,9 +8,9 @@ from apscheduler.triggers.cron import CronTrigger
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Text
-from plugins.basic_plugin.life_service import bingEveryDay, danxianglii
-from plugins.basic_plugin.nasa_api import get_nasa_apod
-from plugins.basic_plugin.weather_query import free_weather_query
+from run.basic_plugin.service.life_service import bingEveryDay, danxianglii
+from run.basic_plugin.service.nasa_api import get_nasa_apod
+from run.basic_plugin.service.weather_query import free_weather_query
 from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import get_users_with_permission_above, get_user
 from run.system_plugin.func_collection import trigger_tasks

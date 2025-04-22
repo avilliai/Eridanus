@@ -1,10 +1,6 @@
 # coding=utf-8
-from plugins.game_plugin.majsoul.majsoul_info.majsoul_Spider import *
+from run.anime_game_service.service.majsoul.majsoul_info.majsoul_Spider import *
 import json,os
-import base64
-from PIL import ImageFont,ImageDraw,Image
-from io import BytesIO
-
 
 FILE_PATH = os.path.dirname(os.path.dirname(__file__))
 #print(FILE_PATH)

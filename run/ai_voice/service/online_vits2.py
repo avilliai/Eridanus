@@ -37,7 +37,7 @@ def install_and_import(package_name):
 websockets = install_and_import('websockets')
 
 
-from plugins.core.tts.online_vits import random_session_hash
+from run.ai_voice.service.online_vits import random_session_hash
 
 logger=get_logger()
 async def huggingface_online_vits2(text, speaker,lang_type="简体中文",proxy=None):

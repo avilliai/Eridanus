@@ -3,8 +3,8 @@
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image
-from plugins.basic_plugin.life_service import danxianglii
-from plugins.basic_plugin.nasa_api import get_nasa_apod
+from run.basic_plugin.service.life_service import danxianglii
+from run.basic_plugin.service.nasa_api import get_nasa_apod
 from run.streaming_media.service.bilibili.bili import fetch_latest_dynamic, fetch_latest_dynamic_id
 async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:str,operation:bool,target_uid:int=None):
     if not isinstance(event,GroupMessageEvent):

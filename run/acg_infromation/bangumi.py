@@ -3,7 +3,7 @@ import datetime
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Text, Image
 from asyncio import sleep
-from plugins.game_plugin.bangumisearch import banguimiList,bangumisearch,screenshot_to_pdf_and_png,run_async_task,daily_task
+from run.acg_infromation.service.bangumisearch import banguimiList,bangumisearch,screenshot_to_pdf_and_png,run_async_task,daily_task
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import traceback

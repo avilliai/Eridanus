@@ -5,16 +5,16 @@ import asyncio
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Record, Node, Text, Image, Music
-from plugins.basic_plugin.anime_setu import anime_setu, anime_setu1
-from plugins.basic_plugin.cloudMusic import cccdddm
-from plugins.basic_plugin.divination import tarotChoice
-from plugins.basic_plugin.image_search import fetch_results, automate_browser
-from plugins.basic_plugin.weather_query import weather_query
-from plugins.core.tts.modelscopeTTS import get_modelscope_tts_speakers
-from plugins.core.tts.napcat_tts import napcat_tts_speakers
-from plugins.core.tts.online_vits2 import get_huggingface_online_vits2_speakers
-from plugins.core.tts.tts import get_acgn_ai_speaker_list, tts
-from plugins.core.tts.vits import get_vits_speakers
+from run.basic_plugin.service.anime_setu import anime_setu, anime_setu1
+from run.basic_plugin.service.cloudMusic import cccdddm
+from run.basic_plugin.service.divination import tarotChoice
+from run.basic_plugin.service.image_search import fetch_results, automate_browser
+from run.basic_plugin.service.weather_query import weather_query
+from run.ai_voice.service.modelscopeTTS import get_modelscope_tts_speakers
+from run.ai_voice.service.napcat_tts import napcat_tts_speakers
+from run.ai_voice.service.online_vits2 import get_huggingface_online_vits2_speakers
+from run.ai_voice.service.tts import get_acgn_ai_speaker_list, tts
+from run.ai_voice.service.vits import get_vits_speakers
 
 from framework_common.database_util.User import get_user
 

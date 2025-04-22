@@ -7,14 +7,12 @@ import threading
 import httpx
 import requests
 
-from ruamel.yaml import YAML
-
 from developTools.utils.logger import get_logger
-from plugins.core.tts.modelscopeTTS import modelscope_tts
-from plugins.core.tts.napcat_tts import napcat_tts_speak, napcat_tts_speakers
-from plugins.core.tts.online_vits import huggingface_online_vits
-from plugins.core.tts.online_vits2 import huggingface_online_vits2
-from plugins.core.tts.vits import vits
+from run.ai_voice.service.modelscopeTTS import modelscope_tts
+from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speakers
+from run.ai_voice.service.online_vits import huggingface_online_vits
+from run.ai_voice.service.online_vits2 import huggingface_online_vits2
+from run.ai_voice.service.vits import vits
 from framework_common.utils.random_str import random_str
 from framework_common.utils.translate import translate
 

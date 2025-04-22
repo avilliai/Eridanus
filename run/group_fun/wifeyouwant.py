@@ -7,7 +7,7 @@ import httpx
 import requests
 import re
 from developTools.message.message_components import Node, Text, Image,At
-from plugins.game_plugin.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker,\
+from run.group_fun.service.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker,\
     run_async_task, today_check_api,query_group_users,add_or_update_user_collect
 from datetime import datetime
 from asyncio import sleep

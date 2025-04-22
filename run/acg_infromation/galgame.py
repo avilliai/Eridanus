@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Node, Text, Image
-from plugins.game_plugin.galgame import Get_Access_Token,Get_Access_Token_json,flag_check,params_check,get_game_image, \
+from run.acg_infromation.service.galgame import Get_Access_Token,Get_Access_Token_json,flag_check,params_check,get_game_image, \
     context_assemble, get_introduction
 from run.streaming_media.service.Link_parsing.Link_parsing import gal_PILimg
 

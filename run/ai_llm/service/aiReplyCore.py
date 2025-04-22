@@ -20,7 +20,7 @@ from run.ai_llm.service.aiReplyHandler.openai import openaiRequest, construct_op
     openaiRequest_official
 from run.ai_llm.service.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from framework_common.database_util.llmDB import get_user_history, update_user_history, delete_user_history, read_chara, use_folder_chara
-from plugins.core.tts.tts import tts
+from run.ai_voice.service.tts import tts
 from framework_common.database_util.User import get_user
 import importlib
 

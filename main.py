@@ -51,8 +51,9 @@ def check_has_main(module_name):
         spec.loader.exec_module(module)
         return hasattr(module, "main")
     except Exception:
-        bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
-        traceback.print_exc()
+        if not module_name.startswith("run.character_detection."):
+            bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
+            traceback.print_exc()
         return False
 
 
@@ -89,8 +90,8 @@ def load_plugins(bot,config):
 
     # 奶龙检测（可选功能）
     try:
-        if config.settings["抽象检测"]["奶龙检测"] or config.settings["抽象检测"]["doro检测"]:
-            safe_import_and_load("nailong_get", "run.groupManager.nailong_get", bot, config)
+        if config.character_detection.config["抽象检测"]["奶龙检测"] or config.character_detection.config["抽象检测"]["doro检测"]:
+            safe_import_and_load("nailong_get", "run.character_detection.nailong_get", bot, config)
 
     except Exception as e:
         bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")

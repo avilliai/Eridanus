@@ -1,5 +1,5 @@
 # coding=utf-8
-from plugins.game_plugin.majsoul.majsoul_info.processData import *
+from run.anime_game_service.service.majsoul.majsoul_info.processData import *
 import asyncio
 
 

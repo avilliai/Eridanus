@@ -1,6 +1,6 @@
-from plugins.game_plugin.majsoul.majsoul_info.init import *
+from run.anime_game_service.service.majsoul.majsoul_info.init import *
 import asyncio
-from plugins.game_plugin.wife_you_want import manage_group_status
+from run.group_fun.service.wife_you_want import manage_group_status
 import copy
 
 json_init={'status':False,'content':{},'text':'初始化','pic_path':{},'type_soft':'雀魂牌谱屋','uesr_name':'初始化'}
