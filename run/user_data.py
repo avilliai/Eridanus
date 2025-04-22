@@ -3,7 +3,7 @@ from asyncio import sleep
 import asyncio
 import re
 from developTools.event.events import GroupMessageEvent
-from plugins.core.llmDB import delete_user_history, clear_all_history
+from framework_common.database_util.llmDB import delete_user_history, clear_all_history
 from framework_common.database_util.User import add_user, get_user, record_sign_in, update_user
 async def call_user_data_register(bot,event,config):
     data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
@@ -76,13 +76,13 @@ def main(bot,config):
     叫我{nickname} #修改自己的昵称
     授权#{target_qq}#{level} #授权某人相应权限，为高等级权限专有指令
     """
-    master_id = config.basic_config["master"]["id"]
-    master_name = config.basic_config["master"]["name"]
+    master_id = config.common_config.basic_config["master"]["id"]
+    master_name = config.common_config.basic_config["master"]["name"]
     asyncio.run(add_user(master_id, master_name, master_name))
     asyncio.run(update_user(master_id, permission=9999, nickname=master_name))
     asyncio.run(update_user(111111111,permission=9999,nickname="主人"))
-    if master_id not in config.censor_user["whitelist"]:
-        config.censor_user["whitelist"].append(master_id)
+    if master_id not in config.common_config.censor_user["whitelist"]:
+        config.common_config.censor_user["whitelist"].append(master_id)
         config.save_yaml(str("censor_user"))
     @bot.on(GroupMessageEvent)
     async def handle_group_message(event):

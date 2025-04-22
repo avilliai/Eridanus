@@ -6,9 +6,9 @@ import asyncio
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import File, Image, Video, Node, Text
 from framework_common.database_util.User import get_user
-from plugins.resource_search_plugin.asmr.asmr100 import parse_from_asmr_id
-from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising, download_video_link_prising
-from plugins.streaming_media_service.youtube.youtube_tools import get_img, audio_download, video_download
+from run.resource_collector.service.asmr.asmr100 import parse_from_asmr_id
+from run.streaming_media.service.Link_parsing.Link_parsing import link_prising, download_video_link_prising
+from run.streaming_media.service.youtube.youtube_tools import get_img, audio_download, video_download
 from framework_common.utils.random_str import random_str
 from framework_common.utils.utils import download_img, download_file, merge_audio_files
 

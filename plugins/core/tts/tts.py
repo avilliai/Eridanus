@@ -18,9 +18,11 @@ from plugins.core.tts.vits import vits
 from framework_common.utils.random_str import random_str
 from framework_common.utils.translate import translate
 
-yaml = YAML(typ='safe')
-with open('config/api.yaml', 'r', encoding='utf-8') as f:
-    local_config = yaml.load(f)
+from framework_common.framework_util.yamlLoader import YAMLManager
+manager = YAMLManager("run")
+yamlmanager = YAMLManager.get_instance()
+local_config = yamlmanager.ai_voice.config
+
 logger=get_logger()
 global GPTSOVITS_SPEAKERS
 GPTSOVITS_SPEAKERS={}
@@ -37,47 +39,47 @@ async def tts(text, speaker=None, config=None,mood=None,bot=None,mode=None):
     if config is None:
         config = YAMLManager(["config/settings.yaml", "config/basic_config.yaml", "config/api.yaml",
                               "config/controller.yaml"])  # 这玩意用来动态加载和修改配置文件
-    if len(text) > config.api["tts"]["length_limit"]:
+    if len(text) > config.ai_voice.config["tts"]["length_limit"]:
         raise ValueError("文本长度超出限制")
     """
     语言类型转换
     """
-    if config.api["tts"]["lang_type"]=="ja":
+    if config.ai_voice.config["tts"]["lang_type"]=="ja":
         text=await translate(text)  #默认就是转日文
         print(f"翻译后的文本：{text}")
     if mode is None:
-        mode = config.api["tts"]["tts_engine"]
+        mode = config.ai_voice.config["tts"]["tts_engine"]
     logger.info_func(f"语音合成任务：文本：{text}，发音人：{speaker}，模式：{mode}")
     if mode == "acgn_ai":
         if speaker is None:
-            speaker=config.api["tts"]["acgn_ai"]["speaker"]
-        return await acgn_ai_tts(random.choice(config.api["tts"]["acgn_ai"]["token"]), config, text, speaker,mood)
+            speaker=config.ai_voice.config["tts"]["acgn_ai"]["speaker"]
+        return await acgn_ai_tts(random.choice(config.ai_voice.config["tts"]["acgn_ai"]["token"]), config, text, speaker,mood)
     elif mode=="napcat_tts":
         if speaker is None:
-            speaker=config.api["tts"]["napcat_tts"]["character_name"]
+            speaker=config.ai_voice.config["tts"]["napcat_tts"]["character_name"]
         spkss=await napcat_tts_speakers(bot)
         if speaker in spkss:
             speaker=spkss[speaker]
         return await napcat_tts_speak(bot, config, text, speaker)
     elif mode=="modelscope_tts":
         if speaker is None:
-            speaker=config.api["tts"]["modelscope_tts"]["speaker"]
+            speaker=config.ai_voice.config["tts"]["modelscope_tts"]["speaker"]
         return await modelscope_tts(text,speaker)
     elif mode=="vits":
         if speaker is None:
-            speaker=config.api["tts"]["vits"]["speaker"]
-        base_url=config.api["tts"]["vits"]["base_url"]
+            speaker=config.ai_voice.config["tts"]["vits"]["speaker"]
+        base_url=config.ai_voice.config["tts"]["vits"]["base_url"]
         return await vits(text,speaker,base_url)
     elif mode=="online_vits":
         if speaker is None:
-            speaker=config.api["tts"]["online_vits"]["speaker"]
-        fn_index=config.api["tts"]["online_vits"]["fn_index"]
-        proxy=config.api["proxy"]["http_proxy"]
+            speaker=config.ai_voice.config["tts"]["online_vits"]["speaker"]
+        fn_index=config.ai_voice.config["tts"]["online_vits"]["fn_index"]
+        proxy=config.config.api["proxy"]["http_proxy"]
         return await huggingface_online_vits(text,speaker,fn_index,proxy)
     elif mode=="online_vits2":
         if speaker is None:
-            speaker=config.api["tts"]["online_vits2"]["speaker"]
-        if config.api["tts"]["lang_type"] == "ja":
+            speaker=config.ai_voice.confi["tts"]["online_vits2"]["speaker"]
+        if config.ai_voice.confi["tts"]["lang_type"] == "ja":
             lang="日本語"
         else:
             lang="简体中文"
@@ -113,7 +115,7 @@ async def get_acgn_ai_speaker_list(a=None,b=None,c=None):
 async def acgn_ai_tts(token, config, text, speaker,inclination="中立_neutral"):
     global GPTSOVITS_SPEAKERS
     if speaker not in GPTSOVITS_SPEAKERS:
-        speaker = config.api["tts"]["acgn_ai"]["speaker"]
+        speaker = config.ai_voice.confi["tts"]["acgn_ai"]["speaker"]
 
 
     url = "https://gsv.ai-lab.top/infer_single"

@@ -1,11 +1,12 @@
 import httpx
 import ruamel.yaml
 import base64
-yaml = ruamel.yaml.YAML()
-yaml.preserve_quotes = True
-with open('config/settings.yaml', 'r', encoding='utf-8') as f:
-    controller = yaml.load(f)
-aiDrawController = controller.get("ai绘画")
+
+from framework_common.framework_util.yamlLoader import YAMLManager
+
+same_manager = YAMLManager.get_instance()
+#print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
+aiDrawController = same_manager.ai_generated_art.config.get("ai绘画")
 tag_model = aiDrawController.get("反推和审核使用模型") if aiDrawController else "wd14-vit-v2-git"
 
 '''

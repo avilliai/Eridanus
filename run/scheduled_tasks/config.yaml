@@ -1,0 +1,43 @@
+scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
+  早安问候:         #晨间推送
+    enable: true  #向信任用户推送天气信息
+    time: 8/3      #推送时间
+    trustThreshold: 9 #权限等级要求，低于此值的用户将不会被推送
+    onlyTrustUser: True  #仅向信任用户推送
+  晚安问候: #晚安提示
+    enable: true
+    text: 晚安！    #开启aiReplyCore后，此项将被ai替代
+    time: 22/31
+    trustThreshold: 9 #低于权限等级的用户将不会被推送
+    onlyTrustUser: True  #仅向信任用户推送
+  bangumi:         #bangumi推送
+    enable: True
+    text: "晚上好，这里是今天的bangumi推送"
+    time: 19/16
+  每日天文:       #nasa天文推送
+    enable: True
+    text: "今日nasa天文推送"
+    time: 18/59
+  单向历:      #单向历
+    enable: true
+    text: 今日单向历
+    time: 19/2
+  摸鱼人日历:            #摸鱼人日历
+    enable: true
+    text: 真没用啊，又在摸鱼了吧，杂鱼❤
+    time: 17/30
+  新闻:            #新闻
+    enable: true
+    text: 早上好杂鱼❤，这里是今天的新闻
+    time: 8/2
+  免费游戏喜加一:       #免费游戏提示
+    enable: true
+    text: 杂鱼❤来白嫖游戏了
+    time: 12/2
+  nightASMR:
+    enable: true
+    text: 听完就赶紧睡觉吧~祝你好梦！(≧▽≦*)
+    time: 22/35
+  bing每日图像:
+    enable: true
+    time: 10/2

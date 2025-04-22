@@ -1,12 +1,11 @@
-import asyncio
 import shutil
 import os
 import json as json_handle
-from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
+from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image,File,Video
-from plugins.streaming_media_service.Link_parsing.core.login_core import ini_login_Link_Prising
-from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising,download_video_link_prising
-from plugins.streaming_media_service.Link_parsing.music_link_parsing import netease_music_link_parse
+from run.streaming_media.service.Link_parsing.core.login_core import ini_login_Link_Prising
+from run.streaming_media.service.Link_parsing.Link_parsing import link_prising,download_video_link_prising
+from run.streaming_media.service.Link_parsing.music_link_parsing import netease_music_link_parse
 
 
 global teamlist
@@ -21,7 +20,7 @@ async def call_bili_download_video(bot,event,config):
     if json['soft_type'] not in {'bilibili', 'dy', 'wb', 'xhs', 'x'}:
         await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
         return
-    proxy = config.api["proxy"]["http_proxy"]
+    proxy = config.common_config.network["proxy"]["http_proxy"]
     try:
         video_json = await download_video_link_prising(json, filepath='data/pictures/cache/', proxy=proxy)
         if 'video' in video_json['type']:
@@ -37,7 +36,7 @@ async def call_bili_download_video(bot,event,config):
         await bot.send(event, f'下载失败\n{e}')
 
 def main(bot,config):
-    botname=config.basic_config["bot"]["name"]
+    botname=config.common_config.basic_config["bot"]["name"]
 
     bili_login_check,douyin_login_check,xhs_login_check=ini_login_Link_Prising(type=0)
     if bili_login_check and douyin_login_check and xhs_login_check:
@@ -69,7 +68,7 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Link_Prising_search(event: GroupMessageEvent):
         global teamlist
-        proxy = config.api["proxy"]["http_proxy"]
+        proxy = config.common_config.network["proxy"]["http_proxy"]
         url=event.pure_text
         #print(url)
         if url == '' and 'json' in event.processed_message[0]:
@@ -102,7 +101,7 @@ def main(bot,config):
             if link_prising_json['video_url']:
                 send_context=f'该视频可下载，发送“下载视频”以推送'
                 teamlist[event.group_id]=link_prising_json
-                if "QQ小程序" in url and config.settings["bili_dynamic"]["is_QQ_chek"] is not True:
+                if "QQ小程序" in url and config.streaming_media.config["bili_dynamic"]["is_QQ_chek"] is not True:
                     await bot.send(event, [f'{send_context}'])
                     return
             await bot.send(event, [f'{send_context}\n', Image(file=link_prising_json['pic_path'])])
@@ -114,14 +113,14 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)
     async def Music_Link_Prising_search(event: GroupMessageEvent):
         url = event.pure_text
-        if config.settings["网易云卡片"]["enable"]:
+        if config.streaming_media.config["网易云卡片"]["enable"]:
             if "music.163.com" not in url:
                 return
             link_parsing_json = await netease_music_link_parse(url, filepath='data/pictures/cache/')
             if link_parsing_json['status']:
                 bot.logger.info('网易云音乐链接解析成功，开始推送~~~')
                 await bot.send(event, Image(file=link_parsing_json['pic_path']))
-                if config.settings["网易云卡片"]["解析自带音频下载url"]:
+                if config.streaming_media.config["网易云卡片"]["解析自带音频下载url"]:
                     try:
                         await bot.send(event, File(file='data/pictures/cache/不允许进行传播、销售等商业活动!!.txt'))
                     except Exception as e:

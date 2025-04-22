@@ -1,5 +1,5 @@
 from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
-from plugins.core.aiReplyCore import aiReplyCore
+from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import get_user
 
 def main(bot,config):

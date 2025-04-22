@@ -230,7 +230,7 @@ async def n4(prompt, path, groupid, config, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "Authorization": f"Bearer {config.ai_generated_art.config['ai绘画']['nai_key'][int(round_nai)]}",
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
         "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -249,7 +249,7 @@ async def n4(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     if config.api["proxy"]["http_proxy"]:
@@ -257,7 +257,7 @@ async def n4(prompt, path, groupid, config, args):
     else:
         proxies = None
     round_nai += 1
-    list_length = len(config.api['ai绘画']['nai_key'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['nai_key'])
     if round_nai >= list_length:
         round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
@@ -273,9 +273,9 @@ async def n4(prompt, path, groupid, config, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -351,7 +351,7 @@ async def n3(prompt, path, groupid, config, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "Authorization": f"Bearer {config.ai_generated_art.config['ai绘画']['nai_key'][int(round_nai)]}",
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
         "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -370,7 +370,7 @@ async def n3(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     if config.api["proxy"]["http_proxy"]:
@@ -378,7 +378,7 @@ async def n3(prompt, path, groupid, config, args):
     else:
         proxies = None
     round_nai += 1
-    list_length = len(config.api['ai绘画']['nai_key'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['nai_key'])
     if round_nai >= list_length:
         round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
@@ -394,9 +394,9 @@ async def n3(prompt, path, groupid, config, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -409,7 +409,7 @@ async def n3(prompt, path, groupid, config, args):
 
 async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     super_width, super_height = await get_image_dimensions(b64_in)
     super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
@@ -477,11 +477,11 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
-    list_length = len(config.api['ai绘画']['sdUrl'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
     url, auth_header = parse_custom_url_auth(url)
@@ -499,9 +499,9 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -516,7 +516,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
 
 async def SdDraw0(prompt, path, config, groupid, args):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     width = int(args.get('w', sd_w) if args.get('w', sd_w) > 0 else sd_w) if isinstance(args, dict) else sd_w
     height = int(args.get('h', sd_h) if args.get('h', sd_h) > 0 else sd_h) if isinstance(args, dict) else sd_h
@@ -581,11 +581,11 @@ async def SdDraw0(prompt, path, config, groupid, args):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
-    list_length = len(config.api['ai绘画']['sdUrl'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
         
@@ -601,9 +601,9 @@ async def SdDraw0(prompt, path, config, groupid, args):
     r = response.json()
 
     b64 = r['images'][0]
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -618,7 +618,7 @@ async def SdDraw0(prompt, path, config, groupid, args):
 
 async def getloras(config):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     url, auth_header = parse_custom_url_auth(url)
 
     headers = {
@@ -639,13 +639,13 @@ async def getloras(config):
 async def ckpt2(model, config):
     global ckpt
     ckpt = model
-    config.settings["ai绘画"]["sd默认启动模型"] = model
+    config.ai_generated_art.config["ai绘画"]["sd默认启动模型"] = model
     config.save_yaml("settings")
 
 
 async def getcheckpoints(config):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     url, auth_header = parse_custom_url_auth(url)
 
     headers = {
@@ -755,7 +755,7 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "Authorization": f"Bearer {config.ai_generated_art.config['ai绘画']['nai_key'][int(round_nai)]}",
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
         "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -778,11 +778,11 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
-    list_length = len(config.api['ai绘画']['nai_key'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['nai_key'])
     if round_nai >= list_length:
         round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
@@ -798,9 +798,9 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -888,7 +888,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
     }
 
     headers = {
-        "Authorization": f"Bearer {config.api['ai绘画']['nai_key'][int(round_nai)]}",
+        "Authorization": f"Bearer {config.ai_generated_art.config['ai绘画']['nai_key'][int(round_nai)]}",
         "accept": "*/*",
         "accept-encoding": "gzip, deflate, br, zstd",
         "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -911,11 +911,11 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
     else:
         proxies = None
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
-    list_length = len(config.api['ai绘画']['nai_key'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['nai_key'])
     if round_nai >= list_length:
         round_nai = 0
     async with httpx.AsyncClient(timeout=1000, proxies=proxies) as client:
@@ -931,9 +931,9 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.api['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -945,7 +945,7 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
 
 async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     super_width, super_height = await get_image_dimensions(b64_in)
     super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
@@ -1018,11 +1018,11 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
-    list_length = len(config.api['ai绘画']['sdUrl'])
+    list_length = len(config.ai_generated_art.config['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
     url, auth_header = parse_custom_url_auth(url)
@@ -1039,9 +1039,9 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -1055,7 +1055,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
 
 async def getsampler(config):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     url, auth_header = parse_custom_url_auth(url)
 
     headers = {
@@ -1080,7 +1080,7 @@ async def getsampler(config):
     
 async def getscheduler(config):
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     url, auth_header = parse_custom_url_auth(url)
 
     headers = {
@@ -1100,7 +1100,7 @@ async def interrupt(config):
     global round_sd
     try:
         adjusted_index = int(round_sd) - 1
-        sdUrls = config.api["ai绘画"]["sdUrl"]
+        sdUrls = config.ai_generated_art.config["ai绘画"]["sdUrl"]
         if adjusted_index < 0 or adjusted_index >= len(sdUrls):
             raise IndexError("索引超出范围，请检查 round_sd 的值。")
         url = sdUrls[adjusted_index]
@@ -1130,7 +1130,7 @@ async def skipsd(config):
     global round_sd
     try:
         adjusted_index = int(round_sd) - 1
-        sdUrls = config.api["ai绘画"]["sdUrl"]
+        sdUrls = config.ai_generated_art.config["ai绘画"]["sdUrl"]
         if adjusted_index < 0 or adjusted_index >= len(sdUrls):
             raise IndexError("索引超出范围，请检查 round_sd 的值。")
         url = sdUrls[adjusted_index]
@@ -1192,7 +1192,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         return await SdreDraw(cleaned_prompt, path, config, groupid, b64_in, args)
 
     global round_sd
-    url = config.api["ai绘画"]["sdUrl"][int(round_sd)]
+    url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     OVERMASK = int(args.get('overmask', default_args.get('overmask', 64)) if isinstance(args, dict) else default_args.get('overmask', 64)) if isinstance(default_args, dict) else 64
 
     orig_width, orig_height = await get_image_dimensions(b64_in)
@@ -1401,12 +1401,12 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         "override_settings_restore_afterwards": False,
     }
 
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
 
     round_sd += 1
-    list_length = len(config.api["ai绘画"]["sdUrl"])
+    list_length = len(config.ai_generated_art.config["ai绘画"]["sdUrl"])
     if round_sd >= list_length:
         round_sd = 0
         
@@ -1427,9 +1427,9 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     b64 = r['images'][0]
 
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.api['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.api['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:

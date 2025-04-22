@@ -1,0 +1,66 @@
+
+api_implements: #花里胡哨
+   nudge:               #戳一戳设置。
+     counter_probability: 100 #反击概率
+     replylist:       #如果开启aiReplyCore，将不使用此处配置回复
+       - "戳我干嘛呀！"
+acg_information:
+  bangumi_query_prefix: "/" #番剧查询类命令前缀
+basic_plugin:
+  setu:
+    r18mode: true
+    download: true #关掉的话就是直接发送url，灰度图不生效。
+    gray_layer: true #是否开启灰度图功能
+  tarot:
+    lock: false #是否开启卡片锁定功能，现在没写锁定，开了也没用
+    mode: "blueArchive" #牌面。可填 blueArchive,bilibili,AbstractImages
+    彩蛋牌:
+      enable: true #是否开启彩蛋牌
+      probability: 5 #彩蛋牌出现概率
+      card_index:
+        - data/pictures/tarot/hidden_tarot/dio.jpg: ""
+        - data/pictures/tarot/hidden_tarot/GIOGIO.jpg: ""
+        - data/pictures/tarot/hidden_tarot/gyro.jpg: ""
+        - data/pictures/tarot/hidden_tarot/hp.jpg: ""
+        - data/pictures/tarot/hidden_tarot/johnny.jpg: ""
+        - data/pictures/tarot/hidden_tarot/joseph.jpg: ""
+        - data/pictures/tarot/hidden_tarot/vlt.jpg: ""
+  搜图:
+    聚合搜图: true          #搜单图
+    soutu_bot: true       #搜本子
+  绘图框架:
+    gal_recommend: True   #galgame推荐是否接入绘图框架，若false则聊天记录发送
+    majsoul_search: True  #雀魂搜索功能是否接入绘图框架，若false则文字发送
+
+JMComic:                  #禁漫相关功能设置
+  anti_nsfw: black_and_white   #防吞策略，可选gif、black_and_white、no_censor
+  gif_compress: false     #gif模式下是否压缩
+  previewPages: 6         #验车预览页数
+  autoClearPDF: True      #下载后自动清除pdf
+  savePath: "data/pictures/benzi"  #下载为pdf的默认保存路径
+
+
+
+
+
+
+
+抽象检测:
+  奶龙检测: false
+  奶龙撤回: true
+  奶龙禁言: true
+  骂奶龙:
+  - 奶龙是你叠？这么喜欢发奶龙？
+  doro检测: false
+  doro撤回: true
+  doro禁言: true
+  骂doro:
+  - doro是你🐴？这么喜欢发你🐴的遗照？ #自己添加
+  - 粉色奶龙
+  - 唐
+  男娘检测: false
+  男娘撤回: true
+  男娘禁言: true
+  骂男娘:
+  - 发男娘图给你超市
+

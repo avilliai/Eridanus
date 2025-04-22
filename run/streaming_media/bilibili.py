@@ -4,8 +4,8 @@ from asyncio import sleep
 from concurrent.futures import ThreadPoolExecutor
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image
-from plugins.streaming_media_service.Link_parsing.Link_parsing import link_prising
-from plugins.streaming_media_service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic, fetch_latest_dynamic
+from run.streaming_media.service.Link_parsing.Link_parsing import link_prising
+from run.streaming_media.service.bilibili.bili import fetch_latest_dynamic_id, fetch_dynamic
 import sys
 
 from run.system_plugin.func_collection import operate_group_push_tasks

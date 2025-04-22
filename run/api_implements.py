@@ -3,12 +3,12 @@ import random
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent, GroupBanNoticeEvent
 from developTools.message.message_components import Record, Node, Text
-from plugins.core.aiReplyCore import aiReplyCore
+from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import update_user, add_user, get_user
 
 
 def main(bot,config):
-    master=config.basic_config["master"]["id"]
+    master=config.common_config.basic_config["master"]["id"]
 
     global avatar
     avatar=False
@@ -18,7 +18,7 @@ def main(bot,config):
         if event.pure_text=="赞我":
             user_info = await get_user(event.user_id)
 
-            if user_info[6] >=config.controller["api_implement"]["send_like"]:
+            if user_info.permission >=config.controller["api_implement"]["send_like"]:
                 await bot.send_like(event.user_id)
                 await bot.send(event, "已赞你！")
         if event.pure_text.startswith("改备注"):
@@ -111,7 +111,7 @@ def main(bot,config):
                 bot_name=config.basic_config["bot"]["name"]
                 user_info=await get_user(event.user_id,user_name)
                 try:
-                    text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
+                    text = f"{user_info.nickname}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
                 except:
                     bot.logger.error("获取不到戳一戳文本")
                     text="戳一戳你~"
@@ -129,7 +129,7 @@ def main(bot,config):
             else:
                 bot_name = config.basic_config["bot"]["name"]
                 user_info = await get_user(event.user_id)
-                text = f"{user_info[1]}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
+                text = f"{user_info.nickname}{event.raw_info[2]['txt']}{bot_name}{event.raw_info[4]['txt']}"
                 bot.logger.info(text)
                 if config.api["llm"]["aiReplyCore"]:
                     r = await aiReplyCore([{"text": text}], event.user_id, config,bot=bot)

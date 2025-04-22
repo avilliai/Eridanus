@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from framework_common.database_util.User import get_user
 from developTools.event.events import GroupMessageEvent
-from plugins.core.aiReplyCore import aiReplyCore_fuck
+from run.ai_llm.service.aiReplyCore import aiReplyCore_fuck
 
 async def operate_group_censor(bot,event,config,target_id,operation):
     if operation == "开启奶龙审核":
