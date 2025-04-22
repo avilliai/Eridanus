@@ -2,7 +2,7 @@
 
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
-from run.anime_game_service.func_collection import anime_game_service_func_collection
+from run.acg_infromation.func_collection import anime_game_service_func_collection
 
 
 def main(bot, config):
