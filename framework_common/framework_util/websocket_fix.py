@@ -42,7 +42,7 @@ class ExtendBot(WebSocketBot):
                         pass
                     if hasattr(event_obj, "group_id"):
                         if self.config.common_config.basic_config["group_handle_logic"]=="blacklist":
-                            if event_obj.group_id not in self.config.common_config.common_config.censor_group["blacklist"]:
+                            if event_obj.group_id not in self.config.common_config.censor_group["blacklist"]:
                                 if hasattr(event_obj, "user_id"):
                                     if self.config.common_config.basic_config["user_handle_logic"] == "blacklist":
                                         if event_obj.user_id not in self.config.common_config.censor_user["blacklist"]:
