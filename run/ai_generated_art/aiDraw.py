@@ -18,6 +18,7 @@ from run.ai_generated_art.service.aiDraw import  n4, n3, SdDraw0, getloras, getc
     SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint, get_img_info
 from run.ai_generated_art.service.wildcard import get_available_wildcards, replace_wildcards
 from framework_common.utils.utils import download_img, url_to_base64, parse_arguments, get_img, delay_recall
+from run.basic_plugin.service.imgae_search.anime_trace import anime_trace
 
 turn = 0
 UserGet = {}
@@ -180,9 +181,23 @@ async def call_text2img1(bot,event,config,tag):
 
 async def call_aiArtModerate(bot,event,config,img_url):
     try:
-        r=await aiArtModerate(img_url,config.ai_generated_art.config["sightengine"]["api_user"],config.ai_generated_art.config["sightengine"]["api_secret"])
+        """
+        traceanime检测
+        """
+        try:
+            res = await anime_trace(img_url)
+            bot.logger.info("traceanime调用成功,结果：{res[2]}")
+            res=f"traceanime检测结果：{res[2]}(True为ai作品，False为非ai作品)"
+        except Exception as e:
+            res="traceanime调用失败"
+
+        try:
+            r=await aiArtModerate(img_url,config.ai_generated_art.config["sightengine"]["api_user"],config.ai_generated_art.config["sightengine"]["api_secret"])
+            r=f"aiArtModerate调用成功，ai生成的可能性为：{r}"
+        except Exception as e:
+            r=f"aiArtModerate调用失败。{e}"
         if config.ai_llm.config["llm"]["aiReplyCore"]:
-            return {"msg":f"图片为ai创作的可能性为{r}%"}
+            return {"msg":f"api调用结果为，{res}\n{r}"}
         else:
             await bot.send(event, f"图片为ai创作的可能性为{r}%", True)
     except Exception as e:

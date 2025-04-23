@@ -5,43 +5,20 @@ from httpx import AsyncClient
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Node, Text
+from run.basic_plugin.service.imgae_search.anime_trace import anime_trace
 
 
 async def call_character_identify(bot, event,config,image_url,model_name):
     bot.logger.info(f"接收来自用户{event.user_id}的识别指令")
-
-    # 发送请求
-    ai_detect = "True"
-    url=f"https://api.animetrace.com/v1/search"
-    data={
-        "is_multi": 0,
-        "model": model_name,
-        "ai_detect": ai_detect,
-        "url": image_url
-    }
-    #url = f"https://aiapiv2.animedb.cn/ai/api/detect?force_one=1&model={model_name}&ai_detect={ai_detect}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67",
-    }
-    forward_meslist = []
-
     try:
-        async with AsyncClient(trust_env=False) as client:
-            res = await client.post(url=url, headers=headers, data=data, timeout=30)
-            content = res.json()
-            result_lines = []
-            forward_meslist.append(Node(content=[Text(f"识别结果如下")]))
-            if "ai" in content:
-                if content["ai"]:
-                    forward_meslist.append(Node(content=[Text(f"ai创作？：{content['ai']}")]))
-            for item in content['data']:
-                for character in item['character']:
-                    result_lines.append(f"{character['work']} - {character['character']}")
-            forward_meslist.append(Node(content=[Text("\n".join(result_lines))]))
-
-            bot.logger.info("角色识别成功")
-            await bot.send(event, forward_meslist)
-            return {"result": "\n".join(result_lines)}
+        res=await anime_trace(image_url)
+        forward_meslist = []
+        forward_meslist.append(Node(content=[Text(str(res[0]))]))
+        forward_meslist.append(Node(content=[Text(str(res[1]))]))
+        forward_meslist.append(Node(content=[Text(f"AI识别：{str(res[2])}")]))
+        bot.logger.info("角色识别成功")
+        await bot.send(event, forward_meslist)
+        return {"result": str(res)}
 
     except Exception as e:
         bot.logger.error(f"角色识别出错：{e}")
