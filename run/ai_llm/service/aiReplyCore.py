@@ -68,7 +68,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
         else:
             system_instruction = await read_chara(user_id, await use_folder_chara(config.ai_llm.config["llm"]["chara_file_name"]))
         user_info=await get_user(user_id)
-        system_instruction=system_instruction.replace("{用户}",user_info.nickname).replace("{bot_name}",config.basic_config["bot"]["name"])
+        system_instruction=system_instruction.replace("{用户}",user_info.nickname).replace("{bot_name}",config.common_config.basic_config["bot"])
     try:
         if recursion_times==0 and processed_message:
             last_trigger_time[user_id] = time.time()
