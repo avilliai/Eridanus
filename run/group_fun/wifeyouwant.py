@@ -349,34 +349,6 @@ def main(bot,config):
             if membercheck_id in membercheck:
                 membercheck.pop(membercheck_id)
 
-    @bot.on(GroupMessageEvent)  # 今日腿子
-    async def today_husband(event: GroupMessageEvent):
-        async with httpx.AsyncClient() as client:
-            if str(event.pure_text).startswith("今"):
-                if '今日' in str(event.pure_text) or '今天' in str(event.pure_text) or '今日' in str(event.pure_text):
-                    global filepath
-                    url=None
-                    if '腿' in str(event.pure_text):
-                        bot.logger.info("今日腿子开启！")
-                        url='https://api.dwo.cc/api/meizi'
-                    elif '黑' in str(event.pure_text):
-                        bot.logger.info("今日黑丝开启！")
-                        url='https://api.dwo.cc/api/hs_img'
-                    elif '白丝' in str(event.pure_text):
-                        bot.logger.info("今日白丝开启！")
-                        url='https://api.dwo.cc/api/bs_img'
-                    elif '头像' in str(event.pure_text):
-                        bot.logger.info("今日头像开启！")
-                        url='https://api.dwo.cc/api/dmtou'
-                    if url is None:return
-                    try:
-                        response = requests.get(url)
-                        img_path = f'{filepath}/today_api_check.jpg'
-                        with open(img_path, 'wb') as file:
-                            file.write(response.content)
-                        await bot.send(event,[Image(file=img_path)])
-                    except Exception:
-                        await bot.send(event, 'api失效了喵，请过一段时间再试试吧')
 
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def today_group_owner(event: GroupMessageEvent):
