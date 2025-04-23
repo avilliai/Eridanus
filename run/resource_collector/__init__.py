@@ -1,3 +1,4 @@
+plugin_description="资源搜集(r18)"
 dynamic_imports = {
     "run.resource_search.resource_search": [
         "search_book_info", "call_asmr", "call_download_book","call_jm"

@@ -1,3 +1,4 @@
+plugin_description="群管理"
 dynamic_imports={
     "run.groupManager.self_Manager": [
         "call_operate_blandwhite", "garbage_collection",

@@ -1,3 +1,4 @@
+plugin_description="媒体服务，bilibili、youtube、微博、小红书等"
 dynamic_imports ={
     "run.streaming_media.youtube": ["download_video"],
 }

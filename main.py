@@ -1,6 +1,7 @@
 import concurrent.futures
 import importlib
 import os
+import subprocess
 import sys
 import asyncio
 import threading
@@ -116,6 +117,25 @@ if enable_webui and os.path.exists("../server.exe"):
 
     bot2_thread = threading.Thread(target=run_bot2, daemon=True)
     bot2_thread.start()
+def run_webui():
+    bot1.logger.info("🔧 正在启动 WebUI 服务...")
+    server_dir = os.path.join(os.path.dirname(__file__), 'web')
+    python_exec = sys.executable
+    server_script = os.path.join(server_dir, 'server.py')
+    process = subprocess.Popen(
+        [python_exec, server_script],
+        cwd=server_dir,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding='utf-8',
+        errors='replace',
+    )
+    def reader():
+        for line in process.stdout:
+            print("[server]", line.strip())
+
+    threading.Thread(target=reader, daemon=True).start()
+run_webui()
 load_plugins(bot1,config)
 bot1.run()
 

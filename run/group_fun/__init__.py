@@ -1,0 +1,1 @@
+plugin_description="群聊娱乐功能"
