@@ -2,7 +2,7 @@ plugin_description="ACG相关信息查询插件"
 dynamic_imports={
     "run.acg_infromation.bangumi": ["call_bangumi_search"],
     "run.acg_infromation.character_identify": ["call_character_identify"],
-    "run.acg_infromatio.func_collection": [
+    "run.acg_infromation.func_collection": [
         "anime_game_service_func_collection"
     ],
 }
