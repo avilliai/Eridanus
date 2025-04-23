@@ -1,6 +1,6 @@
 plugin_description="奶龙审核、doro审核、男娘图片审核"
 dynamic_imports={
-    "run.character_detection": ["operate_group_censor"],
+    "run.character_detection.func_collection": ["operate_group_censor"],
 }
 function_declarations=[
     {
