@@ -172,7 +172,7 @@ def main(bot,config):
                     return
                 else:
                     config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"].append(event.group_id)
-                    config.save_yaml("sheduled_tasks_push_groups_ordinary")
+                    config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
                     await bot.send(event, "订阅成功")
             else:
                 await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
@@ -181,7 +181,7 @@ def main(bot,config):
             if args[1] and args[1] in allow_args:
                 if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"]:
                     config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"].remove(event.group_id)
-                    config.save_yaml("sheduled_tasks_push_groups_ordinary")
+                    config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
                     await bot.send(event, "取消订阅成功")
                 else:
                     await bot.send(event, "本群没有订阅过")

@@ -33,12 +33,12 @@ async def call_operate_user_blacklist(bot,event,config,target_user_id,status):
         if status:
             if target_user_id not in config.common_config.censor_user["blacklist"]:
                 config.common_config.censor_user["blacklist"].append(target_user_id)
-                config.save_yaml(str("censor_user"))
+                config.save_yaml("censor_user",plugin_name="common_config")
             await bot.send(event, f"已将{target_user_id}加入黑名单")
         else:
             try:
                 config.common_config.censor_user["blacklist"].remove(target_user_id)
-                config.save_yaml(str("censor_user"))
+                config.save_yaml("censor_user",plugin_name="common_config")
                 await bot.send(event,f"{target_user_id} 已被移出黑名单")
             except ValueError:
                 await bot.send(event,f"{target_user_id} 不在黑名单中")
@@ -50,12 +50,12 @@ async def call_operate_user_whitelist(bot,event,config,target_user_id,status):
         if status:
             if target_user_id not in config.common_config.censor_user["whitelist"]:
                 config.common_config.censor_user["whitelist"].append(target_user_id)
-                config.save_yaml(str("censor_user"))
+                config.save_yaml("censor_user",plugin_name="common_config")
             await bot.send(event, f"已将{target_user_id}加入白名单")
         else:
             try:
                 config.common_config.censor_user["whitelist"].remove(target_user_id)
-                config.save_yaml(str("censor_user"))
+                config.save_yaml("censor_user",plugin_name="common_config")
                 await bot.send(event,f"{target_user_id} 已被移出白名单")
             except ValueError:
                 await bot.send(event,f"{target_user_id} 不在白名单中")
@@ -67,12 +67,12 @@ async def call_operate_group_blacklist(bot,event,config,target_group_id,status):
         if status:
             if target_group_id not in config.common_config.censor_group["blacklist"]:
                 config.common_config.censor_group["blacklist"].append(target_group_id)
-                config.save_yaml(str("censor_group"))
+                config.save_yaml("censor_group",plugin_name="common_config")
             await bot.send(event, f"已将群{target_group_id}加入黑名单")
         else:
             try:
                 config.common_config.censor_group["blacklist"].remove(target_group_id)
-                config.save_yaml(str("censor_group"))
+                config.save_yaml("censor_group",plugin_name="common_config")
                 await bot.send(event, f"已将群{target_group_id}移出黑名单")
             except ValueError:
                 await bot.send(event, f"群{target_group_id} 不在黑名单中")
@@ -84,12 +84,12 @@ async def call_operate_group_whitelist(bot,event,config,target_group_id,status):
         if status:
             if target_group_id not in config.common_config.censor_group["whitelist"]:
                 config.common_config.censor_group["whitelist"].append(target_group_id)
-                config.save_yaml(str("censor_group"))
+                config.save_yaml("censor_group",plugin_name="common_config")
             await bot.send(event, f"已将群{target_group_id}加入白名单")
         else:
             try:
                 config.common_config.censor_group["whitelist"].remove(target_group_id)
-                config.save_yaml(str("censor_group"))
+                config.save_yaml(str("censor_group"),plugin_name="common_config")
                 await bot.send(event, f"已将群{target_group_id}移出白名单")
             except ValueError:
                 await bot.send(event, f"群{target_group_id} 不在白名单中")

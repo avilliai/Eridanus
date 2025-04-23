@@ -17,12 +17,12 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                 return
             else:
                 config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["groups"].append(event.group_id)
-                config.save_yaml("scheduledTasks_push_groups")
+                config.save_yaml("scheduledTasks_push_groups",plugin_name="scheduled_tasks")
                 await bot.send(event,"订阅成功")
         else:
             if event.group_id in config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["groups"]:
                 config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["groups"].remove(event.group_id)
-                config.save_yaml("scheduledTasks_push_groups")
+                config.save_yaml("scheduledTasks_push_groups",plugin_name="scheduled_tasks")
                 await bot.send(event,"取消订阅成功")
             else:
                 await bot.send(event,"本群没有订阅过")
@@ -36,7 +36,7 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                     await bot.send(event,"你已经订阅过了")
                 else:
                     config.streaming_media.bili_dynamic[target_uid]["push_groups"].append(event.group_id)
-                    config.save_yaml(str("bili_dynamic"))
+                    config.save_yaml("bili_dynamic",plugin_name="streaming_media")
                     await bot.send(event, "订阅成功")
             else:
                 try:
@@ -45,7 +45,7 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                     await bot.send(event, "获取动态id失败，但任务已添加至配置文件。")
                     latest_dynamic_id1, latest_dynamic_id2 = 0, 0
                 config.streaming_media.bili_dynamic[target_uid] = {"push_groups": [event.group_id], "latest_dynamic_id": [latest_dynamic_id1, latest_dynamic_id2]}
-                config.save_yaml(str("bili_dynamic"))
+                config.save_yaml("bili_dynamic",plugin_name="streaming_media")
                 await bot.send(event, "订阅成功")
             try:
                 p=await fetch_latest_dynamic(target_uid,config)
@@ -58,7 +58,7 @@ async def operate_group_push_tasks(bot,event:GroupMessageEvent,config,task_type:
                 groups=config.streaming_media.bili_dynamic[target_uid]["push_groups"]
                 if event.group_id in groups:
                     groups.remove(event.group_id)
-                    config.save_yaml(str("bili_dynamic"))
+                    config.save_yaml("bili_dynamic",plugin_name="streaming_media")
                     await bot.send(event, "取消订阅成功")
                 else:
                     await bot.send(event, "你没有订阅过")

@@ -83,7 +83,7 @@ def main(bot,config):
     asyncio.run(update_user(111111111,permission=9999,nickname="主人"))
     if master_id not in config.common_config.censor_user["whitelist"]:
         config.common_config.censor_user["whitelist"].append(master_id)
-        config.save_yaml(str("censor_user"))
+        config.save_yaml("censor_user",plugin_name="common_config")
     @bot.on(GroupMessageEvent)
     async def handle_group_message(event):
         await sleep(1) #让auto_register指令优先执行

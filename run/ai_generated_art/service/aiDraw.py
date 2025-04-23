@@ -640,7 +640,7 @@ async def ckpt2(model, config):
     global ckpt
     ckpt = model
     config.ai_generated_art.config["ai绘画"]["sd默认启动模型"] = model
-    config.save_yaml("settings")
+    config.save_yaml("config",plugin_name="ai_generated_art")
 
 
 async def getcheckpoints(config):

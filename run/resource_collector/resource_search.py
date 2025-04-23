@@ -164,7 +164,7 @@ async def check_latest_asmr(bot,event,config):
                     bot.logger.error(f"latest_asmr_push error:{e}")
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
             config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
-            config.save_yaml("scheduledTasks_push_groups")
+            config.save_yaml("scheduledTasks_push_groups",plugin_name="scheduled_tasks")
         else:
             bot.logger.info_func("asmr.one 无更新")
     except Exception as e:

@@ -42,7 +42,7 @@ async def check_bili_dynamic(bot,config):
                         linking_prising_json=await link_prising(f'https://t.bilibili.com/{latest_dynamic_id}', filepath='data/pictures/cache/',type = 'dynamic_check')
                         if not linking_prising_json['status']:
                             config.streaming_media.bili_dynamic[target_uid]["latest_dynamic_id"] = [latest_dynamic_id1,latest_dynamic_id2]
-                            config.save_yaml("bili_dynamic")
+                            config.save_yaml("bili_dynamic",plugin_name="streaming_media")
                             continue
                         dynamic= linking_prising_json['pic_path']
 
@@ -57,7 +57,7 @@ async def check_bili_dynamic(bot,config):
                     except:
                         bot.logger.error(f"推送动态失败 群号：{group_id} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
                 config.streaming_media.bili_dynamic[target_uid]["latest_dynamic_id"]=[latest_dynamic_id1,latest_dynamic_id2]
-                config.save_yaml("bili_dynamic")
+                config.save_yaml("bili_dynamic",plugin_name="streaming_media")
         except Exception as e:
             bot.logger.error(f"动态抓取失败{e} uid: {target_uid}")
             continue
