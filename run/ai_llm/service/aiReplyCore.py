@@ -271,7 +271,7 @@ async def aiReplyCore(processed_message,user_id,config,tools=None,bot=None,event
                                 for mface_file in mface_files:
                                     await bot.send(event, Image(file=mface_file))
                                 mface_files = []
-                    self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000,
+                    self_message = {"user_name": config.common_config.basic_config["bot"], "user_id": 0000000,
                                     "message": self_rep}
                     if hasattr(event, "group_id"):
                         await add_to_group(event.group_id, self_message)
@@ -444,7 +444,7 @@ async def add_self_rep(bot,event,config,reply_message):
         return None
     try:
         self_rep = [{"text":reply_message.strip()}]
-        message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000, "message": self_rep}
+        message = {"user_name": config.basic_config["bot"], "user_id": 0000000, "message": self_rep}
         if hasattr(event, "group_id"):
             await add_to_group(event.group_id, message)
     except Exception as e:
@@ -793,7 +793,7 @@ async def aiReplyCore_fuck(processed_message,user_id,config,tools=None,bot=None,
                                 for mface_file in mface_files:
                                     await bot.send(event, Image(file=mface_file))
                                 mface_files = []
-                    self_message = {"user_name": config.basic_config["bot"]["name"], "user_id": 0000000,
+                    self_message = {"user_name": config.common_config.basic_config["bot"], "user_id": 0000000,
                                     "message": self_rep}
                     if hasattr(event, "group_id"):
                         await add_to_group(event.group_id, self_message)
