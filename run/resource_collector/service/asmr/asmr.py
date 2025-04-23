@@ -9,12 +9,16 @@ from developTools.utils.logger import get_logger
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.utils import get_headers
 
-manager = YAMLManager("run")
+
 yaml_manager = YAMLManager.get_instance()
 
 local_config = yaml_manager.common_config.basic_config
-proxy = local_config.get("proxy").get("http_proxy")
-
+try:
+    proxy = local_config.get("proxy").get("http_proxy")
+except:
+    proxy = None
+if not proxy:
+    proxy=None
 
 proxies = {
     "http://": proxy,

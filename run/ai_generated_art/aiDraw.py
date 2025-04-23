@@ -32,7 +32,7 @@ mask = {}
 UserGetm = {}
 default_prompt = {}
 from framework_common.framework_util.yamlLoader import YAMLManager
-manager = YAMLManager("run")
+
 config = YAMLManager.get_instance()
 
 aiDrawController = config.ai_generated_art.config.get("ai绘画")

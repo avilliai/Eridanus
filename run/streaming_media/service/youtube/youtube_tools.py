@@ -5,11 +5,15 @@ from ruamel.yaml import YAML
 from framework_common.utils.utils import get_headers
 
 from framework_common.framework_util.yamlLoader import YAMLManager
-manager = YAMLManager("run")
+
 yamlmanager = YAMLManager.get_instance()
+try:
+    proxy = yamlmanager.common_config.basic_config.get("proxy").get("http_proxy")
+except:
+    proxy = None
 
-proxy = yamlmanager.common_config.basic_config.get("proxy").get("http_proxy")
-
+if not proxy:
+    proxy = None
 
 proxies = {
     "http://": proxy,

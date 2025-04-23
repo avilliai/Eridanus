@@ -16,11 +16,13 @@ API_BASE_URL = "https://api.iwara.tv/videos"
 RATING = "all"  # ecchi(r18), all（没啥用，因为就没有不是r18的）
 DOWNLOAD_DIR = "data/pictures/cache"  # 视频下载目录
 
-manager = YAMLManager("run")
+
 yaml_manager = YAMLManager.get_instance()
 
 local_config = yaml_manager.common_config.basic_config
 proxy = local_config.get("proxy").get("http_proxy")
+if not proxy:
+    proxy = None
 
 def sanitize_filename(filename):
     return re.sub(r'[\\/*?:"<>|]', "", filename)

@@ -5,7 +5,7 @@ from PIL import Image, ImageFont, ImageDraw
 
 from framework_common.utils.random_str import random_str
 
-texture_path = "plugins/resource_search_plugin/zLibrary/img.png"
+texture_path = "run/resource_collector/service/zLibrary/img.png"
 def create_book_image(data):
     # 加载纹理图片并将其拉伸到画布大小
     texture_image = Image.open(texture_path)

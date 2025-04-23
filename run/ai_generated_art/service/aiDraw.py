@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw
 from framework_common.utils.utils import parse_arguments
 from run.ai_generated_art.service.wildcard import replace_wildcards
 from framework_common.framework_util.yamlLoader import YAMLManager
-manager = YAMLManager("run")
+
 same_manager = YAMLManager.get_instance()
 #print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
 aiDrawController = same_manager.ai_generated_art.config.get("ai绘画")

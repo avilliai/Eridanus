@@ -18,7 +18,7 @@ negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, b
 #positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
 
 
-manager = YAMLManager("run")
+
 same_manager = YAMLManager.get_instance()
 #print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
 aiDrawController = same_manager.ai_generated_art.config.get("ai绘画")

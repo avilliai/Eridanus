@@ -17,7 +17,7 @@ from framework_common.utils.random_str import random_str
 from framework_common.utils.translate import translate
 
 from framework_common.framework_util.yamlLoader import YAMLManager
-manager = YAMLManager("run")
+
 yamlmanager = YAMLManager.get_instance()
 local_config = yamlmanager.ai_voice.config
 

@@ -26,9 +26,9 @@ import importlib
 
 def call_func(*args, **kwargs):
     # 运行时动态导入，避免循环导入
-    func_map = importlib.import_module("plugins.func_map")
+    func_map = importlib.import_module("framework_common.framework_util.func_map")
     return func_map.call_func(*args, **kwargs)
-#from plugins.func_map import call_func
+
 last_trigger_time = defaultdict(float)
 
 logger=get_logger()

@@ -20,7 +20,7 @@ positives = '{},rating:general, best quality, very aesthetic, absurdres'
 negatives = 'lowres, bad anatomy, bad hands, text, error, missing finger, extra digits, fewer digits, cropped, worst quality, low quality, low score, bad score, average score, signature, watermark, username, blurry'
 #positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
 
-manager = YAMLManager("run")
+
 same_manager = YAMLManager.get_instance()
 #print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
 aiDrawController = same_manager.ai_generated_art.config.get("ai绘画")

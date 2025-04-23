@@ -214,7 +214,7 @@ def ini_login_Link_Prising(type=None):
     try:
         data_file = SaveData("user_data")
     except:
-        os.remove(f'plugins/resource_search_plugin/Link_parsing/user_data.json')
+        os.remove(f'run/streaming_media/service/Link_parsing/user_data.json')
         data_file = SaveData("user_data")
     bili_login_check, douyin_login_check,xhs_login_check=None,None,None
     if type == 1:
