@@ -12,6 +12,10 @@ PLUGIN_DIR = "run"
 dynamic_imports = {}
 
 for root, dirs, files in os.walk(PLUGIN_DIR):
+    # 检查路径中是否包含 service 文件夹
+    if "service" in root.split(os.sep):
+        continue
+
     if "__init__.py" in files:
         module_name = root.replace(os.sep, ".")
         try:
