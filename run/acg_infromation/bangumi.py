@@ -1,5 +1,9 @@
 import os
 import datetime
+import sys
+
+import asyncio
+
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Text, Image
 from asyncio import sleep
@@ -8,7 +12,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import traceback
 from run.streaming_media.service.Link_parsing.Link_parsing import bangumi_PILimg
-
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 async def call_bangumi_search(bot,event,config,keywords,cat):
@@ -170,9 +175,9 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bangumi_search(event: GroupMessageEvent):
-        botname = config.common_config.basic_config["bot"]["name"]
+        botname = config.common_config.basic_config["bot"]
         context=event.pure_text
-        if not event.pure_text.startswith(config.acg_information.config["acg_information"]["bangumi_query_prefix"]):
+        if not event.pure_text.startswith(config.acg_infromation.config["acg_information"]["bangumi_query_prefix"]):
             return
         if "bangumi查询" in context :
                 #url="https://api.bgm.tv/search/subject/"+str(event.message_chain).split(" ")[1]

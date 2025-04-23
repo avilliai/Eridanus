@@ -9,10 +9,10 @@ import traceback
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from framework_common.framework_util.yamlLoader import YAMLManager
 if sys.platform == 'win32':
   asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.framework_util.websocket_fix import ExtendBot
 
 config = YAMLManager("run") #这玩意用来动态加载和修改配置文件

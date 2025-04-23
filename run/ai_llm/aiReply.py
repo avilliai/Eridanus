@@ -2,7 +2,6 @@ import asyncio
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from framework_common.database_util.Group import clear_group_messages
-from framework_common.framework_util.yamlLoader import YAMLManager
 from run.ai_llm.service.aiReplyCore import aiReplyCore, end_chat, judge_trigger, send_text ,count_tokens_approximate
 from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 
