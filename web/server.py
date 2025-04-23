@@ -10,7 +10,7 @@ import threading
 from io import StringIO
 
 import websockets
-from flask import Flask, request, jsonify, render_template, make_response, redirect, url_for
+from flask import Flask, request, jsonify, render_template, make_response, redirect, url_for, send_from_directory
 from flask_cors import CORS
 from cryptography.fernet import Fernet
 from ruamel.yaml import YAML, comments
@@ -25,9 +25,9 @@ from logger import get_logger
 
 
 
-
-
-app = Flask(__name__,static_folder="websources", static_url_path="",template_folder='websources')
+#新webUI测试，此处以及@app.route("/")处有修改，需要使用原来的webui可以取消注释
+app = Flask(__name__,static_folder="dist", static_url_path="",template_folder="dist")
+# app = Flask(__name__,static_folder="websources", static_url_path="",template_folder='websources')
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)  # 只显示 ERROR 级别及以上的日志（隐藏 INFO 和 DEBUG）
 logger=get_logger()
@@ -374,10 +374,15 @@ def profile():
         auth_info={}    #清空登录信息
         return jsonify({"message": "Success"})
 
-@app.route("/")  # 定义根路由
-def index():
-    return redirect("./dashboard.html") # 返回 dashboard.html
+# @app.route("/")  # 定义根路由
+# def index():
+    # return redirect("./dashboard.html") # 返回 dashboard.html
+    # return send_from_directory(app.static_folder, 'index.html')
 
+# API外的路由完全交给React前端处理,根路由都不用了
+@app.errorhandler(404)
+def not_found(e):
+    return send_from_directory(app.static_folder, 'index.html')
 
 import base64
 
