@@ -1,6 +1,6 @@
 plugin_description = "ai绘画"
 dynamic_imports = {
-    "run.AIGC.ai_generated_art.aiDraw": ["call_text2img", "call_aiArtModerate"],
+    "run.ai_generated_art.aiDraw": ["call_text2img", "call_aiArtModerate"],
 }
 function_declarations=[
 

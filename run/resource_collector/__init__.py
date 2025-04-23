@@ -1,9 +1,9 @@
 plugin_description="资源搜集(r18)"
 dynamic_imports = {
-    "run.resource_search.resource_search": [
+    "run.resource_collector.resource_search": [
         "search_book_info", "call_asmr", "call_download_book","call_jm"
     ],
-    "run.resource_search.engine_search": ["search_net", "read_html"],
+    "run.resource_collector.engine_search": ["search_net", "read_html"],
 }
 function_declarations=[
     {
