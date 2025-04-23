@@ -96,18 +96,15 @@ def load_plugins(bot,config):
 
     except Exception as e:
         bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
-try:
-  enable_webui=config.basic_config["webui"]
-except:
-  enable_webui=False
-if enable_webui and os.path.exists("../server.exe"):
+
+def webui_bot():
     config_copy = YAMLManager("run") # 这玩意用来动态加载和修改配置文件
     def config_fix(config_copy):
-        config_copy.config.settings["JMComic"]["anti_nsfw"] = "no_censor"
-        config_copy.config.settings["asmr"]["gray_layer"] = False
-        config_copy.config.settings["basic_plugin"]["setu"]["gray_layer"] = False
+        config_copy.resource_collector.config["JMComic"]["anti_nsfw"] = "no_censor"
+        config_copy.resource_collector.config["asmr"]["gray_layer"] = False
+        config_copy.basic_plugin.config["setu"]["gray_layer"] = False
         config_copy.ai_llm.config["llm"]["读取群聊上下文"]=False
-        config_copy.config.basic_config["master"]["id"]=111111111
+        config_copy.common_config.basic_config["master"]["id"]=111111111
     def run_bot2():
         """在独立线程运行 bot2"""
         config_fix(config_copy)
@@ -118,6 +115,7 @@ if enable_webui and os.path.exists("../server.exe"):
     bot2_thread = threading.Thread(target=run_bot2, daemon=True)
     bot2_thread.start()
 def run_webui():
+    webui_bot()
     bot1.logger.info("🔧 正在启动 WebUI 服务...")
     server_dir = os.path.join(os.path.dirname(__file__), 'web')
     python_exec = sys.executable
