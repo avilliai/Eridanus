@@ -7,7 +7,8 @@ from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.random_str import random_str
 from framework_common.utils.utils import download_img
-from run.basic_plugin.service.imgae_search.image_search import fetch_results, automate_browser
+from run.basic_plugin.service.imgae_search.image_search import automate_browser
+from run.basic_plugin.service.imgae_search.image_search2 import fetch_results
 
 image_search={}
 
@@ -49,22 +50,29 @@ async def call_image_search1(bot, event, config, img_url):
     bot.logger.info("调用聚合接口搜索图片")
     results = await fetch_results(config.common_config.basic_config["proxy"]["http_proxy"], img_url,
                                   config.basic_plugin.config["image_search"]["sauceno_api_key"])
+    async def extract_data(name,result):
+        node_list = []
+        if name=="sauceno":
+            for item in result:
+                try:
+                    path = "data/pictures/cache/" + random_str() + ".png"
+                    imgpath = await download_img(item[0], path,proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+                    node_list.append(Node(content=[Image(file=imgpath),Text(item[1])]))
+                except Exception as e:
+                    bot.logger.error(f"Error in extract_data: {e}")
+                    continue
+        if name=="anime_trace":
+            node_list.append(Node(content=[Text(f"ai创作检测：{result[2]}")]))
+            node_list.append(Node(content=[Text(result[0])]))
+            node_list.append(Node(content=[Text(result[1])]))
+        return node_list
+
     forMeslist = []
     for name, result in results.items():
         if result and result[0] != "":
             bot.logger.info(f"{name} 成功返回: {result}")
-            try:
-                path = "data/pictures/cache/" + random_str() + ".png"
-                imgpath = await download_img(result[0], path,
-                                             proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-                forMeslist.append(Node(content=[Text(result[1]), Image(file=imgpath)]))
+            forMeslist.extend(await extract_data(name,result))
 
-            except Exception as e:
-                bot.logger.error(f"预览图{name} 下载失败: {e}")
-                forMeslist.append(Node(content=[Text(result[1])]))
-        else:
-            bot.logger.error(f"{name} 返回失败或无结果")
-            forMeslist.append(Node(content=[Text(f"{name} 返回失败或无结果")]))
     await bot.send(event, forMeslist)
 
 

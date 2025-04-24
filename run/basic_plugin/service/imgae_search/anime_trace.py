@@ -35,7 +35,7 @@ async def anime_trace(image_source)->list[str,str,bool]:
                     a = "anime"
                 else:
                     a = "galgame"
-                str_result = f"{a}模型搜索结果：\n"
+                str_result = f"角色识别|{a}模型搜索结果：\n"
                 for result in content["data"][0]["character"]:
                     #print(result)
                     str_result += f"{result['work']} ({result['character']}%)\n"
@@ -51,5 +51,5 @@ async def anime_trace(image_source)->list[str,str,bool]:
 # Example usage
 if __name__ == "__main__":
     # Replace 'test.jpg' with the path to an actual image file
-    anime_res=asyncio.run(anime_trace("img.png"))
+    anime_res=asyncio.run(anime_trace("D:\BlueArchive\Eridanus\img.png"))
     print(anime_res)
