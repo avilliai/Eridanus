@@ -181,7 +181,7 @@ def downloadALLAndToPdf(comic_id, savePath):
     with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(tempResult, file, allow_unicode=True)
     # 创建配置对象
-    option = jmcomic.create_option_by_file('config/jmcomic.yml')
+    option = jmcomic.create_option_by_file('run/resource_collector/jmcomic.yml')
     with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
     # 这里需要再设置一下类变量，不然本子下载不全
