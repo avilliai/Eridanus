@@ -102,7 +102,7 @@ def main(bot,config):
         戳一戳的功能实现，之所以这么复杂，是因为要获取戳一戳的具体内容。
         """
         if event.target_id==bot.id:
-            if event.group_id:
+            if event.group_id and event.group_id!=913122269:
                 try:
                     data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                     user_name = data["data"]["nickname"]

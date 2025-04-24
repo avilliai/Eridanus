@@ -93,6 +93,9 @@ def main(bot,config):
             if not user_info.permission >= config.ai_llm.config["core"]["ai_reply_group"]:
                 await bot.send(event,"你没有足够的权限使用该功能哦~")
                 return
+            if event.group_id==913122269 and not user_info.permission >= 66:
+                #await bot.send(event,"你没有足够的权限使用该功能哦~")
+                return
             if not user_info.permission >= config.ai_llm.config["core"]["ai_token_limt"]:
                 if user_info.ai_token_record >= config.ai_llm.config["core"]["ai_token_limt_token"]:
                     await bot.send(event,"您的ai对话token已用完，请耐心等待下一次刷新～～")
