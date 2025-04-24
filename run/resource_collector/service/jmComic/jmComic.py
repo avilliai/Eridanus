@@ -117,7 +117,7 @@ def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compr
     #临时修改
     with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
-    option = jmcomic.create_option_by_file('config/jmcomic.yml')
+    option = jmcomic.create_option_by_file('run/resource_collector/jmcomic.yml')
 
     if not os.path.exists(f'data/pictures/benzi/temp{comic_id}'):
         os.mkdir(f'data/pictures/benzi/temp{comic_id}')
