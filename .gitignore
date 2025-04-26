@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 user_info.yaml
 log/
+.idea/
