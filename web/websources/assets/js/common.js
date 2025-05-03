@@ -19,15 +19,19 @@ function getCookie(name) {
 
 initDarkMode()
 
-async function checkProfile(){
-const response = await fetch('./api/profile', {
-    method: 'GET',
-    headers: {
-        'Content-Type': 'application/json'
+async function checkProfile() {
+    const auth_token = localStorage.getItem('auth_token');
+    if (auth_token) {
+        document.cookie = `auth_token=${auth_token}`;
     }
-});
-const data = await response.json();
-if(data.error && window.location.pathname != "/login.html")window.location.href="./login.html"
+    const response = await fetch('./api/profile', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    const data = await response.json();
+    if (data.error && window.location.pathname != "/login.html") window.location.href = "./login.html"
 }
 
 checkProfile()
