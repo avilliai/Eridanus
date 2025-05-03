@@ -12,6 +12,7 @@ from io import StringIO
 import websockets
 from flask import Flask, request, jsonify, render_template, make_response, redirect, url_for, send_from_directory
 from flask_cors import CORS
+from flask_sock import Sock
 from cryptography.fernet import Fernet
 from ruamel.yaml import YAML, comments
 from threading import Thread
@@ -24,13 +25,12 @@ from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScala
 from logger import get_logger
 
 
-
-# app = Flask(__name__,static_folder="dist", static_url_path="",template_folder="dist")
-app = Flask(__name__,static_folder="websources", static_url_path="",template_folder='websources')
+app = Flask(__name__,static_folder="dist", static_url_path="",template_folder="dist")
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)  # 只显示 ERROR 级别及以上的日志（隐藏 INFO 和 DEBUG）
 logger=get_logger()
 CORS(app,supports_credentials=True)  # 启用跨域支持
+sock = Sock(app)  # 初始化Flask-Sock
 custom_git_path = os.path.join("environments", "MinGit", "cmd", "git.exe")
 if os.path.exists(custom_git_path):
     git_path = custom_git_path
@@ -373,10 +373,11 @@ def profile():
         auth_info={}    #清空登录信息
         return jsonify({"message": "Success"})
 
-@app.route("/")  # 定义根路由
-def index():
-    return redirect("./dashboard.html") # 返回 dashboard.html
+# @app.route("/")  # 定义根路由
+# def index():
+    # return redirect("./dashboard.html") # 返回 dashboard.html
 
+# API外的路由完全交给React前端处理,根路由都不用了
 @app.errorhandler(404)
 def not_found(e):
     return send_from_directory(app.static_folder, 'index.html')
@@ -473,43 +474,44 @@ def move_file():
         return jsonify({"error": str(e)}), 500
 clients = set()
 
-async def handle_connection(websocket):
+@sock.route('/api/ws')
+def handle_websocket(ws):
     global auth_info
     logger.info_msg("WebSocket 客户端已连接")
-    clients.add(websocket)
+    clients.add(ws)
 
     try:
         # 发送连接成功消息
-        #await websocket.send(json.dumps({'time': 1739849686, 'self_id': 3377428814, 'post_type': 'meta_event', 'meta_event_type': 'lifecycle', 'sub_type': 'connect'}))
-        """while True:
-            # 鉴权，超时抛出异常，终止websocket连接
-            recv_token = await asyncio.wait_for(websocket.recv(),10)
-            recv_token = json.loads(recv_token)['auth_token']
-            try:
-                if auth_info[recv_token] > int(time.time()):
-                    print("WebSocket 客户端鉴权成功")
-                    break
-            except:
-                raise ValueError"""
+        #ws.send(json.dumps({'time': 1739849686, 'self_id': 3377428814, 'post_type': 'meta_event', 'meta_event_type': 'lifecycle', 'sub_type': 'connect'}))
+        """# 鉴权代码，如果需要可以取消注释
+        recv_token = ws.receive()
+        recv_token = json.loads(recv_token)['auth_token']
+        try:
+            if auth_info[recv_token] > int(time.time()):
+                print("WebSocket 客户端鉴权成功")
+            else:
+                raise ValueError
+        except:
+            raise ValueError"""
 
         while True:
             # 接收来自前端的消息
-            message = await websocket.recv()
+            message = ws.receive()
             logger.info_msg(f"收到前端消息: {message} {type(message)}")
             message = json.loads(message)
             if "echo" in message:
-                for client in clients:
-                    await client.send(json.dumps({'status': 'ok',
+                for client in list(clients):
+                    try:
+                        client.send(json.dumps({'status': 'ok',
                                        'retcode': 0,
                                        'data': {'message_id': 1253451396},
                                        'message': '',
                                        'wording': '',
                                        'echo': message['echo']}))
-
-
+                    except Exception:
+                        clients.discard(client)
 
             if isinstance(message,list):
-
                 message.insert(0,{'type': 'at', 'data': {'qq': '1000000', 'name': 'Eridanus'}})
 
             #print(message, type(message))
@@ -535,36 +537,19 @@ async def handle_connection(websocket):
             event_json = json.dumps(onebot_event, ensure_ascii=False)
 
             # 发送给所有连接的客户端（后端）
-            for client in clients:
-                if client != websocket and "auth_token" not in message:  # 避免回传给前端
-                    await client.send(event_json)
-
+            for client in list(clients):
+                try:
+                    if client != ws and "auth_token" not in message:  # 避免回传给前端
+                        client.send(event_json)
+                except Exception:
+                    clients.discard(client)
 
             logger.info_func(f"已发送 OneBot v11 事件: {event_json}")
-    except websockets.exceptions.ConnectionClosed as e:
-        logger.error(f"客户端连接关闭: {e}")
-    except ValueError:
-        logger.error("WebSocket 客户端鉴权失败")
+    except Exception as e:
+        logger.error(f"WebSocket错误: {e}")
     finally:
         logger.error("WebSocket 客户端断开连接")
-        clients.remove(websocket)
-
-# 启动 WebSocket 服务器
-async def start_server():
-    server = await websockets.serve(
-        handle_connection,
-        "0.0.0.0",
-        5008,
-        max_size=None  # 取消大小限制
-    )
-
-    logger.info_msg("WebSocket 服务端已启动，在 5008 端口监听...")
-    await server.wait_closed()
-def run_websocket_server():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(start_server())
-    loop.run_forever()
+        clients.discard(ws)
 def start_webui():
     # 初始化用户登录信息
 
@@ -579,14 +564,11 @@ def start_webui():
         with open(user_file, 'w', encoding="utf-8") as file:
             yaml.dump(user_info, file)
 
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        server_thread = threading.Thread(target=run_websocket_server, daemon=True)
-        server_thread.start()
-        logger.info_msg("WebSocket 服务器已在后台运行")
     print("启动 webui")
     print("浏览器访问 http://localhost:5007")
     print("浏览器访问 http://localhost:5007")
     print("浏览器访问 http://localhost:5007")
+    logger.info_msg("WebSocket 服务端已在 /api/ws 路径下监听...")
     app.run(debug=True, host="0.0.0.0", port=5007)
 #启动Eridanus并捕获输出，反馈到前端。
 #不会写，不写！
