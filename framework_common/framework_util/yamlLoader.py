@@ -14,8 +14,6 @@ class YAMLManager:
         初始化 YAML 管理器，自动并行加载 run 目录下及各插件文件夹中的 YAML 文件。
         """
         self.yaml = YAML()
-        self.yaml.preserve_quotes = True  # 保留引号
-        self.yaml.allow_duplicate_keys = True  # 允许重复键
         self.data = {}  # 存储所有加载的 YAML 数据
         self.file_paths = {}  # 配置文件名到路径的映射
 
