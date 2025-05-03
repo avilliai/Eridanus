@@ -60,16 +60,16 @@ def init_redis():
         logger.warning("⚠️ Redis 未运行，尝试自动启动 Redis...")
         if platform.system() == "Windows":
             start_redis_background()
-            time.sleep(2)  # 等待启动
+            time.sleep(2)
             try:
                 redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
                 redis_client.ping()
                 logger.info("✅ Redis 已自动启动并连接成功")
             except Exception as e:
-                logger.warning(f"❌ Redis 启动失败：{e}")
+                logger.error(f"❌ Redis 启动失败：{e}")
                 redis_client = None
         else:
-            logger.warning("❌ 非 Windows 系统，请手动安装并启动 Redis")
+            logger.error("❌ 非 Windows 系统，请手动安装并启动 Redis")
             redis_client = None
 
 
@@ -103,7 +103,6 @@ async def init_db():
     """初始化数据库，检查并添加必要的字段"""
     async with aiosqlite.connect(DB_NAME) as db:
         try:
-            # 创建表（如果不存在）
             await execute_with_retry(db, """
                 CREATE TABLE IF NOT EXISTS group_messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,7 +115,7 @@ async def init_db():
                 )
             """)
 
-            # 启用 WAL 模式，提高并发性能
+            # WAL 模式，提高并发性能
             await db.execute("PRAGMA journal_mode=WAL;")
             await db.commit()
 
