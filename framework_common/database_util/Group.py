@@ -1,16 +1,84 @@
 import aiosqlite
 import json
 import asyncio
+import redis
+import time
 
 from developTools.utils.logger import get_logger
 from run.ai_llm.service.aiReplyHandler.gemini import gemini_prompt_elements_construct
-from run.ai_llm.service.aiReplyHandler.openai import prompt_elements_construct,prompt_elements_construct_old_version  # 假设你已有这两个函数
+from run.ai_llm.service.aiReplyHandler.openai import prompt_elements_construct, prompt_elements_construct_old_version
 
-DB_NAME = "data/dataBase/group_message.db"
-MAX_RETRIES = 2  # 最大重试次数
-INITIAL_DELAY = 2  # 初始延迟时间 (秒)
+DB_NAME = "data/dataBase/messages.db"
+REDIS_URL = "redis://localhost"
+REDIS_CACHE_TTL = 60  # 秒
 
-logger=get_logger()
+logger = get_logger()
+
+redis_client = None
+import os
+import subprocess
+import platform
+import zipfile
+
+REDIS_EXECUTABLE = "redis-server.exe"
+REDIS_ZIP_PATH = os.path.join("data", "Redis-x64-5.0.14.1.zip")
+REDIS_FOLDER = os.path.join("data", "redis_extracted")
+
+
+def extract_redis_from_local_zip():
+    """从本地 zip 解压 Redis 到指定目录"""
+    if not os.path.exists(REDIS_FOLDER):
+        os.makedirs(REDIS_FOLDER)
+        logger.info("📦 正在从本地压缩包解压 Redis...")
+        with zipfile.ZipFile(REDIS_ZIP_PATH, 'r') as zip_ref:
+            zip_ref.extractall(REDIS_FOLDER)
+        logger.info("✅ Redis 解压完成")
+
+
+def start_redis_background():
+    """在后台启动 Redis（仅支持 Windows）"""
+    extract_redis_from_local_zip()
+    redis_path = os.path.join(REDIS_FOLDER, REDIS_EXECUTABLE)
+    if not os.path.exists(redis_path):
+        logger.error(f"❌ 找不到 redis-server.exe 于 {redis_path}")
+        return
+
+    logger.info("🚀 启动 Redis 服务中...")
+    subprocess.Popen([redis_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+# 初始化 Redis 客户端
+def init_redis():
+    global redis_client
+    if redis_client is not None:
+        return
+
+    try:
+        redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
+        redis_client.ping()
+        logger.info("✅ Redis 连接成功")
+    except redis.exceptions.ConnectionError:
+        logger.warning("⚠️ Redis 未运行，尝试自动启动 Redis...")
+        if platform.system() == "Windows":
+            start_redis_background()
+            time.sleep(2)  # 等待启动
+            try:
+                redis_client = redis.StrictRedis.from_url(REDIS_URL, decode_responses=True)
+                redis_client.ping()
+                logger.info("✅ Redis 已自动启动并连接成功")
+            except Exception as e:
+                logger.warning(f"❌ Redis 启动失败：{e}")
+                redis_client = None
+        else:
+            logger.warning("❌ 非 Windows 系统，请手动安装并启动 Redis")
+            redis_client = None
+
+
+
+# ======================= 通用函数 =======================
+MAX_RETRIES = 2
+INITIAL_DELAY = 2
+
+
 async def execute_with_retry(db, query, params=None):
     """带重试机制的数据库操作"""
     for attempt in range(MAX_RETRIES):
@@ -19,7 +87,7 @@ async def execute_with_retry(db, query, params=None):
                 await db.execute(query, params)
             else:
                 await db.execute(query)
-            return  # 成功则退出循环
+            return
         except aiosqlite.OperationalError as e:
             if "database is locked" in str(e):
                 delay = INITIAL_DELAY * (2 ** attempt)  # 指数退避
@@ -30,8 +98,9 @@ async def execute_with_retry(db, query, params=None):
     raise Exception(f"Max retries reached. Database still locked after {MAX_RETRIES} attempts.")
 
 
+# ======================= 初始化 =======================
 async def init_db():
-    """初始化数据库，检查并添加新的 processed_message 字段"""
+    """初始化数据库，检查并添加必要的字段"""
     async with aiosqlite.connect(DB_NAME) as db:
         try:
             # 创建表（如果不存在）
@@ -40,25 +109,12 @@ async def init_db():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     group_id INTEGER NOT NULL,
                     message TEXT NOT NULL,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    processed_message TEXT,
+                    new_openai_processed_message TEXT,
+                    old_openai_processed_message TEXT
                 )
             """)
-
-            # **检查并添加新字段**
-            cursor = await db.execute("PRAGMA table_info(group_messages)")
-            columns = {row[1] for row in await cursor.fetchall()}
-            alter_queries = []
-
-            if "processed_message" not in columns:
-                alter_queries.append("ALTER TABLE group_messages ADD COLUMN processed_message TEXT;")
-            if "new_openai_processed_message" not in columns:
-                alter_queries.append("ALTER TABLE group_messages ADD COLUMN new_openai_processed_message TEXT;")
-            if "old_openai_processed_message" not in columns:
-                alter_queries.append("ALTER TABLE group_messages ADD COLUMN old_openai_processed_message TEXT;")
-
-            for query in alter_queries:
-                await db.execute(query)
-                logger.info(f"✅ 执行: {query}")
 
             # 启用 WAL 模式，提高并发性能
             await db.execute("PRAGMA journal_mode=WAL;")
@@ -68,28 +124,53 @@ async def init_db():
             logger.warning(f"Error initializing database: {e}")
 
 
+# 初始化数据库
 asyncio.run(init_db())
 
 
+# ======================= 添加消息 =======================
 async def add_to_group(group_id: int, message):
-    """向群组添加消息（插入 group_messages 表，processed_message 为空）"""
+    """向群组添加消息（插入数据库并更新 Redis）"""
+    init_redis()
     async with aiosqlite.connect(DB_NAME) as db:
         try:
+            # 插入新消息
             await execute_with_retry(
                 db,
                 "INSERT INTO group_messages (group_id, message, processed_message, new_openai_processed_message, old_openai_processed_message) VALUES (?, ?, NULL, NULL, NULL)",
                 (group_id, json.dumps(message))
             )
             await db.commit()
+
+            # 删除超过 50 条的最旧记录
+            await execute_with_retry(
+                db,
+                "DELETE FROM group_messages WHERE id IN (SELECT id FROM group_messages WHERE group_id = ? ORDER BY timestamp ASC LIMIT -1 OFFSET 50)",
+                (group_id,)
+            )
+            await db.commit()
+
+            # 清除所有 prompt 标准的缓存
+            for k in ["gemini", "new_openai", "old_openai"]:
+                redis_client.delete(f"group:{group_id}:{k}")
+
         except Exception as e:
             logger.info(f"Error adding to group {group_id}: {e}")
 
 
+# ======================= 获取并转换消息 =======================
 async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, prompt_standard="gemini", bot=None,
                                             event=None):
-    """获取群组最后 20 条消息并转换为 prompt，支持 gemini / new_openai / old_openai"""
+    """获取最近的消息并转换为指定格式的 prompt"""
+    init_redis()
+    cache_key = f"group:{group_id}:{prompt_standard}"
 
-    # 选择正确的数据库字段
+    # 尝试从 Redis 获取缓存
+    cached = redis_client.get(cache_key)
+    if cached:
+        return json.loads(cached)
+
+    # 映射不同的标准字段
     field_mapping = {
         "gemini": "processed_message",
         "new_openai": "new_openai_processed_message",
@@ -101,6 +182,7 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
 
     selected_field = field_mapping[prompt_standard]
 
+    # 从数据库中获取消息
     async with aiosqlite.connect(DB_NAME) as db:
         try:
             cursor = await db.execute(
@@ -114,28 +196,27 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                 message_id, raw_message, processed_message = row
                 raw_message = json.loads(raw_message)
 
-                if processed_message:  # 直接使用缓存
+                # 如果已经处理过，使用缓存的消息
+                if processed_message:
                     final_list.append(json.loads(processed_message))
                 else:
-                    # 处理消息并缓存
                     raw_message["message"].insert(0, {
-                        "text": f"本条消息消息发送者为 {raw_message['user_name']} id为{raw_message['user_id']} 这是参考消息，当我再次向你提问时，请正常回复我。"})
+                        "text": f"本条消息消息发送者为 {raw_message['user_name']} id为{raw_message['user_id']} 这是参考消息，当我再次向你提问时，请正常回复我。"
+                    })
 
                     if prompt_standard == "gemini":
                         processed = await gemini_prompt_elements_construct(raw_message["message"], bot=bot, event=event)
                         final_list.append(processed)
-
                     elif prompt_standard == "new_openai":
-                        processed = await prompt_elements_construct(raw_message["message"], bot=bot,event=event)
+                        processed = await prompt_elements_construct(raw_message["message"], bot=bot, event=event)
                         final_list.append(processed)
-                        final_list.append({"role": "assistant", "content": [{"type": "text", "text": "(群聊背景消息已记录)"}]})
+                        final_list.append(
+                            {"role": "assistant", "content": [{"type": "text", "text": "(群聊背景消息已记录)"}]})
                     else:
                         processed = await prompt_elements_construct_old_version(raw_message["message"], bot=bot,
-                                                                               event=event)
+                                                                                event=event)
                         final_list.append(processed)
-
                         final_list.append({"role": "assistant", "content": "(群聊背景消息已记录)"})
-
 
                     # 更新数据库
                     await execute_with_retry(
@@ -144,8 +225,9 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                         (json.dumps(processed), message_id)
                     )
                     await db.commit()
-            fl=[]
 
+            # 处理最终格式化的消息
+            fl = []
             if prompt_standard == "gemini":
                 all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['parts']]
                 fl.append({"role": "user", "parts": all_parts})
@@ -154,23 +236,28 @@ async def get_last_20_and_convert_to_prompt(group_id: int, data_length=20, promp
                 all_parts = []
                 all_parts_str = ""
                 for entry in final_list:
-                    if entry['role'] == 'user':  # 只处理 'role' 为 'user' 的项
-                        if isinstance(entry['content'], str):  # 如果 'content' 是字符串
+                    if entry['role'] == 'user':
+                        if isinstance(entry['content'], str):
                             all_parts_str += entry['content'] + "\n"
-                            #all_parts.append(entry['content'])
-                        else:  # 如果 'content' 是列表
+                        else:
                             for part in entry['content']:
                                 all_parts.append(part)
-                #all_parts = [part for entry in final_list if entry['role'] == 'user' for part in entry['content']]
-                fl.append({"role": "user", "content": all_parts if all_parts!= [] else all_parts_str})
+                fl.append({"role": "user", "content": all_parts if all_parts else all_parts_str})
                 fl.append({"role": "assistant", "content": "嗯嗯我记住了"})
+
+            # 设置缓存
+            redis_client.setex(cache_key, REDIS_CACHE_TTL, json.dumps(fl))
             return fl
 
         except Exception as e:
             logger.info(f"Error getting last 20 and converting to prompt for group {group_id}: {e}")
             return []
+
+
+# ======================= 清除消息 =======================
 async def clear_group_messages(group_id: int):
-    """删除 group_messages 表中指定 group_id 的所有数据"""
+    """清除指定群组的所有消息"""
+    init_redis()
     async with aiosqlite.connect(DB_NAME) as db:
         try:
             await execute_with_retry(
@@ -180,5 +267,10 @@ async def clear_group_messages(group_id: int):
             )
             await db.commit()
             logger.info(f"✅ 已清除 group_id={group_id} 的所有数据")
+
+            # 清除所有 prompt 标准的缓存
+            for k in ["gemini", "new_openai", "old_openai"]:
+                redis_client.delete(f"group:{group_id}:{k}")
+
         except Exception as e:
             logger.error(f"❌ 清理 group_id={group_id} 数据时出错: {e}")
