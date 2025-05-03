@@ -1,59 +1,86 @@
 import os
 from ruamel.yaml import YAML
 from typing import Any
+from concurrent.futures import ThreadPoolExecutor
+import threading
+
 
 class YAMLManager:
     _instance = None
+    _lock = threading.Lock()  # 线程安全的单例初始化
 
-    def __init__(self,plugins_dir=None):
+    def __init__(self, plugins_dir=None):
         """
-        初始化 YAML 管理器，自动加载 run 目录下及各插件文件夹中的 YAML 文件。
+        初始化 YAML 管理器，自动并行加载 run 目录下及各插件文件夹中的 YAML 文件。
         """
         self.yaml = YAML()
         self.yaml.preserve_quotes = True  # 保留引号
-        self.data = {}  # 存储所有加载的 YAML 数据，结构为 {plugin_name: {config_name: data}} 或 {config_name: data}（对于 run 目录下的文件）
-        self.file_paths = {}  # 配置文件名到路径的映射，结构为 {plugin_name: {config_name: path}} 或 {config_name: path}（对于 run 目录下的文件）
+        self.yaml.allow_duplicate_keys = True  # 允许重复键
+        self.data = {}  # 存储所有加载的 YAML 数据
+        self.file_paths = {}  # 配置文件名到路径的映射
 
         # 加载 run 目录下的 YAML 文件
         run_dir = os.path.join(os.getcwd(), plugins_dir or "run")
         if not os.path.exists(run_dir):
             raise FileNotFoundError(f"Run directory {run_dir} not found.")
 
-        # 直接加载 run 目录下的 YAML 文件
+        # 收集所有需要加载的 YAML 文件
+        yaml_files = []
+
+        # run 目录下的 YAML 文件
         for file_name in os.listdir(run_dir):
-            if file_name.endswith(".yaml") or file_name.endswith(".yml"):
+            if file_name.endswith((".yaml", ".yml")):
                 file_path = os.path.join(run_dir, file_name)
                 config_name = os.path.splitext(file_name)[0]
-                self.file_paths[config_name] = file_path
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    self.data[config_name] = self.yaml.load(file)
+                yaml_files.append((None, config_name, file_path))
 
-        # 加载插件文件夹中的 YAML 文件
+        # 插件文件夹中的 YAML 文件
         for plugin_folder in os.listdir(run_dir):
             plugin_path = os.path.join(run_dir, plugin_folder)
             if os.path.isdir(plugin_path):
-                self.data[plugin_folder] = {}
-                self.file_paths[plugin_folder] = {}
                 for file_name in os.listdir(plugin_path):
-                    if file_name.endswith(".yaml") or file_name.endswith(".yml"):
+                    if file_name.endswith((".yaml", ".yml")):
                         file_path = os.path.join(plugin_path, file_name)
                         config_name = os.path.splitext(file_name)[0]
-                        self.file_paths[plugin_folder][config_name] = file_path
-                        with open(file_path, 'r', encoding='utf-8') as file:
-                            self.data[plugin_folder][config_name] = self.yaml.load(file)
+                        yaml_files.append((plugin_folder, config_name, file_path))
+
+        # 并行加载 YAML 文件
+        def load_yaml_file(args):
+            plugin_name, config_name, file_path = args
+            yaml_instance = YAML()  # 为每个线程创建独立的 YAML 实例
+            yaml_instance.preserve_quotes = True
+            yaml_instance.allow_duplicate_keys = True
+            with open(file_path, 'r', encoding='utf-8') as file:
+                return plugin_name, config_name, file_path, yaml_instance.load(file)
+
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(load_yaml_file, yaml_files))
+
+        # 整理加载结果
+        for plugin_name, config_name, file_path, data in results:
+            if plugin_name is None:
+                self.data[config_name] = data
+                self.file_paths[config_name] = file_path
+            else:
+                if plugin_name not in self.data:
+                    self.data[plugin_name] = {}
+                    self.file_paths[plugin_name] = {}
+                self.data[plugin_name][config_name] = data
+                self.file_paths[plugin_name][config_name] = file_path
 
         YAMLManager._instance = self
 
     @staticmethod
     def get_instance() -> 'YAMLManager':
         """
-        获取已创建的 YAMLManager 实例。
+        获取已创建的 YAMLManager 实例（线程安全）。
 
         :return: YAMLManager 实例
         """
-        if YAMLManager._instance is None:
-            YAMLManager._instance = YAMLManager()
-        return YAMLManager._instance
+        with YAMLManager._lock:
+            if YAMLManager._instance is None:
+                YAMLManager._instance = YAMLManager()
+            return YAMLManager._instance
 
     def save_yaml(self, config_name: str, plugin_name: str = None):
         """
@@ -117,13 +144,15 @@ class YAMLManager:
         :param name: 属性名（插件名或配置文件名）
         :param value: 新值
         """
-        if name in ["yaml", "data", "file_paths", "_instance"]:
+        if name in ["yaml", "data", "file_paths", "_instance", "_lock"]:
             super().__setattr__(name, value)
         elif name in self.data and not isinstance(self.data[name], dict):  # 直接在 run 目录下的 YAML 文件
             self.data[name] = value
             self.save_yaml(name)
         else:
-            raise AttributeError(f"YAMLManager cannot set attribute '{name}' directly. Use plugin.config notation for plugins or config for root files.")
+            raise AttributeError(
+                f"YAMLManager cannot set attribute '{name}' directly. Use plugin.config notation for plugins or config for root files.")
+
 
 # 使用示例
 if __name__ == "__main__":
@@ -132,9 +161,7 @@ if __name__ == "__main__":
 
     print(manager.api["llm"]["apikey"])
 
-
     manager.api["llm"]["apikey"] = "new-api-key"
-
 
     print(manager.plugin1.config["setting"]["value"])
 
