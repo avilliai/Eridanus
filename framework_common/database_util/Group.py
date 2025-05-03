@@ -8,7 +8,7 @@ from developTools.utils.logger import get_logger
 from run.ai_llm.service.aiReplyHandler.gemini import gemini_prompt_elements_construct
 from run.ai_llm.service.aiReplyHandler.openai import prompt_elements_construct, prompt_elements_construct_old_version
 
-DB_NAME = "data/dataBase/messages.db"
+DB_NAME = "data/dataBase/group_messages.db"
 REDIS_URL = "redis://localhost"
 REDIS_CACHE_TTL = 60  # 秒
 
