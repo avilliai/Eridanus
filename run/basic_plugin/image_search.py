@@ -56,7 +56,7 @@ async def call_image_search1(bot, event, config, img_url):
             for item in result:
                 try:
                     path = "data/pictures/cache/" + random_str() + ".png"
-                    imgpath = await download_img(item[0], path,proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+                    imgpath = await download_img(item[0], path,proxy=config.common_config.basic_config["proxy"]["http_proxy"],gray_layer=True)
                     node_list.append(Node(content=[Image(file=imgpath),Text(item[1])]))
                 except Exception as e:
                     bot.logger.error(f"Error in extract_data: {e}")
