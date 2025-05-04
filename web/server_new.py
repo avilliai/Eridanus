@@ -9,14 +9,12 @@ import sys
 import threading
 from io import StringIO
 
-import websockets
-from flask import Flask, request, jsonify, render_template, make_response, redirect, url_for, send_from_directory
+from flask import Flask, request, jsonify, render_template, make_response, url_for, send_from_directory
 from flask_cors import CORS
 from flask_sock import Sock
 from cryptography.fernet import Fernet
 from ruamel.yaml import YAML, comments
 from threading import Thread
-import subprocess
 import os
 import time
 from ruamel.yaml.scalarint import ScalarInt
@@ -432,8 +430,6 @@ def file_to_base64():
         return jsonify({"error": str(e)})
 
 
-
-
 if getattr(sys, 'frozen', False):  # 判断是否是 PyInstaller 打包的
     BASE_DIR = sys._MEIPASS  # PyInstaller 临时解压目录
 else:
@@ -481,19 +477,16 @@ def handle_websocket(ws):
     clients.add(ws)
 
     try:
-        # 发送连接成功消息
-        #ws.send(json.dumps({'time': 1739849686, 'self_id': 3377428814, 'post_type': 'meta_event', 'meta_event_type': 'lifecycle', 'sub_type': 'connect'}))
-        """# 鉴权代码，如果需要可以取消注释
-        recv_token = ws.receive()
-        recv_token = json.loads(recv_token)['auth_token']
+        # 对非本地的访问鉴权
         try:
-            if auth_info[recv_token] > int(time.time()):
-                print("WebSocket 客户端鉴权成功")
-            else:
-                raise ValueError
+            if request.remote_addr != "127.0.0.1":
+                recv_token = request.args.get('auth_token')
+                if auth_info[recv_token] > int(time.time()):
+                    logger.info_msg("WebSocket 客户端鉴权成功")
         except:
-            raise ValueError"""
-
+            logger.warning("WebSocket 客户端鉴权失败")
+            #随便raise一个
+            raise ValueError
         while True:
             # 接收来自前端的消息
             message = ws.receive()
@@ -560,7 +553,7 @@ def start_webui():
             user_info['password'] = yaml_file['password']
         logger.info_msg(f"用户登录信息读取成功。用户名：{user_info['account']} ")
     except:
-        logger.error("用户登录信息读取失败，已恢复默认。默认用户名/密码：eridanus")
+        logger.warning("用户登录信息读取失败，已恢复默认。默认用户名/密码：eridanus")
         with open(user_file, 'w', encoding="utf-8") as file:
             yaml.dump(user_info, file)
 
@@ -569,7 +562,7 @@ def start_webui():
     print("浏览器访问 http://localhost:5007")
     print("浏览器访问 http://localhost:5007")
     logger.info_msg("WebSocket 服务端已在 /api/ws 路径下监听...")
-    app.run(debug=True, host="0.0.0.0", port=5007)
+    app.run(debug=True,host="0.0.0.0", port=5007,threaded=True)
 #启动Eridanus并捕获输出，反馈到前端。
 #不会写，不写！
 
