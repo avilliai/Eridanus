@@ -20,10 +20,13 @@ from run.ai_llm.service.aiReplyHandler.openai import openaiRequest, construct_op
     openaiRequest_official
 from run.ai_llm.service.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
 from framework_common.database_util.llmDB import get_user_history, update_user_history, delete_user_history, read_chara, use_folder_chara
-from run.ai_voice.service.tts import tts
+
 from framework_common.database_util.User import get_user
 import importlib
 
+from run.ai_voice.service.tts import TTS
+
+Tts=TTS()
 def call_func(*args, **kwargs):
     # 运行时动态导入，避免循环导入
     func_map = importlib.import_module("framework_common.framework_util.func_map")
@@ -388,7 +391,7 @@ async def tts_and_send(bot,event,config,reply_message):
     async def _tts_and_send():
         try:
             bot.logger.info(f"调用语音合成 任务文本：{reply_message}")
-            path = await tts(reply_message, config=config, bot=bot)
+            path = await Tts.tts(reply_message, config=config, bot=bot)
             await bot.send(event, Record(file=path))
         except Exception as e:
             bot.logger.error(f"Error occurred when calling tts: {e}")

@@ -10,10 +10,6 @@ tts:
   vits:               #本地语音合成，配置要求极低，服务端整合包请在q群913122269下载
     speaker: "綾地寧々"
     base_url: "http://127.0.0.1:5009"
-  acgn_ai:
-    token:           #https://getkey.acgnai.top/注册后，登录获取令牌，每个token每天2000字，支持多token
-    - ""
-    speaker: "玲可【星穹铁道】"
   napcat_tts:
     character_name: "酥心御姐"
   modelscope_tts:
