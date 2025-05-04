@@ -80,7 +80,7 @@ def main(bot,config):
             pass
         elif task_name == "每日天文":
             logger.info_func("获取今日nasa天文信息推送")
-            img,text=await get_nasa_apod(config.scheduled_tasks.config["nasa_api"]["api_key"],config.common_config.network["proxy"]["http_proxy"])
+            img,text=await get_nasa_apod(config.basic_config.config["nasa_api"]["api_key"],config.common_config.network["proxy"]["http_proxy"])
             text=await aiReplyCore([{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}], random.randint(1000000, 99999999),
                                           config, bot=bot, tools=None)
             for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["每日天文"]["groups"]:

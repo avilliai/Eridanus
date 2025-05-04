@@ -37,61 +37,21 @@ def main(bot,config):
                 print(tools)
 
 
-    locks = {}
-    queues = {}
-    '''@bot.on(GroupMessageEvent) #测试异步
-    async def aiReplys(event):
-        await sleep(10)
-        await bot.send(event,"async task over")'''
+    user_state = {}
+
+
     @bot.on(GroupMessageEvent)
     async def aiReply(event: GroupMessageEvent):
-        if event.message_chain.has(Text):
-            t=event.message_chain.get(Text)[0].text.strip()
-        else:
-            t=""
-        #print(event.processed_message)
-        #print(event.message_id,type(event.message_id))
-        user_info = await get_user(event.user_id, event.sender.nickname)
-        if event.pure_text=="退出":
-            await end_chat(event.user_id)
-            await bot.send(event,"退出聊天~")
-        elif event.pure_text=="/clear" or t=="/clear":
-            await delete_user_history(event.user_id)
-            await clear_group_messages(event.group_id)
-
-            await bot.send(event,"历史记录已清除",True)
-        elif event.pure_text=="/clear group":
-            await clear_group_messages(event.group_id)
-            await bot.send(event,"本群消息已清除",True)
-        elif event.pure_text=="/clearall" and event.user_id == config.common_config.basic_config["master"]["id"]:
-            await clear_all_history()
-            await bot.send(event, "已清理所有用户的对话记录")
-        elif event.pure_text.startswith("/clear") and event.user_id == config.common_config.basic_config["master"]["id"] and event.get("at"):
-            await delete_user_history(event.get("at")[0]["qq"])
-            await bot.send(event, [Text("已清理"),At(event.get('at')[0]['qq']),Text(" 的对话记录")])
-        elif event.pure_text.startswith("/切人设 ") and user_info.permission >= config.ai_llm.config["core"]["ai_change_character"]:
-            chara_file = str(event.pure_text).replace("/切人设 ", "")
-            if chara_file == "0":
-                reply = await clear_user_chara(event.user_id)
-            else:
-                reply = await change_folder_chara(chara_file, event.user_id)
-            await bot.send(event, reply, True)
-        elif event.pure_text.startswith("/全切人设 ") and event.user_id == config.common_config.basic_config["master"]["id"]:
-            chara_file = str(event.pure_text).replace("/全切人设 ", "")
-            if chara_file == "0":
-                reply = await clear_all_users_chara()
-            else:
-                reply = await set_all_users_chara(chara_file)
-            await bot.send(event, reply, True)
-        elif event.pure_text=="/查人设":
-            chara_file = str(event.pure_text).replace("/查人设", "")
-            all_chara = await get_folder_chara()
-            await bot.send(event, all_chara)
-        elif event.get("at") and event.get("at")[0]["qq"]==str(bot.id) or prefix_check(str(event.pure_text),config.ai_llm.config["llm"]["prefix"]) or await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event):
+        await check_commands(event)
+        if (event.message_chain.has(At) and event.message_chain.get(At)[0].qq==bot.id
+                or prefix_check(str(event.pure_text),config.ai_llm.config["llm"]["prefix"])  #前缀判断
+                or await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,event=event)): #触发cd判断
             bot.logger.info(f"接受消息{event.processed_message}")
+
+            ## 权限判断
             user_info = await get_user(event.user_id, event.sender.nickname)
             if not user_info.permission >= config.ai_llm.config["core"]["ai_reply_group"]:
-                await bot.send(event,"你没有足够的权限使用该功能哦~")
+                await bot.send(event,"你没有足够的权限使用该功能~")
                 return
             if event.group_id==913122269 and not user_info.permission >= 66:
                 #await bot.send(event,"你没有足够的权限使用该功能哦~")
@@ -100,43 +60,107 @@ def main(bot,config):
                 if user_info.ai_token_record >= config.ai_llm.config["core"]["ai_token_limt_token"]:
                     await bot.send(event,"您的ai对话token已用完，请耐心等待下一次刷新～～")
                     return
+            await handle_message(event)
 
-            #锁机制
-            if event.user_id not in locks:
-                locks[event.user_id] = asyncio.Lock()
-                queues[event.user_id] = asyncio.Queue()
-            await queues[event.user_id].put(event)
-            if locks[event.user_id].locked():
-                bot.logger.info(f"用户{event.user_id}正在处理消息，放入队列")
-                return
+    async def handle_message(event):
+        # 锁机制
+        uid = event.user_id
+        user_info = await get_user(event.user_id)
+        # 初始化该用户的状态
+        if uid not in user_state:
+            user_state[uid] = {
+                "queue": asyncio.Queue(),
+                "running": False
+            }
 
-            # 处理队列中的请求
-            async with locks[event.user_id]:  # 只有一个协程能执行
-                while not queues[event.user_id].empty():
-                    current_event = await queues[event.user_id].get()  # 取出排队中的请求
-                    reply_message = await aiReplyCore(
-                        current_event.processed_message,
-                        current_event.user_id,
-                        config,
-                        tools=tools,
-                        bot=bot,
-                        event=current_event,
-                    )
-                    if reply_message is None or '' == str(reply_message) or 'Maximum recursion depth' in reply_message:
-                        return
-                    #print(f'reply_message:{reply_message}')
-                    if "call_send_mface(summary='')" in reply_message:
-                        reply_message = reply_message.replace("call_send_mface(summary='')", '')
-                    #print(f"{current_event.processed_message[1]['text']}\n{reply_message}")
+        await user_state[uid]["queue"].put(event)
+
+        if user_state[uid]["running"]:
+            bot.logger.info(f"用户{uid}正在处理中，已放入队列")
+            return
+
+        async def process_user_queue(uid):
+            user_state[uid]["running"] = True
+            try:
+                while not user_state[uid]["queue"].empty():
+                    current_event = await user_state[uid]["queue"].get()
                     try:
-                        tokens_total=count_tokens_approximate(current_event.processed_message[1]['text'],reply_message,user_info.ai_token_record)
-                        await update_user(user_id=event.user_id, ai_token_record=tokens_total)
-                    except:
-                        pass
-                    await send_text(bot,event,config,reply_message.strip())
+                        reply_message = await aiReplyCore(
+                            current_event.processed_message,
+                            current_event.user_id,
+                            config,
+                            tools=tools,
+                            bot=bot,
+                            event=current_event,
+                        )
+                        if reply_message is None or '' == str(
+                                reply_message) or 'Maximum recursion depth' in reply_message:
+                            return
+                        # print(f'reply_message:{reply_message}')
+                        if "call_send_mface(summary='')" in reply_message:
+                            reply_message = reply_message.replace("call_send_mface(summary='')", '')
+                        # print(f"{current_event.processed_message[1]['text']}\n{reply_message}")
+                        try:
+                            tokens_total = count_tokens_approximate(current_event.processed_message[1]['text'],
+                                                                    reply_message, user_info.ai_token_record)
+                            await update_user(user_id=event.user_id, ai_token_record=tokens_total)
+                        except:
+                            pass
+                        await send_text(bot, event, config, reply_message.strip())
+                    except Exception as e:
+                        bot.logger.exception(f"用户 {uid} 处理出错: {e}")
+                    finally:
+                        user_state[uid]["queue"].task_done()
+            finally:
+                user_state[uid]["running"] = False
+
+        asyncio.create_task(process_user_queue(uid))
 
 
 
+
+
+    async def check_commands(event):
+        if event.message_chain.has(Text):
+            t=event.message_chain.get(Text)[0].text.strip()
+        else:
+            t=""
+        user_info = await get_user(event.user_id)
+        if event.pure_text == "退出":
+            await end_chat(event.user_id)
+            await bot.send(event, "退出聊天~")
+        elif event.pure_text == "/clear" or t == "/clear":
+            await delete_user_history(event.user_id)
+            await clear_group_messages(event.group_id)
+            await bot.send(event, "历史记录已清除", True)
+        elif event.pure_text == "/clear group":
+            await clear_group_messages(event.group_id)
+            await bot.send(event, "本群消息已清除", True)
+        elif event.pure_text == "/clearall" and event.user_id == config.common_config.basic_config["master"]["id"]:
+            await clear_all_history()
+            await bot.send(event, "已清理所有用户的对话记录")
+        elif event.pure_text.startswith("/clear") and event.user_id == config.common_config.basic_config["master"]["id"] and event.get("at"):
+            await delete_user_history(event.get("at")[0]["qq"])
+            await bot.send(event, [Text("已清理与目标用户的对话记录")])
+        elif event.pure_text.startswith("/切人设 ") and user_info.permission >= config.ai_llm.config["core"]["ai_change_character"]:
+            chara_file = str(event.pure_text).replace("/切人设 ", "")
+            if chara_file == "0":
+                reply = await clear_user_chara(event.user_id)
+            else:
+                reply = await change_folder_chara(chara_file, event.user_id)
+            await bot.send(event, reply, True)
+        elif event.pure_text.startswith("/全切人设 ") and event.user_id == config.common_config.basic_config["master"][
+            "id"]:
+            chara_file = str(event.pure_text).replace("/全切人设 ", "")
+            if chara_file == "0":
+                reply = await clear_all_users_chara()
+            else:
+                reply = await set_all_users_chara(chara_file)
+            await bot.send(event, reply, True)
+        elif event.pure_text == "/查人设":
+            chara_file = str(event.pure_text).replace("/查人设", "")
+            all_chara = await get_folder_chara()
+            await bot.send(event, all_chara)
     def prefix_check(message:str,prefix:list):
         for p in prefix:
             if message.startswith(p):
@@ -155,32 +179,12 @@ def main(bot,config):
           await clear_all_history()
           await bot.send(event, "已清理所有用户的对话记录")
       else:
-          if event.user_id == 1270858640: return
+
           bot.logger.info(f"私聊接受消息{event.processed_message}")
           user_info = await get_user(event.user_id, event.sender.nickname)
           if not user_info.permission >= config.ai_llm.config["core"]["ai_reply_private"]:
               await bot.send(event, "你没有足够的权限使用该功能哦~")
               return
             # 锁机制
-          if event.user_id not in locks:
-              locks[event.user_id] = asyncio.Lock()
-              queues[event.user_id] = asyncio.Queue()
-          await queues[event.user_id].put(event)
-          if locks[event.user_id].locked():
-              bot.logger.info(f"用户{event.user_id}正在处理消息，放入队列")
-              return
-          async with locks[event.user_id]:  # 只有一个协程能执行
-              while not queues[event.user_id].empty():
-                  current_event = await queues[event.user_id].get()  # 取出排队中的请求
-                  reply_message = await aiReplyCore(
-                      current_event.processed_message,
-                      current_event.user_id,
-                      config,
-                      tools=tools,
-                      bot=bot,
-                      event=current_event,
-                  )
-                  # reply_message=await aiReplyCore(event.processed_message,event.user_id,config,tools=tools,bot=bot,event=event)
-                  if reply_message is not None:
-                      await send_text(bot,event,config,reply_message.strip())
+          await handle_message(event)
 

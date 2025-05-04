@@ -58,7 +58,7 @@ class User:
 class CacheManager:
     def __init__(self, ttl=300):  # 默认缓存 5 分钟
         self.cache = {}
-        self.ttl = ttl  # 缓存失效时间（秒）
+        self.ttl = ttl
 
     def get(self, key):
         if key in self.cache:
@@ -66,7 +66,7 @@ class CacheManager:
             if time.time() - timestamp < self.ttl:
                 return data
             else:
-                del self.cache[key]  # 缓存过期，删除
+                del self.cache[key]
         return None
 
     def set(self, key, value):
@@ -126,7 +126,7 @@ async def update_user(user_id, **kwargs):
             if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record']:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
         await db.commit()
-    # 清除缓存
+
     cache_key = f"get_user:({user_id},)"
     cache_manager.clear(cache_key)
     logger.info(f"✅ 用户 {user_id} 的信息已更新：{kwargs}")
