@@ -22,22 +22,30 @@ def main(bot,config):
 
     else:
         tools = None
-    if config.ai_llm.config["llm"]["联网搜索"]:
-        if config.ai_llm.config["llm"]["model"] == "gemini":
-            if tools is None:
-                tools=[
+    if config.api["llm"]["联网搜索"]:
+      if config.api["llm"]["model"] == "gemini":
+          if tools is None:
+              tools = [
 
-                    { "googleSearch": {} },
-                    ]
-            else:
-                tools=[
-                    { "googleSearch": {} },
-                    tools
-                ]
-                print(tools)
+                  {"googleSearch": {}},
+              ]
+          else:
+              tools = [
+                  {"googleSearch": {}},
+                  tools
+              ]
+              print(tools)
+      else:
+          if tools is None:
+              tools = [{"type": "function", "function": {"name": "googleSearch"}}]
+          else:
+              tools = [
+                  {"type": "function", "function": {"name": "googleSearch"}},
+                  tools
+              ]
 
 
-    user_state = {}
+      user_state = {}
 
 
     @bot.on(GroupMessageEvent)
