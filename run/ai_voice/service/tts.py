@@ -69,12 +69,12 @@ class TTS():
             if speaker is None:
                 speaker=config.ai_voice.config["tts"]["online_vits"]["speaker"]
             fn_index=config.ai_voice.config["tts"]["online_vits"]["fn_index"]
-            proxy=config.config.api["proxy"]["http_proxy"]
+            proxy=config.common_config.basic_config["proxy"]["http_proxy"]
             return await huggingface_online_vits(text,speaker,fn_index,proxy)
         elif mode=="online_vits2":
             if speaker is None:
-                speaker=config.ai_voice.confi["tts"]["online_vits2"]["speaker"]
-            if config.ai_voice.confi["tts"]["lang_type"] == "ja":
+                speaker=config.ai_voice.config["tts"]["online_vits2"]["speaker"]
+            if config.ai_voice.config["tts"]["lang_type"] == "ja":
                 lang="日本語"
             else:
                 lang="简体中文"
