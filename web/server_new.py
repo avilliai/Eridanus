@@ -108,9 +108,9 @@ def auth(func):
         # print(f"客户端返回token：{recv_token}")
         try:
             if auth_info[recv_token] < int(time.time()):  #如果存在token且过期
-                return jsonify({"error": "Unauthorized"}), 400
+                return jsonify({"error": "Unauthorized"})
         except:     #不存在token
-            return jsonify({"error": "Unauthorized"}), 400
+            return jsonify({"error": "Unauthorized"})
         return func(*args, **kwargs)
     return wrapper
 
@@ -253,11 +253,11 @@ def save_yaml(file_path, data):
 def load_file(filename):
     """加载指定的 YAML 文件"""
     if filename not in YAML_FILES:
-        return jsonify({"error": "Invalid file name"}), 400
+        return jsonify({"error": "Invalid file name"})
 
     file_path = YAML_FILES[filename]
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"}), 404
+        return jsonify({"error": "File not found"})
 
     data_with_comments = load_yaml(file_path)
     rtd=jsonify(data_with_comments)
@@ -269,22 +269,22 @@ def load_file(filename):
 def save_file(filename):
     """接收前端数据并保存到 YAML 文件"""
     if filename not in YAML_FILES:
-        return jsonify({"error": "Invalid file name"}), 400
+        return jsonify({"error": "Invalid file name"})
 
     file_path = YAML_FILES[filename]
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"}), 404
+        return jsonify({"error": "File not found"})
 
 
     data = request.json  # 获取前端发送的 JSON 数据
     if not data:
-        return jsonify({"error": "No data provided"}), 400
+        return jsonify({"error": "No data provided"})
 
     result = save_yaml(file_path, data)
     if result is True:
         return jsonify({"message": "File saved successfully"})
     else:
-        return jsonify(result), 500
+        return jsonify(result)
 
 @app.route("/api/sources", methods=["GET"])
 @auth
@@ -311,9 +311,9 @@ def clone_source():
     source_url = data.get("source")
 
     if not source_url:
-        return jsonify({"error": "Missing source URL"}), 400
+        return jsonify({"error": "Missing source URL"})
     if os.path.exists("Eridanus"):
-        return jsonify({"error": "Eridanus already exists。请删除现有Eridanus后再尝试克隆"}), 400
+        return jsonify({"error": "Eridanus already exists。请删除现有Eridanus后再尝试克隆"})
 
     logger.info_msg(f"开始克隆: {source_url}")
     os.system(f"{git_path} clone --depth 1 {source_url}")
@@ -338,7 +338,7 @@ def login():
         return resp
     else:
         logger.error("登录失败")
-        return jsonify({"error": "Failed"}), 401
+        return jsonify({"error": "Failed"})
 
 # 登出api
 @app.route("/api/logout", methods=['GET','POST'])
@@ -392,13 +392,13 @@ def file_to_base64():
     file_path = data.get("path")
     logger.info_func(f"转换文件: {file_path}")
     if not file_path:
-        return jsonify({"error": "Missing file path"}), 400
+        return jsonify({"error": "Missing file path"})
 
     if file_path.startswith("file://"):
         file_path = file_path[7:]  # 去掉 "file://"
 
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"}), 404
+        return jsonify({"error": "File not found"})
 
     try:
         with open(file_path, "rb") as file:
@@ -423,13 +423,13 @@ def file_to_base64():
 
             mime_type = mime_types.get(file_extension)
             if not mime_type:
-                return jsonify({"error": "Unsupported file type"}), 400
+                return jsonify({"error": "Unsupported file type"})
 
             return jsonify({"base64": f"data:{mime_type};base64,{base64_str}"})
 
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)})
 
 
 
@@ -449,13 +449,13 @@ def move_file():
     file_path = data.get("path")
 
     if not file_path:
-        return jsonify({"error": "Missing file path"}), 400
+        return jsonify({"error": "Missing file path"})
 
     if file_path.startswith("file://"):
         file_path = file_path[7:]  # 去掉 "file://"
 
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"}), 404
+        return jsonify({"error": "File not found"})
 
     try:
         # 确保文件不会覆盖已有文件
@@ -471,7 +471,7 @@ def move_file():
         return jsonify({"url": file_url})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)})
 clients = set()
 
 @sock.route('/api/ws')
