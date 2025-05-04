@@ -8,13 +8,9 @@ from developTools.message.message_components import Record, Node, Text, Image, M
 from run.basic_plugin.service.anime_setu import anime_setu, anime_setu1
 from run.basic_plugin.service.cloudMusic import cccdddm
 from run.basic_plugin.service.divination import tarotChoice
-from run.basic_plugin.service.imgae_search.image_search import fetch_results, automate_browser
+
 from run.basic_plugin.service.weather_query import weather_query
-from run.ai_voice.service.modelscopeTTS import get_modelscope_tts_speakers
-from run.ai_voice.service.napcat_tts import napcat_tts_speakers
-from run.ai_voice.service.online_vits2 import get_huggingface_online_vits2_speakers
-from run.ai_voice.service.tts import get_acgn_ai_speaker_list, tts
-from run.ai_voice.service.vits import get_vits_speakers
+
 
 from framework_common.database_util.User import get_user
 
@@ -99,92 +95,7 @@ async def call_setu(bot,event,config,tags,num=3):
 
 
 
-async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
-    mode = config.ai_voice.config["tts"]["tts_engine"]
-    if speaker is None:
-        speaker=config.ai_voice.config["tts"][mode]["speaker"]
-    all_speakers=await call_all_speakers(bot,event,config)
-    all_speakers=all_speakers["speakers"]
-    ncspk=all_speakers[0]
-    acgnspk=all_speakers[1]
-    modelscope_speakers=all_speakers[2]
-    vits_speakers=all_speakers[3]
-    online_vits2_speakers=all_speakers[4]
-    if not ncspk and not acgnspk and not modelscope_speakers and not vits_speakers and not online_vits2_speakers:
-        bot.logger.error("No speakers found")
-        return
-    lock=False
-    if acgnspk:
-        if speaker in acgnspk:
-            lock=True
-            mode = "acgn_ai"
-        elif f"{speaker}【鸣潮】" in acgnspk:
-            speaker=f"{speaker}【鸣潮】"
-            lock=True
-            mode = "acgn_ai"
-        elif f"{speaker}【原神】" in acgnspk:
-            speaker=f"{speaker}【原神】"
-            lock=True
-            mode = "acgn_ai"
-        elif f"{speaker}【崩坏3】" in acgnspk:
-            speaker=f"{speaker}【崩坏3】"
-            lock=True
-            mode = "acgn_ai"
-        elif f"{speaker}【星穹铁道】" in acgnspk:
-            speaker=f"{speaker}【星穹铁道】"
-            lock=True
-            mode = "acgn_ai"
-    if ncspk and not lock:
-        if speaker in ncspk:
-            mode="napcat_tts"
-            speaker=ncspk[speaker]
-            lock=True
-    if modelscope_speakers and not lock:
-        if speaker in modelscope_speakers:
-            mode="modelscope_tts"
-            lock=True
-    if vits_speakers and not lock:
-        if speaker in vits_speakers:
-            mode="vits"
-            lock = True
-    if online_vits2_speakers and not lock:
-        if speaker in online_vits2_speakers:
-            mode="online_vits2"
-            lock = True
-    if not lock:
-        mode=config.ai_voice.config["tts"]["tts_engine"]
-        speaker=config.ai_voice.config["tts"][mode]["speaker"]
-    try:
-        p=await tts(text=text,speaker=speaker,config=config,mood=mood,bot=bot,mode=mode)
-        await bot.send(event, Record(file=p))
-        return {"status":"success"}
-    except:
-        traceback.print_exc()
-        pass
 
-async def call_all_speakers(bot,event,config):
-    try:
-        nc_speakers=await napcat_tts_speakers(bot)
-    except Exception as e:
-        bot.logger.error(f"Error in napcat_tts_speakers: {e}")
-        nc_speakers=None
-    try:
-        acgn_ai_speakers=await get_acgn_ai_speaker_list()
-    except Exception as e:
-        bot.logger.error(f"Error in get_acgn_ai_speaker_list: {e}")
-        acgn_ai_speakers=None
-    modelscope_speakers=get_modelscope_tts_speakers()
-    try:
-        vits_speakers=await get_vits_speakers(config.ai_voice.config["tts"]["vits"]["base_url"],None)
-    except Exception as e:
-        bot.logger.error(f"Error in get_vits_speakers: {e}")
-        vits_speakers=None
-    try:
-        online_vits2_speakers=await get_huggingface_online_vits2_speakers()
-    except Exception as e:
-        bot.logger.error(f"Error in get_huggingface_online_vits2_speakers: {e}")
-        online_vits2_speakers=None
-    return {"speakers": [nc_speakers,acgn_ai_speakers,modelscope_speakers,vits_speakers,online_vits2_speakers]}
 async def call_tarot(bot,event,config):
     if config.basic_plugin.config["tarot"]["彩蛋牌"] and random.randint(1, 100) < \
             config.basic_plugin.config["tarot"]["彩蛋牌"]["probability"]:
@@ -240,40 +151,7 @@ def main(bot,config):
                 await bot.send(event, "出错，格式请按照\n/setu 数量 标签 标签")
 
 
-    @bot.on(GroupMessageEvent)
-    async def tts(event: GroupMessageEvent):
-        if "说" in event.pure_text and event.pure_text.startswith("/"):
-            speaker=event.pure_text.split("说")[0].replace("/","").strip()
-            text=event.pure_text.split("说")[1].strip()
-            r=await call_tts(bot,event,config,text,speaker)
-            if r.get("audio"):
-                await bot.send(event, Record(file=r.get("audio")))
-        elif event.pure_text=="可用角色":
-            #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
-            all_speakers = await call_all_speakers(bot, event, config)
-            all_speakers = all_speakers["speakers"]
-            f= all_speakers[0]
-            e= all_speakers[1]
-            c = all_speakers[2]
-            b = all_speakers[3]
-            a = all_speakers[4]
-            if a:
-                a='\n'.join(a)
-            if b:
-                b='\n'.join(b)
-            if f:
-                f='\n'.join(f)
-            if e:
-                e='\n'.join(e)
-            if c:
-                c='\n'.join(c)
-            await bot.send(event, [
-                Node(content=[Text(f"使用 /xx说xxxxx")]),
-                Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),
-                Node(content=[Text(f"acgn_ai可用角色：\n{e}")]),
-                Node(content=[Text(f"modelscope_tts可用角色：\n{c}")]),
-                Node(content=[Text(f"vits可用角色：\n{b}")]),
-                Node(content=[Text(f"online_vits2可用角色：\n{a}")])])
+
 
     @bot.on(GroupMessageEvent)
     async def cyber_divination(event: GroupMessageEvent):
