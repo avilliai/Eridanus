@@ -227,7 +227,7 @@ async function convertFileToBase64(filePath) {
   try {
 
 
-    const response = await fetch("http://127.0.0.1:5007/api/file2base64", {
+    const response = await fetch(`http://${location.hostname}:5007/api/file2base64`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -257,7 +257,7 @@ async function convertFileToBase64(filePath) {
 async function moveFile2Stastic(filePath) {
   console.log("Calling moveFile2Stastic with path:", filePath);
   try {
-    const response = await fetch("http://127.0.0.1:5007/api/move_file", {
+    const response = await fetch(`http://${location.hostname}:5007/api/move_file`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
