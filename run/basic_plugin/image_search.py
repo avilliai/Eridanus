@@ -52,7 +52,7 @@ async def call_image_search1(bot, event, config, img_url):
                                   config.basic_plugin.config["image_search"]["sauceno_api_key"])
     async def extract_data(name,result):
         node_list = []
-        if name=="sauceno":
+        if name=="saucenao":
             for item in result:
                 try:
                     path = "data/pictures/cache/" + random_str() + ".png"
@@ -60,6 +60,7 @@ async def call_image_search1(bot, event, config, img_url):
                     node_list.append(Node(content=[Image(file=imgpath),Text(item[1])]))
                 except Exception as e:
                     bot.logger.error(f"Error in extract_data: {e}")
+                    node_list.append(Node(content=[Text(item[1])]))
                     continue
         if name=="anime_trace":
             node_list.append(Node(content=[Text(f"ai创作检测：{result[2]}")]))
@@ -71,8 +72,7 @@ async def call_image_search1(bot, event, config, img_url):
     for name, result in results.items():
         if result and result[0] != "":
             bot.logger.info(f"{name} 成功返回: {result}")
-            forMeslist.extend(await extract_data(name,result))
-
+            forMeslist.extend(await extract_data(name, result))
     await bot.send(event, forMeslist)
 
 

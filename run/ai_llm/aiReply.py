@@ -22,8 +22,8 @@ def main(bot,config):
 
     else:
         tools = None
-    if config.api["llm"]["联网搜索"]:
-      if config.api["llm"]["model"] == "gemini":
+    if config.ai_llm.config["llm"]["联网搜索"]:
+      if config.ai_llm.config["llm"]["model"] == "gemini":
           if tools is None:
               tools = [
 
@@ -34,7 +34,6 @@ def main(bot,config):
                   {"googleSearch": {}},
                   tools
               ]
-              print(tools)
       else:
           if tools is None:
               tools = [{"type": "function", "function": {"name": "googleSearch"}}]

@@ -39,6 +39,8 @@ async def anime_trace(image_source)->list[str,str,bool]:
                 for result in content["data"][0]["character"]:
                     #print(result)
                     str_result += f"{result['work']} ({result['character']}%)\n"
+                    if content["data"][0]["character"].index(result)>2:
+                        break
                 return str_result
             except Exception as e:
                 print(f"Error: {str(e)}")
