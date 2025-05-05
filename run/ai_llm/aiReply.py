@@ -72,7 +72,7 @@ def main(bot,config):
     async def handle_message(event):
         # 锁机制
         uid = event.user_id
-        user_info = await get_user(event.user_id)
+        user_state = await get_user(event.user_id)
         # 初始化该用户的状态
         if uid not in user_state:
             user_state[uid] = {
