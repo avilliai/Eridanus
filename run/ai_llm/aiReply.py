@@ -44,7 +44,7 @@ def main(bot,config):
               ]
 
 
-      user_state = {}
+    user_state = {}
 
 
     @bot.on(GroupMessageEvent)
