@@ -21,9 +21,7 @@ import time
 from ruamel.yaml.scalarint import ScalarInt
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScalarString, ScalarString
 
-from .logger import get_logger
-
-
+from web.logger import get_logger
 
 # app = Flask(__name__,static_folder="dist", static_url_path="",template_folder="dist")
 app = Flask(__name__,static_folder="websources", static_url_path="",template_folder='websources')
