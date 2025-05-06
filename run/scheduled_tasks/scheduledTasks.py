@@ -168,8 +168,7 @@ def main(bot: ExtendBot,config):
             for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]:
                 if group_id == 0: continue
                 try:
-                    r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], int(random.randint(1000000, 99999999)),
-                                          config, bot=bot, tools=None)
+                    r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], random.randint(1000000, 99999999),config, bot=bot, tools=None)
                     await bot.send_group_message(group_id, r)
                     await sleep(6)
                 except Exception as e:
