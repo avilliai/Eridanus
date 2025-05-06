@@ -20,9 +20,8 @@ config = YAMLManager("run") #这玩意用来动态加载和修改配置文件
 #bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
 #或者使用ws适配器
 bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
-if config.common_config.basic_config["webui"]:
-    bot2 = ExtendBot("ws://127.0.0.1:5008", config,
-                     blocked_loggers=["DEBUG", "INFO_MSG","warning"])
+
+bot2 = ExtendBot("ws://127.0.0.1:5008", config,blocked_loggers=["DEBUG", "INFO_MSG","warning"])
 
 PLUGIN_DIR = "run"
 def find_plugins(plugin_dir=PLUGIN_DIR):
