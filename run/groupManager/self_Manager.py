@@ -136,7 +136,8 @@ async def report_to_master(bot,event,config):
             node_li.append(Node(content=[Text(str(i))]))
     await bot.send_friend_message(config.common_config.basic_config["master"]['id'], node_li)
 
-async def send(bot,event,config,message):
+async def send(bot,event,config,message,delay=0):
+    await asyncio.sleep(delay)
     message_list=[]
     print(message)
     for i in message:
