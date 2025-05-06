@@ -1,9 +1,13 @@
 import asyncio
 from typing import List
 import numpy as np
+
+from framework_common.utils.install_and_import import install_and_import
+
+sklearn=install_and_import("scikit-learn")
+jieba=install_and_import("jieba")
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import jieba
 import re
 import gc
 from collections import Counter
