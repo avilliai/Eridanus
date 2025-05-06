@@ -65,7 +65,7 @@ async def main():
         from framework_common.framework_util.yamlLoader import YAMLManager
 
         yamlmanager = YAMLManager.get_instance()
-        proxy = yamlmanager.common_config.network.get("proxy").get("http_proxy")
+        proxy = yamlmanager.common_config.basic_config.get("proxy").get("http_proxy")
         pyproxies = {  # pytubefix代理
             "http": proxy,
             "https": proxy
