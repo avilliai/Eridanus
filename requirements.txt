@@ -21,5 +21,6 @@ numpy
 pydub
 websockets
 openai
+aiohttp
 httpx<0.28.0
 redis
