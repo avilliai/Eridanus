@@ -210,18 +210,19 @@ def main(bot: ExtendBot,config):
             async def check_and_add_group_id(arg):
                 if arg and arg in allow_args:
                     if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"]:
-                        await bot.send(event, f"本群已经订阅过了{arg}")
+                        if args[1]!="all": await bot.send(event, f"本群已经订阅过了{arg}")
                         return
                     else:
                         config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"].append(event.group_id)
                         config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
-                        await bot.send(event, f"{arg}订阅成功")
+                        if args[1]!="all": await bot.send(event, f"{arg}订阅成功")
                 else:
-                    await bot.send(event,
-                                   "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+                    if args[1]!="all": await bot.send(event,
+                                   f"不支持的任务，可选任务有：{allow_args}")
             if args[1]=="all":
                 for allow_arg in allow_args:
                     await check_and_add_group_id(allow_arg)
+                await bot.send(event, "所有订阅已更新")
             else:
                 await check_and_add_group_id(args[1])
 
@@ -232,14 +233,15 @@ def main(bot: ExtendBot,config):
                     if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"]:
                         config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"].remove(event.group_id)
                         config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
-                        await bot.send(event, f"取消{arg}订阅成功")
+                        if args[1]!="all": await bot.send(event, f"取消{arg}订阅成功")
                     else:
-                        await bot.send(event, "本群没有订阅过")
+                        if args[1]!="all": await bot.send(event, "本群没有订阅过")
                 else:
-                    await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+                    if args[1]!="all": await bot.send(event, f"不支持的任务，可选任务有：{allow_args}")
             if args[1]=="all":
                 for allow_arg in allow_args:
                     await remove_group_id(allow_arg)
+                await bot.send(event, "所有订阅已取消")
             else:
                 await remove_group_id(args[1])
     @bot.on(GroupMessageEvent)
