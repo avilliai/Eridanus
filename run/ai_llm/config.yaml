@@ -14,6 +14,14 @@ llm:
   aiReplyCore: True   #ai回复核心，将优化其他功能回复表现
   enable_proxy: False
   max_history_length: 40 #最大上下文长度
+  仁济模式: 
+    随机回复概率: 0
+    算法回复:
+      enable: false
+      相似度阈值: 0.3
+      频率阈值: 0.15
+      消息列表最小长度: 10
+      信息熵阈值: 2.0
   Quote: False     #回复时引用
   focus_time: 10    #单次触发对话后持续有效时间
   语音回复几率: 30
