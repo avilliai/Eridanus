@@ -9,7 +9,7 @@ record_mface: true #是否收集主人的表情包
 proxy:
   http_proxy: ""
   socks_proxy: ""
-bot: "Eridanus"
+bot: "Eridanus"   #机器人昵称
 master:
   name: "管理员"
   id: 1840094972
