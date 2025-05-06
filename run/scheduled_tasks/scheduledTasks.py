@@ -7,17 +7,21 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
-from developTools.message.message_components import Image, Text
+from developTools.message.message_components import Image, Text, Card
+from framework_common.framework_util.websocket_fix import ExtendBot
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import download_img
 from run.basic_plugin.service.life_service import bingEveryDay, danxianglii
 from run.basic_plugin.service.nasa_api import get_nasa_apod
 from run.basic_plugin.service.weather_query import free_weather_query
 from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import get_users_with_permission_above, get_user
+from run.resource_collector.service.asmr.asmr100 import random_asmr_100
 from run.system_plugin.func_collection import trigger_tasks
 from run.streaming_media.service.Link_parsing.Link_parsing import bangumi_PILimg
 
 
-def main(bot,config):
+def main(bot: ExtendBot,config):
     logger=bot.logger
     scheduledTasks=config.scheduled_tasks.config["scheduledTasks"]
 
@@ -80,7 +84,7 @@ def main(bot,config):
             pass
         elif task_name == "每日天文":
             logger.info_func("获取今日nasa天文信息推送")
-            img,text=await get_nasa_apod(config.basic_config.config["nasa_api"]["api_key"],config.common_config.network["proxy"]["http_proxy"])
+            img,text=await get_nasa_apod(config.basic_plugin.config["nasa_api"]["api_key"],config.common_config.basic_config["proxy"]["http_proxy"])
             text=await aiReplyCore([{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}], random.randint(1000000, 99999999),
                                           config, bot=bot, tools=None)
             for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["每日天文"]["groups"]:
@@ -139,6 +143,39 @@ def main(bot,config):
             """
             用新的asmr推送实现
             """
+            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]:
+                if group_id == 0: continue
+                try:
+                    r = await random_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+
+                    i = random.choice(r['media_urls'])
+
+                    await bot.send_group_message(group_id, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
+                    try:
+                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png",
+                                                 config.resource_collector.config["asmr"]["gray_layer"],
+                                                 proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+                    except Exception as e:
+                        bot.logger.error(f"download_img error:{e}")
+                        img = r['mainCoverUrl']
+                    await bot.send_group_message(group_id,
+                                   [Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),None or Image(file=img)])
+                except Exception as e:
+                    logger.error(f"向群{group_id}推送单向历失败，原因：{e}")
+                await sleep(6)
+            logger.info_func("单向历推送执行完毕")
+        elif task_name=="早安" or task_name=="晚安" or task_name=="午安":
+            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]:
+                if group_id == 0: continue
+                try:
+                    r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], int(random.randint(1000000, 99999999)),
+                                          config, bot=bot, tools=None)
+                    await bot.send_group_message(group_id, r)
+                    await sleep(6)
+                except Exception as e:
+                    logger.error(f"向群{group_id}推送{task_name}失败，原因：{e}")
+                    continue
+
 
     def create_dynamic_jobs():
         for task_name, task_info in scheduledTasks.items():
@@ -154,39 +191,57 @@ def main(bot,config):
                     args=[task_name, task_info],
                     misfire_grace_time=120,
                 )
+    @bot.on(GroupMessageEvent)
+    async def _(event: GroupMessageEvent):
+        if event.pure_text=="测试定时任务":
+            for task_name, task_info in scheduledTasks.items():
+                await task_executor(task_name, task_info)
 
     # 启动调度器
     async def start_scheduler():
         create_dynamic_jobs()
         scheduler.start()
 
-    allow_args = ["每日天文","bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一"]
+    allow_args = ["每日天文","bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一", "早安", "晚安", "午安"]
     @bot.on(GroupMessageEvent)
     async def _(event: GroupMessageEvent):
         if event.pure_text.startswith("/cron add "):
             args = event.pure_text.split("/cron add ")
-
-            if args[1] and args[1] in allow_args:
-                if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"]:
-                    await bot.send(event, "本群已经订阅过了")
-                    return
+            async def check_and_add_group_id(arg):
+                if arg and arg in allow_args:
+                    if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"]:
+                        await bot.send(event, f"本群已经订阅过了{arg}")
+                        return
+                    else:
+                        config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"].append(event.group_id)
+                        config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
+                        await bot.send(event, f"{arg}订阅成功")
                 else:
-                    config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"].append(event.group_id)
-                    config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
-                    await bot.send(event, "订阅成功")
+                    await bot.send(event,
+                                   "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+            if args[1]=="all":
+                for allow_arg in allow_args:
+                    await check_and_add_group_id(allow_arg)
             else:
-                await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+                await check_and_add_group_id(args[1])
+
         elif event.pure_text.startswith("/cron remove "):
             args = event.pure_text.split("/cron remove ")
-            if args[1] and args[1] in allow_args:
-                if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"]:
-                    config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[args[1]]["groups"].remove(event.group_id)
-                    config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
-                    await bot.send(event, "取消订阅成功")
+            async def remove_group_id(arg):
+                if arg and arg in allow_args:
+                    if event.group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"]:
+                        config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[arg]["groups"].remove(event.group_id)
+                        config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
+                        await bot.send(event, f"取消{arg}订阅成功")
+                    else:
+                        await bot.send(event, "本群没有订阅过")
                 else:
-                    await bot.send(event, "本群没有订阅过")
+                    await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+            if args[1]=="all":
+                for allow_arg in allow_args:
+                    await remove_group_id(allow_arg)
             else:
-                await bot.send(event, "不支持的任务，可选任务有：每日天文，bing每日图像，单向历，bangumi，nightASMR，摸鱼人日历，新闻，免费游戏喜加一")
+                await remove_group_id(args[1])
     @bot.on(GroupMessageEvent)
     async def _(event: GroupMessageEvent):
         if event.pure_text=="今日天文":
