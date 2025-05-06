@@ -128,33 +128,62 @@ asyncio.run(init_db())
 
 
 # ======================= 添加消息 =======================
-async def add_to_group(group_id: int, message):
+async def add_to_group(group_id: int, message, delete_after: int = 50):
     """向群组添加消息（插入数据库并更新 Redis）"""
     init_redis()
     async with aiosqlite.connect(DB_NAME) as db:
         try:
-            # 插入新消息
+            cursor = await db.execute("SELECT COUNT(*) FROM group_messages WHERE group_id =?", (group_id,))
+            count = (await cursor.fetchone())[0]
+
+            if count >= delete_after:
+                excess_count = count - delete_after + 1
+                await execute_with_retry(
+                    db,
+                    "DELETE FROM group_messages WHERE id IN (SELECT id FROM group_messages WHERE group_id =? ORDER BY timestamp ASC LIMIT?)",
+                    (group_id, excess_count)
+                )
+                await db.commit()
+
             await execute_with_retry(
                 db,
-                "INSERT INTO group_messages (group_id, message, processed_message, new_openai_processed_message, old_openai_processed_message) VALUES (?, ?, NULL, NULL, NULL)",
+                "INSERT INTO group_messages (group_id, message, processed_message, new_openai_processed_message, old_openai_processed_message) VALUES (?,?, NULL, NULL, NULL)",
                 (group_id, json.dumps(message))
             )
             await db.commit()
 
-            # 删除超过 50 条的最旧记录
-            await execute_with_retry(
-                db,
-                "DELETE FROM group_messages WHERE id IN (SELECT id FROM group_messages WHERE group_id = ? ORDER BY timestamp ASC LIMIT -1 OFFSET 50)",
-                (group_id,)
-            )
-            await db.commit()
-
-            # 清除所有 prompt 标准的缓存
             for k in ["gemini", "new_openai", "old_openai"]:
                 redis_client.delete(f"group:{group_id}:{k}")
 
         except Exception as e:
             logger.info(f"Error adding to group {group_id}: {e}")
+            
+async def get_group_messages(group_id: int, limit: int = 50):
+    """获取指定群组的指定数量消息，仅返回文本的列表"""
+    try:
+        query = "SELECT message FROM group_messages WHERE group_id =? ORDER BY timestamp DESC"
+        params = (group_id,)
+        if limit is not None:
+            query += " LIMIT?"
+            params += (limit,)
+
+        async with aiosqlite.connect(DB_NAME) as db:
+            cursor = await db.execute(query, params)
+            rows = await cursor.fetchall()
+            text_list = []
+            for row in rows:
+                try:
+                    raw_message = json.loads(row[0])
+                    if "message" in raw_message and isinstance(raw_message["message"], list):
+                        for msg_obj in raw_message["message"]:
+                            if isinstance(msg_obj, dict) and "text" in msg_obj and isinstance(msg_obj["text"], str):
+                                text_list.append(msg_obj["text"])
+                except (json.JSONDecodeError, KeyError):
+                    pass
+            return text_list
+    except Exception as e:
+        logger.info(f"Error getting messages for group {group_id}: {e}")
+        return []
 
 
 # ======================= 获取并转换消息 =======================

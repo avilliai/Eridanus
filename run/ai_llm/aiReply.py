@@ -6,10 +6,12 @@ from run.ai_llm.service.aiReplyCore import aiReplyCore, end_chat, judge_trigger,
 from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
 
 from framework_common.database_util.User import get_user,update_user
+from framework_common.database_util.Group import get_group_messages
+from run.ai_llm.service.auto_talk import check_message_similarity
 
 from framework_common.framework_util.func_map_loader import gemini_func_map, openai_func_map
 from developTools.message.message_components import Text, At
-
+import random
 
 def main(bot,config):
 
@@ -68,6 +70,37 @@ def main(bot,config):
                     await bot.send(event,"您的ai对话token已用完，请耐心等待下一次刷新～～")
                     return
             await handle_message(event)
+        
+        elif (config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"] > 0): # 仁济模式第一层(随机)
+            if random.random() < config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"]:
+                bot.logger.info(f"接受消息{event.processed_message}")
+
+                ## 权限判断
+                user_info = await get_user(event.user_id, event.sender.nickname)
+                if not user_info.permission >= config.ai_llm.config["core"]["ai_reply_group"]:
+                    return
+                if event.group_id==913122269 and not user_info.permission >= 66:
+                    return
+                if not user_info.permission >= config.ai_llm.config["core"]["ai_token_limt"]:
+                    if user_info.ai_token_record >= config.ai_llm.config["core"]["ai_token_limt_token"]:
+                        return
+                await handle_message(event)
+        
+        elif (config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["enable"]): # 仁济模式第二层(算法判断)
+            sentences = await get_group_messages(event.group_id, config.ai_llm.config["llm"]["可获取的群聊上下文长度"])
+            if await check_message_similarity(str(event.pure_text),sentences,similarity_threshold = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["相似度阈值"],frequency_threshold = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["频率阈值"],min_list_size = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["消息列表最小长度"],entropy_threshold = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["信息熵阈值"]):
+                bot.logger.info(f"接受消息{event.processed_message}")
+
+                ## 权限判断
+                user_info = await get_user(event.user_id, event.sender.nickname)
+                if not user_info.permission >= config.ai_llm.config["core"]["ai_reply_group"]:
+                    return
+                if event.group_id==913122269 and not user_info.permission >= 66:
+                    return
+                if not user_info.permission >= config.ai_llm.config["core"]["ai_token_limt"]:
+                    if user_info.ai_token_record >= config.ai_llm.config["core"]["ai_token_limt_token"]:
+                        return
+                await handle_message(event)
 
     async def handle_message(event):
         global user_state
