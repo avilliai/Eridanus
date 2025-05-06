@@ -21,7 +21,7 @@ import time
 from ruamel.yaml.scalarint import ScalarInt
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScalarString, ScalarString
 
-from logger import get_logger
+from .logger import get_logger
 
 
 
