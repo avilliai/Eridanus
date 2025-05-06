@@ -19,7 +19,7 @@ import subprocess
 import os
 import time
 from ruamel.yaml.scalarint import ScalarInt
-from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScalarString
+from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScalarString, ScalarString
 
 from logger import get_logger
 
@@ -131,14 +131,14 @@ def merge_dicts(old, new):
     递归合并旧数据和新数据。
     """
     for k, v in old.items():
-        print(f"处理 key: {k}, old value: {v} old type: {type(v)}, new value: {new.get(k)} new type: {type(new.get(k))}")
+        #print(f"处理 key: {k}, old value: {v} old type: {type(v)}, new value: {new.get(k)} new type: {type(new.get(k))}")
         # 如果值是一个字典，并且键在新的yaml文件中，那么我们就递归地更新键值对
         if isinstance(v, dict) and k in new and isinstance(new[k], dict):
             merge_dicts(v, new[k])
         # 如果值是列表，且新旧值都是列表，则合并并去重
         elif isinstance(v, list) and k in new and isinstance(new[k], list):
             # 合并列表并去重，保留旧列表顺序
-            new[k] = [item for item in v if v is not None]
+            new[k] = [int(item) if isinstance(item, (str, ScalarString)) and item.lstrip('-').isdigit() else item for item in v if v is not None]
         elif k in new and type(v) != type(new[k]):
 
             if isinstance(new[k], DoubleQuotedScalarString) or isinstance(new[k], SingleQuotedScalarString):
@@ -148,16 +148,17 @@ def merge_dicts(old, new):
                 v = int(v)
                 new[k] = v
             else:
-                print(f"类型冲突 key: {k}, old value type: {type(v)}, new value type: {type(new[k])}")
+                #print(f"类型冲突 key: {k}, old value type: {type(v)}, new value type: {type(new[k])}")
                 logger.warning(f"旧值: {v}, 新值: {new[k]} 直接覆盖")
                 new[k] = v
         # 如果键在新的yaml文件中且类型一致，则更新值
         elif k in new:
-            print(f"更新 key: {k}, old value: {v}, new value: {new[k]}")
+            #print(f"更新 key: {k}, old value: {v}, new value: {new[k]}")
             new[k] = v
         # 如果键不在新的yaml中，直接添加
         else:
-            print(f"移除键 key: {k}, value: {v}")
+            pass
+            #print(f"移除键 key: {k}, value: {v}")
 
 def conflict_file_dealer(old_data: dict, file_new='new_aiReply.yaml'):
     logger.info(f"冲突文件处理: {file_new}")
@@ -387,7 +388,7 @@ import base64
 def file_to_base64():
     """将本地文件转换为 Base64 并返回"""
     data = request.json
-    print(data)
+    #print(data)
     file_path = data.get("path")
     logger.info_func(f"转换文件: {file_path}")
     if not file_path:
@@ -575,7 +576,7 @@ def start_webui():
             user_info['password'] = yaml_file['password']
         logger.info_msg(f"用户登录信息读取成功。用户名：{user_info['account']} ")
     except:
-        logger.error("用户登录信息读取失败，已恢复默认。默认用户名/密码：eridanus")
+        logger.error("用户登录信息读取失败，已恢复默认。默认用户名/密码均为 eridanus")
         with open(user_file, 'w', encoding="utf-8") as file:
             yaml.dump(user_info, file)
 

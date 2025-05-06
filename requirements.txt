@@ -22,5 +22,8 @@ pydub
 websockets
 openai
 aiohttp
+flask
+flask-cors
+cryptography
 httpx<0.28.0
 redis

@@ -1,4 +1,4 @@
-plugin_description="奶龙审核、doro审核、男娘图片审核"
+plugin_description="图片审核"
 dynamic_imports={
     "run.character_detection.func_collection": ["operate_group_censor"],
 }
