@@ -17,7 +17,6 @@ jmcomic
 img2pdf
 playwright
 bilibili-api-python
-PicImageSearch
 numpy
 pydub
 websockets
