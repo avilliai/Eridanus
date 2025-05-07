@@ -119,6 +119,10 @@ def run_webui():
     server_dir = os.path.join(os.path.dirname(__file__), 'web')
     python_exec = sys.executable
     server_script = os.path.join(server_dir, 'server.py')
+
+    # 强制 Python 输出使用 UTF-8
+    sys.stdout.reconfigure(encoding='utf-8')
+
     process = subprocess.Popen(
         [python_exec, server_script],
         cwd=server_dir,
@@ -126,7 +130,9 @@ def run_webui():
         stderr=subprocess.STDOUT,
         encoding='utf-8',
         errors='replace',
+        text=True  # 确保输出为文本模式
     )
+
     def reader():
         for line in process.stdout:
             print("[server]", line.strip())
