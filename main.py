@@ -22,7 +22,7 @@ config = YAMLManager("run") #这玩意用来动态加载和修改配置文件
 bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 
 bot2 = ExtendBot("ws://127.0.0.1:5008", config,blocked_loggers=["DEBUG", "INFO_MSG","warning"])
-bot1.logger.info_msg("正在初始化....")
+bot1.logger.info_func("正在初始化....")
 PLUGIN_DIR = "run"
 def find_plugins(plugin_dir=PLUGIN_DIR):
     plugin_modules = []
@@ -132,9 +132,10 @@ def run_webui():
         errors='replace',
         text=True  # 确保输出为文本模式
     )
-    bot1.logger.info_msg("🔧 WebUI 服务启动中，请访问 http://localhost:5007")
-    bot1.logger.info_msg("🔧 WebUI 初试账号密码均为 eridanus")
-    bot1.logger.info_msg("🔧 WebUI 初试账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 服务启动中，请访问 http://localhost:5007")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
     def reader():
         for line in process.stdout:
             print("[server]", line.strip())
