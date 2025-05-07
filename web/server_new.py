@@ -7,9 +7,10 @@ import logging
 import shutil
 import sys
 import threading
+import httpx
 from io import StringIO
 
-from flask import Flask, request, jsonify, render_template, make_response, url_for, send_from_directory
+from flask import Flask, request, jsonify, render_template, make_response, url_for, send_file, send_from_directory
 from flask_cors import CORS
 from flask_sock import Sock
 from cryptography.fernet import Fernet
@@ -251,11 +252,11 @@ def save_yaml(file_path, data):
 def load_file(filename):
     """加载指定的 YAML 文件"""
     if filename not in YAML_FILES:
-        return jsonify({"error": "Invalid file name"})
+        return jsonify({"error": "文件名错误"})
 
     file_path = YAML_FILES[filename]
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"})
+        return jsonify({"error": "文件不存在"})
 
     data_with_comments = load_yaml(file_path)
     rtd=jsonify(data_with_comments)
@@ -267,20 +268,20 @@ def load_file(filename):
 def save_file(filename):
     """接收前端数据并保存到 YAML 文件"""
     if filename not in YAML_FILES:
-        return jsonify({"error": "Invalid file name"})
+        return jsonify({"error": "文件名错误"})
 
     file_path = YAML_FILES[filename]
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"})
+        return jsonify({"error": "文件不存在"})
 
 
     data = request.json  # 获取前端发送的 JSON 数据
     if not data:
-        return jsonify({"error": "No data provided"})
+        return jsonify({"error": "无效数据"})
 
     result = save_yaml(file_path, data)
     if result is True:
-        return jsonify({"message": "File saved successfully"})
+        return jsonify({"message": "文件保存成功"})
     else:
         return jsonify(result)
 
@@ -346,10 +347,10 @@ def logout():
     try:
         del auth_info[recv_token]
         logger.info_msg("用户登出")
-        return jsonify({"message": "Success"})
+        return jsonify({"message": "退出登录成功"})
     except:
-        logger.error("token不存在")
-        return jsonify({"error": "Invalid token"})
+        logger.error("token无效")
+        return jsonify({"error": "token无效"})
 
 # 账户修改
 @app.route("/api/profile", methods=['GET','POST'])
@@ -369,11 +370,7 @@ def profile():
             with open(user_file, 'w', encoding="utf-8") as file:
                 yaml.dump(user_info, file)
         auth_info={}    #清空登录信息
-        return jsonify({"message": "Success"})
-
-# @app.route("/")  # 定义根路由
-# def index():
-    # return redirect("./dashboard.html") # 返回 dashboard.html
+        return jsonify({"message": "账户信息修改成功，请重新登录"})
 
 # API外的路由完全交给React前端处理,根路由都不用了
 @app.errorhandler(404)
@@ -429,47 +426,68 @@ def file_to_base64():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通运行环境
 
-if getattr(sys, 'frozen', False):  # 判断是否是 PyInstaller 打包的
-    BASE_DIR = sys._MEIPASS  # PyInstaller 临时解压目录
-else:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通运行环境
+# UPLOAD_FOLDER = os.path.join(BASE_DIR, "websources", "uploads")
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 确保目录存在
+#
+# @app.route("/api/move_file", methods=["POST"])
+# def move_file():
+#     """移动本地文件到可访问目录，并返回 URL"""
+#     data = request.json
+#     file_path = data.get("path")
+#
+#     if not file_path:
+#         return jsonify({"error": "Missing file path"})
+#
+#     if file_path.startswith("file://"):
+#         file_path = file_path[7:]  # 去掉 "file://"
+#
+#     if not os.path.exists(file_path):
+#         return jsonify({"error": "File not found"})
+#
+#     try:
+#         # 确保文件不会覆盖已有文件
+#         filename = os.path.basename(file_path)
+#         dest_path = os.path.join(UPLOAD_FOLDER, filename)
+#
+#         logger.info_msg(f"目标路径: {dest_path} 原始路径: {file_path}")
+#         shutil.move(file_path, dest_path)  # 移动文件
+#
+#         # 生成可访问的 URL
+#         relative_path = os.path.relpath(dest_path, app.static_folder)  # 计算相对路径
+#         file_url = f"/{relative_path}"  # Flask 已去掉 static_url_path，所以直接返回相对路径
+#         return jsonify({"url": file_url})
+#
+#     except Exception as e:
+#         return jsonify({"error": str(e)})
+#
+# 考虑到webui对话需要保存聊天记录，但是媒体文件不能保存到浏览器缓存，以后参考上面移动文件到目录下的操作，所有聊天文件通过webUI的一个文件管理器管理(todo)
 
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "websources", "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 确保目录存在
-
-@app.route("/api/move_file", methods=["POST"])
-def move_file():
+@app.route("/api/chat/file", methods=["GET"])
+def get_file():
     """移动本地文件到可访问目录，并返回 URL"""
-    data = request.json
-    file_path = data.get("path")
+    # data = request.json
+    file_path = request.args.get("path")
 
     if not file_path:
-        return jsonify({"error": "Missing file path"})
+        return jsonify({"error": "缺少文件路径"})
 
     if file_path.startswith("file://"):
         file_path = file_path[7:]  # 去掉 "file://"
 
     if not os.path.exists(file_path):
-        return jsonify({"error": "File not found"})
+        return jsonify({"error": "文件不存在"})
 
     try:
-        # 确保文件不会覆盖已有文件
-        filename = os.path.basename(file_path)
-        dest_path = os.path.join(UPLOAD_FOLDER, filename)
 
-        logger.info_msg(f"目标路径: {dest_path} 原始路径: {file_path}")
-        shutil.move(file_path, dest_path)  # 移动文件
-
-        # 生成可访问的 URL
-        relative_path = os.path.relpath(dest_path, app.static_folder)  # 计算相对路径
-        file_url = f"/{relative_path}"  # Flask 已去掉 static_url_path，所以直接返回相对路径
-        return jsonify({"url": file_url})
+        return send_file(file_path)
 
     except Exception as e:
         return jsonify({"error": str(e)})
-clients = set()
 
+clients = set()
+#WebSocket路由
 @sock.route('/api/ws')
 def handle_websocket(ws):
     global auth_info
@@ -481,7 +499,7 @@ def handle_websocket(ws):
         try:
             if request.remote_addr != "127.0.0.1":
                 recv_token = request.args.get('auth_token')
-                if auth_info[recv_token] > int(time.time()):
+                if auth_info[recv_token] > int(time.time()) :
                     logger.info_msg("WebSocket 客户端鉴权成功")
         except:
             logger.warning("WebSocket 客户端鉴权失败")
@@ -503,17 +521,33 @@ def handle_websocket(ws):
                                        'echo': message['echo']}))
                     except Exception:
                         clients.discard(client)
+                            #获取前端消息的id
+            time_now = int(time.time())
 
-            if isinstance(message,list):
-                message.insert(0,{'type': 'at', 'data': {'qq': '1000000', 'name': 'Eridanus'}})
+                #是否@，有些指令不能用@
+            # isat = message[0]["isat"] if "id" in message[0] else True
+                # 删除消息中的id和isat字段
+                # 删除消息中的id和isat字段
+            if "id" in message:
+                message_id = message["id"]
+                isat = message["isat"]
+                del message["isat"]
+                del message["id"]
+                message = [message]
+                if isat:
+                    message.insert(0,{'type': 'at', 'data': {'qq': '1000000', 'name': 'Eridanus'}})
+            else:
+                message_id = time_now
+                
+
 
             #print(message, type(message))
 
             onebot_event = {
                 'self_id': 1000000,
                 'user_id': 111111111,
-                'time': int(time.time()),
-                'message_id': 1253451396,
+                'time': time_now,
+                'message_id': message_id,
                 'real_id': 1253451396,
                 'message_seq': 1253451396,
                 'message_type': 'group',
@@ -532,7 +566,7 @@ def handle_websocket(ws):
             # 发送给所有连接的客户端（后端）
             for client in list(clients):
                 try:
-                    if client != ws and "auth_token" not in message:  # 避免回传给前端
+                    if client != ws:  # 避免回传给前端
                         client.send(event_json)
                 except Exception:
                     clients.discard(client)
@@ -543,9 +577,10 @@ def handle_websocket(ws):
     finally:
         logger.error("WebSocket 客户端断开连接")
         clients.discard(ws)
+
+#启动webUI
 def start_webui():
     # 初始化用户登录信息
-
     try:
         with open(user_file, 'r', encoding="utf-8") as file:
             yaml_file = yaml.load(file)
