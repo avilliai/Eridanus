@@ -1,24 +1,30 @@
 # Eridanus WebUI
-## TODO List
 
-- [x] 初次安装流程
-- [x] 对话
-- [x] 用户登录
-- [ ] 继续优化页面样式
-- [ ] 更多message_components显示支持
-
-## WebUI重构进度&计划(前后端暂未完全适配)
-- [x] 迁移到React
+## WebUI重构进度&计划(前后端已基本适配)
 - [x] 对话
 - [x] 修改yaml配置文件
 - [x] 用户登录
-- [ ] 删除配置项二次确认
+- [x] 删除配置项二次确认
+- [x] 修改登录信息
+- [x] ws鉴权
+- [x] ws合并到flask路由
 - [ ] 持久性登录
-- [ ] 权限管理
+- [ ] 黑白名单管理
+- [ ] 数据库管理
 - [ ] 对话上传文件
-- [ ] 对话记录本地化归档/保存
-- [ ] 安装流程（似乎不用了）
+- [ ] 对话记录归档/保存
+- [ ] 对话文件管理
 - [ ] 继续优化页面样式
-- [ ] 更多message_components显示支持
+### message_components显示支持
+- [x] text-文本
+- [x] reply-回复
+- [x] image-图片
+- [x] record-语音
+- [x] video-视频
+- [x] node-合并转发消息
+- [] delete_msg-撤回消息
+- [ ] music-音乐卡片（顶多显示基本信息，获取不到付费音源）
+### 其它
+
 ### 此处仅保留编译后的静态文件
 ### 前端项目地址(gitee)：[https://gitee.com/Creeper666/eridanus-webui-react](https://gitee.com/Creeper666/eridanus-webui-react)
