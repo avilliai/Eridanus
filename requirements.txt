@@ -17,10 +17,13 @@ jmcomic
 img2pdf
 playwright
 bilibili-api-python
-PicImageSearch
 numpy
 pydub
 websockets
 openai
+aiohttp
+flask
+flask-cors
+cryptography
 httpx<0.28.0
 redis

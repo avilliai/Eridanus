@@ -4,17 +4,16 @@ user_handle_logic_operate_level: 1000 #拉黑、解黑用户所需操作权限
 group_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist下，屏蔽指定群，whitelist下，只处理指定群。
 group_handle_logic_operate_level: 1000 #拉黑、解黑群所需操作权限
 邀请bot加群所需权限: 0
-申请bot好友所需权限: 0
+申请bot好友所需权限: 1
 record_mface: true #是否收集主人的表情包
 proxy:
   http_proxy: ""
   socks_proxy: ""
-bot: "Eridanus"
+bot: "Eridanus"   #机器人昵称
 master:
-  name: "主人"
+  name: "管理员"
   id: 1840094972
 group: 879886836   #测试群号1，随便建个小群。bot会往里面发乱七八糟的东西，不要填用户群。
-webui: True  #将Eridanus连接到webui
 adapter:
   ws_client:   #机器人作为websocket客户端
     ws_link: "ws://127.0.0.1:3001"  #bot的websocket请求地址

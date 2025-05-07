@@ -1,10 +1,10 @@
 scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
-  早安问候:         #晨间推送
+  早安问候:         #私聊晨间推送
     enable: true  #向信任用户推送天气信息
     time: 8/3      #推送时间
     trustThreshold: 9 #权限等级要求，低于此值的用户将不会被推送
     onlyTrustUser: True  #仅向信任用户推送
-  晚安问候: #晚安提示
+  晚安问候: #私聊晚安提示
     enable: true
     text: 晚安！    #开启aiReplyCore后，此项将被ai替代
     time: 22/31
@@ -41,3 +41,12 @@ scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
   bing每日图像:
     enable: true
     time: 10/2
+  早安:    #群聊早安问候
+    enable: true
+    time: 8/3
+  午安:    #群聊午安问候
+    enable: true
+    time: 12/3
+  晚安:    #群聊晚安问候
+    enable: true
+    time: 22/31

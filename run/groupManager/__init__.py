@@ -70,7 +70,11 @@ function_declarations=[
                             }
                         }
                     }
-                }
+                },
+                "delay": {
+                    "type": "integer",
+                    "description": "几秒后发送，默认为0"
+                },
             },
             "required": [
                 "message"

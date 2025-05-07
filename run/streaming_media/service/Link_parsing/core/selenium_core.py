@@ -1,16 +1,21 @@
-import selenium
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+
+
 import os
 import time
-from selenium.webdriver.chrome.service import Service
+
 import traceback
 from PIL import Image
 import random
 import re
 
+from framework_common.utils.install_and_import import install_and_import
+
+
 # 初始化 Selenium
 def init_driver():
+    selenium = install_and_import("selenium")
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
     chromedriver_path = "E:\chromedriver\chromedriver.exe"  # 替换为你的 chromedriver 路径
     service = Service(chromedriver_path)
     options = webdriver.ChromeOptions()
@@ -155,6 +160,10 @@ def text_handle(content,img_list):
 
 # 保存图片截图到本地
 def save_image_screenshot(element, index, output_dir=None,img_url=None,img_name=None):
+    selenium = install_and_import("selenium")
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.chrome.service import Service
     if output_dir is None:
         output_dir='screenshots'
     if not os.path.exists(output_dir):
@@ -232,6 +241,10 @@ def wait_for_image_to_load(driver, image,times=None,img_name=None):
 
 # 提取图片截图和文本
 def scrape_images_and_text_with_screenshots(url):
+    selenium = install_and_import("selenium")
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.chrome.service import Service
     images_check = []
     time_wait = 30
     print(f'正在等待网页打开，请等待至少 {time_wait+10}s ...')
@@ -295,6 +308,10 @@ def scrape_images_and_text_with_screenshots(url):
 
 # 提取图片截图和文本
 def scrape_images_get_url(url):
+    selenium = install_and_import("selenium")
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.chrome.service import Service
     images_check = []
     driver = init_driver()
     driver.get(url)  # 加载网页

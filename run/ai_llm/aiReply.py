@@ -23,20 +23,27 @@ def main(bot,config):
     else:
         tools = None
     if config.ai_llm.config["llm"]["联网搜索"]:
-        if config.ai_llm.config["llm"]["model"] == "gemini":
-            if tools is None:
-                tools=[
+      if config.ai_llm.config["llm"]["model"] == "gemini":
+          if tools is None:
+              tools = [
 
-                    { "googleSearch": {} },
-                    ]
-            else:
-                tools=[
-                    { "googleSearch": {} },
-                    tools
-                ]
-                print(tools)
+                  {"googleSearch": {}},
+              ]
+          else:
+              tools = [
+                  {"googleSearch": {}},
+                  tools
+              ]
+      else:
+          if tools is None:
+              tools = [{"type": "function", "function": {"name": "googleSearch"}}]
+          else:
+              tools = [
+                  {"type": "function", "function": {"name": "googleSearch"}},
+                  tools
+              ]
 
-
+    global user_state
     user_state = {}
 
 
@@ -63,6 +70,7 @@ def main(bot,config):
             await handle_message(event)
 
     async def handle_message(event):
+        global user_state
         # 锁机制
         uid = event.user_id
         user_info = await get_user(event.user_id)
@@ -82,35 +90,38 @@ def main(bot,config):
         async def process_user_queue(uid):
             user_state[uid]["running"] = True
             try:
-                while not user_state[uid]["queue"].empty():
-                    current_event = await user_state[uid]["queue"].get()
+
+                current_event = await user_state[uid]["queue"].get()
+                try:
+                    reply_message = await aiReplyCore(
+                        current_event.processed_message,
+                        current_event.user_id,
+                        config,
+                        tools=tools,
+                        bot=bot,
+                        event=current_event,
+                    )
+                    if reply_message is None or '' == str(
+                            reply_message) or 'Maximum recursion depth' in reply_message:
+                        return
+                    # print(f'reply_message:{reply_message}')
+                    if "call_send_mface(summary='')" in reply_message:
+                        reply_message = reply_message.replace("call_send_mface(summary='')", '')
+                    # print(f"{current_event.processed_message[1]['text']}\n{reply_message}")
                     try:
-                        reply_message = await aiReplyCore(
-                            current_event.processed_message,
-                            current_event.user_id,
-                            config,
-                            tools=tools,
-                            bot=bot,
-                            event=current_event,
-                        )
-                        if reply_message is None or '' == str(
-                                reply_message) or 'Maximum recursion depth' in reply_message:
-                            return
-                        # print(f'reply_message:{reply_message}')
-                        if "call_send_mface(summary='')" in reply_message:
-                            reply_message = reply_message.replace("call_send_mface(summary='')", '')
-                        # print(f"{current_event.processed_message[1]['text']}\n{reply_message}")
-                        try:
-                            tokens_total = count_tokens_approximate(current_event.processed_message[1]['text'],
-                                                                    reply_message, user_info.ai_token_record)
-                            await update_user(user_id=event.user_id, ai_token_record=tokens_total)
-                        except:
-                            pass
-                        await send_text(bot, event, config, reply_message.strip())
-                    except Exception as e:
-                        bot.logger.exception(f"用户 {uid} 处理出错: {e}")
-                    finally:
-                        user_state[uid]["queue"].task_done()
+                        tokens_total = count_tokens_approximate(current_event.processed_message[1]['text'],
+                                                                reply_message, user_info.ai_token_record)
+                        await update_user(user_id=event.user_id, ai_token_record=tokens_total)
+                    except:
+                        pass
+                    await send_text(bot, event, config, reply_message.strip())
+                except Exception as e:
+                    bot.logger.exception(f"用户 {uid} 处理出错: {e}")
+                finally:
+                    user_state[uid]["queue"].task_done()
+                    print(user_state[uid]["queue"])
+                    if not user_state[uid]["queue"].empty():
+                        asyncio.create_task(process_user_queue(uid))
             finally:
                 user_state[uid]["running"] = False
 
