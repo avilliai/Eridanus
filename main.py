@@ -21,12 +21,14 @@ config = YAMLManager("run") #这玩意用来动态加载和修改配置文件
 #或者使用ws适配器
 bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 
-bot2 = ExtendBot("ws://127.0.0.1:5008", config,blocked_loggers=["DEBUG", "INFO_MSG","warning"])
+
 bot1.logger.info_func("正在初始化....")
-bot1.logger.warning("🔧 WebUI 服务启动中，请访问 http://localhost:5007")
-bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
-bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
-bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+if config.common_config.basic_config["webui"]["enable"]:
+    bot2 = ExtendBot("ws://127.0.0.1:5008", config, blocked_loggers=["DEBUG", "INFO_MSG", "warning"])
+    bot1.logger.warning("🔧 WebUI 服务启动中，请访问 http://localhost:5007")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
 PLUGIN_DIR = "run"
 def find_plugins(plugin_dir=PLUGIN_DIR):
     plugin_modules = []
@@ -141,7 +143,8 @@ def run_webui():
             print("[server]", line.strip())
 
     threading.Thread(target=reader, daemon=True).start()
-run_webui()
+if config.common_config.basic_config["webui"]["enable"]:
+    run_webui()
 load_plugins(bot1,config)
 bot1.run()
 

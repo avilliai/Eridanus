@@ -5,6 +5,8 @@ group_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist�
 group_handle_logic_operate_level: 1000 #拉黑、解黑群所需操作权限
 邀请bot加群所需权限: 0
 申请bot好友所需权限: 1
+webui:
+  enable: true #是否开启web ui
 record_mface: true #是否收集主人的表情包
 proxy:
   http_proxy: ""
