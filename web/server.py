@@ -690,7 +690,9 @@ def run_websocket_server():
     loop.run_forever()
 def start_webui():
     # 初始化用户登录信息
-
+    print("初始账号及密码：eridanus")
+    print("初始账号及密码：eridanus")
+    print("初始账号及密码：eridanus")
     try:
         with open(user_file, 'r', encoding="utf-8") as file:
             yaml_file = yaml.load(file)
