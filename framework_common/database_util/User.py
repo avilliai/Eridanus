@@ -135,9 +135,10 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
 async def update_user(user_id, **kwargs):
     async with aiosqlite.connect(dbpath) as db:
         for key, value in kwargs.items():
-            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record', 'user_portrait',
-                       'portrait_update_time']:
+            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record', 'user_portrait','portrait_update_time']:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
+            else:
+                logger.warning(f"❌ 未知的用户字段 {key}，请检查输入是否正确。")
         await db.commit()
 
     # 清除缓存
@@ -169,7 +170,8 @@ async def get_user(user_id, nickname="") -> User:
             "signed_days": "[]",
             "registration_date": datetime.date.today().isoformat(),
             'ai_token_record': 0,
-            "user_portrait": ""
+            "user_portrait": "",
+            "portrait_update_time": ""
         }
         async with aiosqlite.connect(dbpath) as db:
             async with db.execute("PRAGMA table_info(users);") as cursor:
@@ -177,7 +179,7 @@ async def get_user(user_id, nickname="") -> User:
                 column_names = [col[1] for col in columns]
                 for key in default_user.keys():
                     if key not in column_names:
-                        await db.execute("ALTER TABLE users ADD COLUMN ai_token_record INTEGER DEFAULT 0;")
+                        await db.execute(f"ALTER TABLE users ADD COLUMN {key} TEXT DEFAULT '';")
                         await db.commit()
                         logger.info(f"列 {key} 已成功添加至 'users' 表中。")
 
@@ -205,7 +207,8 @@ async def get_user(user_id, nickname="") -> User:
                         existing_user['signed_days'],
                         existing_user['registration_date'],
                         existing_user['ai_token_record'],
-                        existing_user.get('user_portrait', "")
+                        existing_user.get('user_portrait', ""),
+                        existing_user.get('portrait_update_time', "")  # 修复：获取数据库中的 portrait_update_time
                     )
                     # 存储到 Redis 缓存
                     if redis_client:
@@ -213,13 +216,14 @@ async def get_user(user_id, nickname="") -> User:
                     return user_obj
 
             await db.execute("""
-            INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date, ai_token_record)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date, ai_token_record, user_portrait, portrait_update_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (user_id, default_user["nickname"], default_user["card"], default_user["sex"],
                   default_user["age"], default_user["city"], default_user["permission"],
-                  default_user["signed_days"], default_user["registration_date"], default_user["ai_token_record"]))
+                  default_user["signed_days"], default_user["registration_date"], default_user["ai_token_record"],
+                  default_user["user_portrait"], default_user["portrait_update_time"]))
             await db.commit()
-            logger.info(f"查询的用户 {user_id} 不存在，已创建默认用户。")
+            logger.info(f"用户 {user_id} 不在数据库中，已创建默认用户。")
             user_obj = User(
                 default_user['user_id'],
                 default_user['nickname'],
@@ -230,15 +234,16 @@ async def get_user(user_id, nickname="") -> User:
                 default_user['permission'],
                 default_user['signed_days'],
                 default_user['registration_date'],
-                default_user['ai_token_record']
+                default_user['ai_token_record'],
+                default_user['user_portrait'],
+                default_user['portrait_update_time']
             )
             # 存储到 Redis 缓存
             if redis_client:
                 redis_client.setex(cache_key, REDIS_CACHE_TTL, pickle.dumps(user_obj))
             return user_obj
     except Exception as e:
-        #traceback.print_exc()
-        #logger.error(f"获取用户 {user_id} 时出错：{e}")
+        logger.error(f"获取用户 {user_id} 时出错：{e}")
         async with aiosqlite.connect(dbpath) as db:
             async with db.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,)) as cursor:
                 if await cursor.fetchone():
