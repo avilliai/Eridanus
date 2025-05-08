@@ -431,8 +431,10 @@ def main(bot,config):
                         #print(f'times:{times}, target_data:{target_data[1]},target_group:{target_group}')
                         queue_check.remove(target_data)
                     else:
-                        times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
-
+                        try:
+                            times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
+                        except:
+                            pass #大朔老师啥时候有空了加个缓存
                     times += 1
                     queue_check.append((from_id, target_group, 'group_owner_record', times))
                     #await manage_group_status(from_id, target_group, 'group_owner_record', times)

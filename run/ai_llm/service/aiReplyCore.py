@@ -85,8 +85,14 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 config.ai_llm.config["llm"]["chara_file_name"]))
         user_info = await get_user(user_id)
         system_instruction = system_instruction.replace("{用户}", user_info.nickname).replace("{bot_name}",
-                                                                                              config.common_config.basic_config[
-                                                                                                  "bot"])
+                                                                                              config.common_config.basic_config["bot"])
+    """
+    用户设定读取
+    """
+    if config.ai_llm.config["llm"]["长期记忆"]:
+        temp_user=await get_user(user_id)
+        system_instruction+=f"\n以下为当前用户的用户画像：{temp_user.user_portrait}"
+
     try:
         if recursion_times == 0 and processed_message:
             last_trigger_time[user_id] = time.time()

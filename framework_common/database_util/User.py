@@ -26,7 +26,8 @@ async def initialize_db():
             signed_days TEXT,
             registration_date TEXT,
             ai_token_record INTEGER DEFAULT 0,
-            user_portrait TEXT DEFAULT ''
+            user_portrait TEXT DEFAULT '',
+            portrait_update_time TEXT DEFAULT ''
         )
         """)
         # 如果数据库已存在，确保字段存在（兼容旧表结构）
@@ -35,13 +36,15 @@ async def initialize_db():
             column_names = [col[1] for col in columns]
             if 'user_portrait' not in column_names:
                 await db.execute("ALTER TABLE users ADD COLUMN user_portrait TEXT DEFAULT '';")
+            if 'portrait_update_time' not in column_names:
+                await db.execute("ALTER TABLE users ADD COLUMN portrait_update_time TEXT DEFAULT '';")
         await db.commit()
 
 
 # User 类
 class User:
     def __init__(self, user_id, nickname, card, sex, age, city, permission, signed_days, registration_date,
-                 ai_token_record, user_portrait=""):
+                 ai_token_record, user_portrait="", portrait_update_time=""):
         self.user_id = user_id
         self.nickname = nickname
         self.card = card
@@ -53,12 +56,13 @@ class User:
         self.registration_date = registration_date
         self.ai_token_record = ai_token_record
         self.user_portrait = user_portrait
+        self.portrait_update_time = portrait_update_time
 
     def __repr__(self):
         return (f"User(user_id={self.user_id}, nickname={self.nickname}, card={self.card}, "
                 f"sex={self.sex}, age={self.age}, city={self.city}, permission={self.permission}, "
                 f"signed_days={self.signed_days}, registration_date={self.registration_date}, "
-                f"ai_token_record={self.ai_token_record}, user_portrait={self.user_portrait})")
+                f"ai_token_record={self.ai_token_record}, user_portrait={self.user_portrait},portrait_update_time={self.portrait_update_time})")
 
 
 
@@ -131,7 +135,7 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
 async def update_user(user_id, **kwargs):
     async with aiosqlite.connect(dbpath) as db:
         for key, value in kwargs.items():
-            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record', 'user_portrait']:
+            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record', 'user_portrait','portrait_update_time']:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
         await db.commit()
 
