@@ -158,6 +158,9 @@ def main(bot,config):
                 finally:
                     user_state[uid]["queue"].task_done()
                     #print(user_state[uid]["queue"])
+                    """
+                    总结用户特征，伪长期记忆人格
+                    """
                     if config.ai_llm.config["llm"]["长期记忆"]:
                         if user_info.portrait_update_time=="" or (datetime.datetime.now()-datetime.datetime.fromisoformat(user_info.portrait_update_time)).total_seconds()>config.ai_llm.config["llm"]["记忆更新间隔"]:
                             bot.logger.info(f"更新用户 {event.user_id} 设定")
