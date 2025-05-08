@@ -12,7 +12,6 @@ dbpath = "data/dataBase/user_management.db"
 # 初始化数据库，新增注册时间字段
 logger = get_logger()
 
-
 async def initialize_db():
     async with aiosqlite.connect(dbpath) as db:
         await db.execute("""
@@ -24,18 +23,25 @@ async def initialize_db():
             age INTEGER DEFAULT 0,
             city TEXT DEFAULT '通辽',
             permission INTEGER DEFAULT 0,
-            signed_days TEXT, -- 用JSON格式存储签到日期
+            signed_days TEXT,
             registration_date TEXT,
-            ai_token_record INTEGER DEFAULT 0
+            ai_token_record INTEGER DEFAULT 0,
+            user_portrait TEXT DEFAULT ''
         )
         """)
+        # 如果数据库已存在，确保字段存在（兼容旧表结构）
+        async with db.execute("PRAGMA table_info(users);") as cursor:
+            columns = await cursor.fetchall()
+            column_names = [col[1] for col in columns]
+            if 'user_portrait' not in column_names:
+                await db.execute("ALTER TABLE users ADD COLUMN user_portrait TEXT DEFAULT '';")
         await db.commit()
 
 
 # User 类
 class User:
     def __init__(self, user_id, nickname, card, sex, age, city, permission, signed_days, registration_date,
-                 ai_token_record):
+                 ai_token_record, user_portrait=""):
         self.user_id = user_id
         self.nickname = nickname
         self.card = card
@@ -46,12 +52,14 @@ class User:
         self.signed_days = signed_days
         self.registration_date = registration_date
         self.ai_token_record = ai_token_record
+        self.user_portrait = user_portrait
 
     def __repr__(self):
         return (f"User(user_id={self.user_id}, nickname={self.nickname}, card={self.card}, "
                 f"sex={self.sex}, age={self.age}, city={self.city}, permission={self.permission}, "
                 f"signed_days={self.signed_days}, registration_date={self.registration_date}, "
-                f"ai_token_record={self.ai_token_record})")
+                f"ai_token_record={self.ai_token_record}, user_portrait={self.user_portrait})")
+
 
 
 # 缓存管理
@@ -123,7 +131,7 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
 async def update_user(user_id, **kwargs):
     async with aiosqlite.connect(dbpath) as db:
         for key, value in kwargs.items():
-            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record']:
+            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record', 'user_portrait']:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
         await db.commit()
 
@@ -147,7 +155,8 @@ async def get_user(user_id, nickname="") -> User:
             "permission": 0,
             "signed_days": "[]",
             "registration_date": datetime.date.today().isoformat(),
-            'ai_token_record': 0
+            'ai_token_record': 0,
+            "user_portrait": ""
         }
         async with aiosqlite.connect(dbpath) as db:
             async with db.execute("PRAGMA table_info(users);") as cursor:
@@ -182,7 +191,8 @@ async def get_user(user_id, nickname="") -> User:
                         existing_user['permission'],
                         existing_user['signed_days'],
                         existing_user['registration_date'],
-                        existing_user['ai_token_record']
+                        existing_user['ai_token_record'],
+                        existing_user.get('user_portrait', "")
                     )
 
             await db.execute("""

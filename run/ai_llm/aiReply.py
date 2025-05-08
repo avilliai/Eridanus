@@ -3,7 +3,8 @@ import asyncio
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from framework_common.database_util.Group import clear_group_messages
 from run.ai_llm.service.aiReplyCore import aiReplyCore, end_chat, judge_trigger, send_text ,count_tokens_approximate
-from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
+from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, \
+    get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara, get_user_history
 
 from framework_common.database_util.User import get_user,update_user
 from framework_common.database_util.Group import get_group_messages
@@ -47,6 +48,10 @@ def main(bot,config):
 
     global user_state
     user_state = {}
+    @bot.on(GroupMessageEvent)
+    async def aiReply(event: GroupMessageEvent):
+        if event.user_id==1840094972:
+            history = await get_user_history(event.user_id)
 
 
     @bot.on(GroupMessageEvent)
