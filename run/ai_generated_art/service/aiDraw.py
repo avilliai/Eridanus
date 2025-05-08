@@ -252,8 +252,8 @@ async def n4(prompt, path, groupid, config, args):
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if config.common_config.basic_config["proxy"]["http_proxy"]:
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
     round_nai += 1
@@ -373,8 +373,8 @@ async def n3(prompt, path, groupid, config, args):
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if config.common_config.basic_config["proxy"]["http_proxy"]:
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
     round_nai += 1
@@ -774,8 +774,8 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if config.common_config.basic_config["proxy"]["http_proxy"]:
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
@@ -907,8 +907,8 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if config.api["proxy"]["http_proxy"]:
-        proxies = {"http://": config.api["proxy"]["http_proxy"], "https://": config.api["proxy"]["http_proxy"]}
+    if config.common_config.basic_config["proxy"]["http_proxy"]:
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
