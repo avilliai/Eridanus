@@ -429,6 +429,8 @@ async def tts_and_send(bot, event, config, reply_message):
             await bot.send(event, Record(file=path))
         except Exception as e:
             bot.logger.error(f"Error occurred when calling tts: {e}")
+            if not config.ai_llm.config["llm"]["语音回复附带文本"]:
+                await bot.send(event, reply_message.strip(), config.ai_llm.config["llm"]["Quote"])
 
     asyncio.create_task(_tts_and_send())
 
