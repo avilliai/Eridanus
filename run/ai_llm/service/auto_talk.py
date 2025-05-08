@@ -54,11 +54,18 @@ def calculate_time_weight(index: int, total: int) -> float:
 async def check_message_similarity(
     input_str: str,
     message_list: List[str],
-    similarity_threshold: float = 0.3,
-    frequency_threshold: float = 0.15,
+    similarity_threshold= 0.3,
+    frequency_threshold= 0.15,
     min_list_size: int = 10,
     entropy_threshold: float = 2.0
 ) -> bool:
+    def convert_number(num):
+        if isinstance(num, int):
+            return num / 100.0
+        elif isinstance(num, float):
+            return num
+    similarity_threshold = convert_number(similarity_threshold)
+    frequency_threshold = convert_number(frequency_threshold)
     try:
         #print(message_list)
         # 检查消息列表长度
