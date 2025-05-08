@@ -72,7 +72,7 @@ def main(bot,config):
             await handle_message(event)
         
         elif (config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"] > 0): # 仁济模式第一层(随机)
-            if random.random() < config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"]:
+            if random.randint(1, 100) < config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"]:
                 bot.logger.info(f"接受消息{event.processed_message}")
 
                 ## 权限判断
