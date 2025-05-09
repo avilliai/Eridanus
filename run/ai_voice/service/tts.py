@@ -8,6 +8,7 @@ import httpx
 import requests
 
 from developTools.utils.logger import get_logger
+from framework_common.utils.ai_translate import Translator
 from run.ai_voice.service.blue_archive_tts import get_huggingface_blue_archive_speakers, huggingface_blue_archive_tts
 from run.ai_voice.service.modelscopeTTS import modelscope_tts, get_modelscope_tts_speakers
 from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speakers
@@ -25,6 +26,7 @@ logger=get_logger()
 class TTS():
     def __init__(self):
         self.config = YAMLManager.get_instance()
+        self.translator=Translator()
 
     async def tts(self,text, speaker=None, config=None,mood=None,bot=None,mode=None):
         pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
@@ -46,7 +48,10 @@ class TTS():
         if mode is None:
             mode = config.ai_voice.config["tts"]["tts_engine"]
         if config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive":
-            text=await translate(text)  #默认就是转日文
+            if config.ai_voice.config["tts"]["ai_translator"]:
+                text=await self.translator.translate(text)
+            else:
+                text=await translate(text)  #默认就是转日文
             print(f"翻译后的文本：{text}")
 
 
