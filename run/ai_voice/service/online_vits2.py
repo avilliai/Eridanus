@@ -33,8 +33,6 @@ def install_and_import(package_name):
             return None
     return importlib.import_module(package_name)
 
-# 使用示例
-websockets = install_and_import('websockets')
 
 
 from run.ai_voice.service.online_vits import random_session_hash

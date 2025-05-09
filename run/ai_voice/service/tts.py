@@ -8,6 +8,7 @@ import httpx
 import requests
 
 from developTools.utils.logger import get_logger
+from run.ai_voice.service.blue_archive_tts import get_huggingface_blue_archive_speakers
 from run.ai_voice.service.modelscopeTTS import modelscope_tts, get_modelscope_tts_speakers
 from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from run.ai_voice.service.online_vits import huggingface_online_vits
@@ -99,7 +100,8 @@ class TTS():
             get_huggingface_online_vits2_speakers,
             error_msg="Error in get_huggingface_online_vits2_speakers"
         )
-        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers]}
+        blue_archive_speakers=await fetch_speakers(get_huggingface_blue_archive_speakers,error_msg="Error in get_huggingface_blue_archive_speakers")
+        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers]}
 
 
 
