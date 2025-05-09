@@ -88,16 +88,16 @@ class TTS():
             except Exception as e:
                 bot.logger.error(f"{error_msg}: {e}")
                 return None
-        nc_speakers = await fetch_speakers(napcat_tts_speakers, bot, "Error in napcat_tts_speakers")
+        nc_speakers = await fetch_speakers(napcat_tts_speakers, bot, error_msg="Error in napcat_tts_speakers")
         modelscope_speakers = get_modelscope_tts_speakers()
         vits_speakers = await fetch_speakers(
             get_vits_speakers,
             self.config.ai_voice.config["tts"]["vits"]["base_url"], None,
-            "Error in get_vits_speakers"
+            error_msg="Error in get_vits_speakers"
         )
         online_vits2_speakers = await fetch_speakers(
             get_huggingface_online_vits2_speakers,
-            "Error in get_huggingface_online_vits2_speakers"
+            error_msg="Error in get_huggingface_online_vits2_speakers"
         )
         return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers]}
 
