@@ -63,7 +63,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
         return
 
 async def call_all_speakers(bot,event,config):
-    return Tts.get_speakers(bot=bot)
+    return await Tts.get_speakers(bot=bot)
 
 def main(bot: ExtendBot,config: YAMLManager):
     @bot.on(GroupMessageEvent)

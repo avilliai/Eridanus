@@ -1,18 +1,67 @@
 import json
+import os
+import pickle
+import platform
+import subprocess
+import zipfile
+
 import aiosqlite
 import datetime
 import asyncio
 import traceback
+
+import redis
+
 from developTools.utils.logger import get_logger
 from functools import wraps
 import time
 
 dbpath = "data/dataBase/user_management.db"
+REDIS_URL = "redis://localhost/1"  # 使用 db1，与默认 db0 隔离
+REDIS_CACHE_TTL = 60  # 秒
+REDIS_EXECUTABLE = "redis-server.exe"
+REDIS_ZIP_PATH = os.path.join("data", "Redis-x64-5.0.14.1.zip")
+REDIS_FOLDER = os.path.join("data", "redis_extracted")
+
+logger = get_logger()
+redis_client = None
+
+
+def start_redis_background():
+    """在后台启动 Redis（仅支持 Windows）"""
+    redis_path = os.path.join(REDIS_FOLDER, REDIS_EXECUTABLE)
+    if not os.path.exists(redis_path):
+        logger.error(f"❌ 找不到 redis-server.exe 于 {redis_path}")
+        return
+
+    logger.info("🚀 启动 Redis 服务中...")
+    subprocess.Popen([redis_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def init_redis():
+    global redis_client
+    if redis_client is not None:
+        return
+    try:
+        redis_client = redis.StrictRedis.from_url(REDIS_URL)
+        redis_client.ping()
+        logger.info("✅ Redis 连接成功（数据库 db1）")
+    except redis.exceptions.ConnectionError:
+        logger.warning("⚠️ Redis 未运行，尝试自动启动 Redis...")
+        if platform.system() == "Windows":
+            start_redis_background()
+            time.sleep(2)
+            try:
+                redis_client = redis.StrictRedis.from_url(REDIS_URL)
+                redis_client.ping()
+                logger.info("✅ Redis 已自动启动并连接成功（数据库 db1）")
+            except Exception as e:
+                logger.error(f"❌ Redis 启动失败：{e}")
+                redis_client = None
+        else:
+            logger.error("❌ 非 Windows 系统，请手动安装并启动 Redis")
+            redis_client = None
 
 # 初始化数据库，新增注册时间字段
-logger = get_logger()
-
-
 async def initialize_db():
     async with aiosqlite.connect(dbpath) as db:
         await db.execute("""
@@ -24,18 +73,27 @@ async def initialize_db():
             age INTEGER DEFAULT 0,
             city TEXT DEFAULT '通辽',
             permission INTEGER DEFAULT 0,
-            signed_days TEXT, -- 用JSON格式存储签到日期
+            signed_days TEXT,
             registration_date TEXT,
-            ai_token_record INTEGER DEFAULT 0
+            ai_token_record INTEGER DEFAULT 0,
+            user_portrait TEXT DEFAULT '',
+            portrait_update_time TEXT DEFAULT ''
         )
         """)
+        async with db.execute("PRAGMA table_info(users);") as cursor:
+            columns = await cursor.fetchall()
+            column_names = [col[1] for col in columns]
+            if 'user_portrait' not in column_names:
+                await db.execute("ALTER TABLE users ADD COLUMN user_portrait TEXT DEFAULT '';")
+            if 'portrait_update_time' not in column_names:
+                await db.execute("ALTER TABLE users ADD COLUMN portrait_update_time TEXT DEFAULT '';")
         await db.commit()
 
 
 # User 类
 class User:
     def __init__(self, user_id, nickname, card, sex, age, city, permission, signed_days, registration_date,
-                 ai_token_record):
+                 ai_token_record, user_portrait="", portrait_update_time=""):
         self.user_id = user_id
         self.nickname = nickname
         self.card = card
@@ -46,65 +104,17 @@ class User:
         self.signed_days = signed_days
         self.registration_date = registration_date
         self.ai_token_record = ai_token_record
+        self.user_portrait = user_portrait
+        self.portrait_update_time = portrait_update_time
 
     def __repr__(self):
         return (f"User(user_id={self.user_id}, nickname={self.nickname}, card={self.card}, "
                 f"sex={self.sex}, age={self.age}, city={self.city}, permission={self.permission}, "
                 f"signed_days={self.signed_days}, registration_date={self.registration_date}, "
-                f"ai_token_record={self.ai_token_record})")
+                f"ai_token_record={self.ai_token_record}, user_portrait={self.user_portrait},portrait_update_time={self.portrait_update_time})")
 
 
-# 缓存管理
-class CacheManager:
-    def __init__(self, ttl=300):  # 默认缓存 5 分钟
-        self.cache = {}
-        self.ttl = ttl
 
-    def get(self, key):
-        if key in self.cache:
-            data, timestamp = self.cache[key]
-            if time.time() - timestamp < self.ttl:
-                return data
-            else:
-                del self.cache[key]
-        return None
-
-    def set(self, key, value):
-        self.cache[key] = (value, time.time())
-
-    def clear(self, key):
-        if key in self.cache:
-            del self.cache[key]
-
-    def clear_all(self):
-        self.cache.clear()
-
-
-# 全局缓存实例
-cache_manager = CacheManager(ttl=300)
-
-
-# 缓存装饰器
-def async_cache():
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}:{args}"
-            cached_result = cache_manager.get(cache_key)
-            if cached_result is not None:
-                logger.debug(f"缓存命中: {cache_key}")
-                return cached_result
-            result = await func(*args, **kwargs)
-            cache_manager.set(cache_key, result)
-            logger.debug(f"缓存设置: {cache_key}")
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-# 添加用户时记录注册时间
 async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permission=0, ai_token_record=0):
     async with aiosqlite.connect(dbpath) as db:
         async with db.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,)) as cursor:
@@ -116,27 +126,39 @@ async def add_user(user_id, nickname, card, sex="0", age=0, city="通辽", permi
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (user_id, nickname, card, sex, age, city, permission, "[]", registration_date, ai_token_record))
         await db.commit()
+        # 清除缓存
+        if redis_client:
+            redis_client.delete(f"user:{user_id}")
         return f"✅ 用户 {user_id} 注册成功。"
-
 
 # 更新用户信息
 async def update_user(user_id, **kwargs):
     async with aiosqlite.connect(dbpath) as db:
         for key, value in kwargs.items():
-            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record']:
+            if key in ["nickname", "card", "sex", "age", "city", "permission", 'ai_token_record', 'user_portrait','portrait_update_time']:
                 await db.execute(f"UPDATE users SET {key} = ? WHERE user_id = ?", (value, user_id))
+            else:
+                logger.warning(f"❌ 未知的用户字段 {key}，请检查输入是否正确。")
         await db.commit()
 
-    cache_key = f"get_user:({user_id},)"
-    cache_manager.clear(cache_key)
+    # 清除缓存
+    if redis_client:
+        redis_client.delete(f"user:{user_id}")
     logger.info(f"✅ 用户 {user_id} 的信息已更新：{kwargs}")
     return f"✅ 用户 {user_id} 的信息已更新：{kwargs}"
 
 
-# 获取用户信息（添加缓存）
-@async_cache()
 async def get_user(user_id, nickname="") -> User:
     try:
+        init_redis()
+        cache_key = f"user:{user_id}"
+        # 检查 Redis 缓存
+        if redis_client:
+            cached_user = redis_client.get(cache_key)
+            if cached_user:
+                #logger.info(f"缓存命中用户 {user_id}")
+                return pickle.loads(cached_user)
+
         default_user = {
             "user_id": user_id,
             "nickname": f"{nickname}",
@@ -147,7 +169,9 @@ async def get_user(user_id, nickname="") -> User:
             "permission": 0,
             "signed_days": "[]",
             "registration_date": datetime.date.today().isoformat(),
-            'ai_token_record': 0
+            'ai_token_record': 0,
+            "user_portrait": "",
+            "portrait_update_time": ""
         }
         async with aiosqlite.connect(dbpath) as db:
             async with db.execute("PRAGMA table_info(users);") as cursor:
@@ -155,7 +179,7 @@ async def get_user(user_id, nickname="") -> User:
                 column_names = [col[1] for col in columns]
                 for key in default_user.keys():
                     if key not in column_names:
-                        await db.execute("ALTER TABLE users ADD COLUMN ai_token_record INTEGER DEFAULT 0;")
+                        await db.execute(f"ALTER TABLE users ADD COLUMN {key} TEXT DEFAULT '';")
                         await db.commit()
                         logger.info(f"列 {key} 已成功添加至 'users' 表中。")
 
@@ -172,7 +196,7 @@ async def get_user(user_id, nickname="") -> User:
                         update_values = [existing_user[key] for key in missing_keys] + [user_id]
                         await db.execute(update_query, update_values)
                         await db.commit()
-                    return User(
+                    user_obj = User(
                         existing_user['user_id'],
                         existing_user['nickname'],
                         existing_user['card'],
@@ -182,18 +206,25 @@ async def get_user(user_id, nickname="") -> User:
                         existing_user['permission'],
                         existing_user['signed_days'],
                         existing_user['registration_date'],
-                        existing_user['ai_token_record']
+                        existing_user['ai_token_record'],
+                        existing_user.get('user_portrait', ""),
+                        existing_user.get('portrait_update_time', "")  # 修复：获取数据库中的 portrait_update_time
                     )
+                    # 存储到 Redis 缓存
+                    if redis_client:
+                        redis_client.setex(cache_key, REDIS_CACHE_TTL, pickle.dumps(user_obj))
+                    return user_obj
 
             await db.execute("""
-            INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date, ai_token_record)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (user_id, nickname, card, sex, age, city, permission, signed_days, registration_date, ai_token_record, user_portrait, portrait_update_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (user_id, default_user["nickname"], default_user["card"], default_user["sex"],
                   default_user["age"], default_user["city"], default_user["permission"],
-                  default_user["signed_days"], default_user["registration_date"], default_user["ai_token_record"]))
+                  default_user["signed_days"], default_user["registration_date"], default_user["ai_token_record"],
+                  default_user["user_portrait"], default_user["portrait_update_time"]))
             await db.commit()
-            logger.info(f"查询的用户 {user_id} 不存在，已创建默认用户。")
-            return User(
+            logger.info(f"用户 {user_id} 不在数据库中，已创建默认用户。")
+            user_obj = User(
                 default_user['user_id'],
                 default_user['nickname'],
                 default_user['card'],
@@ -203,14 +234,24 @@ async def get_user(user_id, nickname="") -> User:
                 default_user['permission'],
                 default_user['signed_days'],
                 default_user['registration_date'],
-                default_user['ai_token_record']
+                default_user['ai_token_record'],
+                default_user['user_portrait'],
+                default_user['portrait_update_time']
             )
-    except:
+            # 存储到 Redis 缓存
+            if redis_client:
+                redis_client.setex(cache_key, REDIS_CACHE_TTL, pickle.dumps(user_obj))
+            return user_obj
+    except Exception as e:
+        logger.error(f"获取用户 {user_id} 时出错：{e}")
         async with aiosqlite.connect(dbpath) as db:
             async with db.execute("SELECT 1 FROM users WHERE user_id = ?", (user_id,)) as cursor:
                 if await cursor.fetchone():
                     await db.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
                     await db.commit()
+        # 清除缓存
+        if redis_client:
+            redis_client.delete(f"user:{user_id}")
         return await get_user(user_id)
 
 
@@ -221,8 +262,7 @@ async def get_signed_days(user_id):
             result = await cursor.fetchone()
             return eval(result[0]) if result else []
 
-
-# 记录签到
+# 记录签到并更新缓存
 async def record_sign_in(user_id, nickname="DefaultUser", card="00000"):
     async with aiosqlite.connect(dbpath) as db:
         async with db.execute("SELECT signed_days FROM users WHERE user_id = ?", (user_id,)) as cursor:
@@ -246,12 +286,11 @@ async def record_sign_in(user_id, nickname="DefaultUser", card="00000"):
             await db.execute("UPDATE users SET signed_days = ? WHERE user_id = ?", (json.dumps(signed_days), user_id))
             await db.commit()
             # 清除缓存
-            cache_key = f"get_user:({user_id},)"
-            cache_manager.clear(cache_key)
+            if redis_client:
+                redis_client.delete(f"user:{user_id}")
             return f"用户 {user_id} 签到成功，日期：{today}"
         else:
             return f"用户 {user_id} 今天已经签到过了！"
-
 
 # 查找权限高于指定值的用户
 async def get_users_with_permission_above(permission_value):

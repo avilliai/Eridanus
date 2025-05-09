@@ -118,7 +118,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         dynamic_id = int(re.search(r'[^/]+(?!.*/)', url)[0])
         #logger.info(dynamic_id)
         dy = dynamic.Dynamic(dynamic_id, credential)
-        is_opus = dy.is_opus()#判断动态是否为图文
+        is_opus =await dy.is_opus()#判断动态是否为图文
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
         #is_opus=True
         try:

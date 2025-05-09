@@ -21,8 +21,40 @@ config = YAMLManager("run") #这玩意用来动态加载和修改配置文件
 #或者使用ws适配器
 bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
 
-bot2 = ExtendBot("ws://127.0.0.1:5008", config,blocked_loggers=["DEBUG", "INFO_MSG","warning"])
 
+bot1.logger.info_func("正在初始化....")
+if config.common_config.basic_config["webui"]["enable"]:
+    bot2 = ExtendBot("ws://127.0.0.1:5008", config, blocked_loggers=["DEBUG", "INFO_MSG", "warning"])
+    bot1.logger.warning("🔧 WebUI 服务启动中，请在完全启动后访问 http://localhost:5007")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+
+
+    def run_webui():
+        server_dir = os.path.join(os.path.dirname(__file__), 'web')
+        python_exec = sys.executable
+        server_script = os.path.join(server_dir, 'server.py')
+
+
+
+        process = subprocess.Popen(
+            [python_exec, server_script],
+            cwd=server_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding='utf-8',
+            errors='replace',
+            text=True
+        )
+        def reader():
+            for line in process.stdout:
+                print("[server]", line.strip())
+
+        threading.Thread(target=reader, daemon=True).start()
+
+
+    run_webui()
 PLUGIN_DIR = "run"
 def find_plugins(plugin_dir=PLUGIN_DIR):
     plugin_modules = []
@@ -113,26 +145,9 @@ def webui_bot():
 
     bot2_thread = threading.Thread(target=run_bot2, daemon=True)
     bot2_thread.start()
-def run_webui():
-    webui_bot()
-    bot1.logger.info("🔧 正在启动 WebUI 服务...")
-    server_dir = os.path.join(os.path.dirname(__file__), 'web')
-    python_exec = sys.executable
-    server_script = os.path.join(server_dir, 'server.py')
-    process = subprocess.Popen(
-        [python_exec, server_script],
-        cwd=server_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding='utf-8',
-        errors='replace',
-    )
-    def reader():
-        for line in process.stdout:
-            print("[server]", line.strip())
 
-    threading.Thread(target=reader, daemon=True).start()
-run_webui()
+if config.common_config.basic_config["webui"]["enable"]:
+    webui_bot()
 load_plugins(bot1,config)
 bot1.run()
 

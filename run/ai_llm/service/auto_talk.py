@@ -54,20 +54,27 @@ def calculate_time_weight(index: int, total: int) -> float:
 async def check_message_similarity(
     input_str: str,
     message_list: List[str],
-    similarity_threshold: float = 0.3,
-    frequency_threshold: float = 0.15,
+    similarity_threshold= 0.3,
+    frequency_threshold= 0.15,
     min_list_size: int = 10,
     entropy_threshold: float = 2.0
 ) -> bool:
+    def convert_number(num):
+        if isinstance(num, int):
+            return num / 100.0
+        elif isinstance(num, float):
+            return num
+    similarity_threshold = convert_number(similarity_threshold)
+    frequency_threshold = convert_number(frequency_threshold)
     try:
         #print(message_list)
         # 检查消息列表长度
         if len(message_list) < min_list_size:
-            print(f"Message list size {len(message_list)} < {min_list_size}")
+            #print(f"Message list size {len(message_list)} < {min_list_size}")
             return False
 
         if not message_list:
-            print("No valid messages to compare")
+            #print("No valid messages to compare")
             return False
 
         # 分词输入字符串
@@ -127,9 +134,9 @@ async def check_message_similarity(
         high_similarity_count = np.sum(np.array(adjusted_similarities) >= similarity_threshold)
         similarity_frequency = high_similarity_count / len(message_list)
 
-        print(
-            f"Similarity frequency: {similarity_frequency:.3f}, Threshold: {frequency_threshold}"
-        )
+        #print(
+            #f"Similarity frequency: {similarity_frequency:.3f}, Threshold: {frequency_threshold}"
+        #)
 
         del tfidf_matrix, similarities, adjusted_similarities
         gc.collect()
@@ -137,5 +144,5 @@ async def check_message_similarity(
         return similarity_frequency >= frequency_threshold
 
     except Exception as e:
-        print(f"Error in check_message_similarity: {e}")
+        #print(f"Error in check_message_similarity: {e}")
         return False

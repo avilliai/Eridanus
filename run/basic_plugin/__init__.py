@@ -1,9 +1,8 @@
 plugin_description = "基础功能集合"
 dynamic_imports = {
     "run.basic_plugin.basic_plugin": [
-        "call_weather_query", "call_setu",
-        "call_tts", "call_tarot", "call_pick_music",
-        "call_fortune", "call_all_speakers","call_quit_chat"
+        "call_weather_query", "call_setu","call_tarot", "call_pick_music",
+        "call_fortune", "call_quit_chat"
     ],
     "run.basic_plugin.image_search":
         ["call_image_search"],
@@ -65,31 +64,6 @@ function_declarations=[
         }
     },
     {
-        "name": "call_tts",
-        "description": "根据文本和语音合成角色，合成语音并播放。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "text": {
-                    "type": "string",
-                    "description": "要合成的文本。"
-                },
-                "speaker": {
-                    "type": "string",
-                    "description": "使用的语音合成角色。默认角色为None"
-                },
-                "mood": {
-                    "type": "string",
-                    "enum": ["生气_angry", "开心_happy", "中立_neutral", "难过_sad"],
-                    "description": "语音的情绪。根据具体句子判断。"
-                }
-            },
-            "required": [
-                "text"
-            ]
-        }
-    },
-    {
         "name": "call_pick_music",
         "description": "触发音乐选取功能。根据歌曲名或歌手名搜索点歌。",
         "parameters": {
@@ -112,10 +86,6 @@ function_declarations=[
     {
         "name": "call_fortune",
         "description": "运势占卜，返回图片。"
-    },
-    {
-        "name": "call_all_speakers",
-        "description": "获取可用的语音合成角色列表。"
     },
 
     {

@@ -1,9 +1,13 @@
 import asyncio
+import datetime
+import traceback
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 from framework_common.database_util.Group import clear_group_messages
 from run.ai_llm.service.aiReplyCore import aiReplyCore, end_chat, judge_trigger, send_text ,count_tokens_approximate
-from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara
+from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, \
+    get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara, get_user_history, \
+    delete_latest2_history
 
 from framework_common.database_util.User import get_user,update_user
 from framework_common.database_util.Group import get_group_messages
@@ -49,6 +53,7 @@ def main(bot,config):
     user_state = {}
 
 
+
     @bot.on(GroupMessageEvent)
     async def aiReply(event: GroupMessageEvent):
         await check_commands(event)
@@ -72,7 +77,7 @@ def main(bot,config):
             await handle_message(event)
         
         elif (config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"] > 0): # 仁济模式第一层(随机)
-            if random.random() < config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"]:
+            if random.randint(1, 100) < config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"]:
                 bot.logger.info(f"接受消息{event.processed_message}")
 
                 ## 权限判断
@@ -152,11 +157,28 @@ def main(bot,config):
                     bot.logger.exception(f"用户 {uid} 处理出错: {e}")
                 finally:
                     user_state[uid]["queue"].task_done()
-                    print(user_state[uid]["queue"])
+                    #print(user_state[uid]["queue"])
+                    """
+                    总结用户特征，伪长期记忆人格
+                    """
+                    if config.ai_llm.config["llm"]["长期记忆"]:
+                        if user_info.portrait_update_time=="" or (datetime.datetime.now()-datetime.datetime.fromisoformat(user_info.portrait_update_time)).total_seconds()>config.ai_llm.config["llm"]["记忆更新间隔"]:
+                            bot.logger.info(f"更新用户 {event.user_id} 设定")
+                            reply_message = await aiReplyCore(
+                                [{'text':'system: 对以上聊天内容做出总结，描绘出当前对话的用户画像，总结出当前用户的人物性格特征以及偏好。不要回复，直接给出结果'}],
+                                current_event.user_id,
+                                config,
+                                bot=bot,
+                                event=current_event,
+                            )
+                            await update_user(event.user_id,user_portrait=reply_message.strip())
+                            await update_user(event.user_id, portrait_update_time=datetime.datetime.now().isoformat())
+                            await delete_latest2_history(event.user_id)
                     if not user_state[uid]["queue"].empty():
                         asyncio.create_task(process_user_queue(uid))
             finally:
                 user_state[uid]["running"] = False
+
 
         asyncio.create_task(process_user_queue(uid))
 
