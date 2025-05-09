@@ -29,13 +29,15 @@ async def automate_browser(image_path):
         browser = await p.chromium.launch(headless=True)  # 改为 False 以便观察
         context = await browser.new_context()
         page = await context.new_page()
-
+        logger.info("Browser launched")
         await page.goto("https://soutubot.moe/")
+        await page.wait_for_load_state("networkidle", timeout=60000)
+        logger.info("Page loaded")
 
         file_input = page.locator('input[type="file"]')
         await file_input.wait_for(state="visible", timeout=90000)
         await file_input.set_input_files(image_path)
-
+        logger.info("File input")
         await page.wait_for_url("https://soutubot.moe/results/*", timeout=90000)
         await page.wait_for_load_state("networkidle", timeout=90000)
 
