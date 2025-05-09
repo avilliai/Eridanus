@@ -8,7 +8,7 @@ import httpx
 import requests
 
 from developTools.utils.logger import get_logger
-from run.ai_voice.service.blue_archive_tts import get_huggingface_blue_archive_speakers
+from run.ai_voice.service.blue_archive_tts import get_huggingface_blue_archive_speakers, huggingface_blue_archive_tts
 from run.ai_voice.service.modelscopeTTS import modelscope_tts, get_modelscope_tts_speakers
 from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from run.ai_voice.service.online_vits import huggingface_online_vits
@@ -43,11 +43,12 @@ class TTS():
         """
         语言类型转换
         """
-        if config.ai_voice.config["tts"]["lang_type"]=="ja":
-            text=await translate(text)  #默认就是转日文
-            print(f"翻译后的文本：{text}")
         if mode is None:
             mode = config.ai_voice.config["tts"]["tts_engine"]
+        if config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive":
+            text=await translate(text)  #默认就是转日文
+            print(f"翻译后的文本：{text}")
+
 
         logger.info_func(f"语音合成任务：文本：{text}，发音人：{speaker}，模式：{mode}")
         if mode=="napcat_tts":
@@ -80,6 +81,10 @@ class TTS():
             else:
                 lang="简体中文"
             return await huggingface_online_vits2(text,speaker,lang)
+        elif mode=="blue_archive":
+            if speaker is None:
+                speaker=config.ai_voice.config["tts"]["online_vits2"]["speaker"]
+            return await huggingface_blue_archive_tts(text, speaker)
         else:
             pass
     async def get_speakers(self,bot=None):
