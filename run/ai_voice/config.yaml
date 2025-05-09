@@ -2,7 +2,7 @@ tts:
   tts_engine: blue_archive     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
   length_limit: 100 #语音合成最大长度，超过此长度将自动拒绝合成
   lang_type: "zh"  #自动转换语言类型,ja或zh。vits系列建议全部ja
-  ai_translator: false  #是否使用AI翻译，默认true
+  ai_translator: false  #是否使用AI翻译，默认true，此项目前无效
   blue_archive:
     speaker: "JP_Mari"   #前往https://huggingface.co/spaces/ORI-Muchim/BlueArchiveTTS查看支持的speakers
   online_vits2:
