@@ -24,7 +24,7 @@ from framework_common.framework_util.yamlLoader import YAMLManager
 logger=get_logger()
 class TTS():
     def __init__(self):
-        self.config = YAMLManager.get_instance().ai_voice.config
+        self.config = YAMLManager.get_instance()
 
     async def tts(self,text, speaker=None, config=None,mood=None,bot=None,mode=None):
         pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
