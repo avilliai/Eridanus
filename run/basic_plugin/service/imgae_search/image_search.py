@@ -32,10 +32,8 @@ async def automate_browser(image_path):
 
         await page.goto("https://soutubot.moe/")
 
-
-        #await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=90000)
-
         file_input = page.locator('input[type="file"]')
+        await file_input.wait_for(state="visible", timeout=90000)
         await file_input.set_input_files(image_path)
 
         await page.wait_for_url("https://soutubot.moe/results/*", timeout=90000)
