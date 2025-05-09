@@ -83,7 +83,7 @@ class TTS():
             return await huggingface_online_vits2(text,speaker,lang)
         elif mode=="blue_archive":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["online_vits2"]["speaker"]
+                speaker=config.ai_voice.config["tts"]["blue_archive"]["speaker"]
             return await huggingface_blue_archive_tts(text, speaker)
         else:
             pass
