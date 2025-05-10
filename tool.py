@@ -6,7 +6,7 @@ from time import sleep
 import os
 import sys
 
-from framework_common.utils.install_and_import import install_and_import
+
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from developTools.utils.logger import get_logger
 
-
+from framework_common.utils.install_and_import import install_and_import
 """
 获取环境
 """
