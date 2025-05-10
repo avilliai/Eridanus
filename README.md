@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/galaxy_icon_125459.png" width="200" height="200" alt="Shiro">
+  <img src=".github/assets/galaxy_icon_125459.png" width="100" height="100" alt="Shiro">
 </p>
 
 <div align="center">
