@@ -7,6 +7,7 @@ from framework_common.utils.random_str import random_str
 
 texture_path = "run/resource_collector/service/zLibrary/img.png"
 def create_book_image(data):
+    #print(data)
     # 加载纹理图片并将其拉伸到画布大小
     texture_image = Image.open(texture_path)
 
@@ -41,7 +42,7 @@ def create_book_image(data):
     # 准备所有文本
     title_lines = split_text_by_line(data['title'], max_chars_per_line)
     author_lines = split_text_by_line(data['author'], max_chars_per_line)
-    year_lines = split_text_by_line(data['year'], max_chars_per_line)
+    year_lines = split_text_by_line(str(data['year']), max_chars_per_line)
     description = data['description'].replace('<p>', '').replace('</p>', '').replace('<br>', '')
     description_lines = split_text_by_line(description, max_chars_per_line)
 
