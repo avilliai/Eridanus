@@ -31,7 +31,7 @@ async def automate_browser(image_path):
         page = await context.new_page()
         logger.info("Browser launched")
         await page.goto("https://soutubot.moe/")
-        await page.wait_for_load_state("networkidle", timeout=60000)
+        await page.wait_for_load_state("load", timeout=60000)
         logger.info("Page loaded")
         file_input = page.locator('input[type="file"]')
         #await file_input.wait_for(state="visible", timeout=90000)
