@@ -5,7 +5,6 @@ dynamic_imports = {
         "call_tts", "call_all_speakers"]
 }
 function_declarations=[
-
     {
         "name": "call_tts",
         "description": "根据文本和语音合成角色，合成语音并播放。",

@@ -1,18 +1,42 @@
+<p align="center">
+  <img src=".github/assets/galaxy_icon_125459.png" width="100" height="100" alt="Shiro">
+</p>
+
+<div align="center">
 
 # Eridanus
-onebot v11标准的多功能bot，大部分功能支持llm函数调用，插件化设计，具有一定拓展性。
 
-学业繁忙，预计4月底5月初恢复原先更新频率
+_🎊 基于 [OneBot](https://github.com/howmanybots/onebot/blob/master/README.md) 协议的多功能bot兼python开发框架 🎊_<br>
+
+</div>
+
+<p align="center">
+    <a href="https://github.com/avilliai/Eridanus/issues"><img src="https://img.shields.io/github/issues/avilliai/Eridanus?style=flat-square" alt="issues" /></a>
+    <a href="https://github.com/avilliai/Eridanus/blob/master/LICENSE"><img src="https://img.shields.io/github/license/avilliai/Eridanus?style=flat-square" alt="license"></a>
+    <a href=""><img src="https://img.shields.io/badge/QQ群-913122269-brightgreen.svg?style=flat-square" alt="qq-group"></a>
+    <a href="https://github.com/howmanybots/onebot"><img src="https://img.shields.io/badge/OneBot-v11-blue?style=flat-square&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAIVBMVEUAAAAAAAADAwMHBwceHh4UFBQNDQ0ZGRkoKCgvLy8iIiLWSdWYAAAAAXRSTlMAQObYZgAAAQVJREFUSMftlM0RgjAQhV+0ATYK6i1Xb+iMd0qgBEqgBEuwBOxU2QDKsjvojQPvkJ/ZL5sXkgWrFirK4MibYUdE3OR2nEpuKz1/q8CdNxNQgthZCXYVLjyoDQftaKuniHHWRnPh2GCUetR2/9HsMAXyUT4/3UHwtQT2AggSCGKeSAsFnxBIOuAggdh3AKTL7pDuCyABcMb0aQP7aM4AnAbc/wHwA5D2wDHTTe56gIIOUA/4YYV2e1sg713PXdZJAuncdZMAGkAukU9OAn40O849+0ornPwT93rphWF0mgAbauUrEOthlX8Zu7P5A6kZyKCJy75hhw1Mgr9RAUvX7A3csGqZegEdniCx30c3agAAAABJRU5ErkJggg=="></a>
+</p>
+
+<p align="center">
+  <a href="https://eridanus.netlify.app">文档</a>
+  ·
+  <a href="https://github.com/avilliai/Eridanus/releases">下载</a>
+  ·
+  <a href="https://eridanus.netlify.app/getting-started/">快速开始</a>
+  ·
+  <a href="">参与贡献</a>
+</p>
+
+<div align="center">
+
+![Alt](https://repobeats.axiom.co/api/embed/2e669d8cf896cdd4259d7810df2f07fbfa5fe0df.svg "Repobeats analytics image")
+
+
+</div>
 
 # 部署
 [文档](https://eridanus.netlify.app)    
-[文档](https://eridanus-doc.netlify.app/)
-
-
-## 快捷部署
-[linux脚本](https://gitee.com/laixi_lingdun/eridanus_deploy)
-
-[windows整合包](https://github.com/avilliai/Eridanus/releases) 附带webui。
+[备用文档](https://eridanus-doc.netlify.app/)
 
 如使用快捷部署部署失败，请参照文档部署。
 # 交流
@@ -56,4 +80,3 @@ Eridanus 采用 CC BY-NC-SA 4.0 许可证。任何人均可免费获取、使用
   <img src="https://contrib.rocks/image?repo=avilliai/Eridanus" />
 </a>
 
-![Alt](https://repobeats.axiom.co/api/embed/2e669d8cf896cdd4259d7810df2f07fbfa5fe0df.svg "Repobeats analytics image")

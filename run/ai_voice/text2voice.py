@@ -16,26 +16,19 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
 
     # 获取所有 speakers
     all_speakers = (await call_all_speakers(bot, event, config))["speakers"]
-    ncspk, acgnspk, modelscope_speakers, vits_speakers, online_vits2_speakers = all_speakers
+    ncspk, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers = all_speakers
 
     # 检查是否有可用 speakers
     if not any(all_speakers):
         bot.logger.error("No speakers found")
         return
 
-    # 定义匹配规则
-    '''(acgnspk, [
-        (speaker, "acgn_ai"),
-        (f"{speaker}【鸣潮】", "acgn_ai"),
-        (f"{speaker}【原神】", "acgn_ai"),
-        (f"{speaker}【崩坏3】", "acgn_ai"),
-        (f"{speaker}【星穹铁道】", "acgn_ai")
-    ]),'''  # 已弃用
     speaker_modes = [
         (ncspk, [(speaker, "napcat_tts")]),
         (modelscope_speakers, [(speaker, "modelscope_tts")]),
         (vits_speakers, [(speaker, "vits")]),
-        (online_vits2_speakers, [(speaker, "online_vits2")])
+        (online_vits2_speakers, [(speaker, "online_vits2")]),
+        (blue_archive_speakers, [(speaker, "blue_archive")]),
     ]
 
     # 匹配 speaker 和 mode
@@ -75,26 +68,17 @@ def main(bot: ExtendBot,config: YAMLManager):
             if r.get("audio"):
                 await bot.send(event, Record(file=r.get("audio")))
         elif event.pure_text=="可用角色":
-            #Node(content=[Text("可用角色：")]+[Text(i) for i in get_acgn_ai_speaker_list()])
             all_speakers = await call_all_speakers(bot, event, config)
             all_speakers = all_speakers["speakers"]
-            f= all_speakers[0]
-            e= all_speakers[1]
-            c = all_speakers[2]
-            b = all_speakers[3]
-            if a:
-                a='\n'.join(a)
-            if b:
-                b='\n'.join(b)
-            if f:
-                f='\n'.join(f)
-            if e:
-                e='\n'.join(e)
-            if c:
-                c='\n'.join(c)
+            napcat_speakers = all_speakers[0]
+            modelscope_speakers = all_speakers[1]
+            vits_speakers = all_speakers[2]
+            online_vits2_speakers = all_speakers[3]
+            blue_archive_speakers = all_speakers[4]
             await bot.send(event, [
                 Node(content=[Text(f"使用 /xx说xxxxx")]),
-                Node(content=[Text(f"napcat_tts可用角色：\n{f}")]),
-                Node(content=[Text(f"modelscope_tts可用角色：\n{c}")]),
-                Node(content=[Text(f"vits可用角色：\n{b}")]),
-                Node(content=[Text(f"online_vits2可用角色：\n{a}")])])
+                Node(content=[Text(f"napcat_tts可用角色：\n{napcat_speakers}")]),
+                Node(content=[Text(f"modelscope_tts可用角色：\n{modelscope_speakers}")]),
+                Node(content=[Text(f"blue_archive_speakers可用角色：\n{blue_archive_speakers}")]),
+                Node(content=[Text(f"vits可用角色：\n{vits_speakers}")]),
+                Node(content=[Text(f"online_vits2可用角色：\n{online_vits2_speakers}")])],)

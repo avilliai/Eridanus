@@ -143,23 +143,36 @@ def main(bot: ExtendBot,config):
             """
             用新的asmr推送实现
             """
-            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]:
-                if group_id == 0: continue
+            async def get_random_asmr():
                 try:
                     r = await random_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
 
                     i = random.choice(r['media_urls'])
+                    return i, r
+                except Exception as e:
+                    logger.error(f"获取晚安ASMR失败，原因：{e}")
+                    return get_random_asmr()
+            i, r = await get_random_asmr()
+            try:
+                img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png",
+                                         config.resource_collector.config["asmr"]["gray_layer"],
+                                         proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+            except Exception as e:
+                bot.logger.error(f"download_img error:{e}")
+                img = None
+
+            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]:
+                if group_id == 0: continue
+                try:
 
                     await bot.send_group_message(group_id, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
-                    try:
-                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png",
-                                                 config.resource_collector.config["asmr"]["gray_layer"],
-                                                 proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-                    except Exception as e:
-                        bot.logger.error(f"download_img error:{e}")
-                        img = r['mainCoverUrl']
-                    await bot.send_group_message(group_id,
-                                   [Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),None or Image(file=img)])
+                    if img:
+                        await bot.send_group_message(group_id,
+                                       [Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),Image(file=img)])
+                    else:
+                        await bot.send_group_message(group_id,
+                                                     [Text(
+                                                         f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}")])
                 except Exception as e:
                     logger.error(f"向群{group_id}推送单向历失败，原因：{e}")
                 await sleep(6)
