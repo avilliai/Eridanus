@@ -5,7 +5,9 @@ from concurrent.futures.thread import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Node, Text, File, Card
+from developTools.utils.logger import get_logger
 from framework_common.database_util.User import get_user
+from framework_common.framework_util.yamlLoader import YAMLManager
 from run.resource_collector.service.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
     choose_from_hotest_asmr_100
 from run.resource_collector.service.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
@@ -15,12 +17,31 @@ from run.resource_collector.service.zLibrary.zLibrary import Zlibrary
 from framework_common.utils.random_str import random_str
 from framework_common.utils.utils import download_file, merge_audio_files, download_img
 
-global Z
+logger=get_logger()
+module_config=YAMLManager.get_instance()
+proxy = module_config.common_config.basic_config["proxy"]["http_proxy"]
+if proxy != "":
+    proxies = {
+        "http": proxy,
+        "https": proxy
+    }
+else:
+    proxies = None
+if module_config.resource_collector.config["z_library"]["email"] != "" and module_config.resource_collector.config["z_library"][
+    "password"] != "":
+    global Z
+    try:
+        Z = Zlibrary(email=module_config.resource_collector.config["z_library"]["email"],
+                     password=module_config.resource_collector.config["z_library"]["password"], proxies=proxies)
+        logger.info("✅ z_library 登陆成功")
+    except Exception as e:
+        logger.error(f"❌ z_library login error:{e}")
 
 global operating
 operating = {}  #jm文件共享的维护列表
 
 async def search_book_info(bot,event,config,info):
+    global Z
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["z_library"]["search_operate_level"]:
 
@@ -29,12 +50,14 @@ async def search_book_info(bot,event,config,info):
         forward_list = []
         for r in result:
             forward_list.append(Node(content=[Text(r[0]), Image(file=r[1])]))
+        print(forward_list)
         await bot.send(event, forward_list)
         # await bot.send(event,Image(file=p)])
         # print(r)
     else:
         await bot.send(event, "你没有权限使用该功能")
 async def call_download_book(bot,event,config,book_id: str,hash:str):
+    global Z
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["z_library"]["download_operate_level"]:
         await bot.send(event, "正在下载中，请稍候...")
@@ -283,22 +306,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
     asyncio.create_task(_call_jm())
     return {"status": "running", "message": "任务已在后台启动，请耐心等待结果"}
 def main(bot,config):
-    proxy = config.common_config.basic_config["proxy"]["http_proxy"]
-    if proxy!= "":
-        proxies = {
-            "http": proxy,
-            "https": proxy
-        }
-    else:
-        proxies=None
-    if config.resource_collector.config["z_library"]["email"]!="" and config.resource_collector.config["z_library"]["password"]!="":
-        global Z
-        try:
-            Z = Zlibrary(email=config.resource_collector.config["z_library"]["email"], password=config.resource_collector.config["z_library"]["password"],proxies=proxies)
-            bot.logger.info("✅ z_library 登陆成功")
-        except Exception as e:
-            bot.logger.error(f"❌ z_library login error:{e}")
-            return
+
     logger = bot.logger
 
 

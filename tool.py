@@ -6,6 +6,8 @@ from time import sleep
 import os
 import sys
 
+from framework_common.utils.install_and_import import install_and_import
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -45,7 +47,7 @@ async def main():
         3 playwright工具安装
         4 开发者工具
         5 若只的检测相关ai库(如奶龙检测)
-        6 B站 or 抖音 or 小红书 登录""")
+        6 B站 or 抖音 or 小红书 登录。不登也不影响你用""")
     sleep(0.3)
     user_input=input("请输入指令序号：")
     if user_input=="1":
@@ -98,15 +100,9 @@ async def main():
         logger.info("安装奶龙相关ai库依赖中")
         ai_req()
     elif user_input=="6":
-        try:
-            import PyExecJS
-        except ImportError as e:
-            os.system(f"\"{python_path}\" -m pip install PyExecJS")
-            logger.warning("如为初次运行，请关闭程序并重新进入这一步")
-        try:
-            import gi
-        except ImportError as e:
-            os.system(f"\"{python_path}\" -m pip install PyGObject")
+
+        PyExecJS=install_and_import("PyExecJS")
+        gi=install_and_import("PyGObject","gi")
 
         from run.streaming_media.service.Link_parsing.core.login_core import login_core_select
         await login_core_select()

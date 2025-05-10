@@ -10,33 +10,26 @@ import traceback
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 if sys.platform == 'win32':
-  asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.framework_util.websocket_fix import ExtendBot
 
-config = YAMLManager("run") #这玩意用来动态加载和修改配置文件
-#from developTools.adapters.http_adapter import HTTPBot
-#bot = HTTPBot(http_sever=config.basic_config["adapter"]["http_client"]["url"],access_token=config.basic_config["adapter"]["access_token"],host=str(config.basic_config['adapter']["http_sever"]["host"]), port=int(config.basic_config["adapter"]["http_sever"]["port"]))
-#或者使用ws适配器
-bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"],config,blocked_loggers=["DEBUG", "INFO_MSG"])
+config = YAMLManager("run")  # 这玩意用来动态加载和修改配置文件
+bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"], config,
+                 blocked_loggers=["DEBUG", "INFO_MSG"])
 
-
-bot1.logger.info_func("正在初始化....")
+bot1.logger.info("正在初始化....")
 if config.common_config.basic_config["webui"]["enable"]:
     bot2 = ExtendBot("ws://127.0.0.1:5008", config, blocked_loggers=["DEBUG", "INFO_MSG", "warning"])
     bot1.logger.warning("🔧 WebUI 服务启动中，请在完全启动后访问 http://localhost:5007")
     bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
     bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
     bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
-
-
     def run_webui():
         server_dir = os.path.join(os.path.dirname(__file__), 'web')
         python_exec = sys.executable
         server_script = os.path.join(server_dir, 'server.py')
-
-
 
         process = subprocess.Popen(
             [python_exec, server_script],
@@ -47,6 +40,7 @@ if config.common_config.basic_config["webui"]["enable"]:
             errors='replace',
             text=True
         )
+
         def reader():
             for line in process.stdout:
                 print("[server]", line.strip())
@@ -55,7 +49,36 @@ if config.common_config.basic_config["webui"]["enable"]:
 
 
     run_webui()
+
 PLUGIN_DIR = "run"
+# 创建模块缓存字典
+module_cache = {}
+
+
+def check_has_main_and_cache(module_name):
+    """检查模块是否包含 `main()` 方法，并缓存已加载的模块"""
+    global module_cache
+
+    try:
+        if module_name in module_cache:
+            module = module_cache[module_name]
+        else:
+            spec = importlib.util.find_spec(module_name)
+            if spec is None:
+                bot1.logger.warning(f"⚠️ 未找到模块 {module_name}")
+                return False, None
+
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            # 缓存模块
+            module_cache[module_name] = module
+
+        return hasattr(module, "main"), module
+    except Exception:
+        if not module_name.startswith("run.character_detection."):
+            bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
+            traceback.print_exc()
+        return False, None
 def find_plugins(plugin_dir=PLUGIN_DIR):
     plugin_modules = []
     for root, _, files in os.walk(plugin_dir):
@@ -64,41 +87,28 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
                 module_path = os.path.join(root, file)
                 module_name = module_path.replace(os.sep, ".").removesuffix(".py")
                 plugin_name = os.path.splitext(file)[0]
-                if check_has_main(module_name) and plugin_name!="nailong_get":
-                    plugin_modules.append((plugin_name, module_name))
+
+                has_main, module = check_has_main_and_cache(module_name)
+
+                if has_main and plugin_name != "nailong_get":
+                    plugin_modules.append((plugin_name, module_name, module))
                 else:
-                    if plugin_name!="nailong_get" and plugin_name!="func_collection" and f"service" not in module_name:
-                        bot1.logger.info(f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
+                    if plugin_name != "nailong_get" and plugin_name != "func_collection" and f"service" not in module_name:
+                        bot1.logger.info(
+                            f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
     return plugin_modules
-
-def check_has_main(module_name):
-    """检查模块是否包含 `main()` 方法"""
-    try:
-        spec = importlib.util.find_spec(module_name)
-        if spec is None:
-            bot1.logger.warning(f"⚠️ 未找到模块 {module_name}")
-            return False
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return hasattr(module, "main")
-    except Exception:
-        if not module_name.startswith("run.character_detection."):
-            bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
-            traceback.print_exc()
-        return False
-
-
 # 自动构建插件列表
 plugin_modules = find_plugins()
 bot1.logger.info(f"🔧 共读取到插件：{len(plugin_modules)}个")
-bot1.logger.info(f"🔧 正在加载插件....") #{', '.join(name for name, _ in plugin_modules)}")
-
-def safe_import_and_load(plugin_name, module_path,bot,config):
+bot1.logger.info(f"🔧 正在加载插件....")
+def safe_import_and_load(plugin_name, module_path, cached_module, bot, config):
     try:
-        module = importlib.import_module(module_path)
+        # 使用缓存的模块而不是重新导入
+        module = cached_module
+
         if ".service." not in str(module_path):
-            if hasattr(module, "main") and ".service." not in str(module_path):
+            if hasattr(module, "main"):
                 module.main(bot, config)
                 bot.logger.info(f"✅ 成功加载插件：{plugin_name}")
             else:
@@ -107,12 +117,15 @@ def safe_import_and_load(plugin_name, module_path,bot,config):
         bot.logger.warning(f"❌ 插件{module_path} {plugin_name} 加载失败：{e}")
         traceback.print_exc()
         bot.logger.warning(f"❌ 建议执行一次 更新脚本(windows)/tool.py(linux) 自动补全依赖后重启以尝试修复此问题")
-        bot.logger.warning(f"❌ 如仍无法解决，请反馈此问题至 https://github.com/avilliai/Eridanus/issues 或我们的QQ群 913122269")
-def load_plugins(bot,config):
+        bot.logger.warning(
+            f"❌ 如仍无法解决，请反馈此问题至 https://github.com/avilliai/Eridanus/issues 或我们的QQ群 913122269")
+
+def load_plugins(bot, config):
     # 并行加载插件
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
-            executor.submit(safe_import_and_load, name, path,bot,config): name for name, path in plugin_modules
+            executor.submit(safe_import_and_load, name, path, module, bot, config): name
+            for name, path, module in plugin_modules
         }
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -122,34 +135,38 @@ def load_plugins(bot,config):
 
     # 奶龙检测（可选功能）
     try:
-        if config.character_detection.config["抽象检测"]["奶龙检测"] or config.character_detection.config["抽象检测"]["doro检测"]:
-            safe_import_and_load("nailong_get", "run.character_detection.nailong_get", bot, config)
+        if config.character_detection.config["抽象检测"]["奶龙检测"] or config.character_detection.config["抽象检测"][
+            "doro检测"]:
+            # 这里也可以优化，检查缓存中是否已有此模块
+            if "run.character_detection.nailong_get" in module_cache:
+                module = module_cache["run.character_detection.nailong_get"]
+                safe_import_and_load("nailong_get", "run.character_detection.nailong_get", module, bot, config)
+            else:
+                module = importlib.import_module("run.character_detection.nailong_get")
+                module_cache["run.character_detection.nailong_get"] = module
+                safe_import_and_load("nailong_get", "run.character_detection.nailong_get", module, bot, config)
 
     except Exception as e:
         bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
 
 def webui_bot():
-    config_copy = YAMLManager("run") # 这玩意用来动态加载和修改配置文件
+    config_copy = YAMLManager("run")  # 这玩意用来动态加载和修改配置文件
     def config_fix(config_copy):
         config_copy.resource_collector.config["JMComic"]["anti_nsfw"] = "no_censor"
         config_copy.resource_collector.config["asmr"]["gray_layer"] = False
         config_copy.basic_plugin.config["setu"]["gray_layer"] = False
-        config_copy.ai_llm.config["llm"]["读取群聊上下文"]=False
-        config_copy.common_config.basic_config["master"]["id"]=111111111
+        config_copy.ai_llm.config["llm"]["读取群聊上下文"] = False
+        config_copy.common_config.basic_config["master"]["id"] = 111111111
     def run_bot2():
         """在独立线程运行 bot2"""
         config_fix(config_copy)
-        load_plugins(bot2,config_copy)
+        load_plugins(bot2, config_copy)
         bot2.run()
-
 
     bot2_thread = threading.Thread(target=run_bot2, daemon=True)
     bot2_thread.start()
 
 if config.common_config.basic_config["webui"]["enable"]:
     webui_bot()
-load_plugins(bot1,config)
+load_plugins(bot1, config)
 bot1.run()
-
-
-
