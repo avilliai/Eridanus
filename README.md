@@ -1,18 +1,18 @@
+<p align="center">
+  <img src=".github/assets/galaxy_icon_125459.png" width="200" height="200" alt="Shiro">
+</p>
+
+<div align="center">
 
 # Eridanus
-onebot v11标准的多功能bot，大部分功能支持llm函数调用，插件化设计，具有一定拓展性。
 
-学业繁忙，预计4月底5月初恢复原先更新频率
+_🎊 基于 [OneBot](https://github.com/howmanybots/onebot/blob/master/README.md) 协议的多功能bot兼python开发框架 🎊_<br>
+
+</div>
 
 # 部署
 [文档](https://eridanus.netlify.app)    
-[文档](https://eridanus-doc.netlify.app/)
-
-
-## 快捷部署
-[linux脚本](https://gitee.com/laixi_lingdun/eridanus_deploy)
-
-[windows整合包](https://github.com/avilliai/Eridanus/releases) 附带webui。
+[备用文档](https://eridanus-doc.netlify.app/)
 
 如使用快捷部署部署失败，请参照文档部署。
 # 交流
