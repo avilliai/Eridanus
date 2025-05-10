@@ -116,9 +116,9 @@ async def check_latest_asmr(bot,event,config):
     bot.logger.info_func("开始监测 asmr.one 更新")
     try:
         r=await latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-        if r["id"]!=config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]:
+        if r["id"]!=config.scheduled_tasks.scheduledTasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]:
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 开始推送")
-            group_list = config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["groups"]
+            group_list = config.scheduled_tasks.scheduledTasks_push_groups_ordinary["nightASMR"]["groups"]
             for group_id in group_list:
                 try:
                     i = random.choice(r['media_urls'])
@@ -163,8 +163,8 @@ async def check_latest_asmr(bot,event,config):
                 except Exception as e:
                     bot.logger.error(f"latest_asmr_push error:{e}")
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
-            config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
-            config.save_yaml("scheduledTasks_push_groups",plugin_name="scheduled_tasks")
+            config.scheduled_tasks.scheduledTasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]=r["id"]
+            config.save_yaml("scheduledTasks_push_groups_ordinary",plugin_name="scheduled_tasks")
         else:
             bot.logger.info_func("asmr.one 无更新")
     except Exception as e:
