@@ -42,7 +42,8 @@ def main(bot,config):
         bot.logger.info('✅ 链接解析功能已上线！')
     else:
         if not bili_login_check:
-            bot.logger.warning('⚠️ B站session未能成功获取')
+            #bot.logger.warning('⚠️ B站session未能成功获取')
+            pass
         else:
             bot.logger.warning('✅ B站session成功获取')
         if not douyin_login_check:
