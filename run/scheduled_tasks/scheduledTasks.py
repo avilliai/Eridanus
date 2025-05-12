@@ -205,7 +205,7 @@ def main(bot: ExtendBot,config):
                 )
     @bot.on(GroupMessageEvent)
     async def _(event: GroupMessageEvent):
-        if event.pure_text=="测试定时任务":
+        if event.pure_text=="测试定时任务" and event.user_id==config.common_config.basic_config["master"]['id']:
             for task_name, task_info in scheduledTasks.items():
                 await task_executor(task_name, task_info)
 
