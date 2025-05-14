@@ -2,16 +2,19 @@ import random
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, startUpMetaEvent, \
     ProfileLikeEvent, PokeNotifyEvent, GroupBanNoticeEvent
-from developTools.message.message_components import Record, Node, Text
+from developTools.message.message_components import Record, Node, Text, Image
 from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import update_user, add_user, get_user
-
+from framework_common.utils.utils import download_img
+from framework_common.utils.random_str import random_str
+import os
 
 def main(bot,config):
     master=config.common_config.basic_config["master"]["id"]
 
-    global avatar
+    global avatar,nudge_list
     avatar=False
+    nudge_list = []
 
     @bot.on(GroupMessageEvent)
     async def sendLike(event: GroupMessageEvent):
@@ -117,13 +120,37 @@ def main(bot,config):
                     text="戳一戳你~"
                 bot.logger.info(text)
                 #print(text)
+
+                if config.system_plugin.config['api_implements']['nudge']['is_Reply_with_meme']:
+                    if random.randint(1, 100) < config.system_plugin.config['api_implements']['nudge']['Reply_with_meme_probability']:
+                        if config.system_plugin.config['api_implements']['nudge']['Reply_with_meme_method'] == 'url':
+                            img_path = "data/pictures/cache/" + random_str() + ".gif"
+                            for url_img in config.system_plugin.config['api_implements']['nudge']['Reply_with_meme_url']:
+                                try:
+                                    await download_img(url_img, img_path)
+                                    break
+                                except:
+                                    continue
+                        else:
+                            directory_img_check=config.system_plugin.config['api_implements']['nudge']['Reply_with_meme_local']
+                            files_img_check = [f for f in os.listdir(directory_img_check) if os.path.isfile(os.path.join(directory_img_check, f))]
+                            img_path = os.path.join(directory_img_check, files_img_check[random.randint(0, len(files_img_check) - 1)])
+                        await bot.send_group_message(event.group_id, Image(file=img_path))
+                        return
                 if config.ai_llm.config["llm"]["aiReplyCore"]:
                     r = await aiReplyCore([{"text": text}], event.user_id, config,bot=bot)
-
                 else:
                     reply_list=config.system_plugin.config['api_implements']['nudge']['replylist']
-                    r=random.choice(reply_list)
+                    global nudge_list
+                    if len(reply_list) == len(nudge_list):nudge_list=[]
+                    r = random.choice(reply_list)
+                    for r_num in range(0,len(reply_list)):
+                        if r in nudge_list:r = random.choice(reply_list)
+                        else:break
+                    nudge_list.append(r)
                 await bot.send_group_message(event.group_id, r)
+
+
                 if random.randint(1,100)<config.system_plugin.config['api_implements']['nudge']['counter_probability']:
                     await bot.group_poke(event.group_id,event.user_id)
             else:
