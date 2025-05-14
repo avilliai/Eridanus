@@ -177,8 +177,8 @@ def main(bot: ExtendBot,config):
                     logger.error(f"向群{group_id}推送单向历失败，原因：{e}")
                 await sleep(6)
             logger.info_func("单向历推送执行完毕")
-        elif task_name=="早安" or task_name=="晚安" or task_name=="午安":
-            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]:
+        elif task_name in ["早安","晚安","午安"]:
+            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[task_name]["groups"]:
                 if group_id == 0: continue
                 try:
                     r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], random.randint(1000000, 99999999),config, bot=bot, tools=None)
