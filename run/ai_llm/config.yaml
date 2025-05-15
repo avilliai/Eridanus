@@ -43,7 +43,7 @@ llm:
   gemini:         #https://ai.google.dev/
     api_keys:  #继续像这样添加apikey
       - YOUR_API_KEY_1
-    model: gemini-2.0-flash-001
+    model: gemini-2.0-flash
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
     temperature: 0.7
     maxOutputTokens: 2048
