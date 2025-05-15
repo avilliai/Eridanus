@@ -16,6 +16,6 @@ async def weather_query(proxy,api_key,location):
         return data["results"]
 async def free_weather_query(city):
     async with httpx.AsyncClient() as client:
-        r=await client.get(f"https://api.lolimi.cn/API/weather/?city={city}")
+        r=await client.get(f"https://api.52vmy.cn/api/query/tian/three?city={city}")
         data=r.json()
         return data["data"]

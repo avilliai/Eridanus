@@ -1,7 +1,7 @@
 import os
 import datetime
 import sys
-
+import json
 import asyncio
 
 from developTools.event.events import GroupMessageEvent
@@ -165,7 +165,9 @@ def main(bot,config):
         if ( "今日" in context) and ("新番" in context or "番剧" in context or "动画" in context or "bangumi" in context or "放送" in context):
             weekday = datetime.datetime.today().weekday()
             weekdays = ["一", "二", "三", "四", "五", "六", "日"]
+            #print(f'bangumi 周{weekdays[weekday]}放送')
             bangumi_json = await bangumi_PILimg(filepath='data/pictures/cache/', type_soft=f'bangumi 周{weekdays[weekday]}放送',name=f'bangumi 周{weekdays[weekday]}放送',type='calendar')
+            #print(json.dumps(bangumi_json, indent=4))
             if bangumi_json['status']:
                 bot.logger.info('今日番剧图片制作成功，开始推送~~~')
                 await bot.send(event, [f'bangumi 周{weekdays[weekday]}番剧放送！！',Image(file=bangumi_json['pic_path'])])

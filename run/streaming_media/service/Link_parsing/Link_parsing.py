@@ -1098,6 +1098,8 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
             return json_check
     else:
         name = f'{int(time.time())}'
+
+
     if type is None:
         count=0
         count_1=0
@@ -1124,10 +1126,13 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
         return json_check
     elif type == 'calendar':
         calendar_json,week = await claendar_bangumi_get_json()
+        #print(week)
+        #print(json.dumps(calendar_json, indent=4))
         text_total=''
         img_context=[]
         count=0
         for calendar_item in calendar_json:
+            #print(calendar_item)
             count+=1
             name_bangumi = calendar_item['name_cn']
             if '' == name_bangumi:
@@ -1135,8 +1140,8 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
 
 
             try:
-                img_context.append(calendar_item['images']['common_utils'].replace('http','https'))
-
+                #img_context.append(calendar_item['images']['common_utils'].replace('http','https'))
+                img_context.append(calendar_item['images']['common'].replace('http', 'https'))
                 if 'rating' in calendar_item:
                     text_total += f"{count}、 {name_bangumi}----{calendar_item['rating']['score']}☆\n"
                 else:
@@ -1151,6 +1156,7 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
         text_add=''
         words = text_total.split("\n")  # 按换行符分割文本，逐行处理
         for line in words:  # 遍历每一行（处理换行符的部分）
+            #print(line)
             if line == '' :continue
             count+=1
             text_add+=f'{line}\n'
@@ -1171,6 +1177,7 @@ async def bangumi_PILimg(text=None,img_context=None,filepath=None,proxy=None,typ
                 img_add_context.append(img_context[i + count_1])
             contents = await add_append_img(contents, await asyncio.gather(*[asyncio.create_task(download_img(item, f'{filepath}', len=len(img_add_context))) for item in img_add_context]))
 
+        #print(contents)
         out_path = draw_adaptive_graphic_and_textual(contents,type=11,filepath=filepath, type_software=type_soft,
                                                          color_software=(251, 114, 153, 80),canvas_width=1000,
                                                          output_path_name=name,per_row_pic=5)
