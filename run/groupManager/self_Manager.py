@@ -201,12 +201,12 @@ def main(bot,config):
         try:
             bot.logger.info(f"{decode_string(encoded_strings[0])}: {len(group_list)}")
             bot.logger.info(f"{decode_string(encoded_strings[1])} {len(friend_list)}")
-            # await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
+            await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
         except:
             pass
         if random.randint(1, 100)<10:
             await bot.send_friend_message(config.common_config.basic_config["master"]['id'], Record(file=f"{decode_string(encoded_strings[5])}"))
-        # await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
+        await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
         while True:
             await garbage_collection(bot,event,config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
