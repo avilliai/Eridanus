@@ -10,7 +10,7 @@ llm:
   读取群聊上下文: true  #开启上下文读取功能，可读取群聊历史消息，并根据上下文进行回复。
   可获取的群聊上下文长度: 50 # 仁济模式开算法回复务必开上下文
   长期记忆: True  #ai总结用户特征，某种程度上也算中长期记忆
-  记忆更新间隔: 120  #单位秒
+  记忆更新间隔: 360  #单位秒
   prefix: #可以用于触发bot的指令前缀
     - "测试机"
   aiReplyCore: True   #ai回复核心，将优化其他功能回复表现
@@ -43,7 +43,7 @@ llm:
   gemini:         #https://ai.google.dev/
     api_keys:  #继续像这样添加apikey
       - YOUR_API_KEY_1
-    model: gemini-2.0-flash-001
+    model: gemini-2.0-flash
     base_url: https://generativelanguage.googleapis.com #后面的/v1/beta什么的会自动填充
     temperature: 0.7
     maxOutputTokens: 2048
