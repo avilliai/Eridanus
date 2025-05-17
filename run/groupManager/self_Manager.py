@@ -1,6 +1,8 @@
 import asyncio
 import base64
 import random
+import aiofiles
+from ruamel.yaml import YAML
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     LifecycleMetaEvent
@@ -171,6 +173,21 @@ def main(bot,config):
         group_list = group_list["data"]
         friend_list = await bot.get_friend_list()
         friend_list = friend_list["data"]
+        #如果不是webUI的bot
+        if config.common_config.basic_config["master"]['id'] != 111111111:
+            #写入用户和群聊信息
+            yaml = YAML()
+            async with aiofiles.open('./user_info.yaml', 'r', encoding="utf-8") as file:
+                user_file = yaml.load(await file.read())
+            user_file["friends"] = len(friend_list)
+            user_file["groups"] = len(group_list)
+            async with aiofiles.open('./user_info.yaml', 'w', encoding="utf-8") as file:
+                import io
+                stream = io.StringIO()
+                yaml.dump(user_file, stream)
+                yaml_content = stream.getvalue()
+                bot.logger.info(yaml_content)
+                await file.write(yaml_content)
         encoded_strings = ['c2FsdF/or7vlj5bnvqTliJfooajmlbDph486IF9zYWx0',
                            'c2FsdF/or7vlj5blpb3lj4vliJfooajmlbDph486IF9zYWx0',
                            'c2FsdF/lkK/liqjmiJDlip8K5b2T5YmN576k5pWw6YePOiBfc2FsdA==',
@@ -184,12 +201,12 @@ def main(bot,config):
         try:
             bot.logger.info(f"{decode_string(encoded_strings[0])}: {len(group_list)}")
             bot.logger.info(f"{decode_string(encoded_strings[1])} {len(friend_list)}")
-            await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
+            # await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[2])}{len(group_list)}\n{decode_string(encoded_strings[3])} {len(friend_list)}")
         except:
             pass
         if random.randint(1, 100)<10:
             await bot.send_friend_message(config.common_config.basic_config["master"]['id'], Record(file=f"{decode_string(encoded_strings[5])}"))
-        await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
+        # await bot.send_friend_message(config.common_config.basic_config["master"]['id'], f"{decode_string(encoded_strings[4])}")
         while True:
             await garbage_collection(bot,event,config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存

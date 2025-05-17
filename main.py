@@ -21,7 +21,7 @@ bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_l
 
 bot1.logger.info("正在初始化....")
 if config.common_config.basic_config["webui"]["enable"]:
-    bot2 = ExtendBot("ws://127.0.0.1:5008", config, blocked_loggers=["DEBUG", "INFO_MSG", "warning"])
+    bot2 = ExtendBot("ws://127.0.0.1:5007/api/ws", config, blocked_loggers=["DEBUG", "INFO_MSG", "warning"])
     bot1.logger.warning("🔧 WebUI 服务启动中，请在完全启动后访问 http://localhost:5007")
     bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
     bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
@@ -29,7 +29,7 @@ if config.common_config.basic_config["webui"]["enable"]:
     def run_webui():
         server_dir = os.path.join(os.path.dirname(__file__), 'web')
         python_exec = sys.executable
-        server_script = os.path.join(server_dir, 'server.py')
+        server_script = os.path.join(server_dir, 'server_new.py')
 
         process = subprocess.Popen(
             [python_exec, server_script],
