@@ -73,7 +73,7 @@ def init_redis():
             redis_client = None
 
 
-
+init_redis()
 # ======================= 通用函数 =======================
 MAX_RETRIES = 2
 INITIAL_DELAY = 2
