@@ -13,7 +13,7 @@ async def random_ninjutsu(bot: ExtendBot,event,config: YAMLManager):
     ninjutsu=await ninja.random_ninjutsu()
     tags=""
     for tag in ninjutsu['tags']:
-        tags+=f"{tag['name']}"
+        tags+=f"{tag['name']},"
     parse_message=f"忍术名称: {ninjutsu['name']}\n忍术介绍: {ninjutsu['description']}\n忍术标签: {tags}\n忍术教学: {ninjutsu['videoLink']}\n更多忍术请访问: https://wsfrs.com/"
     if not ninjutsu['imageUrl']:
         messages=[Image(file="run/group_fun/service/img.png"),Text("啊没图使\n"),Text(parse_message)]
