@@ -241,7 +241,7 @@ def main(bot: ExtendBot,config):
         create_dynamic_jobs()
         scheduler.start()
 
-    allow_args = ["每日天文","bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一", "早安", "晚安", "午安"]
+    allow_args = ["忍术大学习","每日天文","bing每日图像", "单向历", "bangumi", "nightASMR", "摸鱼人日历", "新闻", "免费游戏喜加一", "早安", "晚安", "午安"]
     @bot.on(GroupMessageEvent)
     async def _(event: GroupMessageEvent):
         if event.pure_text.startswith("/cron add "):
