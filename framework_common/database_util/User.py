@@ -26,9 +26,18 @@ REDIS_FOLDER = os.path.join("data", "redis_extracted")
 logger = get_logger()
 redis_client = None
 
+def extract_redis_from_local_zip():
+    """从本地 zip 解压 Redis 到指定目录"""
+    if not os.path.exists(REDIS_FOLDER):
+        os.makedirs(REDIS_FOLDER)
+        logger.info("📦 正在从本地压缩包解压 Redis...")
+        with zipfile.ZipFile(REDIS_ZIP_PATH, 'r') as zip_ref:
+            zip_ref.extractall(REDIS_FOLDER)
+        logger.info("✅ Redis 解压完成")
 
 def start_redis_background():
     """在后台启动 Redis（仅支持 Windows）"""
+    extract_redis_from_local_zip()
     redis_path = os.path.join(REDIS_FOLDER, REDIS_EXECUTABLE)
     if not os.path.exists(redis_path):
         logger.error(f"❌ 找不到 redis-server.exe 于 {redis_path}")
