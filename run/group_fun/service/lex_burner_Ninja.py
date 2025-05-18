@@ -5,7 +5,7 @@ import httpx
 class Lexburner_Ninja:
     def __init__(self):
         self.name = "Lexburner_Ninja"
-    async def Ninjutsu_query(self,Ninjutsu_name):
+    async def query_ninjutsu(self,name):
         async with httpx.AsyncClient() as client:
             pass
     async def random_ninjutsu(self):
