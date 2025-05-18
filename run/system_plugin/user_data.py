@@ -3,6 +3,7 @@ from asyncio import sleep
 import asyncio
 import re
 from developTools.event.events import GroupMessageEvent
+from developTools.message.message_components import Node, Text
 from framework_common.database_util.llmDB import delete_user_history, clear_all_history
 from framework_common.database_util.User import add_user, get_user, record_sign_in, update_user
 async def call_user_data_register(bot,event,config):
@@ -17,7 +18,8 @@ async def call_user_data_register(bot,event,config):
     await bot.send(event, r)
 async def call_user_data_query(bot,event,config):
     r = await get_user(event.user_id, event.sender.nickname)
-    await bot.send(event, str(r))
+    await bot.send(event, Node(content=[Text(str(r))]))
+    #await bot.send(event, str(r))
 async def call_user_data_sign(bot,event,config):
     r = await record_sign_in(event.user_id)
     await bot.send(event, r)

@@ -10,7 +10,7 @@ ninja=Lexburner_Ninja()
 
 
 async def random_ninjutsu(bot: ExtendBot,event,config: YAMLManager):
-    ninjutsu=ninja.random_ninjutsu()
+    ninjutsu=await ninja.random_ninjutsu()
     tags=""
     for tag in ninjutsu['tags']:
         tags+=f"{tag['name']}"
