@@ -4,29 +4,30 @@ import functools
 import importlib
 import json
 import logging
-import shutil
 import sys
-import threading
-import httpx
 from io import StringIO
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template, make_response, url_for, send_file, send_from_directory
+from flask import Flask, request, jsonify, make_response, send_file, send_from_directory
 from flask_cors import CORS
-from flask_sock import Sock
 from cryptography.fernet import Fernet
 from ruamel.yaml import YAML, comments
-from threading import Thread
 import os
 import time
 from ruamel.yaml.scalarint import ScalarInt
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScalarString
-
+import shutil
 import colorlog
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from utils import install_and_import
+from userdb_query import get_users_range, get_users_count, search_users_by_id, get_user_signed_days
+flask_sock=install_and_import("flask_sock")
+from flask_sock import Sock
+psutil=install_and_import("psutil")
 
 # 全局变量，用于存储 logger 实例和屏蔽的日志类别
 _logger = None
 _blocked_loggers = []
-
 
 def createLogger(blocked_loggers=None):
     global _logger, _blocked_loggers
@@ -137,7 +138,6 @@ def createLogger(blocked_loggers=None):
 
     _logger = logger
 
-
 def get_logger(blocked_loggers=None):
     global _logger
     if _logger is None:
@@ -146,24 +146,32 @@ def get_logger(blocked_loggers=None):
     _logger.update_log_file()
     return _logger
 
+app = Flask(__name__,static_folder="dist", static_url_path="")
+app.json.sort_keys = False     #不要对json排序
 
-app = Flask(__name__,static_folder="dist", static_url_path="",template_folder="dist")
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)  # 只显示 ERROR 级别及以上的日志（隐藏 INFO 和 DEBUG）
 logger=get_logger()
+
 CORS(app,supports_credentials=True)  # 启用跨域支持
-sock = Sock(app)  # 初始化Flask-Sock
+sock = Sock(app)  # 初始化Flask sock
+
 custom_git_path = os.path.join("environments", "MinGit", "cmd", "git.exe")
 if os.path.exists(custom_git_path):
     git_path = custom_git_path
 else:
     git_path = "git"
+
 logger.info(f"Git path: {git_path}")
 
 #默认用户信息
 user_info = {
+    #webUI默认账户密码
     "account":"eridanus",
     "password":"f6074ac37e2f8825367d9ae118a523abf16924a86414242ae921466db1e84583",
+    #机器人好友和群聊数量
+    "friends":0,
+    "groups":0,
 }
 
 #用户信息文件
@@ -219,22 +227,6 @@ def build_yaml_file_map(run_dir):
     return yaml_map
 RUN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'run'))
 YAML_FILES = build_yaml_file_map(RUN_DIR)
-
-#鉴权
-def auth(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        global auth_info
-        recv_token = request.cookies.get('auth_token')
-        # recv_expires = request.cookies.get('auth_expires')
-        # print(f"客户端返回token：{recv_token}")
-        try:
-            if auth_info[recv_token] < int(time.time()):  #如果存在token且过期
-                return jsonify({"error": "Unauthorized"})
-        except:     #不存在token
-            return jsonify({"error": "Unauthorized"})
-        return func(*args, **kwargs)
-    return wrapper
 
 # 初始化 YAML 解析器（支持注释）
 yaml = YAML()
@@ -326,6 +318,7 @@ def extract_comments(data, path="", comments_dict=None):
             extract_comments(item, new_path, comments_dict)
 
     return comments_dict
+
 def extract_key_order(data, path="", order_dict=None):
     if order_dict is None:
         order_dict = {}
@@ -343,6 +336,7 @@ def extract_key_order(data, path="", order_dict=None):
             extract_key_order(item, new_path, order_dict)
 
     return order_dict
+
 def load_yaml_with_comments(file_path):
 
     try:
@@ -369,6 +363,19 @@ def save_yaml(file_path, data):
     #print(f"数据: {data}")
     return conflict_file_dealer(data["data"], file_path)
 
+#鉴权
+def auth(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global auth_info
+        recv_token = request.cookies.get('auth_token')
+        try:
+            if auth_info[recv_token] < int(time.time()):  #如果存在token且过期
+                return jsonify({"error": "Unauthorized"})
+        except:     #不存在token
+            return jsonify({"error": "Unauthorized"})
+        return func(*args, **kwargs)
+    return wrapper
 
 @app.route("/api/load/<filename>", methods=["GET"])
 @auth
@@ -441,6 +448,7 @@ def clone_source():
     os.system(f"{git_path} clone --depth 1 {source_url}")
 
     return jsonify({"message": f"开始部署 {source_url}"})
+
 # 登录api
 @app.route("/api/login", methods=['POST'])
 def login():
@@ -449,12 +457,11 @@ def login():
     data = request.get_json()
     #不能给用户看
     # logger.info_msg(data)
-    if data == user_info:
+    if data["account"] == user_info["account"] and data["password"] == user_info["password"]:
         logger.info_msg("webUI登录成功")
         auth_token = Fernet.generate_key().decode()      #生成token
         auth_expires = int(time.time()+auth_duration)    #生成过期时间
         auth_info[auth_token] = auth_expires             #加入字典
-        logger.info_msg(auth_info)
         resp = make_response(jsonify({"message":"登录成功","auth_token": auth_token}))
         resp.set_cookie("auth_token", auth_token)
         resp.set_cookie("auth_expires",str(auth_expires))
@@ -473,8 +480,7 @@ def logout():
         logger.info_msg("用户登出")
         return jsonify({"message": "退出登录成功"})
     except:
-        logger.error("token无效")
-        return jsonify({"error": "token无效"})
+        return jsonify({"error": "登录信息无效"})
 
 # 账户修改
 @app.route("/api/profile", methods=['GET','POST'])
@@ -496,21 +502,117 @@ def profile():
         auth_info={}    #清空登录信息
         return jsonify({"message": "账户信息修改成功，请重新登录"})
 
-# API外的路由完全交给React前端处理,根路由都不用了
+#用户管理
+@app.route("/api/usermgr/userList", methods=["GET"])
+@auth
+def get_users():
+    try:
+        #当前页
+        current = int(request.args.get("current"))
+        #每页数量
+        page_size = int(request.args.get("pageSize"))
+        start = (current - 1) * page_size
+        end = start + page_size
+        sort_by = request.args.get("sortBy")
+        sort_order = request.args.get("sortOrder")
+        async def fetch_users():
+            if request.args.get("user_id"):
+                user_id = request.args.get("user_id")
+                total_count = await get_users_count(user_id)
+                result = await search_users_by_id(user_id, start, end, sort_by, sort_order)
+                return total_count,result
+            else:
+                # 获取用户总数
+                total_count = await get_users_count()
+                # 获取指定范围的用户
+                users = await get_users_range(start, end, sort_by, sort_order)
+                return total_count, users
+        
+        total_count, users = asyncio.run(fetch_users())
+
+        return jsonify({
+            "data": users,
+            "total": total_count,
+            "success": True,
+            "pageSize": page_size,
+            "current": current,
+        })
+    except Exception as e:
+        return jsonify({"error": f"获取用户信息失败: {e}"}), 500
+
+#机器人的基本信息
+@app.route("/api/dashboard/basicInfo", methods=["GET"])
+@auth
+def basic_info():
+    try:
+        system_info_only = request.args.get("systemInfo")
+        # 获取系统信息
+        cpu_percent = psutil.cpu_percent(interval=0.5)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        if system_info_only:
+            return jsonify({
+                "systemInfo": {
+                    "cpuUsage": cpu_percent,
+                    "totalMemory": memory.total,
+                    "usedMemory": memory.used,
+                    "totalDisk": disk.total,
+                    "usedDisk": disk.used
+                },
+            })
+        # 获取好友和群聊信息
+        with open(user_file, 'r', encoding="utf-8") as file:
+            yaml_file = yaml.load(file)
+            user_info['friends'] = yaml_file['friends']
+            user_info['groups'] = yaml_file['groups']
+        
+        # 获取排行榜数据
+        async def get_ranks():
+            token_rank = await get_users_range(0,10,"ai_token_record","DESC")
+            signin_rank = await get_user_signed_days()
+            total_users = await get_users_count()
+            return token_rank, signin_rank ,total_users
+        token_rank, signin_rank, total_users = asyncio.run(get_ranks())
+
+        basic_info = {
+            "systemInfo": {
+                "cpuUsage": cpu_percent,
+                "totalMemory": memory.total,
+                "usedMemory": memory.used,  
+                "totalDisk": disk.total, 
+                "usedDisk": disk.used 
+            },
+            "botInfo": {
+                "totalUsers": total_users,
+                "totalFriends": user_info['friends'],
+                "totalGroups": user_info['groups']
+            },
+            "ranks": {
+                "tokenRank": token_rank,
+                "signInRank": signin_rank
+            }
+        }
+        return jsonify(basic_info)
+    except Exception as e:
+        return jsonify({"error": f"获取基本信息失败: {e}"})
+
+
+# API外的路由（404）完全交给React前端处理,根路由都不用了
 @app.errorhandler(404)
 def not_found(e):
     return send_from_directory(app.static_folder, 'index.html')
 
-import base64
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通运行环境
 
-@app.route("/api/file2base64", methods=["POST"])
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "websources", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 确保目录存在
+@app.route("/api/move_file", methods=["POST"])
 @auth
-def file_to_base64():
-    """将本地文件转换为 Base64 并返回"""
+def move_file():
+    """移动本地文件到可访问目录，并返回 URL"""
     data = request.json
-    print(data)
     file_path = data.get("path")
-    logger.info_func(f"转换文件: {file_path}")
+
     if not file_path:
         return jsonify({"error": "Missing file path"})
 
@@ -521,78 +623,26 @@ def file_to_base64():
         return jsonify({"error": "File not found"})
 
     try:
-        with open(file_path, "rb") as file:
-            base64_str = base64.b64encode(file.read()).decode("utf-8")
+        # 确保文件不会覆盖已有文件
+        filename = os.path.basename(file_path)
+        dest_path = os.path.join(UPLOAD_FOLDER, filename)
 
-            file_extension = os.path.splitext(file_path)[1].lower()
-            mime_types = {
-                ".jpg": "image/jpeg",
-                ".jpeg": "image/jpeg",
-                ".png": "image/png",
-                ".gif": "image/gif",
-                ".mp3": "audio/mpeg",
-                ".wav": "audio/wav",
-                ".flac": "audio/flac",
-                ".mp4": "video/mp4",
-                ".webm": "video/webm",
-                ".pdf": "application/pdf",
-                ".zip": "application/zip",
-                ".txt": "text/plain",
-                ".json": "application/json",
-            }
+        logger.info_msg(f"目标路径: {dest_path} 原始路径: {file_path}")
+        shutil.move(file_path, dest_path)  # 移动文件
 
-            mime_type = mime_types.get(file_extension)
-            if not mime_type:
-                return jsonify({"error": "Unsupported file type"})
-
-            return jsonify({"base64": f"data:{mime_type};base64,{base64_str}"})
-
+        # 生成可访问的 URL
+        relative_path = os.path.relpath(dest_path, app.static_folder)  # 计算相对路径
+        file_url = f"/{relative_path}"  # Flask 已去掉 static_url_path，所以直接返回相对路径
+        return jsonify({"url": file_url})
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通运行环境
-
-# UPLOAD_FOLDER = os.path.join(BASE_DIR, "websources", "uploads")
-# os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 确保目录存在
-#
-# @app.route("/api/move_file", methods=["POST"])
-# def move_file():
-#     """移动本地文件到可访问目录，并返回 URL"""
-#     data = request.json
-#     file_path = data.get("path")
-#
-#     if not file_path:
-#         return jsonify({"error": "Missing file path"})
-#
-#     if file_path.startswith("file://"):
-#         file_path = file_path[7:]  # 去掉 "file://"
-#
-#     if not os.path.exists(file_path):
-#         return jsonify({"error": "File not found"})
-#
-#     try:
-#         # 确保文件不会覆盖已有文件
-#         filename = os.path.basename(file_path)
-#         dest_path = os.path.join(UPLOAD_FOLDER, filename)
-#
-#         logger.info_msg(f"目标路径: {dest_path} 原始路径: {file_path}")
-#         shutil.move(file_path, dest_path)  # 移动文件
-#
-#         # 生成可访问的 URL
-#         relative_path = os.path.relpath(dest_path, app.static_folder)  # 计算相对路径
-#         file_url = f"/{relative_path}"  # Flask 已去掉 static_url_path，所以直接返回相对路径
-#         return jsonify({"url": file_url})
-#
-#     except Exception as e:
-#         return jsonify({"error": str(e)})
 #
 # 考虑到webui对话需要保存聊天记录，但是媒体文件不能保存到浏览器缓存，以后参考上面移动文件到目录下的操作，所有聊天文件通过webUI的一个文件管理器管理(todo)
 
 @app.route("/api/chat/file", methods=["GET"])
 @auth
 def get_file():
-    """移动本地文件到可访问目录，并返回 URL"""
     # data = request.json
     file_path = request.args.get("path")
 
@@ -606,9 +656,7 @@ def get_file():
         return jsonify({"error": "文件不存在"})
 
     try:
-
         return send_file(file_path)
-
     except Exception as e:
         return jsonify({"error": str(e)})
 
@@ -619,7 +667,6 @@ def handle_websocket(ws):
     global auth_info
     logger.info_msg("WebSocket 客户端已连接")
     clients.add(ws)
-
     try:
         # 对非本地的访问鉴权
         try:
@@ -628,9 +675,7 @@ def handle_websocket(ws):
                 if auth_info[recv_token] > int(time.time()) :
                     logger.info_msg("WebSocket 客户端鉴权成功")
         except:
-            logger.warning("WebSocket 客户端鉴权失败")
-            #随便raise一个
-            raise ValueError
+            raise ValueError("WebSocket 客户端鉴权失败")
         while True:
             # 接收来自前端的消息
             message = ws.receive()
@@ -699,10 +744,10 @@ def handle_websocket(ws):
 
             logger.info_func(f"已发送 OneBot v11 事件: {event_json}")
     except Exception as e:
-        logger.error(f"WebSocket错误: {e}")
+        logger.info_msg(f"WebSocket事件: {e}")
     finally:
         #总有人看见红色就害怕
-        logger.info_msg("WebSocket 客户端断开连接")
+        # logger.info_msg("WebSocket 客户端断开连接")
         clients.discard(ws)
 
 #启动webUI
@@ -713,18 +758,15 @@ def start_webui():
             yaml_file = yaml.load(file)
             user_info['account'] = yaml_file['account']
             user_info['password'] = yaml_file['password']
-        logger.info_msg(f"用户登录信息读取成功。用户名：{user_info['account']} ")
+            user_info['friends'] = yaml_file['friends']
+            user_info['groups'] = yaml_file['groups']
+        logger.info_msg(f"登录信息读取成功。用户名：{user_info['account']} ")
     except:
-        logger.warning("用户登录信息读取失败，已恢复默认。默认用户名/密码：eridanus")
+        logger.warning("登录信息读取失败，已恢复默认。默认用户名/密码：eridanus")
         with open(user_file, 'w', encoding="utf-8") as file:
             yaml.dump(user_info, file)
 
-    print("启动 webui")
-    print("浏览器访问 http://localhost:5007")
-    print("浏览器访问 http://localhost:5007")
-    print("浏览器访问 http://localhost:5007")
-    # logger.info_msg("WebSocket 服务端已在 /api/ws 路径下监听...")
-    app.run(debug=True,host="0.0.0.0", port=5007,threaded=True)
+    app.run(host="0.0.0.0", port=5007,threaded=True)
 #启动Eridanus并捕获输出，反馈到前端。
 #不会写，不写！
 
