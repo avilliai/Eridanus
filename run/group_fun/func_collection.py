@@ -2,6 +2,7 @@ from developTools.message.message_components import Image, Text,Node
 from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.framework_util.yamlLoader import YAMLManager
 from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja
+from run.streaming_media.youtube import download_video
 
 ninja=Lexburner_Ninja()
 
@@ -23,3 +24,5 @@ async def random_ninjutsu(bot: ExtendBot,event,config: YAMLManager):
         await bot.send(event,messages)
     except Exception as e:
         await bot.send(event,[Image(file="run/group_fun/service/img.png"),Text("啊没图使\n"),Text(parse_message)])
+    if ninjutsu['videoLink']:
+        await download_video(bot,event,config,ninjutsu['videoLink'],platform="bilibili")
