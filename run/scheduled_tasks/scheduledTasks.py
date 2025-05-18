@@ -16,6 +16,7 @@ from run.basic_plugin.service.nasa_api import get_nasa_apod
 from run.basic_plugin.service.weather_query import free_weather_query
 from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import get_users_with_permission_above, get_user
+from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja
 from run.resource_collector.service.asmr.asmr100 import random_asmr_100
 from run.system_plugin.func_collection import trigger_tasks
 from run.streaming_media.service.Link_parsing.Link_parsing import bangumi_PILimg
@@ -183,6 +184,32 @@ def main(bot: ExtendBot,config):
                 try:
                     r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], random.randint(1000000, 99999999),config, bot=bot, tools=None)
                     await bot.send_group_message(group_id, r)
+                    await sleep(6)
+                except Exception as e:
+                    logger.error(f"向群{group_id}推送{task_name}失败，原因：{e}")
+                    continue
+        elif task_name == "忍术大学习":
+            logger.info_func("获取忍术大学习")
+            async def get_random_renshu():
+                ninja = Lexburner_Ninja()
+                ninjutsu = await ninja.random_ninjutsu()
+                tags = ""
+                for tag in ninjutsu['tags']:
+                    tags += f"{tag['name']}"
+                parse_message = f"忍术名称: {ninjutsu['name']}\n忍术介绍: {ninjutsu['description']}\n忍术标签: {tags}\n忍术教学: {ninjutsu['videoLink']}"
+                if not ninjutsu['imageUrl']:
+                    messages = [Image(file="run/group_fun/service/img.png"), Text("啊没图使\n"),
+                                Text(parse_message)]
+                else:
+                    messages = [Image(file=ninjutsu['imageUrl']), Text(parse_message)]
+                return messages
+            messages = await get_random_renshu()
+            logger.info_func("推送忍术大学习")
+            for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[task_name]["groups"]:
+                if group_id == 0: continue
+                try:
+                    #r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], random.randint(1000000, 99999999),config, bot=bot, tools=None)
+                    await bot.send_group_message(group_id, messages)
                     await sleep(6)
                 except Exception as e:
                     logger.error(f"向群{group_id}推送{task_name}失败，原因：{e}")
