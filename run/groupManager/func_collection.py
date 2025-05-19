@@ -23,7 +23,7 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
     count=[]
     if mode=="above":
         for group in groups["data"]:
-            if group["member_count"] > th and group["group_id"]!=0:
+            if group["member_count"] > th and group["group_id"]!=0 and group["group_id"] not in config.common_config.censor_group["whitelist"]:
                 try:
                     await bot.quit(group["group_id"])
                     count.append(group["group_id"])
@@ -31,7 +31,7 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
                     traceback.print_exc()
     elif mode=="below":
         for group in groups["data"]:
-            if group["member_count"] < th and group["group_id"]!=0:
+            if group["member_count"] < th and group["group_id"]!=0 and group["group_id"] not in config.common_config.censor_group["whitelist"]:
                 try:
                     await bot.quit(group["group_id"])
                     count.append(group["group_id"])
