@@ -1,5 +1,6 @@
 import traceback
 
+from developTools.message.message_components import Node, Text
 from framework_common.framework_util.websocket_fix import ExtendBot
 
 
@@ -15,14 +16,17 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
     """
     if not event.user_id == config.common_config.basic_config["master"]["id"]:
         await bot.send(event, "你没有权限执行此操作！恶意操作将被上报！")
+        return {"status": "failed", "reason": "你没有权限执行此操作！"}
     groups = await bot.get_group_list()
     for group in groups["data"]:
         print(group["group_id"], group["member_count"])
+    count=[]
     if mode=="above":
         for group in groups["data"]:
             if group["member_count"] > th and group["group_id"]!=0:
                 try:
                     await bot.quit(group["group_id"])
+                    count.append(group["group_id"])
                 except:
                     traceback.print_exc()
     elif mode=="below":
@@ -30,5 +34,8 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
             if group["member_count"] < th and group["group_id"]!=0:
                 try:
                     await bot.quit(group["group_id"])
+                    count.append(group["group_id"])
                 except:
                     traceback.print_exc()
+    await bot.send(event, f"已退出{len(count)}个群聊！")
+    await bot.send(event, Node(content=[Text(f"退出的群如下：{count}")]))
