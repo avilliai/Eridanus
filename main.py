@@ -46,8 +46,8 @@ if config.common_config.basic_config["webui"]["enable"]:
     bot1.logger.info(f"主线程：外部程序运行在 {external_cwd}")
 
     # 在子线程中启动 WebUI
-    #webui_thread = threading.Thread(target=run_webui, daemon=True)
-    #webui_thread.start()
+    webui_thread = threading.Thread(target=run_webui, daemon=True)
+    webui_thread.start()
     bot1.logger.info("主线程：WebUI 已启动在子线程中")
 
 
