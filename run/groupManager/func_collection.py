@@ -19,8 +19,7 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
         await bot.send(event, "你没有权限执行此操作！恶意操作将被上报！")
         return {"status": "failed", "reason": "你没有权限执行此操作！"}
     groups = await bot.get_group_list()
-    for group in groups["data"]:
-        print(group["group_id"], group["member_count"])
+
     count=[]
     if mode=="above":
         for group in groups["data"]:
