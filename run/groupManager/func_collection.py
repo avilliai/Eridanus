@@ -41,5 +41,5 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
                 except:
                     traceback.print_exc()
     await bot.send(event, f"已退出{len(count)}个群聊！")
-    count_str='\n\n'.join(count)
+    count_str = '\n\n'.join(str(item) for item in count)
     await bot.send(event, Node(content=[Text(f"退出的群如下：{count_str}")]))
