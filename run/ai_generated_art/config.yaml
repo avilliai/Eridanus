@@ -11,7 +11,7 @@ ai绘画:
     - ''
   sd画图: true
   sd默认启动模型: 'miaomiao_1_4.safetensors'
-  反推和审核使用模型: 'wd14-vit-v2-git' # 可填的选项见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB
+  反推和审核使用模型: 'wd14-vit-v2-git' # 可填的选项见文档https://eridanus-doc.netlify.app/configuration/ai%E7%BB%98%E7%94%BB/ai%E7%BB%98%E7%94%BB.html#%E5%8F%8D%E6%8E%A8%E4%B8%8E%E5%AE%A1%E6%A0%B8%E7%94%A8%E6%A8%A1%E5%9E%8B%E7%9B%B8%E5%85%B3
   sd图片是否保存到生图端: true   #是否将生成的图片保存在webui的outputs里
   novel_ai画图: false
   sd画图默认分辨率: '1024,1536' # 宽,高（别带空格）
@@ -26,7 +26,7 @@ ai绘画:
   禁止nsfw: false
   allow_nsfw_groups:               #允许色图的群号，禁止nsfw开启时有效
   - 123
-  其他默认绘图参数: # 各参数见文档https://eridanus-doc.netlify.app/docs/%E6%8B%93%E5%B1%95%E5%8A%9F%E8%83%BD/ai%E7%BB%98%E7%94%BB#%E6%89%80%E6%9C%89%E5%8F%AF%E8%B0%83%E8%8A%82%E5%8F%82%E6%95%B0%E5%88%97%E8%A1%A8
+  其他默认绘图参数: # 各参数见文档https://eridanus-doc.netlify.app/configuration/ai%E7%BB%98%E7%94%BB/ai%E7%BB%98%E7%94%BB.html#%E5%8F%8D%E6%8E%A8%E4%B8%8E%E5%AE%A1%E6%A0%B8%E7%94%A8%E6%A8%A1%E5%9E%8B%E7%9B%B8%E5%85%B3
     - --d 0.7
     - --p {},rating:general, best quality, very aesthetic, absurdres
     - --n blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts
