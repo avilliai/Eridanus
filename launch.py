@@ -2,7 +2,6 @@ import asyncio
 import os
 import sys
 import signal
-import psutil
 import logging
 import threading
 import io
@@ -12,6 +11,8 @@ logger = logging.getLogger(__name__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(current_dir)
 sys.path.append(current_dir)
+from web.utils import install_and_import
+psutil=install_and_import("psutil")
 
 try:
     from framework_common.framework_util.yamlLoader import YAMLManager
