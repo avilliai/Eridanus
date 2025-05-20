@@ -173,21 +173,7 @@ def main(bot,config):
         group_list = group_list["data"]
         friend_list = await bot.get_friend_list()
         friend_list = friend_list["data"]
-        #如果不是webUI的bot
-        if config.common_config.basic_config["master"]['id'] != 111111111:
-            #写入用户和群聊信息
-            yaml = YAML()
-            async with aiofiles.open('./user_info.yaml', 'r', encoding="utf-8") as file:
-                user_file = yaml.load(await file.read())
-            user_file["friends"] = len(friend_list)
-            user_file["groups"] = len(group_list)
-            async with aiofiles.open('./user_info.yaml', 'w', encoding="utf-8") as file:
-                import io
-                stream = io.StringIO()
-                yaml.dump(user_file, stream)
-                yaml_content = stream.getvalue()
-                bot.logger.info(yaml_content)
-                await file.write(yaml_content)
+
         encoded_strings = ['c2FsdF/or7vlj5bnvqTliJfooajmlbDph486IF9zYWx0',
                            'c2FsdF/or7vlj5blpb3lj4vliJfooajmlbDph486IF9zYWx0',
                            'c2FsdF/lkK/liqjmiJDlip8K5b2T5YmN576k5pWw6YePOiBfc2FsdA==',

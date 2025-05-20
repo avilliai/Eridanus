@@ -1,7 +1,6 @@
 import concurrent.futures
 import importlib
 import os
-import subprocess
 import sys
 import asyncio
 import threading
@@ -22,34 +21,37 @@ bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_l
 bot1.logger.info("正在初始化....")
 if config.common_config.basic_config["webui"]["enable"]:
     bot2 = ExtendBot("ws://127.0.0.1:5007/api/ws", config, blocked_loggers=["DEBUG", "INFO_MSG", "warning"])
-    bot1.logger.warning("🔧 WebUI 服务启动中，请在完全启动后，本机浏览器访问 http://localhost:5007")
-    bot1.logger.warning("🔧 若您部署的远程主机有公网ip或端口转发功能，请访问对应ip的5007端口，或设置的转发端口。")
-    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
-    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
-    bot1.logger.warning("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.server("🔧 WebUI 服务启动中，请在完全启动后，本机浏览器访问 http://localhost:5007")
+    bot1.logger.server("🔧 若您部署的远程主机有公网ip或端口转发功能，请访问对应ip的5007端口，或设置的转发端口。")
+    bot1.logger.server("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.server("🔧 WebUI 初始账号密码均为 eridanus")
+    bot1.logger.server("🔧 WebUI 初始账号密码均为 eridanus")
+    webui_dir = os.path.abspath(os.getcwd() + "/web")
+    sys.path.append(webui_dir)
+
+
     def run_webui():
-        server_dir = os.path.join(os.path.dirname(__file__), 'web')
-        python_exec = sys.executable
-        server_script = os.path.join(server_dir, 'server_new.py')
-
-        process = subprocess.Popen(
-            [python_exec, server_script],
-            cwd=server_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding='utf-8',
-            errors='replace',
-            text=True
-        )
-
-        def reader():
-            for line in process.stdout:
-                print("[server]", line.strip())
-
-        threading.Thread(target=reader, daemon=True).start()
+        """在子线程中运行 WebUI，隔离模块加载路径"""
+        try:
+            # 确保 WebUI 模块可以从 webui_dir 加载
+            bot1.logger.info(f"WebUI 线程：启动 WebUI，模块路径 {webui_dir}")
+            from web.server_new import start_webui
+            start_webui()
+        except Exception as e:
+            bot1.logger.error(f"WebUI 线程：启动 WebUI 失败：{e}")
+            traceback.print_exc()
 
 
-    run_webui()
+    external_cwd = os.getcwd()
+    bot1.logger.info(f"主线程：外部程序运行在 {external_cwd}")
+
+    # 在子线程中启动 WebUI
+    webui_thread = threading.Thread(target=run_webui, daemon=True)
+    webui_thread.start()
+    bot1.logger.info("主线程：WebUI 已启动在子线程中")
+
+
+
 
 PLUGIN_DIR = "run"
 # 创建模块缓存字典

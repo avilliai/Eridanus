@@ -19,141 +19,27 @@ import shutil
 import colorlog
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from developTools.utils.logger import get_logger
 from utils import install_and_import
 from userdb_query import get_users_range, get_users_count, search_users_by_id, get_user_signed_days
-flask_sock=install_and_import("flask_sock")
+
+flask_sock = install_and_import("flask_sock")
 from flask_sock import Sock
-psutil=install_and_import("psutil")
+
+psutil = install_and_import("psutil")
 
 # 全局变量，用于存储 logger 实例和屏蔽的日志类别
 _logger = None
 _blocked_loggers = []
 
-def createLogger(blocked_loggers=None):
-    global _logger, _blocked_loggers
-    if blocked_loggers is not None:
-        _blocked_loggers = blocked_loggers
-
-    # 确保日志文件夹存在
-    log_folder = "log"
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-
-    # 创建一个 logger 对象
-    logger = logging.getLogger("Eridanus")
-    logger.setLevel(logging.DEBUG)
-    logger.propagate = False  # 防止重复日志
-
-    # 自定义过滤器，用于屏蔽指定的日志类别
-    class BlockLoggerFilter(logging.Filter):
-        def filter(self, record):
-            # 过滤器增强：按记录来源和日志类别精确屏蔽
-            if record.levelname in _blocked_loggers:
-                return False
-            return True
-
-    # 设置控制台日志格式和颜色
-    console_handler = logging.StreamHandler()
-    console_format = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - [bot] %(message)s'
-    console_colors = {
-        'DEBUG': 'white',
-        'INFO': 'cyan',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'bold_red',
-    }
-    console_formatter = colorlog.ColoredFormatter(console_format, log_colors=console_colors)
-    console_handler.setFormatter(console_formatter)
-    console_handler.addFilter(BlockLoggerFilter())  # 添加过滤器
-    logger.addHandler(console_handler)
-
-    # --- 增加颜色区分消息和功能 ---
-    console_format_msg = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - [MSG] %(message)s'
-    console_format_func = '%(log_color)s%(asctime)s - %(name)s - %(levelname)s - [FUNC] %(message)s'
-    console_colors_msg = {
-        'DEBUG': 'white',
-        'INFO': 'green',  # 服务器接收的消息用绿色
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'bold_red',
-    }
-    console_colors_func = {
-        'DEBUG': 'white',
-        'INFO': 'blue',  # 功能信息用蓝色
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'bold_red',
-    }
-    console_formatter_msg = colorlog.ColoredFormatter(console_format_msg, log_colors=console_colors_msg)
-    console_formatter_func = colorlog.ColoredFormatter(console_format_func, log_colors=console_colors_func)
-
-    # 设置文件日志格式
-    file_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    file_formatter = logging.Formatter(file_format)
-
-    # 获取当前日期
-    current_date = datetime.now().strftime("%Y-%m-%d")
-    log_file_path = os.path.join(log_folder, f"{current_date}.log")
-
-    # 创建文件处理器
-    file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
-    file_handler.setFormatter(file_formatter)
-    file_handler.addFilter(BlockLoggerFilter())  # 添加过滤器
-    logger.addHandler(file_handler)
-
-    # 定义一个函数来更新日志文件（按日期切换）
-    def update_log_file():
-        nonlocal log_file_path, file_handler
-        new_date = datetime.now().strftime("%Y-%m-%d")
-        new_log_file_path = os.path.join(log_folder, f"{new_date}.log")
-        if new_log_file_path != log_file_path:
-            logger.removeHandler(file_handler)
-            file_handler.close()
-            log_file_path = new_log_file_path
-            file_handler = logging.FileHandler(log_file_path, mode='a', encoding='utf-8')
-            file_handler.setFormatter(file_formatter)
-            file_handler.addFilter(BlockLoggerFilter())  # 添加过滤器
-            logger.addHandler(file_handler)
-
-    # 在 logger 上绑定更新日志文件的函数
-    logger.update_log_file = update_log_file
-
-    # --- 添加区分消息和功能的函数 ---
-    def info_msg(self, message, *args, **kwargs):
-        if self.isEnabledFor(logging.INFO) and "INFO_MSG" not in _blocked_loggers:
-            console_handler.setFormatter(console_formatter_msg)  # 设置消息格式
-            self._log(logging.INFO, message, args, **kwargs)
-            console_handler.setFormatter(console_formatter)  # 恢复默认格式
-
-    def info_func(self, message, *args, **kwargs):
-        if self.isEnabledFor(logging.INFO) and "INFO_FUNC" not in _blocked_loggers:
-            console_handler.setFormatter(console_formatter_func)  # 设置功能格式
-            self._log(logging.INFO, message, args, **kwargs)
-            console_handler.setFormatter(console_formatter)  # 恢复默认格式
-
-    # 将新函数绑定到 logger 类
-    logging.Logger.info_msg = info_msg
-    logging.Logger.info_func = info_func
-    # --- 结束添加区分消息和功能的函数 ---
-
-    _logger = logger
-
-def get_logger(blocked_loggers=None):
-    global _logger
-    if _logger is None:
-        createLogger(blocked_loggers)
-    # 每次获取 logger 时检查是否需要更新日志文件
-    _logger.update_log_file()
-    return _logger
-
-app = Flask(__name__,static_folder="dist", static_url_path="")
-app.json.sort_keys = False     #不要对json排序
+app = Flask(__name__, static_folder="dist", static_url_path="")
+app.json.sort_keys = False  # 不要对json排序
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)  # 只显示 ERROR 级别及以上的日志（隐藏 INFO 和 DEBUG）
-logger=get_logger()
+logger = get_logger()
 
-CORS(app,supports_credentials=True)  # 启用跨域支持
+CORS(app, supports_credentials=True)  # 启用跨域支持
 sock = Sock(app)  # 初始化Flask sock
 
 custom_git_path = os.path.join("environments", "MinGit", "cmd", "git.exe")
@@ -164,33 +50,34 @@ else:
 
 logger.info(f"Git path: {git_path}")
 
-#默认用户信息
+# 默认用户信息
 user_info = {
-    #webUI默认账户密码
-    "account":"eridanus",
-    "password":"f6074ac37e2f8825367d9ae118a523abf16924a86414242ae921466db1e84583",
-    #机器人好友和群聊数量
-    "friends":0,
-    "groups":0,
+    # webUI默认账户密码
+    "account": "eridanus",
+    "password": "f6074ac37e2f8825367d9ae118a523abf16924a86414242ae921466db1e84583",
+    # 机器人好友和群聊数量
+    "friends": 0,
+    "groups": 0,
 }
 
-#用户信息文件
+# 用户信息文件
 user_file = "../user_info.yaml"
 
-#会话信息字典（token跟expires）
-auth_info={}
+# 会话信息字典（token跟expires）
+auth_info = {}
 
-#会话有效时长，秒数为单位（暂时只对webui生效）
-auth_duration=720000
-#可用的git源
+# 会话有效时长，秒数为单位（暂时只对webui生效）
+auth_duration = 720000
+# 可用的git源
 REPO_SOURCES = [
-   "https://ghfast.top/https://github.com/avilliai/Eridanus.git",
-   "https://mirror.ghproxy.com/https://github.com/avilliai/Eridanus",
-   "https://github.moeyy.xyz/https://github.com/avilliai/Eridanus",
-   "https://github.com/avilliai/Eridanus.git",
-   "https://gh.llkk.cc/https://github.com/avilliai/Eridanus.git",
-   "https://gitclone.com/github.com/avilliai/Eridanus.git"
+    "https://ghfast.top/https://github.com/avilliai/Eridanus.git",
+    "https://mirror.ghproxy.com/https://github.com/avilliai/Eridanus",
+    "https://github.moeyy.xyz/https://github.com/avilliai/Eridanus",
+    "https://github.com/avilliai/Eridanus.git",
+    "https://gh.llkk.cc/https://github.com/avilliai/Eridanus.git",
+    "https://gitclone.com/github.com/avilliai/Eridanus.git"
 ]
+
 
 # 配置文件路径
 def get_plugin_description(plugin_dir):
@@ -204,6 +91,7 @@ def get_plugin_description(plugin_dir):
         return getattr(module, 'plugin_description', None)
     except Exception:
         return None
+
 
 def build_yaml_file_map(run_dir):
     yaml_map = {}
@@ -225,6 +113,8 @@ def build_yaml_file_map(run_dir):
             key = f"{plugin_desc}.{filename}"
             yaml_map[key] = abs_path
     return yaml_map
+
+
 RUN_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'run'))
 YAML_FILES = build_yaml_file_map(RUN_DIR)
 
@@ -240,12 +130,14 @@ yaml.preserve_quotes = True
 新旧数据合并
 """
 
+
 def merge_dicts(old, new):
     """
     递归合并旧数据和新数据。
     """
     for k, v in old.items():
-        print(f"处理 key: {k}, old value: {v} old type: {type(v)}, new value: {new.get(k)} new type: {type(new.get(k))}")
+        logger.server(
+            f"处理 key: {k}, old value: {v} old type: {type(v)}, new value: {new.get(k)} new type: {type(new.get(k))}")
         # 如果值是一个字典，并且键在新的yaml文件中，那么我们就递归地更新键值对
         if isinstance(v, dict) and k in new and isinstance(new[k], dict):
             merge_dicts(v, new[k])
@@ -258,20 +150,21 @@ def merge_dicts(old, new):
             if isinstance(new[k], DoubleQuotedScalarString) or isinstance(new[k], SingleQuotedScalarString):
                 v = str(v)
                 new[k] = v
-            elif isinstance(new[k],ScalarInt) or isinstance(v, ScalarInt):
+            elif isinstance(new[k], ScalarInt) or isinstance(v, ScalarInt):
                 v = int(v)
                 new[k] = v
             else:
-                print(f"类型冲突 key: {k}, old value type: {type(v)}, new value type: {type(new[k])}")
+                logger.server(f"类型冲突 key: {k}, old value type: {type(v)}, new value type: {type(new[k])}")
                 logger.warning(f"旧值: {v}, 新值: {new[k]} 直接覆盖")
                 new[k] = v
         # 如果键在新的yaml文件中且类型一致，则更新值
         elif k in new:
-            print(f"更新 key: {k}, old value: {v}, new value: {new[k]}")
+            logger.server(f"更新 key: {k}, old value: {v}, new value: {new[k]}")
             new[k] = v
         # 如果键不在新的yaml中，直接添加
         else:
-            print(f"移除键 key: {k}, value: {v}")
+            logger.server(f"移除键 key: {k}, value: {v}")
+
 
 def conflict_file_dealer(old_data: dict, file_new='new_aiReply.yaml'):
     logger.info(f"冲突文件处理: {file_new}")
@@ -293,6 +186,7 @@ def conflict_file_dealer(old_data: dict, file_new='new_aiReply.yaml'):
     with open(file_new, 'w', encoding="utf-8") as file:
         yaml.dump(new_data, file)
     return True
+
 
 def extract_comments(data, path="", comments_dict=None):
     if comments_dict is None:
@@ -319,6 +213,7 @@ def extract_comments(data, path="", comments_dict=None):
 
     return comments_dict
 
+
 def extract_key_order(data, path="", order_dict=None):
     if order_dict is None:
         order_dict = {}
@@ -337,17 +232,18 @@ def extract_key_order(data, path="", order_dict=None):
 
     return order_dict
 
-def load_yaml_with_comments(file_path):
 
+def load_yaml_with_comments(file_path):
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             data = yaml.load(f)
         # 提取所有注释
         order = extract_key_order(data)
         comments = extract_comments(data)
-        return {"data": data, "comments": comments,"order": order}
+        return {"data": data, "comments": comments, "order": order}
     except Exception as e:
         return {"error": str(e)}
+
 
 def load_yaml(file_path):
     """加载 YAML 文件并返回内容及注释"""
@@ -356,26 +252,30 @@ def load_yaml(file_path):
     except Exception as e:
         return {"error": str(e)}
 
+
 def save_yaml(file_path, data):
     """将数据保存回 YAML 文件"""
 
-    #print(f"保存文件: {file_path}")
-    #print(f"数据: {data}")
+    # logger.server(f"保存文件: {file_path}")
+    # logger.server(f"数据: {data}")
     return conflict_file_dealer(data["data"], file_path)
 
-#鉴权
+
+# 鉴权
 def auth(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global auth_info
         recv_token = request.cookies.get('auth_token')
         try:
-            if auth_info[recv_token] < int(time.time()):  #如果存在token且过期
+            if auth_info[recv_token] < int(time.time()):  # 如果存在token且过期
                 return jsonify({"error": "Unauthorized"})
-        except:     #不存在token
+        except:  # 不存在token
             return jsonify({"error": "Unauthorized"})
         return func(*args, **kwargs)
+
     return wrapper
+
 
 @app.route("/api/load/<filename>", methods=["GET"])
 @auth
@@ -389,9 +289,10 @@ def load_file(filename):
         return jsonify({"error": "文件不存在"})
 
     data_with_comments = load_yaml(file_path)
-    rtd=jsonify(data_with_comments)
+    rtd = jsonify(data_with_comments)
 
     return rtd
+
 
 @app.route("/api/save/<filename>", methods=["POST"])
 @auth
@@ -404,7 +305,6 @@ def save_file(filename):
     if not os.path.exists(file_path):
         return jsonify({"error": "文件不存在"})
 
-
     data = request.json  # 获取前端发送的 JSON 数据
     if not data:
         return jsonify({"error": "无效数据"})
@@ -415,11 +315,13 @@ def save_file(filename):
     else:
         return jsonify(result)
 
+
 @app.route("/api/sources", methods=["GET"])
 @auth
 def list_sources():
     """列出所有可用的git源"""
     return jsonify(list(REPO_SOURCES))
+
 
 @app.route("/api/files", methods=["GET"])
 @auth
@@ -427,11 +329,13 @@ def list_files():
     """列出所有可用的 YAML 文件"""
     return jsonify({"files": list(YAML_FILES.keys())})
 
+
 @app.route("/api/pull", methods=["POST"])
 @auth
 def pull_eridanus():
     """从仓库拉取eridanus(未完成)"""
     return jsonify({"message": "success"})
+
 
 @app.route("/api/clone", methods=["POST"])
 @auth
@@ -444,10 +348,11 @@ def clone_source():
     if os.path.exists("Eridanus"):
         return jsonify({"error": "Eridanus already exists。请删除现有Eridanus后再尝试克隆"})
 
-    logger.info_msg(f"开始克隆: {source_url}")
+    logger.server(f"开始克隆: {source_url}")
     os.system(f"{git_path} clone --depth 1 {source_url}")
 
     return jsonify({"message": f"开始部署 {source_url}"})
+
 
 # 登录api
 @app.route("/api/login", methods=['POST'])
@@ -455,35 +360,37 @@ def login():
     global auth_info
     global auth_duration
     data = request.get_json()
-    #不能给用户看
-    # logger.info_msg(data)
+    # 不能给用户看
+    # logger.server(data)
     if data["account"] == user_info["account"] and data["password"] == user_info["password"]:
-        logger.info_msg("webUI登录成功")
-        auth_token = Fernet.generate_key().decode()      #生成token
-        auth_expires = int(time.time()+auth_duration)    #生成过期时间
-        auth_info[auth_token] = auth_expires             #加入字典
-        resp = make_response(jsonify({"message":"登录成功","auth_token": auth_token}))
+        logger.server("webUI登录成功")
+        auth_token = Fernet.generate_key().decode()  # 生成token
+        auth_expires = int(time.time() + auth_duration)  # 生成过期时间
+        auth_info[auth_token] = auth_expires  # 加入字典
+        resp = make_response(jsonify({"message": "登录成功", "auth_token": auth_token}))
         resp.set_cookie("auth_token", auth_token)
-        resp.set_cookie("auth_expires",str(auth_expires))
+        resp.set_cookie("auth_expires", str(auth_expires))
         return resp
     else:
         logger.error("webUI登录失败")
         return jsonify({"error": "Failed"})
 
+
 # 登出api
-@app.route("/api/logout", methods=['GET','POST'])
+@app.route("/api/logout", methods=['GET', 'POST'])
 def logout():
     global auth_info
     recv_token = request.cookies.get('auth_token')
     try:
         del auth_info[recv_token]
-        logger.info_msg("用户登出")
+        logger.server("用户登出")
         return jsonify({"message": "退出登录成功"})
     except:
         return jsonify({"error": "登录信息无效"})
 
+
 # 账户修改
-@app.route("/api/profile", methods=['GET','POST'])
+@app.route("/api/profile", methods=['GET', 'POST'])
 @auth
 def profile():
     global user_info
@@ -492,42 +399,44 @@ def profile():
         return jsonify({"account": user_info['account']})
     elif request.method == 'POST':
         data = request.get_json()
-        logger.info_msg(data)
+        logger.server(data)
         if data["account"]:
             user_info["account"] = data["account"]
         if data["password"]:
             user_info["password"] = data["password"]
             with open(user_file, 'w', encoding="utf-8") as file:
                 yaml.dump(user_info, file)
-        auth_info={}    #清空登录信息
+        auth_info = {}  # 清空登录信息
         return jsonify({"message": "账户信息修改成功，请重新登录"})
 
-#用户管理
+
+# 用户管理
 @app.route("/api/usermgr/userList", methods=["GET"])
 @auth
 def get_users():
     try:
-        #当前页
+        # 当前页
         current = int(request.args.get("current"))
-        #每页数量
+        # 每页数量
         page_size = int(request.args.get("pageSize"))
         start = (current - 1) * page_size
         end = start + page_size
         sort_by = request.args.get("sortBy")
         sort_order = request.args.get("sortOrder")
+
         async def fetch_users():
             if request.args.get("user_id"):
                 user_id = request.args.get("user_id")
                 total_count = await get_users_count(user_id)
                 result = await search_users_by_id(user_id, start, end, sort_by, sort_order)
-                return total_count,result
+                return total_count, result
             else:
                 # 获取用户总数
                 total_count = await get_users_count()
                 # 获取指定范围的用户
                 users = await get_users_range(start, end, sort_by, sort_order)
                 return total_count, users
-        
+
         total_count, users = asyncio.run(fetch_users())
 
         return jsonify({
@@ -540,7 +449,8 @@ def get_users():
     except Exception as e:
         return jsonify({"error": f"获取用户信息失败: {e}"}), 500
 
-#机器人的基本信息
+
+# 机器人的基本信息
 @app.route("/api/dashboard/basicInfo", methods=["GET"])
 @auth
 def basic_info():
@@ -565,22 +475,23 @@ def basic_info():
             yaml_file = yaml.load(file)
             user_info['friends'] = yaml_file['friends']
             user_info['groups'] = yaml_file['groups']
-        
+
         # 获取排行榜数据
         async def get_ranks():
-            token_rank = await get_users_range(0,10,"ai_token_record","DESC")
+            token_rank = await get_users_range(0, 10, "ai_token_record", "DESC")
             signin_rank = await get_user_signed_days()
             total_users = await get_users_count()
-            return token_rank, signin_rank ,total_users
+            return token_rank, signin_rank, total_users
+
         token_rank, signin_rank, total_users = asyncio.run(get_ranks())
 
         basic_info = {
             "systemInfo": {
                 "cpuUsage": cpu_percent,
                 "totalMemory": memory.total,
-                "usedMemory": memory.used,  
-                "totalDisk": disk.total, 
-                "usedDisk": disk.used 
+                "usedMemory": memory.used,
+                "totalDisk": disk.total,
+                "usedDisk": disk.used
             },
             "botInfo": {
                 "totalUsers": total_users,
@@ -602,10 +513,13 @@ def basic_info():
 def not_found(e):
     return send_from_directory(app.static_folder, 'index.html')
 
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 普通运行环境
 
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "websources", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # 确保目录存在
+
+
 @app.route("/api/move_file", methods=["POST"])
 @auth
 def move_file():
@@ -627,7 +541,7 @@ def move_file():
         filename = os.path.basename(file_path)
         dest_path = os.path.join(UPLOAD_FOLDER, filename)
 
-        logger.info_msg(f"目标路径: {dest_path} 原始路径: {file_path}")
+        logger.server(f"目标路径: {dest_path} 原始路径: {file_path}")
         shutil.move(file_path, dest_path)  # 移动文件
 
         # 生成可访问的 URL
@@ -637,6 +551,8 @@ def move_file():
 
     except Exception as e:
         return jsonify({"error": str(e)})
+
+
 #
 # 考虑到webui对话需要保存聊天记录，但是媒体文件不能保存到浏览器缓存，以后参考上面移动文件到目录下的操作，所有聊天文件通过webUI的一个文件管理器管理(todo)
 
@@ -660,45 +576,48 @@ def get_file():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+
 clients = set()
-#WebSocket路由
+
+
+# WebSocket路由
 @sock.route('/api/ws')
 def handle_websocket(ws):
     global auth_info
-    logger.info_msg("WebSocket 客户端已连接")
+    logger.server("WebSocket 客户端已连接")
     clients.add(ws)
     try:
         # 对非本地的访问鉴权
         try:
             if request.remote_addr != "127.0.0.1":
                 recv_token = request.args.get('auth_token')
-                if auth_info[recv_token] > int(time.time()) :
-                    logger.info_msg("WebSocket 客户端鉴权成功")
+                if auth_info[recv_token] > int(time.time()):
+                    logger.server("WebSocket 客户端鉴权成功")
         except:
             raise ValueError("WebSocket 客户端鉴权失败")
         while True:
             # 接收来自前端的消息
             message = ws.receive()
-            logger.info_msg(f"收到前端消息: {message} {type(message)}")
+            logger.server(f"收到前端消息: {message} {type(message)}")
             message = json.loads(message)
             if "echo" in message:
                 for client in list(clients):
                     try:
                         client.send(json.dumps({'status': 'ok',
-                                       'retcode': 0,
-                                       'data': {'message_id': 1253451396},
-                                       'message': '',
-                                       'wording': '',
-                                       'echo': message['echo']}))
+                                                'retcode': 0,
+                                                'data': {'message_id': 1253451396},
+                                                'message': '',
+                                                'wording': '',
+                                                'echo': message['echo']}))
                     except Exception:
                         clients.discard(client)
-                            #获取前端消息的id
+                        # 获取前端消息的id
             time_now = int(time.time())
 
-                #是否@，有些指令不能用@
+            # 是否@，有些指令不能用@
             # isat = message[0]["isat"] if "id" in message[0] else True
-                # 删除消息中的id和isat字段
-                # 删除消息中的id和isat字段
+            # 删除消息中的id和isat字段
+            # 删除消息中的id和isat字段
             if "id" in message:
                 message_id = message["id"]
                 isat = message["isat"]
@@ -706,13 +625,11 @@ def handle_websocket(ws):
                 del message["id"]
                 message = [message]
                 if isat:
-                    message.insert(0,{'type': 'at', 'data': {'qq': '1000000', 'name': 'Eridanus'}})
+                    message.insert(0, {'type': 'at', 'data': {'qq': '1000000', 'name': 'Eridanus'}})
             else:
                 message_id = time_now
-                
 
-
-            #print(message, type(message))
+            # logger.server(message, type(message))
 
             onebot_event = {
                 'self_id': 1000000,
@@ -742,15 +659,16 @@ def handle_websocket(ws):
                 except Exception:
                     clients.discard(client)
 
-            logger.info_func(f"已发送 OneBot v11 事件: {event_json}")
+            logger.server(f"已发送 OneBot v11 事件: {event_json}")
     except Exception as e:
-        logger.info_msg(f"WebSocket事件: {e}")
+        logger.server(f"WebSocket事件: {e}")
     finally:
-        #总有人看见红色就害怕
-        # logger.info_msg("WebSocket 客户端断开连接")
+        # 总有人看见红色就害怕
+        # logger.server("WebSocket 客户端断开连接")
         clients.discard(ws)
 
-#启动webUI
+
+# 启动webUI
 def start_webui():
     # 初始化用户登录信息
     try:
@@ -760,15 +678,16 @@ def start_webui():
             user_info['password'] = yaml_file['password']
             user_info['friends'] = yaml_file['friends']
             user_info['groups'] = yaml_file['groups']
-        logger.info_msg(f"登录信息读取成功。用户名：{user_info['account']} ")
+        logger.server(f"登录信息读取成功。初始用户名和密码均为 {user_info['account']} ")
+        logger.server("请访问 http://localhost:5007 登录")
+        logger.server("请访问 http://localhost:5007 登录")
+        logger.server("请访问 http://localhost:5007 登录")
     except:
         logger.warning("登录信息读取失败，已恢复默认。默认用户名/密码：eridanus")
         with open(user_file, 'w', encoding="utf-8") as file:
             yaml.dump(user_info, file)
 
-    app.run(host="0.0.0.0", port=5007,threaded=True)
-#启动Eridanus并捕获输出，反馈到前端。
-#不会写，不写！
+    app.run(host="0.0.0.0", port=5007)
+# 启动Eridanus并捕获输出，反馈到前端。
+# 不会写，不写！
 
-if __name__ == "__main__":
-    start_webui()

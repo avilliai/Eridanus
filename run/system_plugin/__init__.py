@@ -57,7 +57,7 @@ function_declarations=[
     },
     {
         "name": "call_change_city",
-        "description": "调整所在城市信息。eg：修改城市为新乡",
+        "description": "调整所在城市信息。eg：修改城市为新乡。当用户告知所在地区后，必须调用此函数以保存。",
         "parameters": {
             "type": "object",
             "properties": {
@@ -73,7 +73,7 @@ function_declarations=[
     },
     {
         "name": "call_change_name",
-        "description": "改变称呼。触发示例： 叫我阿明",
+        "description": "改变称呼。触发示例： 叫我阿明。当用户告知修改昵称后，必须调用此函数以保存。",
         "parameters": {
             "type": "object",
             "properties": {
