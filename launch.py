@@ -186,7 +186,7 @@ def bot_thread_function(loop_for_scheduler, global_cfg_manager):
                     await bot_instance_for_thread.send(event, "Pong! 启动器机器人线程存活", True)
                 except Exception as send_exc:
                     logger.error(f"[BotThread] 发送 /ping 回复失败: {send_exc}", exc_info=True)
-
+#
     try:
         bot_instance_for_thread.run()
     except Exception as e:
