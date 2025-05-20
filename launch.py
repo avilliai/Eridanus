@@ -1,0 +1,273 @@
+import asyncio
+import os
+import sys
+import signal
+import psutil
+import logging
+import threading
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(current_dir)
+sys.path.append(current_dir)
+
+try:
+    from framework_common.framework_util.yamlLoader import YAMLManager
+    from framework_common.framework_util.websocket_fix import ExtendBot
+    from developTools.event.events import GroupMessageEvent
+except ImportError as e:
+    print(f"错误：无法导入必要的模块: {e}")
+    print("请确保 framework_common 和 developTools 在 Python 路径中，或者与 launch.py 结构正确。")
+    sys.exit(1)
+
+PYTHON_EXECUTABLE = sys.executable
+MAIN_SCRIPT_PATH = os.path.join(current_dir, "main.py")
+
+logging.basicConfig(level=logging.INFO, format='[Launcher] %(message)s')
+logger = logging.getLogger(__name__)
+
+main_py_process_info = {
+    "process": None,
+    "stdout_task": None,
+    "stderr_task": None
+}
+
+main_event_loop = None
+config_manager_instance = None
+
+async def _read_stream(stream, prefix="[main.py] "):
+    while True:
+        try:
+            line = await stream.readline()
+            if line:
+                #logger.info(f"{prefix}{line.decode(sys.stdout.encoding or 'utf-8', errors='replace').strip()}")
+                pass
+            else:
+                break
+        except Exception as e:
+            logger.error(f"读取流 '{prefix}' 时发生错误: {e}")
+            break
+
+async def start_main_py():
+    global main_py_process_info
+    if main_py_process_info["process"] and main_py_process_info["process"].returncode is None:
+        logger.warning("main.py 似乎已在运行。")
+        return
+
+    logger.info(f"正在启动: {PYTHON_EXECUTABLE} {MAIN_SCRIPT_PATH}")
+    try:
+        process = await asyncio.create_subprocess_exec(
+            PYTHON_EXECUTABLE, MAIN_SCRIPT_PATH,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=current_dir
+        )
+        main_py_process_info["process"] = process
+        logger.info(f"main.py 已启动，PID: {process.pid}")
+
+        main_py_process_info["stdout_task"] = asyncio.create_task(
+            _read_stream(process.stdout, prefix="[main.py STDOUT] ")
+        )
+        main_py_process_info["stderr_task"] = asyncio.create_task(
+            _read_stream(process.stderr, prefix="[main.py STDERR] ")
+        )
+    except Exception as e:
+        logger.error(f"启动 main.py 失败: {e}", exc_info=True)
+        main_py_process_info["process"] = None
+
+
+async def stop_main_py():
+    global main_py_process_info
+    proc_obj = main_py_process_info["process"]
+    if not proc_obj or proc_obj.returncode is not None:
+        logger.info("main.py 未运行或已停止。")
+        if main_py_process_info["stdout_task"] and not main_py_process_info["stdout_task"].done():
+            main_py_process_info["stdout_task"].cancel()
+        if main_py_process_info["stderr_task"] and not main_py_process_info["stderr_task"].done():
+            main_py_process_info["stderr_task"].cancel()
+        main_py_process_info = {"process": None, "stdout_task": None, "stderr_task": None}
+        return
+
+    pid_to_stop = proc_obj.pid
+    logger.info(f"正在尝试停止 main.py (PID: {pid_to_stop}) 及其子进程...")
+    try:
+        parent = psutil.Process(pid_to_stop)
+        children = parent.children(recursive=True)
+        for child in children:
+            logger.info(f"正在终止子进程 PID: {child.pid}")
+            try: child.terminate()
+            except psutil.NoSuchProcess: pass
+        
+        gone, alive = psutil.wait_procs(children, timeout=3)
+        for p in alive:
+            logger.warning(f"子进程 PID: {p.pid} 未能在3秒内终止，将强制结束。")
+            try: p.kill()
+            except psutil.NoSuchProcess: pass
+
+        logger.info(f"正在终止主进程 PID: {parent.pid}")
+        try:
+            parent.terminate()
+            await proc_obj.wait()
+        except psutil.NoSuchProcess: pass
+        except ProcessLookupError: pass
+
+        logger.info(f"main.py (PID: {pid_to_stop}) 已发送终止信号。")
+    except psutil.NoSuchProcess:
+        logger.warning(f"尝试停止时未找到 main.py 进程 (PID: {pid_to_stop})。可能已经停止。")
+    except Exception as e:
+        logger.error(f"停止 main.py 时发生错误: {e}", exc_info=True)
+    finally:
+        if main_py_process_info["stdout_task"] and not main_py_process_info["stdout_task"].done():
+            main_py_process_info["stdout_task"].cancel()
+        if main_py_process_info["stderr_task"] and not main_py_process_info["stderr_task"].done():
+            main_py_process_info["stderr_task"].cancel()
+        main_py_process_info = {"process": None, "stdout_task": None, "stderr_task": None}
+
+
+async def actual_restart_task():
+    logger.info("[MainLoop] 接收到重启任务，正在执行...")
+    await stop_main_py()
+    await asyncio.sleep(3)
+    await start_main_py()
+    logger.info("[MainLoop] main.py 重启流程完毕。")
+
+
+def bot_thread_function(loop_for_scheduler, global_cfg_manager):
+    logger.info("[BotThread] 机器人线程已启动。")
+    bot_instance_for_thread = None
+
+    try:
+        ws_link = global_cfg_manager.common_config.basic_config["adapter"]["ws_client"]["ws_link"]
+        master_id = str(global_cfg_manager.common_config.basic_config["master"]["id"])
+
+        bot_instance_for_thread = ExtendBot(
+            ws_link,
+            global_cfg_manager,
+            blocked_loggers=["DEBUG", "INFO_MSG"]
+        )
+        logger.info(f"[BotThread] 机器人实例初始化完毕，将连接到: {ws_link}")
+        logger.info(f"[BotThread] 管理员ID配置为: {master_id}")
+
+    except Exception as e:
+        logger.error(f"[BotThread] 初始化机器人实例失败: {e}", exc_info=True)
+        return
+
+    @bot_instance_for_thread.on(GroupMessageEvent)
+    async def handle_launcher_commands(event: GroupMessageEvent):
+        nonlocal master_id
+        if str(event.user_id) == master_id:
+            if event.pure_text == "/restart":
+                logger.info(f"[BotThread] 收到管理员 (UID: {event.user_id}) 的 /restart 命令。")
+                try:
+                    await bot_instance_for_thread.send(event, "收到重启命令，正在提交，请管理员注意bot私聊重启状态", True)
+                except Exception as send_exc:
+                    logger.error(f"[BotThread] 发送重启确认消息失败: {send_exc}", exc_info=True)
+
+                if loop_for_scheduler and not loop_for_scheduler.is_closed():
+                    asyncio.run_coroutine_threadsafe(actual_restart_task(), loop_for_scheduler)
+                    logger.info("[BotThread] 重启任务已提交到主事件循环。")
+                else:
+                    logger.error("[BotThread] 主事件循环不可用或已关闭，无法提交重启任务。")
+
+            elif event.pure_text == "/ping":
+                logger.info(f"[BotThread] 收到管理员 (UID: {event.user_id}) 的 /ping 命令。")
+                try:
+                    await bot_instance_for_thread.send(event, "Pong! 启动器机器人线程存活。", True)
+                except Exception as send_exc:
+                    logger.error(f"[BotThread] 发送 /ping_launcher 回复失败: {send_exc}", exc_info=True)
+
+    try:
+        bot_instance_for_thread.run()
+    except Exception as e:
+        logger.error(f"[BotThread] 机器人运行时发生严重错误: {e}", exc_info=True)
+    finally:
+        logger.info("[BotThread] 机器人线程执行完毕或已终止。")
+
+
+async def main_lifecycle_manager(shutdown_evt: asyncio.Event):
+    """管理 main.py 的生命周期和等待关闭信号。"""
+    global main_event_loop
+    main_event_loop = asyncio.get_running_loop()
+
+    logger.info("[MainLoop] 首次启动 main.py...")
+    await start_main_py()
+
+    logger.info("[MainLoop] 主生命周期管理器正在运行，等待关闭信号...")
+    await shutdown_evt.wait()
+    logger.info("[MainLoop] 收到关闭信号，开始清理...")
+    await stop_main_py()
+
+
+if __name__ == "__main__":
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
+    try:
+        config_manager_instance = YAMLManager("run")
+    except Exception as e:
+        logger.error(f"启动器无法加载全局配置文件: {e}. 机器人线程将无法启动。", exc_info=True)
+        sys.exit(1)
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    shutdown_event = asyncio.Event()
+
+    try:
+        loop.add_signal_handler(signal.SIGINT, lambda: (logger.info("SIGINT 收到，设置关闭事件。"), shutdown_event.set()))
+        if sys.platform != "win32":
+             loop.add_signal_handler(signal.SIGTERM, lambda: (logger.info("SIGTERM 收到，设置关闭事件。"), shutdown_event.set()))
+    except NotImplementedError:
+        logger.warning("当前平台不支持 asyncio 信号处理器。Ctrl+C 可能不会平滑关闭。")
+
+    bot_t = threading.Thread(target=bot_thread_function, args=(loop, config_manager_instance), name="LauncherBotThread", daemon=True)
+    bot_t.start()
+
+    try:
+        logger.info("[Main] 启动主生命周期管理器...")
+        loop.run_until_complete(main_lifecycle_manager(shutdown_event))
+    except KeyboardInterrupt:
+        logger.info("[Main] 检测到 KeyboardInterrupt，开始关闭...")
+        if not shutdown_event.is_set():
+             shutdown_event.set()
+        if not loop.is_closed():
+             loop.run_until_complete(main_lifecycle_manager(shutdown_event))
+    except Exception as e:
+        logger.critical(f"[Main] 主事件循环发生未捕获的严重错误: {e}", exc_info=True)
+        if not shutdown_event.is_set():
+            shutdown_event.set()
+            if not loop.is_closed():
+                 loop.run_until_complete(main_lifecycle_manager(shutdown_event))
+    finally:
+        logger.info("[Main] 进入最终清理阶段...")
+        if main_py_process_info["process"] and main_py_process_info["process"].returncode is None:
+            logger.info("[Main] 执行最终的 main.py 停止检查...")
+            if not loop.is_closed():
+                try:
+                    loop.run_until_complete(stop_main_py())
+                except Exception as final_stop_exc:
+                    logger.error(f"[Main] 在最终清理中停止 main.py 时出错: {final_stop_exc}", exc_info=True)
+            else:
+                logger.warning("[Main] 主循环已关闭，无法执行异步的 stop_main_py。main.py 可能仍在运行。")
+
+
+        logger.info("[Main] 等待机器人线程结束 (最多5秒)...")
+        bot_t.join(timeout=5)
+        if bot_t.is_alive():
+            logger.warning("[Main] 机器人线程在超时后仍未结束。")
+        
+        if not loop.is_closed():
+            for task in asyncio.all_tasks(loop):
+                if not task.done():
+                    task.cancel()
+            try:
+                async def _gather_remaining():
+                    await asyncio.gather(*[task for task in asyncio.all_tasks(loop) if not task.done()], return_exceptions=True)
+                loop.run_until_complete(_gather_remaining())
+            except Exception as loop_cleanup_exc:
+                logger.error(f"[Main] 清理剩余 asyncio 任务时出错: {loop_cleanup_exc}", exc_info=True)
+            finally:
+                loop.close()
+                logger.info("[Main] 主事件循环已关闭。")
+        
+        asyncio.set_event_loop(None)
+        logger.info("启动器已退出。")
