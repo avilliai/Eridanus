@@ -154,7 +154,7 @@ def bot_thread_function(loop_for_scheduler, global_cfg_manager):
         bot_instance_for_thread = ExtendBot(
             ws_link,
             global_cfg_manager,
-            blocked_loggers=["DEBUG", "INFO_MSG"]
+            blocked_loggers=["DEBUG", "INFO_MSG","INFO"]
         )
         logger.info(f"[BotThread] 机器人实例初始化完毕，将连接到: {ws_link}")
         logger.info(f"[BotThread] 管理员ID配置为: {master_id}")
