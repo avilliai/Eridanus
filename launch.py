@@ -151,10 +151,10 @@ def bot_thread_function(loop_for_scheduler, global_cfg_manager):
         ws_link = global_cfg_manager.common_config.basic_config["adapter"]["ws_client"]["ws_link"]
         master_id = str(global_cfg_manager.common_config.basic_config["master"]["id"])
 
-        bot_instance_for_thread = ExtendBot(
+        from developTools.adapters.websocket_adapter import WebSocketBot
+        bot_instance_for_thread = WebSocketBot(
             ws_link,
-            global_cfg_manager,
-            blocked_loggers=["DEBUG", "INFO_MSG","INFO"]
+            blocked_loggers=["DEBUG", "INFO_MSG"]
         )
         logger.info(f"[BotThread] 机器人实例初始化完毕，将连接到: {ws_link}")
         logger.info(f"[BotThread] 管理员ID配置为: {master_id}")
