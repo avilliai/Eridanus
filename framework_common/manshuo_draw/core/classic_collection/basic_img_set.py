@@ -1,9 +1,9 @@
 from PIL import Image, ImageDraw
+from .initialize import initialize_yaml_must_require
 
 class basicimgset:
     def __init__(self, params):
-        must_required_keys=[]
-        default_keys_values={}
+        default_keys_values,must_required_keys=initialize_yaml_must_require(params)
         self.must_required_keys = must_required_keys or []  # 必须的键，如果没有提供就默认是空列表
         self.default_keys_values = default_keys_values or {}  # 默认值字典
         # 检测缺少的必需键
@@ -21,17 +21,14 @@ class basicimgset:
 
 
 
-    def create_canvas(self, width=500, height=500, color=(255, 255, 255)):
-        """
-        创建一个画布并返回。
 
-        :param width: 画布宽度（默认500像素）
-        :param height: 画布高度（默认500像素）
-        :param color: 画布背景颜色（默认白色，RGB格式）
-        :return: PIL Image 对象
+    def creatbasicimgnobackdrop(self, width=500, height=500, color=(255, 255, 255)):
+        """
+        创建一个同名空白画布并返回。
+
         """
         # 创建一个指定大小和颜色的画布
-        canvas = Image.new("RGB", (width, height), color)
+        canvas = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
         return canvas
 
 

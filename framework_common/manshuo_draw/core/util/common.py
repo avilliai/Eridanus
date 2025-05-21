@@ -19,7 +19,7 @@ def printf_check(json_img):
                 print('本次绘图已开启调试功能')
                 break
 
-def random_str(length):
+def random_str(length=10):
     characters = string.ascii_letters + string.digits
     # 生成随机字符串
     random_string = ''.join(random.choice(characters) for _ in range(length))

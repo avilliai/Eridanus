@@ -4,6 +4,7 @@ import asyncio
 async def manshuo_draw(json_img, img_path=None):
     #if img_path is not None:json_img['img_path_save']=img_path
     #json_img['img_path_save']=json_img['img_path_save']+'/'+random_str(10)+'.png'
+
     await deal_img(json_img)
 
 
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     :is_crop:表示是否裁剪图片，如True表示裁剪图片为一个正方形
     """
     contents=[
-        {'type':'basic_set','img_width':1000,'img_height':5000,'padding_common':25,'img_path_save':'data/cache','debug':True},
+        {'type':'basic_set','img_width':1000,'img_height':5000,'padding_common':25,'img_path_save':'data/cache','debug':True,'config_path':'defalut_config.yaml'},
 
         {'type': 'backdrop', 'subtype': 'one_color', 'color': '#000000'},
 
@@ -46,5 +47,5 @@ if __name__ == '__main__':
 
     img_path_set='data/cache'
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(manshuo_draw(contents))
+
+    asyncio.run(manshuo_draw(contents))
