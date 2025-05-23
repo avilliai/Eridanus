@@ -62,8 +62,13 @@ async def check_bili_dynamic(bot,config):
             bot.logger.error(f"动态抓取失败{e} uid: {target_uid}")
 
     bilibili_type_draw = config.streaming_media.config["bili_dynamic"]["draw_type"]
-    tasks = [check_single_uid(target_uid,bilibili_type_draw) for target_uid in config.streaming_media.bili_dynamic]
-    await asyncio.gather(*tasks)
+    if config.streaming_media.config["bili_dynamic"]["并发模式"]:
+        tasks = [check_single_uid(target_uid,bilibili_type_draw) for target_uid in config.streaming_media.bili_dynamic]
+        await asyncio.gather(*tasks)
+    else:
+        for target_uid in config.streaming_media.bili_dynamic:
+            await check_single_uid(target_uid,bilibili_type_draw)
+            await sleep(30)
     bot.logger.info_func("完成 B 站动态更新检查")
 
 def main(bot,config):
