@@ -61,7 +61,7 @@ async def call_setu(bot,event,config,tags,num=3):
         except Exception as e:
             bot.logger.error(f"Error in setu: {e}")
             fordMes=[]
-        if fordMes==[]:
+        if not fordMes:
             bot.logger.warning("No setu found.Change resource")
             r=await anime_setu1(tags,num,config.basic_plugin.config["setu"]["r18mode"])
             for i in r:
@@ -86,7 +86,7 @@ async def call_setu(bot,event,config,tags,num=3):
                         fordMes.append(Node(content=[Text(f"标题：{title}\n作者：{author}\n标签：{tags}\nurl：{url}")]))
                     except:
                         pass
-        if fordMes==[]:
+        if not fordMes:
             await bot.send(event, "没有找到符合条件的涩图/或下载失败，换个标签试试吧")
             return
         await bot.send(event, fordMes)

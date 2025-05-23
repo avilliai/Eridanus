@@ -1,8 +1,6 @@
 import asyncio
 import base64
 import random
-import aiofiles
-from ruamel.yaml import YAML
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     LifecycleMetaEvent
@@ -127,8 +125,7 @@ async def report_to_master(bot,event,config):
         r=f"违规内容上报\n发送者id为{event.user_id} 群号为{group_id}"
     elif mes_type=="ideas":
         r = f"反馈意见上报\n发送者id为{event.user_id}"
-    node_li=[]
-    node_li.append(Node(content=[Text(r)]))
+    node_li= [Node(content=[Text(r)])]
     for i in event.processed_message:
         if "text" in i:
             node_li.append(Node(content=[Text(i["text"])]))

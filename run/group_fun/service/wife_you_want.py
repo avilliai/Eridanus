@@ -1,15 +1,11 @@
-import aiosqlite
 import asyncio
-import threading
-import requests
-
-from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
 import calendar
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 import time
+from datetime import datetime
+
+import aiosqlite
+import requests
+from PIL import Image, ImageDraw, ImageFont
 
 DATABASE = "data/dataBase/wifeyouwant.db"  # 修改路径为小写
 

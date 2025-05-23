@@ -76,7 +76,7 @@ def main(bot,config):
                     return
             await handle_message(event)
         
-        elif (config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"] > 0): # 仁济模式第一层(随机)
+        elif config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"] > 0: # 仁济模式第一层(随机)
             if random.randint(1, 100) < config.ai_llm.config["llm"]["仁济模式"]["随机回复概率"]:
                 bot.logger.info(f"接受消息{event.processed_message}")
 
@@ -91,7 +91,7 @@ def main(bot,config):
                         return
                 await handle_message(event)
         
-        elif (config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["enable"]): # 仁济模式第二层(算法判断)
+        elif config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["enable"]: # 仁济模式第二层(算法判断)
             sentences = await get_group_messages(event.group_id, config.ai_llm.config["llm"]["可获取的群聊上下文长度"])
             if await check_message_similarity(str(event.pure_text),sentences,similarity_threshold = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["相似度阈值"],frequency_threshold = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["频率阈值"],min_list_size = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["消息列表最小长度"],entropy_threshold = config.ai_llm.config["llm"]["仁济模式"]["算法回复"]["信息熵阈值"]):
                 bot.logger.info(f"接受消息{event.processed_message}")

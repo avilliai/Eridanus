@@ -1,19 +1,18 @@
-import json
+import os
+import asyncio
 import os
 import re
+import sys
 import time
-from typing import List, Dict, Any
+from io import BytesIO
+from typing import List, Dict
 from urllib.parse import urlparse
 
 import aiofiles
-import aiohttp
 import httpx
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
 import requests
+from PIL import Image
 
-import sys
-import asyncio
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 """

@@ -2,7 +2,7 @@
 from typing import Literal, Optional, Dict, Union, List, Any
 
 from pydantic import BaseModel, ConfigDict
-from pydantic.v1 import root_validator, validator
+from pydantic.v1 import validator
 
 from developTools.event.base import EventBase
 from developTools.message.message_chain import MessageChain

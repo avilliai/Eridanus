@@ -1,8 +1,13 @@
-import asyncio
 from typing import List
 import numpy as np
 
 from framework_common.utils.install_and_import import install_and_import
+from typing import List
+
+import numpy as np
+
+from framework_common.utils.install_and_import import install_and_import
+
 sklearn=install_and_import("scikit-learn","sklearn")
 
 jieba=install_and_import("jieba")
@@ -11,7 +16,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 import gc
 from collections import Counter
-import time
+
 
 def clean_text(text: str) -> str:
     """
