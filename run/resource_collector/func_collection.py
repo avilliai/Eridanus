@@ -5,6 +5,7 @@ from developTools.message.message_components import Text, Node, File, Image
 from framework_common.database_util.User import get_user
 from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.utils.zip import compress_files
+from framework_common.utils.zip_2_pwd_version import compress_files_with_pwd
 from run.resource_collector.service.iwara.iwara1 import search_videos, download_specific_video, fetch_video_info, \
     sanitize_filename
 
@@ -41,9 +42,13 @@ async def iwara_search(bot:ExtendBot,event:GroupMessageEvent,config,aim:str,oper
             if config.resource_collector.config["iwara"]["zip_file"]:
                 zip_name=f"{list.get('title')}.zip"
                 bot.logger.info(f"正在压缩文件至data/video/cache/{zip_name}")
-                compress_files(list.get('path'),
-               "data/video/cache",
-               zip_name=sanitize_filename(list.get('title')) + ".zip")
+                if config.resource_collector.config["iwara"]["zip_password"]:
+                    compress_files_with_pwd(list.get('path'), "data/video/cache", zip_name=zip_name, password=config.resource_collector.config["iwara"]["zip_password"])
+                    await bot.send(event, Text(f"文件压缩中，密码：{config.resource_collector.config['iwara']['zip_password']}"))
+                else:
+                    compress_files(list.get('path'),
+                   "data/video/cache",
+                   zip_name=sanitize_filename(list.get('title')) + ".zip")
                 file_ziped = f"data/video/cache/{sanitize_filename(list.get('title'))}.zip"
                 msg = [Node(content=[Text(list.get('title')), Text("\nvideo_id:"), Text(list.get('video_id'))]),
                        Node(content=[File(file=file_ziped)])]
