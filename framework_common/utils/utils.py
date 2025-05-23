@@ -1,14 +1,12 @@
+import asyncio
 import base64
 import random
-
-import asyncio
-import httpx
-import base64
-
 import re
 from io import BytesIO
 
+import httpx
 from PIL import Image
+
 
 async def delay_recall(bot, msg, interval=20):
     """

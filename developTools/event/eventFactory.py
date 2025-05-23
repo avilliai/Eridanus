@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Type
 from developTools.event.base import EventBase
 from developTools.event.events import GroupUploadNoticeEvent, GroupMessageEvent, PrivateMessageEvent, \
     GroupAdminNoticeEvent, GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupBanNoticeEvent, \
-    FriendAddNoticeEvent, GroupRecallNoticeEvent, FriendRecallNoticeEvent, NotifyEvent, FriendRequestEvent, \
+    FriendAddNoticeEvent, GroupRecallNoticeEvent, FriendRecallNoticeEvent, FriendRequestEvent, \
     GroupRequestEvent, LifecycleMetaEvent, HeartbeatMetaEvent, startUpMetaEvent, LuckyKingNotifyEvent, PokeNotifyEvent, \
     ProfileLikeEvent, HonorNotifyEvent
 

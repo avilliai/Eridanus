@@ -1,6 +1,6 @@
 
 import requests
-from langdetect import detect
+
 
 def translate(text, mode="ZH_CN2JA"):
     try:
