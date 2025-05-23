@@ -1,6 +1,9 @@
 # __init__.py
 from .basic_img_set import basicimgset
-
+from .backdrop import Backdrop
+from .layer import LayerSet
+from .text import TextModule
+from .img import ImageModule
 
 # 定义 __all__ 列表，明确导出的内容
-__all__ = ["basicimgset"]
+__all__ = ["basicimgset",'Backdrop','LayerSet','TextModule','ImageModule']

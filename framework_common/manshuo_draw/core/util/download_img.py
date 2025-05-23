@@ -115,6 +115,8 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
     # print(f'url:{url}\nfilename:{file_name}\npath:{path}')
     if len is None:
         len=1
+
+
     # 单个文件下载
     if int(len) == 1 :
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:

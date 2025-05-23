@@ -7,6 +7,7 @@ class basicimgset:
         self.must_required_keys = must_required_keys or []  # 必须的键，如果没有提供就默认是空列表
         self.default_keys_values = default_keys_values or {}  # 默认值字典
         # 检测缺少的必需键
+        #print(must_required_keys)
         missing_keys = [key for key in self.must_required_keys if key not in params]
         if missing_keys:
             raise ValueError(f"初始化中缺少必需的键: {missing_keys}，请检查传入的数据是否有误")
@@ -21,8 +22,7 @@ class basicimgset:
 
 
 
-
-    def creatbasicimgnobackdrop(self, width=500, height=500, color=(255, 255, 255)):
+    def creatbasicimgnobackdrop(self):
         """
         创建一个同名空白画布并返回。
 

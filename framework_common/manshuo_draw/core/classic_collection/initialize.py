@@ -28,6 +28,10 @@ def initialize_yaml_must_require(params):
 
     if params['type'] not in initialize_yaml_set:
         return [], {}
+    if params['type'] in initialize_yaml_set :
+        if 'subtype' in params and params['subtype'] not in initialize_yaml_set[params['type']]:
+            return [], {}
+
     if 'subtype' not in params:
         initialize_yaml_load=initialize_yaml_set[f"{params['type']}"]
     else:

@@ -339,6 +339,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
                 processed_contents.append(lines)
     if image_row:
         processed_contents.append(image_row)
+
     # 计算总高度
     check_img=0
     check_text=0
@@ -629,7 +630,7 @@ def handle_img(canvas,padding,padding_x,padding_x_text,avatar_path,font_size,nam
                 else:
                     canvas = draw_text_step(canvas, position=(padding_x_check, current_y), text=line, font=font_tx,text_color=(0, 0, 0),filepath=filepath,emoji_list=emoji_list)
                     current_y_add = font_tx.getbbox("A")[3]
-                current_y += current_y_add +padding
+                current_y += current_y_add + padding
             else:
                 for line in content:
                     line = line[0]

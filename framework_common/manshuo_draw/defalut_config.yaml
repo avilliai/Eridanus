@@ -1,0 +1,32 @@
+basic_set:
+  img_width: 1000
+  img_height: 1000
+  padding_left_common: 25
+  padding_up_common: 25
+  img_path_save: framework_common/manshuo_draw/data/cache
+  debug: False
+  config_path: framework_common/manshuo_draw/defalut_config.yaml
+
+
+backdrop:
+  one_color:
+    color: '#c2e4ff'
+
+text:
+  pure_text:
+    font: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+    padding: 20
+    padding_up:
+    spacing: 1
+    font_size: 24
+    color: '#000000'
+
+img:
+  common:
+    number_per_row: 3
+    font: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+    padding_with: 15
+    is_crop: True
+    font_size: 24
+    font_color: '#ffffff'
+    label_color: (251,114,153,80)

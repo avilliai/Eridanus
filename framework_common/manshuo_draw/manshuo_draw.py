@@ -26,16 +26,17 @@ if __name__ == '__main__':
     :is_crop:表示是否裁剪图片，如True表示裁剪图片为一个正方形
     """
     contents=[
-        {'type':'basic_set','img_width':1000,'img_height':5000,'padding_common':25,'img_path_save':'data/cache','debug':True,'config_path':'defalut_config.yaml'},
+        {'type':'basic_set','img_path_save':'data/cache','debug':True,'config_path':'defalut_config.yaml'},
 
-        {'type': 'backdrop', 'subtype': 'one_color', 'color': '#000000'},
+        {'type': 'backdrop', 'subtype': 'one_color'},
+        {'type': 'text', 'subtype': 'pure_text',
+         'content': '你好，欢迎来到manshuo绘图！','font': 'data/fort/LXGWWenKai-Regular.ttf', 'color': '#000000', 'font_size': 24},
 
-        {'type':'text','subtype':'text','content':'你好，欢迎来到manshuo绘图软件！','font':'default','color':'#000000','size':24},
-        {'type':'text','subtype':'text','content':'你好，欢迎来到manshuo绘图软件！这部分是测试内容，请直接忽略，谢谢','font':'default','color':'#000000','size':24,'padding_ahind':25,'padding_with':25},
+        {'type':'text','subtype':'pure_text','content':'你好，欢迎来到manshuo绘图！欢迎来到manshuo绘图！欢迎来到manshuo绘图！欢迎来到manshuo绘图！这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢','font':'data/fort/LXGWWenKai-Regular.ttf','color':'#000000','font_size':24},
 
-        {'type': 'img','subtype':'text','img': [],'label':[],'label_color':'','number_per_row':1,'font':'default','color':'#000000','size':24,'padding_ahind':25,'padding_with':25,'is_crop':False},
-        {'type': 'img','subtype':'text', 'img': [], 'label': [], 'label_color': '', 'number_per_row': 1, 'font': 'default','color': '#000000', 'size': 24, 'padding_ahind': 25, 'padding_with': 25, 'is_crop': False},
-        {'type': 'img','subtype':'text', 'img': [],'label':[],'label_color':'', 'number_per_row': 3,'font':'default','color':'#000000','size':24,'padding_ahind':25,'padding_with':25,'is_crop':False},
+        {'type': 'img','subtype':'common','img': [],'label':[],'label_color':'','number_per_row':1,'font':'data/fort/LXGWWenKai-Regular.ttf','is_crop':True},
+        {'type': 'img','subtype':'common', 'img': [], 'label': [], 'label_color': '', 'number_per_row': 1, 'font': 'data/fort/LXGWWenKai-Regular.ttf', 'is_crop': True},
+        {'type': 'img','subtype':'common', 'img': [],'label':[],'label_color':'', 'number_per_row': 3,'font':'data/fort/LXGWWenKai-Regular.ttf','is_crop':True},
         {'type': 'avatar','subtype':'text', 'img': '你好，欢迎来到manshuo绘图软件！','font':'default','padding_ahind':25,'padding_with':25},
 
         ]
