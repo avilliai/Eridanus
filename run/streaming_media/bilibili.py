@@ -18,9 +18,9 @@ if sys.platform == "win32":
 
 async def check_bili_dynamic(bot,config):
     bot.logger.info_func("开始检查 B 站动态更新")
-    bilibili_type_draw = config.streaming_media.config["bili_dynamic"]["draw_type"]
-    for target_uid in config.streaming_media.bili_dynamic:
-        await sleep(30)#设置好内间隔，以防被冻
+
+    async def check_single_uid(target_uid,bilibili_type_draw):
+
         try:
             latest_dynamic_id1,latest_dynamic_id2=await fetch_latest_dynamic_id(int(target_uid))
             dy_store = [config.streaming_media.bili_dynamic[target_uid]["latest_dynamic_id"][0],config.streaming_media.bili_dynamic[target_uid]["latest_dynamic_id"][1]]
@@ -43,12 +43,12 @@ async def check_bili_dynamic(bot,config):
                         if not linking_prising_json['status']:
                             config.streaming_media.bili_dynamic[target_uid]["latest_dynamic_id"] = [latest_dynamic_id1,latest_dynamic_id2]
                             config.save_yaml("bili_dynamic",plugin_name="streaming_media")
-                            continue
+
                         dynamic= linking_prising_json['pic_path']
 
                 except Exception as e:
                     bot.logger.error(f"动态获取失败 ：{e} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
-                    continue
+
 
                 for group_id in groups:
                     bot.logger.info_func(f"推送动态 群号：{groups} 关注id: {target_uid} 最新动态id: {latest_dynamic_id}")
@@ -60,8 +60,12 @@ async def check_bili_dynamic(bot,config):
                 config.save_yaml("bili_dynamic",plugin_name="streaming_media")
         except Exception as e:
             bot.logger.error(f"动态抓取失败{e} uid: {target_uid}")
-            continue
+
+    bilibili_type_draw = config.streaming_media.config["bili_dynamic"]["draw_type"]
+    tasks = [check_single_uid(target_uid,bilibili_type_draw) for target_uid in config.streaming_media.bili_dynamic]
+    await asyncio.gather(*tasks)
     bot.logger.info_func("完成 B 站动态更新检查")
+
 def main(bot,config):
     threading.Thread(target=bili_main(bot,config), daemon=True).start()
 def bili_main(bot,config):
@@ -81,7 +85,7 @@ def bili_main(bot,config):
                     #await check_bili_dynamic(bot,config)
                 except Exception as e:
                     bot.logger.error(e)
-                await asyncio.sleep(1700)  #哈哈
+                await asyncio.sleep(config.streaming_media.config["bili_dynamic"]["dynamic_interval"])  #哈哈
         else:
             bot.logger.info("B站动态更新检查已启动")
 
