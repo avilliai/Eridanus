@@ -5,7 +5,11 @@ from framework_common.utils.install_and_import import install_and_import
 
 pyzipper=install_and_import("pyzipper")
 
+import re
 
+def sanitize_filename(name: str, replacement: str = "_") -> str:
+    # 替换所有非法字符
+    return re.sub(r'[\\/:"*?<>|]', replacement, name)
 def compress_files_with_pwd(
         sources: Union[str, List[str]],
         output_dir: str,
@@ -20,6 +24,7 @@ def compress_files_with_pwd(
     :param zip_name: 压缩文件的名称（默认 archive.zip）
     :param password: 设置压缩包密码（可选）
     """
+    zip_name = sanitize_filename(zip_name)
     if isinstance(sources, str):
         sources = [sources]
 
