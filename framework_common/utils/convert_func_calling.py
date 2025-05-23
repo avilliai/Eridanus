@@ -1,5 +1,5 @@
 import copy
-import json
+
 
 def convert_gemini_to_openai(gemini_tools):
     openai_functions = []

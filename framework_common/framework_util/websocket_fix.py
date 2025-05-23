@@ -6,7 +6,6 @@ import websockets
 
 from developTools.adapters.websocket_adapter import WebSocketBot
 from developTools.event.eventFactory import EventFactory
-from developTools.event.events import GroupMessageEvent, PrivateMessageEvent
 
 
 class ExtendBot(WebSocketBot):
