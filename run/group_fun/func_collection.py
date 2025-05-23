@@ -15,7 +15,7 @@ async def random_ninjutsu(bot: ExtendBot,event,config: YAMLManager):
     for tag in ninjutsu['tags']:
         tags+=f"{tag['name']},"
     parse_message=f"忍术名称: {ninjutsu['name']}\n忍术介绍: {ninjutsu['description']}\n忍术标签: {tags}\n忍术教学: {ninjutsu['videoLink']}\n更多忍术请访问: https://wsfrs.com/"
-    if not ninjutsu['imageUrl']:
+    if not ninjutsu.get('imageUrl'):
         messages=[Image(file="run/group_fun/service/img.png"),Text("啊没图使\n"),Text(parse_message)]
     else:
         messages=[Image(file=ninjutsu['imageUrl']),Text(parse_message)]
@@ -29,10 +29,10 @@ async def query_ninjutsu(bot: ExtendBot,event,config: YAMLManager,name):
     bot.logger.info(f"查询忍术: {name}")
     try:
         ninjutsu=await ninja.query_ninjutsu(name)
-        parse_message=f"忍术名称: {ninjutsu['title']}\n忍术介绍: {ninjutsu['description']}\n忍术标签: {ninjutsu['tags']}\n忍术教学: {ninjutsu['video_link']}"
+        parse_message=f"忍术名称: {ninjutsu['title']}\n忍术介绍: {ninjutsu['description']}\n忍术标签: {ninjutsu['tags']}\n忍术教学: {ninjutsu['videoLink']}"
         await bot.send(event,[Image(file="run/group_fun/service/img.png"),Text("啊没图使\n"),Text(parse_message)])
-        if ninjutsu['video_link']:
-            await download_video(bot, event, config, ninjutsu['video_link'], platform="bilibili")
+        if ninjutsu['videoLink']:
+            await download_video(bot, event, config, ninjutsu['videoLink'], platform="bilibili")
     except Exception as e:
         bot.logger.error(f"忍术查询失败: {e}")
         await bot.send(event,[Image(file="run/group_fun/service/img.png"),Text("啊没图使\n"),Text("找不到这个忍术，请检查拼写或重新输入")])
