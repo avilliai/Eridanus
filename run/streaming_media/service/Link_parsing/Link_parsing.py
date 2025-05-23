@@ -122,7 +122,7 @@ async def bilibili(url,filepath=None,is_twice=None):
         json_check['url'] = f'https://t.bilibili.com/{dynamic_id}'
         #is_opus=True
         try:
-            if is_opus is False:#若判断为图文则换另一种方法读取
+            if not is_opus:#若判断为图文则换另一种方法读取
                 logger.info('not opus')
                 #print(dynamic_id)
 
@@ -183,7 +183,7 @@ async def bilibili(url,filepath=None,is_twice=None):
             is_opus=True
 
 
-        if is_opus is True:
+        if is_opus:
             dynamic_info = await dy.get_info()
             logger.info('is opus')
             #print(json.dumps(dynamic_info, indent=4))

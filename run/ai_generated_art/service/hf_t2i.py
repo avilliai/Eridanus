@@ -6,11 +6,9 @@ import time
 
 import httpx
 
-
 from developTools.utils.logger import get_logger
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.random_str import random_str
-import ruamel.yaml
 from framework_common.utils.utils import parse_arguments
 from run.ai_generated_art.service.wildcard import replace_wildcards
 

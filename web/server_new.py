@@ -4,19 +4,18 @@ import functools
 import importlib
 import json
 import logging
+import os
+import shutil
 import sys
+import time
 from io import StringIO
-from datetime import datetime
+
+from cryptography.fernet import Fernet
 from flask import Flask, request, jsonify, make_response, send_file, send_from_directory
 from flask_cors import CORS
-from cryptography.fernet import Fernet
 from ruamel.yaml import YAML, comments
-import os
-import time
 from ruamel.yaml.scalarint import ScalarInt
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScalarString
-import shutil
-import colorlog
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from developTools.utils.logger import get_logger
@@ -310,7 +309,7 @@ def save_file(filename):
         return jsonify({"error": "无效数据"})
 
     result = save_yaml(file_path, data)
-    if result is True:
+    if result:
         return jsonify({"message": "文件保存成功"})
     else:
         return jsonify(result)

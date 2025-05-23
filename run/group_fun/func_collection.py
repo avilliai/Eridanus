@@ -1,4 +1,4 @@
-from developTools.message.message_components import Image, Text,Node
+from developTools.message.message_components import Image, Text
 from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.framework_util.yamlLoader import YAMLManager
 from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja

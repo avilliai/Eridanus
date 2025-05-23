@@ -23,7 +23,7 @@ from framework_common.framework_util.yamlLoader import YAMLManager
 
 
 logger=get_logger()
-class TTS():
+class TTS:
     def __init__(self):
         self.config = YAMLManager.get_instance()
         self.translator=Translator()

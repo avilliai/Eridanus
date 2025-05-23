@@ -68,7 +68,7 @@ class ImageEditor:
 
     async def fetch_jwt(self):
         # 动态生成 expiration 参数（当前时间 + 5 分钟）
-        expiration_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+        expiration_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5)
         expiration_str = expiration_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         encoded_expiration = quote(expiration_str)  # URL 编码
 

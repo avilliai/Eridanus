@@ -1,6 +1,5 @@
-import json
-
 import asyncio
+
 import httpx
 
 
@@ -17,7 +16,7 @@ async def meta_llama(prompt, proxies):
         return r.json()["choices"][0]["message"]
 
 
-async def free_phi_3_5(prompt,proxies):
+async def free_phi_3_5(prompt, proxies):
     url = "https://apiserver.alcex.cn/v1/chat/completions"
     data = {
         "model": "phi-3.5",
@@ -30,13 +29,13 @@ async def free_phi_3_5(prompt,proxies):
         return r.json()["choices"][0]["message"]
 
 
-async def free_gemini(prompt,proxies):
+async def free_gemini(prompt, proxies):
     url = f"https://apiserver.alcex.cn/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
         "Cookie": "sl-session=Ei97VrWfame4ViswzDZ/IQ=="
     }
-    data ={
+    data = {
         "model": "gemini-1.5-flash",
         "messages": prompt,
         "stream": False
@@ -46,18 +45,20 @@ async def free_gemini(prompt,proxies):
         r = await client.post(url, json=data)
 
         return r.json()["choices"][0]["message"]
+
+
 async def free_model_result(prompt, proxies=None):
     functions = [
-        meta_llama(prompt,proxies),
+        meta_llama(prompt, proxies),
         free_phi_3_5(prompt, proxies),
-        free_gemini(prompt,proxies)
+        free_gemini(prompt, proxies)
     ]
 
     for future in asyncio.as_completed(functions):
         try:
             result = await future
             if result:
-                if result["content"]!= "" and result["content"]!= "You've reached your free usage limit today":
+                if result["content"] != "" and result["content"] != "You've reached your free usage limit today":
                     return result
         except Exception as e:
             print(f"Task failed: {e}")

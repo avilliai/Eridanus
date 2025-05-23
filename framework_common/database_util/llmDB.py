@@ -88,7 +88,7 @@ def silly_tavern_card(image_path, clear_html=False):
                 final.append(res)
 
     except Exception as e:
-        return (f"错误，解码失败: {e}")
+        return f"错误，解码失败: {e}"
 
     if final:
         s = "\n".join(final)

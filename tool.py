@@ -117,7 +117,7 @@ def updaat(f=False,source=None,yamls={}):
         "https://ghfast.top/https://github.com/avilliai/Eridanus.git",
         "https://gh.llkk.cc/https://github.com/avilliai/Eridanus.git"
     ]
-    if source==None:
+    if source is None:
         for i in sources:
             logger.info(f"{sources.index(i)}. {i}")
         logger.info("拉取bot代码\n--------------------")
@@ -149,7 +149,7 @@ def updaat(f=False,source=None,yamls={}):
 
     # 存放冲突文件名的列表
     conflict_files = []
-    if f==True:
+    if f:
         if os.path.exists("./temp"):
             for i in yamls:
                 logger.info("开始处理"+i)

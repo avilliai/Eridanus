@@ -352,7 +352,7 @@ async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None,card_url
             json_dy['card_is_fan'] = card_check['fan']['is_fan']
             json_dy['card_path'] = card_path[0]
 
-        if json_dy['card_path'] is False:
+        if not json_dy['card_path']:
             json_dy['card_path'] = (await asyncio.gather(*[asyncio.create_task(download_img(card_url_list[random.randint(0, len(card_url_list) - 1)], f'{filepath}'))]))[0]
 
 

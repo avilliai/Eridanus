@@ -3,7 +3,6 @@ from developTools.event.events import GroupMessageEvent
 from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.framework_util.yamlLoader import YAMLManager
 from run.group_fun.func_collection import random_ninjutsu, query_ninjutsu
-from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja
 
 
 def main(bot: ExtendBot,config: YAMLManager):

@@ -1,7 +1,8 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 import os
 import re
-import time
+
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
 
 def add_rounded_rectangle(draw, xy, radius, fill):
     x0, y0, x1, y1 = xy

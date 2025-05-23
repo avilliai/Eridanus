@@ -227,7 +227,10 @@ if __name__ == "__main__":
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(logging.Formatter('%(message)s'))
     try:
-        console_handler.setEncoding('utf-8')
+        if hasattr(console_handler, 'setEncoding'):
+            console_handler.setEncoding('utf-8')
+        else:
+            sys.__stderr__.write('警告：无法为日志控制台处理器设置UTF-8编码, 函数不存在\n')
     except Exception as e_enc:
          sys.__stderr__.write(f"警告：无法为日志控制台处理器设置UTF-8编码: {e_enc}\n")
     root_logger.addHandler(console_handler)
