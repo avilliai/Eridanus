@@ -30,3 +30,4 @@ redis
 jieba
 scikit-learn
 psutil
+pyzipper
