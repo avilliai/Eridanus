@@ -391,10 +391,10 @@ async def bilibili(url,filepath=None,is_twice=None):
         return None
 
 
-    # 获取视频信息
-    video_id = re.search(r"video\/[^\?\/ ]+", url)[0].split('/')[1]
-    v = video.Video(video_id, credential=credential)
+
     try:
+        video_id = re.search(r"video\/[^\?\/ ]+", url)[0].split('/')[1]
+        v = video.Video(video_id, credential=credential)
         video_info = await v.get_info()
     except Exception as e:
         logger.info('无法获取视频内容，该进程已退出')
