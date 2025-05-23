@@ -8,7 +8,8 @@ def main(bot,config):
     async def search_image(event):
         if str(event.pure_text).startswith("iwara下载"):
             user_info = await get_user(event.user_id)
-            if not user_info.permission >= config.streaming_media.config["iwara"]["iwara_download_level"]:
+            if not user_info.permission >= config.resource_collector.config["iwara"]["iwara_download_level"]:
+                await bot.send(event, "无权限")
                 return
             videoid = str(event.pure_text).replace("iwara下载", "")
             await bot.send(event, Text(f"正在下载iwara视频{videoid}"))
@@ -20,7 +21,8 @@ def main(bot,config):
                 await bot.send(event, Text(f"iwara视频{videoid}下载失败：{e}"))
         elif str(event.pure_text).startswith("iwara搜"):
             user_info = await get_user(event.user_id)
-            if not user_info.permission >= config.streaming_media.config["iwara"]["iwara_search_level"]:
+            if not user_info.permission >= config.resource_collector.config["iwara"]["iwara_search_level"]:
+                await bot.send(event, "无权限")
                 return
             word = str(event.pure_text).replace("iwara搜", "")
             await bot.send(event, Text(f"正在iwara搜索{word}"))
@@ -38,7 +40,8 @@ def main(bot,config):
                 await bot.send(event, Text(f"iwara搜索{word}失败：{e}"))
         elif str(event.pure_text).startswith("iwara最新"):
             user_info = await get_user(event.user_id)
-            if not user_info.permission >= config.streaming_media.config["iwara"]["iwara_search_level"]:
+            if not user_info.permission >= config.resource_collector.config["iwara"]["iwara_search_level"]:
+                await bot.send(event, "无权限")
                 return
             await bot.send(event, Text(f"正在获取iwara最新视频"))
             try:
@@ -55,7 +58,8 @@ def main(bot,config):
                 await bot.send(event, Text(f"iwara最新获取失败：{e}"))
         elif str(event.pure_text).startswith("iwara趋势"):
             user_info = await get_user(event.user_id)
-            if not user_info.permission >= config.streaming_media.config["iwara"]["iwara_search_level"]:
+            if not user_info.permission >= config.resource_collector.config["iwara"]["iwara_search_level"]:
+                await bot.send(event, "无权限")
                 return
             await bot.send(event, Text(f"正在获取iwara趋势视频"))
             try:
@@ -72,7 +76,8 @@ def main(bot,config):
                 await bot.send(event, Text(f"iwara趋势获取失败：{e}"))
         elif str(event.pure_text).startswith("iwara热门"):
             user_info = await get_user(event.user_id)
-            if not user_info.permission >= config.streaming_media.config["iwara"]["iwara_search_level"]:
+            if not user_info.permission >= config.resource_collector.config["iwara"]["iwara_search_level"]:
+                await bot.send(event, "无权限")
                 return
             await bot.send(event, Text(f"正在获取iwara热门视频"))
             try:
