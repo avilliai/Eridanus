@@ -158,7 +158,9 @@ def webui_bot():
         config_copy.resource_collector.config["JMComic"]["anti_nsfw"] = "no_censor"
         config_copy.resource_collector.config["asmr"]["gray_layer"] = False
         config_copy.basic_plugin.config["setu"]["gray_layer"] = False
+        config_copy.resource_collector.config["iwara"]["iwara_gray_layer"] = False
         config_copy.ai_llm.config["llm"]["读取群聊上下文"] = False
+        config_copy.resource_collector.config["iwara"]["zip_file"] = False
         config_copy.common_config.basic_config["master"]["id"] = 111111111
     def run_bot2():
         """在独立线程运行 bot2"""
