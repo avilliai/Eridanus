@@ -35,7 +35,7 @@ cookie = "cna=j117HdPDmkoCAXjC3hh/4rjk; ajs_anonymous_id=5aa505b4-8510-47b5-a1e3
 def random_session_hash(random_length):
     return random_str(random_length, "abcdefghijklmnopqrstuvwxyz1234567890")
 
-async def hf_drawer(prompt,proxy,args,negative=None,user_cookie=None):
+async def hf_drawer(prompt, proxy, args):
     height = 1600
     width = 1064
     try:

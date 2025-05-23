@@ -7,15 +7,14 @@ from bs4 import BeautifulSoup
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
-from run.ai_generated_art.service.aiArtModerate import aiArtModerate
 from run.ai_generated_art.service.modelscope_text2img import modelscope_drawer
 from run.ai_generated_art.service.hf_t2i import hf_drawer
 from run.ai_generated_art.service.setu_moderate import pic_audit_standalone
 from run.basic_plugin.service.ai_text2img import bing_dalle3, flux_ultra
 from framework_common.database_util.User import get_user, User
 from framework_common.utils.random_str import random_str
-from run.ai_generated_art.service.aiDraw import  n4, n3, SdDraw0, getloras, getcheckpoints, ckpt2, n4re0, n3re0,\
-    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint, get_img_info
+from run.ai_generated_art.service.aiDraw import n4, n3, SdDraw0, getloras, getcheckpoints, ckpt2, n4re0, n3re0, \
+    SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint, get_img_info, aiArtModerate
 from run.ai_generated_art.service.wildcard import get_available_wildcards, replace_wildcards
 from framework_common.utils.utils import download_img, url_to_base64, parse_arguments, get_img, delay_recall
 from run.basic_plugin.service.imgae_search.anime_trace import anime_trace
@@ -40,6 +39,7 @@ aiDrawController = config.ai_generated_art.config.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 allow_nsfw_groups = [int(item) for item in aiDrawController.get("allow_nsfw_groups", [])] if aiDrawController else []
 
+
 async def call_text2img(bot, event, config, prompt):
     tag = prompt
 
@@ -63,40 +63,45 @@ async def call_text2img(bot, event, config, prompt):
                     r = f1
             except Exception as e:
                 bot.logger.error(f"Task failed: {e}")
-        if r:
-            bot.logger.info("text2img 任务完成: success")
-        else:
-            bot.logger.info("text2img 任务完成: failed")
-
+        bot.logger.info(f"text2img 任务完成: {r}")
     # 在后台运行任务，不等待完成
     asyncio.create_task(run_tasks())
+
+
 async def call_text2img3(bot, event, config, prompt):
     user_info = await get_user(event.user_id)
-    if user_info.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画2所需权限等级"] and config.ai_generated_art.config["ai绘画"]["内置ai绘画2开关"]:
+    if user_info.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画2所需权限等级"] and \
+            config.ai_generated_art.config["ai绘画"]["内置ai绘画2开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
-        img=await modelscope_drawer(prompt,config.common_config.basic_config["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+        img = await modelscope_drawer(prompt, config.common_config.basic_config["proxy"]["http_proxy"],
+                                      sd_user_args.get(event.sender.user_id, {}))
         bot.logger.info(f"NoobXL-EPS-v1.1：{img}")
         if img:
-            await bot.send(event,[Text(f"NoobXL-EPS-v1.1："),Image(file=img)])
+            await bot.send(event, [Text(f"NoobXL-EPS-v1.1："), Image(file=img)])
+
 
 async def call_text2img4(bot, event, config, prompt):
     if config.common_config.basic_config:
         try:
             user: User = await get_user(event.user_id)
-            if user.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画2所需权限等级"] and config.ai_generated_art.config["ai绘画"]["内置ai绘画2开关"]:
+            if user.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画2所需权限等级"] and \
+                    config.ai_generated_art.config["ai绘画"]["内置ai绘画2开关"]:
                 bot.logger.info(f"Received text2img prompt: {prompt}")
-                img=await hf_drawer(prompt,config.common_config.basic_config["proxy"]["http_proxy"], sd_user_args.get(event.sender.user_id, {}))
+                img = await hf_drawer(prompt, config.common_config.basic_config["proxy"]["http_proxy"],
+                                      sd_user_args.get(event.sender.user_id, {}))
                 bot.logger.info(f"ani4：{img}")
                 if img:
-                    await bot.send(event,[Text(f"ani4："),Image(file=img)])
+                    await bot.send(event, [Text(f"ani4："), Image(file=img)])
         except Exception as e:
             print(f"ani4：{e}")
+
 
 async def call_text2img2(bot, event, config, tag):
     prompt = tag
     user_info = await get_user(event.user_id)
 
-    if user_info.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画1所需权限等级"] and config.ai_generated_art.config["ai绘画"]["内置ai绘画1开关"]:
+    if user_info.permission >= config.ai_generated_art.config["ai绘画"]["内置ai绘画1所需权限等级"] and \
+            config.ai_generated_art.config["ai绘画"]["内置ai绘画1开关"]:
         bot.logger.info(f"Received text2img prompt: {prompt}")
         proxy = config.common_config.basic_config
 
@@ -122,16 +127,18 @@ async def call_text2img2(bot, event, config, tag):
                 bot.logger.error(f"Task failed with prompt '{prompt}': {e}")
     else:
         pass
-        #await bot.send(event, "你没有权限使用该功能。")
+        # await bot.send(event, "你没有权限使用该功能。")
 
-async def call_text2img1(bot,event,config,tag):
+
+async def call_text2img1(bot, event, config, tag):
     user_info = await get_user(event.user_id)
     if user_info.permission < config.ai_generated_art.config["ai绘画"]["ai绘画所需权限等级"]:
         bot.logger.info(f"reject text2img request: 权限不足")
-        msg = await bot.send(event,"无绘图功能使用权限",True)
+        msg = await bot.send(event, "无绘图功能使用权限", True)
         await delay_recall(bot, msg)
         return
-    if config.ai_generated_art.config["ai绘画"]["sd画图"] and config.ai_generated_art.config["ai绘画"]["sdUrl"] !="" and config.ai_generated_art.config["ai绘画"]["sdUrl"]!='':
+    if config.ai_generated_art.config["ai绘画"]["sd画图"] and config.ai_generated_art.config["ai绘画"][
+        "sdUrl"] != "" and config.ai_generated_art.config["ai绘画"]["sdUrl"] != '':
         global turn
         global sd_user_args
         tag, log = await replace_wildcards(tag)
@@ -140,9 +147,10 @@ async def call_text2img1(bot,event,config,tag):
         path = f"data/pictures/cache/{random_str()}.png"
         bot.logger.info(f"调用sd api: path:{path}|prompt:{tag} 当前队列人数：{turn}")
         try:
-            if turn!=0:
-                if turn>config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id!=config.common_config.basic_config["master"]["id"]:
-                    msg = await bot.send(event,"服务端任务队列已满，稍后再试")
+            if turn != 0:
+                if turn > config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id != \
+                        config.common_config.basic_config["master"]["id"]:
+                    msg = await bot.send(event, "服务端任务队列已满，稍后再试")
                     await delay_recall(bot, msg)
                     return
                 msg = await bot.send(event, f'请求已加入绘图队列，当前排队任务数量：{turn}，请耐心等待~', True)
@@ -153,9 +161,9 @@ async def call_text2img1(bot,event,config,tag):
             turn += 1
             args = sd_user_args.get(event.sender.user_id, {})
             if hasattr(event, "group_id"):
-                id_=event.group_id
+                id_ = event.group_id
             else:
-                id_=event.user_id
+                id_ = event.user_id
             p = await SdDraw0(tag, path, config, id_, args)
             if not p:
                 turn -= 1
@@ -179,7 +187,8 @@ async def call_text2img1(bot,event,config,tag):
             msg = await bot.send(event, f"sd api调用失败。{e}")
             await delay_recall(bot, msg)
 
-async def call_aiArtModerate(bot,event,config,img_url):
+
+async def call_aiArtModerate(bot, event, config, img_url):
     try:
         """
         traceanime检测
@@ -187,23 +196,25 @@ async def call_aiArtModerate(bot,event,config,img_url):
         try:
             res = await anime_trace(img_url)
             bot.logger.info("traceanime调用成功,结果：{res[2]}")
-            res=f"traceanime检测结果：{res[2]}(True为ai作品，False为非ai作品)"
+            res = f"traceanime检测结果：{res[2]}(True为ai作品，False为非ai作品)"
         except Exception as e:
-            res="traceanime调用失败"
+            res = "traceanime调用失败"
 
         try:
-            r=await aiArtModerate(img_url,config.ai_generated_art.config["sightengine"]["api_user"],config.ai_generated_art.config["sightengine"]["api_secret"])
-            r=f"aiArtModerate调用成功，ai生成的可能性为：{r}"
+            r = await aiArtModerate(img_url, config.ai_generated_art.config["sightengine"]["api_user"],
+                                    config.ai_generated_art.config["sightengine"]["api_secret"])
+            r = f"aiArtModerate调用成功，ai生成的可能性为：{r}"
         except Exception as e:
-            r=f"aiArtModerate调用失败。{e}"
+            r = f"aiArtModerate调用失败。{e}"
         if config.ai_llm.config["llm"]["aiReplyCore"]:
-            return {"msg":f"api调用结果为，{res}\n{r}"}
+            return {"msg": f"api调用结果为，{res}\n{r}"}
         else:
             await bot.send(event, f"图片为ai创作的可能性为{r}%", True)
     except Exception as e:
         bot.logger.error(e)
         msg = await bot.send(event, f"aiArtModerate调用失败。{e}")
         await delay_recall(bot, msg)
+
 
 async def nai4(bot, event, config, tag):
     if config.ai_generated_art.config["ai绘画"]["novel_ai画图"]:
@@ -235,6 +246,7 @@ async def nai4(bot, event, config, tag):
                     bot.logger.info(f"nai4调用失败。{e}")
                     msg = await bot.send(event, f"nai4画图失败{e}", True)
                     await delay_recall(bot, msg)
+
 
 async def nai3(bot, event, config, tag):
     if config.ai_generated_art.config["ai绘画"]["novel_ai画图"]:
@@ -268,8 +280,10 @@ async def nai3(bot, event, config, tag):
                     msg = await bot.send(event, f"nai3画图失败{e}", True)
                     await delay_recall(bot, msg)
 
-def main(bot,config):
+
+def main(bot, config):
     ai_img_recognize = {}
+
     @bot.on(GroupMessageEvent)
     async def search_image(event):
         try:
@@ -292,14 +306,13 @@ def main(bot,config):
             prompt = str(event.pure_text).replace("画 ", "")
             await call_text2img(bot, event, config, prompt)
 
-    
     @bot.on(GroupMessageEvent)
     async def naiDraw4(event):
         if str(event.pure_text).startswith("n4 ") and config.ai_generated_art.config["ai绘画"]["novel_ai画图"]:
             tag = str(event.pure_text).replace("n4 ", "")
             msg = await bot.send(event, '正在进行nai4画图', True)
             await delay_recall(bot, msg)
-            await nai4(bot,event,config,tag)
+            await nai4(bot, event, config, tag)
 
     @bot.on(GroupMessageEvent)
     async def naiDraw3(event):
@@ -307,7 +320,7 @@ def main(bot,config):
             tag = str(event.pure_text).replace("n3 ", "")
             msg = await bot.send(event, '正在进行nai3画图', True)
             await delay_recall(bot, msg)
-            await nai3(bot,event,config,tag)
+            await nai3(bot, event, config, tag)
 
     @bot.on(GroupMessageEvent)
     async def db(event):
@@ -318,7 +331,8 @@ def main(bot,config):
             await delay_recall(bot, msg)
             limit = 5
             if config.common_config.basic_config["proxy"]["http_proxy"]:
-                proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
+                proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"],
+                           "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
             else:
                 proxies = None
 
@@ -338,7 +352,7 @@ def main(bot,config):
                     bot.logger.info(f"Autocomplete request successful for tag: {tag}")
             except Exception as e:
                 bot.logger.error(f"Failed to get autocomplete data for tag: {tag}. Error: {e}")
-                msg = await bot.send(event,f"获取{tag}的搜索结果失败")
+                msg = await bot.send(event, f"获取{tag}的搜索结果失败")
                 await delay_recall(bot, msg)
                 return
 
@@ -400,15 +414,19 @@ def main(bot,config):
                         raise
 
                 async def process_image(image_url):
-                    image_url = image_url.replace('180x180', '720x720').replace('360x360', '720x720').replace('.jpg', '.webp')
+                    image_url = image_url.replace('180x180', '720x720').replace('360x360', '720x720').replace('.jpg',
+                                                                                                              '.webp')
                     try:
                         base64_image, bytes_image = await download_img1(image_url)
-                        if event.group_id not in allow_nsfw_groups and config.ai_generated_art.config['ai绘画']["禁止nsfw"]:
+                        if event.group_id not in allow_nsfw_groups and config.ai_generated_art.config['ai绘画'][
+                            "禁止nsfw"]:
                             if config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                                 try:
-                                    audit_result = await pic_audit_standalone(base64_image, return_none=True,url=config.ai_generated_art.config["ai绘画"]["sd审核和反推api"])
+                                    audit_result = await pic_audit_standalone(base64_image, return_none=True, url=
+                                    config.ai_generated_art.config["ai绘画"]["sd审核和反推api"])
                                     if audit_result:
-                                        bot.logger.info(f"Image at URL {image_url} was flagged by audit: {audit_result}")
+                                        bot.logger.info(
+                                            f"Image at URL {image_url} was flagged by audit: {audit_result}")
                                         return [Text(f"太涩了{image_url}")]
                                 except Exception as e:
                                     bot.logger.error(f"error to audit image at {image_url}: {e}")
@@ -416,7 +434,7 @@ def main(bot,config):
                             else:
                                 bot.logger.warning(f"审核api未配置，为了安全起见，已屏蔽图片{image_url}")
                                 return [Text(f"审核api未配置，为了安全起见，已屏蔽图片{image_url}")]
-                                    
+
                         bot.logger.info(f"Image at URL {image_url} passed the audit")
                         path = f"data/pictures/cache/{random_str()}.png"
                         p = await download_img(image_url, path)
@@ -496,7 +514,8 @@ def main(bot,config):
                     msg = await bot.send(event, "tag反推中", True)
                     await delay_recall(bot, msg)
                     message, tags, tags_str = await pic_audit_standalone(b64_in, is_return_tags=True,
-                                                                        url=config.ai_generated_art.config["ai绘画"]["sd审核和反推api"])
+                                                                         url=config.ai_generated_art.config["ai绘画"][
+                                                                             "sd审核和反推api"])
                     tags_str = tags_str.replace("_", " ")
                     await bot.send(event, Text(tags_str), True)
                 except Exception as e:
@@ -543,7 +562,7 @@ def main(bot,config):
                 prompt = str(event.pure_text).replace("重绘 ", "").replace("重绘", "").strip()
                 if user_info.permission < config.ai_generated_art.config["ai绘画"]["ai绘画所需权限等级"]:
                     bot.logger.info(f"reject text2img request: 权限不足")
-                    msg = await bot.send(event,"无绘图功能使用权限",True)
+                    msg = await bot.send(event, "无绘图功能使用权限", True)
                     await delay_recall(bot, msg)
                     return
                 UserGet[event.sender.user_id] = [prompt]
@@ -561,13 +580,13 @@ def main(bot,config):
                 # 日志记录
                 prompts = ', '.join(UserGet[event.sender.user_id])
                 if prompts:
-                    prompts,log = await replace_wildcards(prompts)
+                    prompts, log = await replace_wildcards(prompts)
                     if log:
                         await bot.send(event, log, True)
                 user_info = await get_user(event.user_id)
                 if user_info.permission < config.ai_generated_art.config["ai绘画"]["ai绘画所需权限等级"]:
                     bot.logger.info(f"reject text2img request: 权限不足")
-                    msg = await bot.send(event,"无绘图功能使用权限",True)
+                    msg = await bot.send(event, "无绘图功能使用权限", True)
                     await delay_recall(bot, msg)
                     return
                 bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的重绘指令 prompt: {prompts}")
@@ -578,10 +597,11 @@ def main(bot,config):
                 bot.logger.info(f"发起SDai重绘请求，path:{path}|prompt:{prompts}")
                 prompts_str = ' '.join(UserGet[event.sender.user_id]) + ' '
                 UserGet.pop(event.sender.user_id)
-                if turn>config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id!=config.common_config.basic_config["master"]["id"]:
-                        msg = await bot.send(event,"服务端任务队列已满，稍后再试")
-                        await delay_recall(bot, msg)
-                        return 
+                if turn > config.ai_generated_art.config["ai绘画"]["sd队列长度限制"] and event.user_id != \
+                        config.common_config.basic_config["master"]["id"]:
+                    msg = await bot.send(event, "服务端任务队列已满，稍后再试")
+                    await delay_recall(bot, msg)
+                    return
 
                 try:
                     args = sd_re_args.get(event.sender.user_id, {})
@@ -604,7 +624,7 @@ def main(bot,config):
                         await delay_recall(bot, msg)
                     else:
                         turn -= 1
-                        await bot.send(event, [Text("sd重绘结果"),Image(file=p)], True)
+                        await bot.send(event, [Text("sd重绘结果"), Image(file=p)], True)
                 except Exception as e:
                     bot.logger.error(f"重绘失败: {e}")
                     msg = await bot.send(event, f"sd api重绘失败。{e}", True)
@@ -639,7 +659,7 @@ def main(bot,config):
             bot.logger.info('切换ckpt中')
             if event.user_id == config.common_config.basic_config["master"]["id"]:
                 try:
-                    await ckpt2(tag,config)
+                    await ckpt2(tag, config)
                     msg = await bot.send(event, "切换成功喵~第一次会慢一点~", True)
                     await delay_recall(bot, msg)
                     # logger.info("success")
@@ -650,7 +670,7 @@ def main(bot,config):
             else:
                 msg = await bot.send(event, "仅master可执行此操作", True)
                 await delay_recall(bot, msg)
-                
+
         if str(event.pure_text) == "sampler" and config.ai_generated_art.config["ai绘画"]["sd画图"]:
             bot.logger.info('查询sampler中...')
             try:
@@ -660,7 +680,7 @@ def main(bot,config):
                 # logger.info("success")
             except Exception as e:
                 bot.logger.error(e)
-        
+
         if str(event.pure_text) == "scheduler" and config.ai_generated_art.config["ai绘画"]["sd画图"]:
             bot.logger.info('查询scheduler中...')
             try:
@@ -670,8 +690,9 @@ def main(bot,config):
                 # logger.info("success")
             except Exception as e:
                 bot.logger.error(e)
-                
-        if str(event.pure_text) == "interrupt" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == config.common_config.basic_config["master"]["id"]:
+
+        if str(event.pure_text) == "interrupt" and config.ai_generated_art.config["ai绘画"][
+            "sd画图"] and event.user_id == config.common_config.basic_config["master"]["id"]:
             global turn
             try:
                 await interrupt(config)
@@ -681,8 +702,9 @@ def main(bot,config):
                 bot.logger.error(e)
                 msg = await bot.send(event, f"中断任务失败: {e}")
                 await delay_recall(bot, msg, 20)
-                
-        if str(event.pure_text) == "skip" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == config.common_config.basic_config["master"]["id"]:
+
+        if str(event.pure_text) == "skip" and config.ai_generated_art.config["ai绘画"]["sd画图"] and event.user_id == \
+                config.common_config.basic_config["master"]["id"]:
             global turn
             try:
                 await skipsd(config)
@@ -705,7 +727,6 @@ def main(bot,config):
                 prompts, log = await replace_wildcards(prompts)
                 if log:
                     await bot.send(event, prompts)
-                
 
     @bot.on(GroupMessageEvent)
     async def n4reDrawRun(event):
@@ -729,7 +750,7 @@ def main(bot,config):
                 # 日志记录
                 prompts = ', '.join(n4re[event.sender.user_id])
                 if prompts:
-                    prompts,log = await replace_wildcards(prompts)
+                    prompts, log = await replace_wildcards(prompts)
                     if log:
                         await bot.send(event, log, True)
                 bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n4re指令 prompt: {prompts}")
@@ -739,7 +760,7 @@ def main(bot,config):
                 img_url = await get_img(event.processed_message, bot, event)
                 bot.logger.info(f"发起n4re请求，path:{path}|prompt:{prompts}")
                 prompts_str = ' '.join(n4re[event.sender.user_id]) + ' '
-                msg = await bot.send(event, "正在nai4重绘",True)
+                msg = await bot.send(event, "正在nai4重绘", True)
                 await delay_recall(bot, msg)
                 n4re.pop(event.sender.user_id)
 
@@ -758,7 +779,7 @@ def main(bot,config):
                             msg = await bot.send(event, p, True)
                             await delay_recall(bot, msg)
                         else:
-                            await bot.send(event, [Text("nai4重绘结果"),Image(file=p)], True)
+                            await bot.send(event, [Text("nai4重绘结果"), Image(file=p)], True)
                     except Exception as e:
                         bot.logger.error(e)
                         if retries_left > 0:
@@ -792,7 +813,7 @@ def main(bot,config):
                 # 日志记录
                 prompts = ', '.join(n3re[event.sender.user_id])
                 if prompts:
-                    prompts,log = await replace_wildcards(prompts)
+                    prompts, log = await replace_wildcards(prompts)
                     if log:
                         await bot.send(event, log, True)
                 bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的n3re指令 prompt: {prompts}")
@@ -802,7 +823,7 @@ def main(bot,config):
                 img_url = await get_img(event.processed_message, bot, event)
                 bot.logger.info(f"发起n3re请求，path:{path}|prompt:{prompts}")
                 prompts_str = ' '.join(n3re[event.sender.user_id]) + ' '
-                msg = await bot.send(event, "正在nai3重绘",True)
+                msg = await bot.send(event, "正在nai3重绘", True)
                 await delay_recall(bot, msg, 20)
                 n3re.pop(event.sender.user_id)
 
@@ -821,7 +842,7 @@ def main(bot,config):
                             msg = await bot.send(event, p, True)
                             await delay_recall(bot, msg, 20)
                         else:
-                            await bot.send(event, [Text("nai3重绘结果"),Image(file=p)], True)
+                            await bot.send(event, [Text("nai3重绘结果"), Image(file=p)], True)
                     except Exception as e:
                         bot.logger.error(e)
                         if retries_left > 0:
@@ -854,7 +875,7 @@ def main(bot,config):
                 await delay_recall(bot, msg, 20)
                 mask[event.sender.user_id] = img_url
                 return
-            
+
         # 处理图片和重绘命令
         if event.sender.user_id in UserGetm and event.sender.user_id not in mask:
             if await get_img(event.processed_message, bot, event):
@@ -870,7 +891,8 @@ def main(bot,config):
                 prompts = UserGetm[event.sender.user_id]  # 直接使用字符串
                 mask_url = await get_img(event.processed_message, bot, event)
                 img_url = mask[event.sender.user_id]  # 直接使用字符串
-                bot.logger.info(f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的局部重绘指令 prompt: {prompts}")
+                bot.logger.info(
+                    f"接收来自群：{event.group_id} 用户：{event.sender.user_id} 的局部重绘指令 prompt: {prompts}")
                 UserGetm.pop(event.sender.user_id)
                 mask.pop(event.sender.user_id)
 
@@ -895,13 +917,13 @@ def main(bot,config):
                         await delay_recall(bot, msg, 20)
                     else:
                         turn -= 1
-                        await bot.send(event, [Text("sd局部重绘结果"),Image(file=p)], True)
+                        await bot.send(event, [Text("sd局部重绘结果"), Image(file=p)], True)
                 except Exception as e:
                     bot.logger.error(f"局部重绘失败: {e}")
                     msg = await bot.send(event, f"sd api局部重绘失败。{e}", True)
                     await delay_recall(bot, msg, 20)
                 return
-                
+
     @bot.on(GroupMessageEvent)
     async def end_re(event):
         if str(event.pure_text) == "/clearre":
@@ -912,7 +934,7 @@ def main(bot,config):
             global n3re
             global mask
             global UserGetm
-            
+
             dictionaries = {
                 'UserGet': UserGet,
                 'tag_user': tag_user,
@@ -935,10 +957,10 @@ def main(bot,config):
                         bot.logger.info(f"User ID {user_id} not found in {dict_name}.")
                 else:
                     bot.logger.info(f"Expected a dictionary for {dict_name}, but got {type(dictionary)}.")
-            
+
             msg = await bot.send(event, "已清除所有输入图片和文本缓存", True)
             await delay_recall(bot, msg, 20)
-            
+
     @bot.on(GroupMessageEvent)
     async def img_info(event):
         global info_user
