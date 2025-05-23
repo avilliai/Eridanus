@@ -649,17 +649,64 @@ def handle_websocket(ws):
                 'post_type': 'message',
                 'group_id': 879886836}
 
-            event_json = json.dumps(onebot_event, ensure_ascii=False)
+            def send_mes(onebot_event):
+                event_json = json.dumps(onebot_event, ensure_ascii=False)
 
-            # 发送给所有连接的客户端（后端）
-            for client in list(clients):
-                try:
-                    if client != ws:  # 避免回传给前端
-                        client.send(event_json)
-                except Exception:
-                    clients.discard(client)
+                # 发送给所有连接的客户端（后端）
+                for client in list(clients):
+                    try:
+                        if client != ws:  # 避免回传给前端
+                            client.send(event_json)
+                    except Exception:
+                        clients.discard(client)
 
-            logger.server(f"已发送 OneBot v11 事件: {event_json}")
+                logger.server(f"已发送 OneBot v11 事件: {event_json}")
+            def is_valid_messages_structure(data):
+                # 检查字典是否包含 message 键
+                if not isinstance(data, dict) or 'message' not in data:
+                    return False
+
+                # 检查 message 是否包含 action 和 params
+                message = data.get('message')
+                if not isinstance(message, dict) or 'action' not in message or 'params' not in message:
+                    return False
+
+                # 检查 action 是否为 send_group_forward_msg
+                if message['action'] != 'send_group_forward_msg':
+                    return False
+
+                # 检查 params 是否包含 messages
+                params = message.get('params')
+                if not isinstance(params, dict) or 'messages' not in params:
+                    return False
+
+                # 检查 messages 是否为列表
+                messages = params.get('messages')
+                if not isinstance(messages, list):
+                    return False
+                # 检查 messages 中的每个元素是否为 node 类型
+                for msg in messages:
+                    if not isinstance(msg, dict) or 'type' not in msg or msg['type'] != 'node':
+                        return False
+                    # 进一步检查 node 是否包含 data 且 data 包含 content
+                    if 'data' not in msg or not isinstance(msg['data'], dict):
+                        return False
+                    if 'content' not in msg['data'] or not isinstance(msg['data']['content'], list):
+                        return False
+
+                return True
+            if is_valid_messages_structure(onebot_event):
+                """
+                对Node消息进行处理
+                """
+                back_event = onebot_event.copy()
+                for node in onebot_event['message']["params"]["messages"]:
+                    content=node['data']['content']
+                    back_event["message"]["action"] ="send_group_msg"
+                    back_event['message']["params"]["message"] = content
+                    send_mes(back_event)
+            else:
+                send_mes(onebot_event)
     except Exception as e:
         logger.server(f"WebSocket事件: {e}")
     finally:
