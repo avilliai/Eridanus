@@ -8,7 +8,6 @@ import asyncio
 
 from jmcomic import *
 
-
 from framework_common.utils.random_str import random_str
 from run.ai_generated_art.service.antiSFW import process_folder, compress_gifs
 
@@ -31,7 +30,7 @@ class MyDownloader(jmcomic.JmDownloader):
             return [album[self.album_index - 1]]
         if detail.is_photo():
             photo: jmcomic.JmPhotoDetail = detail
-            #print(len(photo))
+            # print(len(photo))
             if end > len(photo):
                 end = len(photo)
             if start > len(photo):
@@ -53,7 +52,7 @@ def queryJM(name, num=3):
         results.append([f"车牌号：{i[0]} \n name：{i[1]['name']}\nauthor：{i[1]['author']} \n部分预览图：", file[0]])
         if len(results) > num:
             return results
-        #print(results)
+        # print(results)
 
 
 def JM_search(name):
@@ -110,11 +109,11 @@ def JM_search_comic_id():
     return result
 
 
-def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compress=False):
-    with open("run/resource_collector/jmcomic.yml", 'r', encoding='utf-8') as f: #不知道他这个options咋传的，我就修改配置文件得了。
+def downloadComic(comic_id, start=1, end=5, anti_nsfw="black_and_white", gif_compress=False):
+    with open("run/resource_collector/jmcomic.yml", 'r', encoding='utf-8') as f:  # 不知道他这个options咋传的，我就修改配置文件得了。
         result = yaml.load(f.read(), Loader=yaml.FullLoader)
-    result["dir_rule"]["base_dir"]=f"data/pictures/benzi/temp{comic_id}"
-    #临时修改
+    result["dir_rule"]["base_dir"] = f"data/pictures/benzi/temp{comic_id}"
+    # 临时修改
     with open("run/resource_collector/jmcomic.yml", 'w', encoding="utf-8") as file:
         yaml.dump(result, file, allow_unicode=True)
     option = jmcomic.create_option_by_file('run/resource_collector/jmcomic.yml')
@@ -133,10 +132,10 @@ def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compr
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
     file_names = os.listdir(folder_path)
-    #print(file_names)
+    # print(file_names)
     new_files = []
     if anti_nsfw == "gif":
-        asyncio.run(process_folder(input_folder=folder_path,output_folder=folder_path))
+        asyncio.run(process_folder(input_folder=folder_path, output_folder=folder_path))
         for filename in sorted(os.listdir(folder_path)):
             if filename.lower().endswith('.gif'):
                 new_filename = f"data/pictures/cache/{random_str()}.gif"
@@ -148,19 +147,19 @@ def downloadComic(comic_id, start=1, end=5,anti_nsfw="black_and_white",gif_compr
         for i in file_names:
             # print(file_names)
             image_raw = Image.open(f"data/pictures/benzi/temp{comic_id}/" + i)
-            
+
             # convert image to black and white
             image_black_white = image_raw.convert('1')
             newPath = f"data/pictures/cache/{random_str()}.png"
             new_files.append(newPath)
             image_black_white.save(newPath)
         # png_files = [os.path.join(folder_path, file) for file in file_names if file.lower().endswith('.png')]
-        #print(new_files)
+        # print(new_files)
     elif anti_nsfw == "no_censor":
         for i in file_names:
             original_file = f"data/pictures/benzi/temp{comic_id}/" + i
             shutil.move(original_file, "data/pictures/cache/")
-            new_files.append("data/pictures/cache/"+i)
+            new_files.append("data/pictures/cache/" + i)
     return new_files
 
 
@@ -192,4 +191,3 @@ def downloadALLAndToPdf(comic_id, savePath):
     # 使用option对象来下载本子
     jmcomic.download_album(comic_id, option)
     return f"{savePath}/{comic_id}"
-
