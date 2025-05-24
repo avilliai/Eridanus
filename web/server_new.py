@@ -36,7 +36,7 @@ app.json.sort_keys = False  # 不要对json排序
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)  # 只显示 ERROR 级别及以上的日志（隐藏 INFO 和 DEBUG）
-logger = get_logger()
+logger = get_logger(blocked_loggers=["DEBUG", "INFO_MSG"])
 
 CORS(app, supports_credentials=True)  # 启用跨域支持
 sock = Sock(app)  # 初始化Flask sock
