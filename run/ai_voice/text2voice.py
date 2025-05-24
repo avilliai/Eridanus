@@ -16,7 +16,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
 
     # 获取所有 speakers
     all_speakers = (await call_all_speakers(bot, event, config))["speakers"]
-    ncspk, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers = all_speakers
+    ncspk, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers,otto = all_speakers
 
     # 检查是否有可用 speakers
     if not any(all_speakers):
@@ -29,6 +29,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
         (vits_speakers, [(speaker, "vits")]),
         (online_vits2_speakers, [(speaker, "online_vits2")]),
         (blue_archive_speakers, [(speaker, "blue_archive")]),
+        (otto, [("otto", "OttoTTS")])
     ]
 
     # 匹配 speaker 和 mode
