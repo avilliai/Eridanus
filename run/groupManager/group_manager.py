@@ -60,8 +60,8 @@ def main(bot: ExtendBot,config):
                 await bot.quit(group_id)
                 await bot.send(event, f"已退群{group_id}")
             if event.pure_text.startswith("/quit < "):
-                threshold = int(event.pure_text.replace("/quit < "))
+                threshold = int(event.pure_text.replace("/quit < ",""))
                 await quit_group(bot,event,config,threshold,"below")
             elif event.pure_text.startswith("/quit > "):
-                threshold = int(event.pure_text.replace("/quit > "))
+                threshold = int(event.pure_text.replace("/quit > ",""))
                 await quit_group(bot,event,config,threshold,"above")
