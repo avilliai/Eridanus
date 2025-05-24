@@ -1,6 +1,8 @@
 import logging
 import os
 from datetime import datetime
+from logging import Logger
+
 import colorlog
 
 # 全局变量，用于存储 logger 实例和屏蔽的日志类别
@@ -135,7 +137,7 @@ def createLogger(blocked_loggers=None):
     _logger = logger
 
 
-def get_logger(blocked_loggers=None):
+def get_logger(blocked_loggers=None) -> Logger:
     global _logger
     if _logger is None:
         createLogger(blocked_loggers)

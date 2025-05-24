@@ -263,7 +263,6 @@ async def search_videos(word,config,iwara_gray_layer=False):
         return video_info_list
 
 def main(command):
-    global sort
     if command.startswith("下载"):
         videoid = command.replace("下载", "").strip()
         if videoid:
@@ -284,8 +283,6 @@ def main(command):
     elif command.startswith("榜单"):
         sort = command.replace("榜单", "").strip()
         asyncio.run(fetch_video_info(sort))
-    else:
-        pass
         #print("未知命令，请输入 '榜单{name}'、'榜单下载{name}' 、'下载{video_id}、'搜索{关键词}'")
 
 if __name__ == "__main__":

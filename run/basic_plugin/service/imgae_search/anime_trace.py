@@ -2,7 +2,8 @@ import asyncio
 from httpx import AsyncClient
 import os
 
-async def anime_trace(image_source)->list[str,str,bool]:
+
+async def anime_trace(image_source) -> list[str, str, bool]:
     """
     ai检测，返回结果。识别角色
     """
@@ -15,8 +16,10 @@ async def anime_trace(image_source)->list[str,str,bool]:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67",
     }
-    ai_work=False
+    ai_work = False
+
     async def get_data():
+        nonlocal ai_work
         async with AsyncClient(trust_env=False) as client:
             try:
                 if image_source.startswith("http"):
@@ -30,7 +33,7 @@ async def anime_trace(image_source)->list[str,str,bool]:
                         res = await client.post(url=url, headers=headers, data=data, files=files, timeout=30)
                 content = res.json()
                 if content["ai"]:
-                    ai_work=True
+                    ai_work = True
                 if data["model"] == "animetrace_high_beta":
                     a = "anime"
                 else:
@@ -39,19 +42,21 @@ async def anime_trace(image_source)->list[str,str,bool]:
                 for result in content["data"][0]["character"]:
                     #print(result)
                     str_result += f"{result['work']} ({result['character']}%)\n"
-                    if content["data"][0]["character"].index(result)>2:
+                    if content["data"][0]["character"].index(result) > 2:
                         break
                 return str_result
             except Exception as e:
                 print(f"Error: {str(e)}")
                 return None
-    anime_res=await get_data()
+
+    anime_res = await get_data()
     data["model"] = "full_game_model_kira"
-    game_res=await get_data()
-    return [anime_res,game_res,ai_work]
+    game_res = await get_data()
+    return [anime_res, game_res, ai_work]
+
 
 # Example usage
 if __name__ == "__main__":
     # Replace 'test.jpg' with the path to an actual image file
-    anime_res=asyncio.run(anime_trace("D:\BlueArchive\Eridanus\img.png"))
+    anime_res = asyncio.run(anime_trace("D:\BlueArchive\Eridanus\img.png"))
     print(anime_res)

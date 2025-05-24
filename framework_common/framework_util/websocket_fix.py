@@ -9,10 +9,11 @@ from developTools.event.eventFactory import EventFactory
 
 
 class ExtendBot(WebSocketBot):
-    def __init__(self, uri: str,config, **kwargs):
+    def __init__(self, uri: str, config, **kwargs):
         super().__init__(uri, **kwargs)
         self.config = config
-        self.id=1000000
+        self.id = 1000000
+
     async def _receive(self):
         """
         接收服务端消息并分发处理。
@@ -32,15 +33,15 @@ class ExtendBot(WebSocketBot):
                 elif "post_type" in data:
                     event_obj = EventFactory.create_event(data)
                     try:
-                        if event_obj.post_type=="meta_event":
+                        if event_obj.post_type == "meta_event":
 
-                            if event_obj.meta_event_type=="lifecycle":
+                            if event_obj.meta_event_type == "lifecycle":
                                 self.id = int(event_obj.self_id)
                                 self.logger.info(f"Bot ID: {self.id}")
                     except:
                         pass
                     if hasattr(event_obj, "group_id"):
-                        if self.config.common_config.basic_config["group_handle_logic"]=="blacklist":
+                        if self.config.common_config.basic_config["group_handle_logic"] == "blacklist":
                             if event_obj.group_id not in self.config.common_config.censor_group["blacklist"]:
                                 if hasattr(event_obj, "user_id"):
                                     if self.config.common_config.basic_config["user_handle_logic"] == "blacklist":
@@ -57,7 +58,7 @@ class ExtendBot(WebSocketBot):
                                     asyncio.create_task(self.event_bus.emit(event_obj))
                             else:
                                 self.logger.info(f"群{event_obj.group_id}在黑名单中，跳过处理。")
-                        elif self.config.common_config.basic_config["group_handle_logic"]=="whitelist":
+                        elif self.config.common_config.basic_config["group_handle_logic"] == "whitelist":
                             if event_obj.group_id in self.config.common_config.censor_group["whitelist"]:
                                 if hasattr(event_obj, "user_id"):
                                     if self.config.common_config.basic_config["user_handle_logic"] == "blacklist":
@@ -75,12 +76,12 @@ class ExtendBot(WebSocketBot):
                             else:
                                 self.logger.info(f"群{event_obj.group_id}不在白名单中，跳过处理。")
                     elif hasattr(event_obj, "user_id"):
-                        if self.config.common_config.basic_config["user_handle_logic"]=="blacklist":
+                        if self.config.common_config.basic_config["user_handle_logic"] == "blacklist":
                             if event_obj.user_id not in self.config.common_config.censor_user["blacklist"]:
                                 asyncio.create_task(self.event_bus.emit(event_obj))
                             else:
                                 self.logger.info(f"用户{event_obj.user_id}在黑名单中，跳过处理。")
-                        elif self.config.common_config.basic_config["user_handle_logic"]=="whitelist":
+                        elif self.config.common_config.basic_config["user_handle_logic"] == "whitelist":
                             if event_obj.user_id in self.config.common_config.censor_user["whitelist"]:
                                 asyncio.create_task(self.event_bus.emit(event_obj))
                             else:

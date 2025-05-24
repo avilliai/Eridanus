@@ -58,8 +58,6 @@ module_cache = {}
 
 def check_has_main_and_cache(module_name):
     """检查模块是否包含 `main()` 方法，并缓存已加载的模块"""
-    global module_cache
-
     try:
         if module_name in module_cache:
             module = module_cache[module_name]
@@ -75,7 +73,7 @@ def check_has_main_and_cache(module_name):
             module_cache[module_name] = module
 
         return hasattr(module, "main"), module
-    except Exception as e:
+    except Exception:
         if not module_name.startswith("run.character_detection."):
             bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
             traceback.print_exc()

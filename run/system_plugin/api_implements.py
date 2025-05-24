@@ -13,7 +13,6 @@ import os
 def main(bot, config):
     master = config.common_config.basic_config["master"]["id"]
 
-    global avatar, nudge_list
     avatar = False
     nudge_list = []
 
@@ -38,7 +37,7 @@ def main(bot, config):
 
     @bot.on(GroupMessageEvent)
     async def changeAvatar(event: GroupMessageEvent):
-        global avatar
+        nonlocal avatar
         # bot.logger.info(event.processed_message)
         # bot.logger.error(event.get("image"))
         if event.pure_text == "换头像" and event.sender.user_id == master:
@@ -152,7 +151,7 @@ def main(bot, config):
                     r = await aiReplyCore([{"text": text}], event.user_id, config, bot=bot)
                 else:
                     reply_list = config.system_plugin.config['api_implements']['nudge']['replylist']
-                    global nudge_list
+                    nonlocal nudge_list
                     if len(reply_list) == len(nudge_list): nudge_list = []
                     r = random.choice(reply_list)
                     for r_num in range(0, len(reply_list)):

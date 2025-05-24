@@ -1,13 +1,8 @@
 # 语音合成接口
-import asyncio
-import random
 import re
-import threading
-
-import httpx
-import requests
 
 from developTools.utils.logger import get_logger
+from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.ai_translate import Translator
 from run.ai_voice.service.blue_archive_tts import get_huggingface_blue_archive_speakers, huggingface_blue_archive_tts
 from run.ai_voice.service.modelscopeTTS import modelscope_tts, get_modelscope_tts_speakers
@@ -15,12 +10,33 @@ from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speaker
 from run.ai_voice.service.online_vits import huggingface_online_vits
 from run.ai_voice.service.online_vits2 import huggingface_online_vits2, get_huggingface_online_vits2_speakers
 from run.ai_voice.service.vits import vits, get_vits_speakers
-from framework_common.utils.random_str import random_str
-from framework_common.utils.translate import translate
-
-from framework_common.framework_util.yamlLoader import YAMLManager
+import httpx
+import requests
 
 
+async def translate(text, mode="ZH_CN2JA"):
+    try:
+        URL = f"https://api.pearktrue.cn/api/translate/?text={text}&type={mode}"
+        async with httpx.AsyncClient(timeout=20) as client:
+            r = await client.get(URL)
+            #print(r.json()["data"]["translate"])
+            return r.json()["data"]["translate"]
+    except:
+        if mode != "ZH_CN2JA":
+            return text
+    try:
+        url = f"https://findmyip.net/api/translate.php?text={text}&target_lang=ja"
+        r = requests.get(url=url, timeout=10)
+        return r.json()["data"]["translate_result"]
+    except:
+        pass
+    try:
+        url = f"https://translate.appworlds.cn?text={text}&from=zh-CN&to=ja"
+        r = requests.get(url=url, timeout=10, verify=False)
+        return r.json()["data"]
+    except:
+        pass
+    return text
 
 logger=get_logger()
 class TTS:

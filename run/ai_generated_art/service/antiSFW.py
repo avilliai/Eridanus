@@ -48,10 +48,12 @@ async def generate_blank_img(img):
     return blank_img.convert("RGBA")
 
 
-async def generate_gif_1(image, duration=[0.01, 9.99]):
+async def generate_gif_1(image, duration=None):
     """
     使用添加空白帧的方法生成gif图像。
     """
+    if duration is None:
+        duration = [0.01, 9.99]
     img = await read_image_async(image)  # 使用 read_image_async 获取已转换的图像
     bk_img = await generate_blank_img(np.array(img))
     img_list = [Image.fromarray(bk_img), img]

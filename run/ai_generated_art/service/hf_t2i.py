@@ -123,7 +123,7 @@ async def hf_drawer(prompt, proxy, args):
                         
                         try:
                             event_data = json.loads(line.replace("data:", "").strip())
-                        except json.JSONDecodeError as decode_error:
+                        except json.JSONDecodeError:
                             continue
                         
                         msg_type = event_data.get('msg')
