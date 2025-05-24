@@ -166,7 +166,7 @@ def updaat(f=False,source=None,yamls={}):
         logger.warning("开始检查依赖....请不要关闭窗口")
         logger.warning("开始检查依赖....请不要关闭窗口")
         logger.warning("开始检查依赖....请不要关闭窗口")
-        check_requirements("requirements.txt", pip_path)
+        check_requirements("requirements.txt")
         logger.warning("依赖检查完成，开始依赖约束检查")
         logger.error("出现红色、黄色警告为正常现象，请忽略")
         logger.warning("出现红色、黄色警告为正常现象，请忽略")
@@ -330,12 +330,12 @@ def parse_requirements(file_path):
                 print(f"无法解析行：'{line}'，请检查格式是否正确。")
     return requirements
 
-def get_installed_packages(pip_path):
+def get_installed_packages():
     """
     使用 pip 获取已安装的包和版本信息。
     """
     result = subprocess.run(
-        [pip_path, 'list', '--format=freeze'],
+        ['pip', 'freeze'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -352,7 +352,7 @@ def get_installed_packages(pip_path):
         print(f"获取已安装包失败：{result.stderr}")
     return installed_packages
 
-def check_requirements(requirements_file, pip_path):
+def check_requirements(requirements_file):
     """
     检查 requirements.txt 中的依赖是否已安装。
     """
@@ -362,7 +362,7 @@ def check_requirements(requirements_file, pip_path):
 
     requirements = parse_requirements(requirements_file)
 
-    installed_packages = get_installed_packages(pip_path)
+    installed_packages = get_installed_packages()
 
     def normalize_package_name(name):
         return name.lower().replace('_', '-')

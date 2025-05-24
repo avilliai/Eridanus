@@ -83,12 +83,11 @@ def main(bot, config):
 
 
 def bili_main(bot, config):
-    global bili_activate
     bili_activate = False
 
     @bot.on(LifecycleMetaEvent)
     async def _(event):
-        global bili_activate
+        nonlocal bili_activate
         if not bili_activate:
             bili_activate = True
             loop = asyncio.get_running_loop()

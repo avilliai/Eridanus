@@ -27,12 +27,11 @@ async def call_character_identify(bot, event,config,image_url,model_name):
 
 def main(bot ,config):
 
-    global image_identify_list
     image_identify_list = {}
 
     @bot.on(GroupMessageEvent)
     async def startYouridentify(event :GroupMessageEvent):
-        global image_identify_list
+        nonlocal image_identify_list
         if event.pure_text=="识别" or (event.get("at") and event.get("at")[0]["qq"] == str(bot.id) and event.get("text") is not None and "识别" in event.get("text")[0]):
             image_identify_list[event.user_id] ={'model' :"anime_model_lovelive"}
             if re.search(r"(?:gal|galgame|游戏)", event.pure_text, re.IGNORECASE):     # 匹配字符串，忽略大小写
