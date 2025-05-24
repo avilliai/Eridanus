@@ -17,3 +17,5 @@ tts:
     character_name: "酥心御姐"
   modelscope_tts:
     speaker: "东雪莲"
+  OttoTTS:
+    speaker: "otto"   #未经测试，不保证稳定性

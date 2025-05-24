@@ -9,9 +9,12 @@ from run.ai_voice.service.modelscopeTTS import modelscope_tts, get_modelscope_tt
 from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from run.ai_voice.service.online_vits import huggingface_online_vits
 from run.ai_voice.service.online_vits2 import huggingface_online_vits2, get_huggingface_online_vits2_speakers
+from run.ai_voice.service.ottoTTS import OttoTTS
 from run.ai_voice.service.vits import vits, get_vits_speakers
 import httpx
 import requests
+
+
 
 
 async def translate(text, mode="ZH_CN2JA"):
@@ -63,7 +66,7 @@ class TTS:
         """
         if mode is None:
             mode = config.ai_voice.config["tts"]["tts_engine"]
-        if config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive":
+        if (config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive") and mode!="OttoTTS":
             if config.ai_voice.config["tts"]["ai_translator"]:
                 text=await self.translator.translate(text)
             else:
@@ -106,6 +109,9 @@ class TTS:
             if speaker is None:
                 speaker=config.ai_voice.config["tts"]["blue_archive"]["speaker"]
             return await huggingface_blue_archive_tts(text, speaker)
+        elif mode=="OttoTTS":
+            otto=OttoTTS()
+            return await otto.speak(text)
         else:
             pass
     async def get_speakers(self,bot=None):
@@ -127,7 +133,7 @@ class TTS:
             error_msg="Error in get_huggingface_online_vits2_speakers"
         )
         blue_archive_speakers=await fetch_speakers(get_huggingface_blue_archive_speakers,error_msg="Error in get_huggingface_blue_archive_speakers")
-        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers]}
+        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers,["otto"]]}
 
 
 
