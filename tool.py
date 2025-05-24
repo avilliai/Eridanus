@@ -31,15 +31,11 @@ custom_python_path = os.path.join(parent_dir, "environments", "Python311", "pyth
 
 python_path = sys.executable
 logger.info(f"python_path: {python_path}")
-custom_pip_path = os.path.join(parent_dir, "environments", "Python311", "Scripts", "pip.exe")
-if os.path.exists(custom_pip_path):
-    pip_path = custom_pip_path
-elif os.path.exists(os.path.join("venv", "Scripts", "pip.exe")):
-    pip_path = os.path.join("venv", "Scripts", "pip.exe")
-else:
-    pip_path = "pip"
-logger.info(f"pip_path: {pip_path}")
-os.system(f"\"{python_path}\" -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/")
+try:
+    from  pip._internal.cli.main import main as pip_main
+except ImportError as e:
+    logger.info("Cannot import pip")
+pip_main(['config', 'set', 'global.index-url', 'https://mirrors.aliyun.com/pypi/simple/'])
 async def main():
     logger.info("""请输入要执行的指令：
         1 youtube登录
@@ -245,7 +241,7 @@ try:
     from ruamel.yaml import YAML
 except Exception as e:
     logger.error("未安装ruamel.yaml库，无法处理冲突文件，开始安装缺少的依赖")
-    os.system(f"\"{python_path}\" -m pip install ruamel.yaml")
+    pip_main(['install', 'ruamel.yaml'])
     from ruamel.yaml import YAML
 # 创建一个YAML对象来加载和存储YAML数据
 yaml = YAML()
@@ -305,13 +301,13 @@ def fuck_requirements():
     for i in update_requirements:
         try:
             logger.info(f"开始更新依赖{i}...")
-            os.system(f"\"{python_path}\" -m pip install --upgrade {i}")
+            pip_main(['install', '--upgrade', i])
         except Exception as e:
             logger.error(f"更新依赖{i}失败：{e}")
     for i in local_config.get("restrict"):
         try:
             logger.info(f"开始安装依赖{i}...")
-            os.system(f"\"{python_path}\" -m pip install {i}")
+            pip_main(['install', i])
         except Exception as e:
             logger.error(f"安装依赖{i}失败：{e}")
 def parse_requirements(file_path):
@@ -388,9 +384,9 @@ def check_requirements(requirements_file, pip_path):
         for pkg in missing:
             print(f"  - {pkg}")
             if "<" in pkg or ">" in pkg or "=" in pkg:
-                os.system(f"\"{python_path}\" -m pip install {pkg}")
+                pip_main(['install', pkg])
             else:
-                os.system(f"\"{python_path}\" -m pip install --upgrade {pkg}")
+                pip_main(['install', '--upgrade', pkg])
 
     if mismatched:
         print("\n版本不匹配的包(一般不用管这个)：")
@@ -427,23 +423,20 @@ def ai_req():
         cuda_torch_suffix = None
     
     try:
+        pip_main(['install', 'opencv-python-headless'])
         if cuda_torch_suffix:
-            os.system(f"\"{python_path}\" -m pip install opencv-python-headless")
             # 如果检测到了支持的CUDA版本，则安装带有CUDA支持的PyTorch包
-            os.system(f"\"{python_path}\" -m pip install torch torchvision torchaudio --index-url=https://download.pytorch.org/whl/{cuda_torch_suffix}")
+            pip_main(['install', 'torch', 'torchvision', 'torchaudio', f'--index-url=https://download.pytorch.org/whl/{cuda_torch_suffix}'])
         else:
-            os.system(f"\"{python_path}\" -m pip install opencv-python-headless")
             # 如果没有检测到CUDA或不支持的CUDA版本，则安装CPU-only版本的PyTorch包
             logger.info("未检测到CUDA或CUDA版本不受支持，正在安装仅CPU版本的PyTorch...")
-            os.system(f"\"{python_path}\" -m pip install opencv-python-headless torch torchvision torchaudio")
-
+            pip_main(['install', 'opencv-python-headless', 'torch', 'torchvision', 'torchaudio'])
     except subprocess.CalledProcessError as e:
         logger.error(f"安装PyTorch时出错：{e}")
         sys.exit(1)
-        return
 
     logger.info("ai相关库安装成功完成")
     return
     
-
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())
