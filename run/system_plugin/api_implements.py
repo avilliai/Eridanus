@@ -17,7 +17,7 @@ def main(bot, config):
     nudge_list = []
 
     @bot.on(GroupMessageEvent)
-    async def sendLike(event: GroupMessageEvent):
+    async def send_like(event: GroupMessageEvent):
         if event.pure_text == "赞我":
             user_info = await get_user(event.user_id)
 
@@ -36,7 +36,7 @@ def main(bot, config):
                                           f"bot在群{event.group_id}被禁言了{event.duration}秒\n操作者id:{event.operator_id}\n建议拉黑该群和该用户")
 
     @bot.on(GroupMessageEvent)
-    async def changeAvatar(event: GroupMessageEvent):
+    async def change_avatar(event: GroupMessageEvent):
         nonlocal avatar
         # bot.logger.info(event.processed_message)
         # bot.logger.error(event.get("image"))
@@ -73,7 +73,7 @@ def main(bot, config):
             await bot.send(event, Record(file="file://D:/python/Manyana/data/autoReply/voiceReply/a1axataxaWaQaia.wav"))
 
     @bot.on(PrivateMessageEvent)
-    async def FriendMesHandler(event: PrivateMessageEvent):
+    async def friend_mes_handler(event: PrivateMessageEvent):
         if event.pure_text == "戳我":
             await bot.friend_poke(event.sender.user_id)
 
@@ -100,12 +100,12 @@ def main(bot, config):
         # print(r)
 
     @bot.on(ProfileLikeEvent)
-    async def profileLikeHandler(event: ProfileLikeEvent):
+    async def profile_like_handler(event: ProfileLikeEvent):
         bot.logger.info(f"{event.operator_id} 赞了你！")
         await bot.send_friend_message(event.operator_id, "谢谢！")
 
     @bot.on(PokeNotifyEvent)
-    async def pokeHandler(event: PokeNotifyEvent):
+    async def poke_handler(event: PokeNotifyEvent):
         """
         戳一戳的功能实现，之所以这么复杂，是因为要获取戳一戳的具体内容。
         """

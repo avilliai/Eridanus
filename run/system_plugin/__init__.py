@@ -1,4 +1,4 @@
-plugin_description="系统功能"
+plugin_description = "系统功能"
 dynamic_imports = {
     "run.system_plugin.func_collection": ["operate_group_push_tasks"],
     "run.system_plugin.Mface_Record": ["call_send_mface"],
@@ -8,7 +8,7 @@ dynamic_imports = {
         "call_delete_user_history", "call_clear_all_history"
     ],
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "operate_group_push_tasks",
         "description": "添加或取消推送任务",
@@ -33,7 +33,7 @@ function_declarations=[
             ]
         }
     },
-{
+    {
         "name": "call_delete_user_history",
         "description": "清理当前对话记录"
     },
@@ -41,7 +41,6 @@ function_declarations=[
         "name": "call_clear_all_history",
         "description": "清理所有用户的对话记录"
     },
-
 
     {
         "name": "call_user_data_register",
