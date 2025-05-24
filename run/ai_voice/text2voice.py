@@ -64,7 +64,7 @@ def main(bot: ExtendBot,config: YAMLManager):
     async def tts(event: GroupMessageEvent):
         if "说" in event.pure_text and event.pure_text.startswith("/"):
             speaker=event.pure_text.split("说")[0].replace("/","").strip()
-            text=event.pure_text.split("说")[1].strip()
+            text = event.pure_text.split("说", 1)[1].strip()
             r=await call_tts(bot,event,config,text,speaker)
             if r.get("audio"):
                 await bot.send(event, Record(file=r.get("audio")))
