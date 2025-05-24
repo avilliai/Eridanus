@@ -66,7 +66,7 @@ class TTS:
         """
         if mode is None:
             mode = config.ai_voice.config["tts"]["tts_engine"]
-        if config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive":
+        if (config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive") and mode!="OttoTTS":
             if config.ai_voice.config["tts"]["ai_translator"]:
                 text=await self.translator.translate(text)
             else:
