@@ -81,3 +81,4 @@ async def trigger_tasks(bot, event, config, task_name):
         bot.logger.info_func("获取单向历推送")
         path = await danxianglii()
         await bot.send(event, Image(file=path))
+    return None
