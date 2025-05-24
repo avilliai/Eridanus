@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(current_dir)
 sys.path.append(current_dir)
-from web.utils import install_and_import
+from framework_common.utils.install_and_import import install_and_import
 psutil=install_and_import("psutil")
 
 try:

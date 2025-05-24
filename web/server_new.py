@@ -19,7 +19,7 @@ from ruamel.yaml.scalarstring import DoubleQuotedScalarString, SingleQuotedScala
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from developTools.utils.logger import get_logger
-from utils import install_and_import
+from framework_common.utils.install_and_import import install_and_import
 from userdb_query import get_users_range, get_users_count, search_users_by_id, get_user_signed_days
 
 flask_sock = install_and_import("flask_sock")

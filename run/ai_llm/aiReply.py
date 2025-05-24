@@ -28,7 +28,6 @@ def main(bot, config):
         if config.ai_llm.config["llm"]["model"] == "gemini":
             if tools is None:
                 tools = [
-
                     {"googleSearch": {}},
                 ]
             else:
@@ -45,7 +44,6 @@ def main(bot, config):
                     tools
                 ]
 
-    global user_state
     user_state = {}
 
     @bot.on(GroupMessageEvent)
@@ -111,7 +109,7 @@ def main(bot, config):
                 await handle_message(event)
 
     async def handle_message(event):
-        global user_state
+        nonlocal user_state
         # 锁机制
         uid = event.user_id
         user_info = await get_user(event.user_id)
@@ -250,7 +248,6 @@ def main(bot, config):
             await clear_all_history()
             await bot.send(event, "已清理所有用户的对话记录")
         else:
-
             bot.logger.info(f"私聊接受消息{event.processed_message}")
             user_info = await get_user(event.user_id, event.sender.nickname)
             if not user_info.permission >= config.ai_llm.config["core"]["ai_reply_private"]:
