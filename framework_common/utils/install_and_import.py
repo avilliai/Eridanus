@@ -6,8 +6,6 @@ from developTools.utils.logger import get_logger
 logger=get_logger()
 """
 CWS Ps:os.system很好 以后别用了。。。
-这就是我的替身install and import，装和导
-(以防有人没看懂，这里是捏他soft and wet，那么问题来了，soft and wet是什么？)
 """
 def install_and_import(package_name, import_name=None):
     """检测模块是否已安装，若未安装则通过 pip 安装"""
