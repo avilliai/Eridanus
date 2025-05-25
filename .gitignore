@@ -3,3 +3,5 @@ __pycache__/
 user_info.yaml
 log/
 .idea/
+.history/*
+data/*

@@ -1,0 +1,11 @@
+ai_code_generator:
+  # 权限配置
+  required_permission_level: 0  # 需要的权限等级
+  # 安全配置
+  enable_code_validation: true  # 是否启用代码验证
+  max_code_length: 5000  # 最大代码长度
+  # 热重载配置
+  auto_reload: true  # 是否自动重载
+  reload_delay: 0.5  # 重载延迟(秒)
+  
+  # 注意：AI API配置复用现有的ai_llm配置

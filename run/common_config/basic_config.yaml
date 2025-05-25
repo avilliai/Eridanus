@@ -1,4 +1,3 @@
-
 user_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist下，屏蔽指定用户，whitelist下，只处理指定用户。
 user_handle_logic_operate_level: 1000 #拉黑、解黑用户所需操作权限
 group_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist下，屏蔽指定群，whitelist下，只处理指定群。
@@ -9,8 +8,8 @@ webui:
   enable: true #是否开启web ui
 record_mface: true #是否收集主人的表情包
 proxy:
-  http_proxy: ""
-  socks_proxy: ""
+  http_proxy: "http://127.0.0.1:10809"
+  socks_proxy: "socks5://127.0.0.1:7891"
 bot: "Eridanus"   #机器人昵称
 master:
   name: "管理员"

@@ -1,5 +1,6 @@
 import concurrent.futures
 import importlib
+import importlib.util
 import os
 import subprocess
 import sys
@@ -14,6 +15,7 @@ if sys.platform == 'win32':
 
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.framework_util.websocket_fix import ExtendBot
+from framework_common.framework_util.hot_reload import hot_reload_manager
 
 config = YAMLManager("run")  # 这玩意用来动态加载和修改配置文件
 bot1 = ExtendBot(config.common_config.basic_config["adapter"]["ws_client"]["ws_link"], config,
@@ -161,6 +163,8 @@ def webui_bot():
     def run_bot2():
         """在独立线程运行 bot2"""
         config_fix(config_copy)
+        # 注册webui bot到热重载系统
+        hot_reload_manager.register_bot(bot2)
         load_plugins(bot2, config_copy)
         bot2.run()
 
@@ -169,5 +173,16 @@ def webui_bot():
 
 if config.common_config.basic_config["webui"]["enable"]:
     webui_bot()
+
+# 初始化热重载系统
+hot_reload_manager.set_logger(bot1.logger)
+hot_reload_manager.register_bot(bot1)  # 注册主bot实例
+
+if config.common_config.basic_config.get("hot_reload", {}).get("enable", True):
+    hot_reload_manager.start_monitoring()
+    bot1.logger.info("🔥 热重载系统已启动")
+else:
+    bot1.logger.info("🔥 热重载系统已禁用")
+
 load_plugins(bot1, config)
 bot1.run()

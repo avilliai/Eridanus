@@ -13,6 +13,13 @@ class EventBus:
             self.handlers[event] = set()
         self.handlers[event].add(handler)
 
+    def unsubscribe(self, event: str, handler: Callable[..., Coroutine[None, None, None]]) -> None:
+        """注销事件监听器"""
+        if event in self.handlers:
+            self.handlers[event].discard(handler)
+            if not self.handlers[event]:  # 如果没有监听器了，删除该事件
+                del self.handlers[event]
+
     def on(self, event: str):
         def decorator(func: Callable[..., Coroutine[None, None, None]]) -> Callable[..., Coroutine[None, None, None]]:
             self.subscribe(event, func)
