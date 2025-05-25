@@ -3,6 +3,7 @@ import base64
 import os
 import random
 import time
+from asyncio import sleep
 
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     LifecycleMetaEvent
@@ -281,6 +282,7 @@ def main(bot, config):
                 try:
                     bot.logger.info(f"转发消息至群{group['group_id']}")
                     await bot.send_group_message(group["group_id"],event.message_chain)
+                    await sleep(4)
                 except Exception as e:
                     bot.logger.error(f"发送群消息失败：{group['group_id']} 原因: {e}")
     @bot.on(GroupMessageEvent)
