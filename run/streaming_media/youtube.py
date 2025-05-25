@@ -90,9 +90,9 @@ async def download_video(bot,event,config,url,type="audio",platform="youtube"):
                 except Exception as e:
                     bot.logger.error(f"download_img error:{e}")
                     img=r['mainCoverUrl']
-                forward_list = []
-
-                forward_list.append(Node(content=[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"), Image(file=img)]))
+                forward_list = [Node(
+                    content=[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
+                             Image(file=img)])]
 
                 file_paths=[]
                 main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"

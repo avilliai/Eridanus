@@ -1,9 +1,11 @@
 bili_dynamic:     #下面的设置暂不可用，请暂时不要修改
   enable: true    #是否开启动态推送功能
-  dynamic_interval: 300 #动态推送间隔时间，单位为秒
+  dynamic_interval: 1000 #动态检查间隔时间，单位为秒
+  并发模式: false #是否启用并发模式，开启后可以同时获取多个动态，但可能会因高频请求导致无法爬取
   screen_shot_mode: "mobile" #mobile为移动端截图，pc为PC端截图
   draw_type: 2    #1代表用playwright（需要安装其余组件）；2代表本地Pillow绘图（有可能出错）
   is_QQ_chek: True #是否检测qq小程序里的视频链接
+
 网易云卡片:    #绘制网易云歌曲分享卡片
   enable: true
   解析自带音频下载url: false #涉及付费音乐版权问题，只能以文件形式发送了,不允许进行传播、销售等商业活动!!

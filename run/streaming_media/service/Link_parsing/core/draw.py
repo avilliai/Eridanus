@@ -335,7 +335,7 @@ def handle_context(contents,font,content_width,total_height,padding,type_check,i
                 lines = wrap_text(content, font_tx_pil, content_width)
             else:
                 lines = wrap_text(content, font, content_width)
-            if lines != []:
+            if lines:
                 processed_contents.append(lines)
     if image_row:
         processed_contents.append(image_row)

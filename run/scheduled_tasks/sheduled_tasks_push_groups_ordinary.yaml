@@ -19,6 +19,7 @@ bangumi:
   users:
   - 0
 nightASMR:
+  latest_asmr_id: 123456
   groups:
   - 0
   users:
@@ -46,4 +47,9 @@ nightASMR:
   - 0
 晚安:
   groups:
+  - 0
+忍术大学习:
+  groups:
+  - 0
+  users:
   - 0

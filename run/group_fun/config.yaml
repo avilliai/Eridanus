@@ -8,3 +8,4 @@ today_wife:
   签🦌撤回: True
   透群友撤回: True
   透热门群友: True #只会透到最近发言较多的群友
+  is_at: True #今日群友/管理/群主 是否艾特其本人

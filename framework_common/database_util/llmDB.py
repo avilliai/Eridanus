@@ -1,14 +1,12 @@
 import asyncio
-import os
-import json
-import aiosqlite
-import httpx
-import re
-from PIL import Image
 import base64
 import html
+import json
+import os
+import re
 
-from ruamel.yaml import YAML
+import aiosqlite
+from PIL import Image
 
 from framework_common.framework_util.yamlLoader import YAMLManager
 
@@ -88,7 +86,7 @@ def silly_tavern_card(image_path, clear_html=False):
                 final.append(res)
 
     except Exception as e:
-        return (f"错误，解码失败: {e}")
+        return f"错误，解码失败: {e}"
 
     if final:
         s = "\n".join(final)
@@ -239,7 +237,7 @@ async def read_chara(user_id, chara_str):  # 这里的chara_str是一个字符�
             return result[0]
 
 
-async def get_user_history(user_id):
+async def get_user_history(user_id)->list:
     """获取用户历史对话"""
     async with aiosqlite.connect(DATABASE_FILE) as db:
         async with db.execute("SELECT history FROM conversation_history WHERE user_id = ?", (user_id,)) as cursor:
@@ -249,6 +247,10 @@ async def get_user_history(user_id):
             else:
                 return []
 
+async def delete_latest2_history(user_id):
+    user_history=await get_user_history(user_id)
+    user_history=user_history[:-2]
+    await update_user_history(user_id, user_history)
 
 async def update_user_history(user_id, history):
     """更新用户历史对话"""

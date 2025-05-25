@@ -29,20 +29,20 @@ async def automate_browser(image_path):
         browser = await p.chromium.launch(headless=True)  # 改为 False 以便观察
         context = await browser.new_context()
         page = await context.new_page()
-
+        logger.info("Browser launched")
         await page.goto("https://soutubot.moe/")
-
-
-        await page.locator('xpath=//*[@id="app"]/div/div/div/div[1]/div[2]/div/div[2]/div/div/span[2]').click(timeout=90000)
-
+        await page.wait_for_load_state("networkidle", timeout=60000)
+        logger.info("Page loaded")
         file_input = page.locator('input[type="file"]')
-        await file_input.set_input_files(image_path)
-
+        #await file_input.wait_for(state="visible", timeout=90000)
+        await file_input.set_input_files(image_path,timeout=150000)
+        logger.info("File input")
         await page.wait_for_url("https://soutubot.moe/results/*", timeout=90000)
-        await page.wait_for_load_state("networkidle", timeout=90000)
+        await page.wait_for_load_state("domcontentloaded", timeout=90000)
 
-        extracted_html = await page.locator('xpath=//*[@id="app"]/div/div/div/div[2]').evaluate("element => element.outerHTML")
-
+        extracted_html = await page.locator('#app > div > div > div > div.grid.grid-cols-1.gap-4.w-full').evaluate("element => element.outerHTML")
+        #await page.wait_for_load_state("domcontentloaded",timeout=90000)
+        #print(extracted_html)
         img_path = "data/pictures/cache/" + random_str() + ".png"
         r, _ = await asyncio.gather(
             extract_data(extracted_html),
@@ -95,3 +95,4 @@ async def extract_data(html_code):
       data.append(item)
 
     return data
+#print(asyncio.run(automate_browser("img_4.png")))

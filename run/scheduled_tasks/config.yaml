@@ -41,6 +41,9 @@ scheduledTasks:    #其他定时任务模块的内容会陆续转到这里
   bing每日图像:
     enable: true
     time: 10/2
+  忍术大学习:
+    enable: true
+    time: 18/59
   早安:    #群聊早安问候
     enable: true
     time: 8/3

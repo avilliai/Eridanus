@@ -20,7 +20,10 @@ jmcomic:
   jm_comic_download_level: 0          #jm下载功能所需权限等级
 iwara:
   iwara_search_level: 0  #iwara搜索功能所需权限等级
-  iwara_download_level: 998  #iwara下载功能所需权限等级
+  iwara_download_level: 9  #iwara下载功能所需权限等级
+  iwara_gray_layer: true #是否开启iwara灰度图功能
+  zip_file: false #是否压缩文件
+  zip_password: "123456" #压缩密码
 JMComic:                  #禁漫相关功能设置
   anti_nsfw: black_and_white   #防吞策略，可选gif、black_and_white、no_censor
   gif_compress: false     #gif模式下是否压缩

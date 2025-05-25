@@ -5,7 +5,9 @@ from urllib.parse import quote
 import httpx
 import asyncio
 
-from framework_common.utils.random_session_hash import random_session_hash
+from framework_common.utils.random_str import random_str
+
+random_session_hash = lambda random_length: random_str(random_length, "abcdefghijklmnopqrstuvwxyz1234567890")
 
 
 class ImageEditor:
@@ -38,15 +40,13 @@ class ImageEditor:
             ),
         }
 
-
-
         # 使用 httpx 异步客户端
         async with httpx.AsyncClient() as client:
             try:
                 # 准备 multipart/form-data 数据
                 files = {
                     "files": open(file_path, "rb"),  # 替换为实际文件名和文件流
-                    "upload_id":self.upload_id,  # 添加 upload_id 作为表单字段
+                    "upload_id": self.upload_id,  # 添加 upload_id 作为表单字段
                 }
 
                 # 发送 POST 请求
@@ -68,7 +68,7 @@ class ImageEditor:
 
     async def fetch_jwt(self):
         # 动态生成 expiration 参数（当前时间 + 5 分钟）
-        expiration_time = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+        expiration_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=5)
         expiration_str = expiration_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         encoded_expiration = quote(expiration_str)  # URL 编码
 
@@ -112,9 +112,9 @@ class ImageEditor:
                     try:
                         response_data = response.json()
                         print("响应内容:", json.dumps(response_data, indent=2, ensure_ascii=False))
-                        self.token=response_data["token"]
-                        self.accessToken=response_data["accessToken"]
-                        self.exp=response_data["exp"]
+                        self.token = response_data["token"]
+                        self.accessToken = response_data["accessToken"]
+                        self.exp = response_data["exp"]
                     except json.JSONDecodeError:
                         print("无法解析响应内容为 JSON:", response.text)
                 else:
@@ -127,12 +127,11 @@ class ImageEditor:
                 print(f"其他错误: {e}")
 
 
-
 # 运行异步函数
 if __name__ == "__main__":
     image_editor = ImageEditor()
     file_path = "D:\BlueArchive\Eridanus\img.png"  # 请替换为实际文件路径
-    r=asyncio.run(image_editor.upload_file(file_path=file_path))
+    r = asyncio.run(image_editor.upload_file(file_path=file_path))
     print(r)
-    r=asyncio.run(image_editor.fetch_jwt())
+    r = asyncio.run(image_editor.fetch_jwt())
     print(r)

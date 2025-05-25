@@ -6,8 +6,9 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent
-from run.ai_llm.service.aiReplyCore import aiReplyCore_fuck
-
+from framework_common.database_util.llmDB import read_chara, use_folder_chara
+from run.ai_llm.service.aiReplyCore import aiReplyCore
+from run.character_detection.func_collection import operate_group_censor
 
 
 def main(bot, config):
@@ -30,6 +31,7 @@ def main(bot, config):
     chehui3 = sets["男娘撤回"]
     mute3=sets["男娘禁言"]
     attack3=sets["骂男娘"]
+
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.pure_text.startswith("/开启奶龙审核 "):
@@ -101,7 +103,8 @@ def main(bot, config):
                             if config.ai_llm.config["llm"]["aiReplyCore"]:
                                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                                 name = data["data"]["nickname"]
-                                reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                                system_instruction = await use_folder_chara('喷子.txt')
+                                reply = await aiReplyCore([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,system_instruction=system_instruction,bot=bot,tools=None)
                                 await bot.send(event, reply,True)
                             else:
                                 await bot.send(event, random.choice(attack1),True)
@@ -111,9 +114,10 @@ def main(bot, config):
                             await bot.send(event, random.choice(attack1),True)
                     else:
                         if config.ai_llm.config["llm"]["aiReplyCore"]:
+                            system_instruction = await use_folder_chara('喷子.txt')
                             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                             name = data["data"]["nickname"]
-                            reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                            reply = await aiReplyCore([{"text": f"系统提示:{name}刚刚发送了一张奶龙的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,system_instruction=system_instruction,bot=bot,tools=None)
                             await bot.send(event, reply,True)
                         else:
                             await bot.send(event, random.choice(attack1),True)
@@ -139,9 +143,10 @@ def main(bot, config):
                             Source_id = event_dict['message_id']
                             await bot.recall(Source_id)
                             if config.ai_llm.config["llm"]["aiReplyCore"]:
+                                system_instruction = await use_folder_chara('喷子.txt')
                                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                                 name = data["data"]["nickname"]
-                                reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                                reply = await aiReplyCore([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,system_instruction=system_instruction,bot=bot,tools=None)
                                 await bot.send(event, reply,True)
                             else:
                                 await bot.send(event, random.choice(attack2),True)
@@ -153,7 +158,8 @@ def main(bot, config):
                         if config.ai_llm.config["llm"]["aiReplyCore"]:
                             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                             name = data["data"]["nickname"]
-                            reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                            system_instruction = await use_folder_chara('喷子.txt')
+                            reply = await aiReplyCore([{"text": f"系统提示:{name}刚刚发送了一张doro的图片,这是一张很唐(愚蠢引人不适)的图，对其进行攻击"}], 1145141919810, config,system_instruction=system_instruction,bot=bot,tools=None)
                             await bot.send(event, reply,True)
                         else:
                             await bot.send(event, random.choice(attack2),True)
@@ -181,7 +187,8 @@ def main(bot, config):
                             if config.ai_llm.config["llm"]["aiReplyCore"]:
                                 data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                                 name = data["data"]["nickname"]
-                                reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                                system_instruction = await use_folder_chara('喷子.txt')
+                                reply = await aiReplyCore([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,system_instruction=system_instruction,bot=bot,tools=None)
                                 await bot.send(event, reply,True)
                             else:
                                 await bot.send(event, random.choice(attack3),True)
@@ -193,7 +200,8 @@ def main(bot, config):
                         if config.ai_llm.config["llm"]["aiReplyCore"]:
                             data = await bot.get_group_member_info(group_id=event.group_id, user_id=event.user_id)
                             name = data["data"]["nickname"]
-                            reply = await aiReplyCore_fuck([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,bot=bot,tools=None)
+                            system_instruction = await use_folder_chara('喷子.txt')
+                            reply = await aiReplyCore([{"text": f"系统提示:{name}发了一张男娘图，对其进行攻击"}], 1145141919810, config,system_instruction=system_instruction,bot=bot,tools=None)
                             await bot.send(event, reply,True)
                         else:
                             await bot.send(event, random.choice(attack3),True)

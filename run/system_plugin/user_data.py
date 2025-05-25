@@ -3,6 +3,7 @@ from asyncio import sleep
 import asyncio
 import re
 from developTools.event.events import GroupMessageEvent
+from developTools.message.message_components import Node, Text
 from framework_common.database_util.llmDB import delete_user_history, clear_all_history
 from framework_common.database_util.User import add_user, get_user, record_sign_in, update_user
 async def call_user_data_register(bot,event,config):
@@ -17,7 +18,8 @@ async def call_user_data_register(bot,event,config):
     await bot.send(event, r)
 async def call_user_data_query(bot,event,config):
     r = await get_user(event.user_id, event.sender.nickname)
-    await bot.send(event, str(r))
+    await bot.send(event, Node(content=[Text(str(r))]))
+    #await bot.send(event, str(r))
 async def call_user_data_sign(bot,event,config):
     r = await record_sign_in(event.user_id)
     await bot.send(event, r)
@@ -118,10 +120,13 @@ def main(bot,config):
             if match: #f
                 target_qq = match.group(1)
                 if '用户' in event.raw_message:
-                    await call_permit(bot, event, config, target_qq, 1)
+                    level = 1
                 elif '贡献者' in event.raw_message:
-                    await call_permit(bot, event, config, target_qq, 2)
+                    level = 2
                 elif '信任' in event.raw_message:
-                    await call_permit(bot, event, config, target_qq, 3)
+                    level = 3
                 elif '管理员' in event.raw_message:
-                    await call_permit(bot, event, config, target_qq, 10)
+                    level = 10
+                else:
+                    return None
+                await call_permit(bot, event, config, target_qq, level)

@@ -1,8 +1,12 @@
-from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent
+from developTools.event.events import GroupDecreaseNoticeEvent, GroupIncreaseNoticeEvent, GroupMessageEvent, \
+    PrivateMessageEvent
+from framework_common.framework_util.websocket_fix import ExtendBot
 from run.ai_llm.service.aiReplyCore import aiReplyCore
 from framework_common.database_util.User import get_user
+from run.groupManager.func_collection import quit_group
 
-def main(bot,config):
+
+def main(bot: ExtendBot,config):
     @bot.on(GroupMessageEvent)
     async def group_message(event: GroupMessageEvent):
         if event.get("text"):
@@ -43,3 +47,21 @@ def main(bot,config):
                 await bot.send(event, str(r))
             else:
                 await bot.send(event, f"有新的旅行伙伴加入哟~~")
+    @bot.on(GroupMessageEvent)
+    async def group_message(event: GroupMessageEvent):
+        await quitgroup(event)
+    @bot.on(PrivateMessageEvent)
+    async def private_message(event: PrivateMessageEvent):
+        await quitgroup(event)
+    async def quitgroup(event):
+        if event.user_id==config.common_config.basic_config["master"]["id"]:
+            if event.pure_text.startswith("退群"):
+                group_id = int(event.pure_text.replace("退群",""))
+                await bot.quit(group_id)
+                await bot.send(event, f"已退群{group_id}")
+            if event.pure_text.startswith("/quit < "):
+                threshold = int(event.pure_text.replace("/quit < ",""))
+                await quit_group(bot,event,config,threshold,"below")
+            elif event.pure_text.startswith("/quit > "):
+                threshold = int(event.pure_text.replace("/quit > ",""))
+                await quit_group(bot,event,config,threshold,"above")

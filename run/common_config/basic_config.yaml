@@ -4,7 +4,9 @@ user_handle_logic_operate_level: 1000 #拉黑、解黑用户所需操作权限
 group_handle_logic: blacklist #模式。可填 blacklist, whitelist。blacklist下，屏蔽指定群，whitelist下，只处理指定群。
 group_handle_logic_operate_level: 1000 #拉黑、解黑群所需操作权限
 邀请bot加群所需权限: 0
-申请bot好友所需权限: 1
+申请bot好友所需权限: 0
+webui:
+  enable: true #是否开启web ui
 record_mface: true #是否收集主人的表情包
 proxy:
   http_proxy: ""

@@ -1,22 +1,25 @@
-import random
-import os
-import datetime
-import aiosqlite
 import asyncio
-import httpx
-import requests
+import datetime
+import os
+import random
 import re
-from developTools.message.message_components import Node, Text, Image,At
-from run.group_fun.service.wife_you_want import manage_group_status,manage_group_add,initialize_db,manage_group_check,PIL_lu_maker,\
-    run_async_task, today_check_api,query_group_users,add_or_update_user_collect
-from datetime import datetime
+import threading
 from asyncio import sleep
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+
+import aiosqlite
+import httpx
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
-import threading
+from developTools.message.message_components import Node, Text, Image, At
+from run.group_fun.service.wife_you_want import manage_group_status, manage_group_add, initialize_db, \
+    manage_group_check, PIL_lu_maker, \
+    run_async_task, today_check_api, query_group_users, add_or_update_user_collect
+
 
 def queue_check_wait(bot,config):
     global url_activate,queue_check
@@ -353,40 +356,64 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def today_group_owner(event: GroupMessageEvent):
         flag_aim = 0
-        if ('今日群主' == str(event.pure_text)):
+        flag_persona=0
+        target_id=None
+        if event.message_chain.has(At):
+            try:
+                if '今日群友' in event.processed_message[0]['text']:
+                    target_id=event.message_chain.get(At)[0].qq
+                    flag_persona = 3
+            except Exception as e:
+                pass
+        elif '今日群主' == str(event.pure_text):
             flag_persona = 1
             check = 'owner'
+        elif '今日管理' == str(event.pure_text):
+            flag_persona = 2
+            check = 'admin'
+        elif '今日群友' == str(event.pure_text):
+            flag_persona = 3
+            #check = 'owner'
+
+
         else:
             flag_persona = 0
         if flag_persona != 0:
-            bot.logger.info("今日群主任务开启")
+            bot.logger.info("今日群主or群友任务开启")
             friendlist = []
             target_group = int(event.group_id)
-            friendlist_get = await bot.get_group_member_list(event.group_id)
-            data_count = len(friendlist_get["data"])
-            if flag_persona == 2 or flag_persona == 3 or flag_persona == 4 or flag_persona == 5:
-                if data_count > 500:
-                    await bot.send(event, '抱歉，群聊人数过多，bot服务压力过大，仅开放今日群主功能，谢谢')
-                    return
-            for friend in friendlist_get["data"]:
-                data_test = None
-                data_check = friend['role']
-                if flag_persona == 1 or flag_persona == 2 or flag_persona == 5:
-                    if data_check == check:data_test = friend['user_id']
-                elif flag_persona == 3 or flag_persona == 4:data_test = friend['user_id']
-                if data_test != None:friendlist.append(data_test)
-                if flag_persona == 1 or flag_persona == 5:
-                    if data_check == 'owner': break
-            target_id = friendlist[random.randint(1, len(friendlist)) - 1]
-            target_name = (await bot.get_group_member_info(target_group, target_id))['data']['nickname']
+            if target_id is None:
+                friendlist_get = await bot.get_group_member_list(event.group_id)
+                data_count = len(friendlist_get["data"])
+                if flag_persona == 2 or flag_persona == 3 or flag_persona == 4 or flag_persona == 5:
+                    if data_count > 500:
+                        await bot.send(event, '抱歉，群聊人数过多，bot服务压力过大，仅开放今日群主功能，谢谢')
+                        return
+                for friend in friendlist_get["data"]:
+                    data_test = None
+                    data_check = friend['role']
+                    if flag_persona == 1 or flag_persona == 2 or flag_persona == 5:
+                        if data_check == check:data_test = friend['user_id']
+                    elif flag_persona == 3 or flag_persona == 4:data_test = friend['user_id']
+                    if data_test is not None:friendlist.append(data_test)
+                    if flag_persona == 1 or flag_persona == 5:
+                        if data_check == 'owner': break
+                target_id = friendlist[random.randint(1, len(friendlist)) - 1]
 
-            if flag_persona == 1:
+
+            target_name = (await bot.get_group_member_info(target_group, target_id))['data']['nickname']
+            #print(target_name,target_id)
+            if flag_persona != 0 :
                 today_wife_api, header = config.group_fun.config["today_wife"]["api"], config.group_fun.config["today_wife"]["header"]
                 response = today_check_api(today_wife_api, header)
                 img_path = f'data/pictures/wife_you_want_img/today_wife.jpg'
                 with open(img_path, 'wb') as file:
                     file.write(response.content)
-                await bot.send(event, [f'这里是今天的{target_name}哟~~~\n', Image(file=img_path)])
+                if config.group_fun.config["today_wife"]["is_at"]:
+                    await bot.send_group_message(target_group, [f'这里是今天的 ',At(qq=target_id),f' 哟~~~\n', Image(file=img_path)])
+                else:
+                    await bot.send(event, [f'这里是今天的 {target_name} 哟~~~\n', Image(file=img_path)])
+
 
 
     @bot.on(GroupMessageEvent)  # 透群友合集
@@ -431,8 +458,10 @@ def main(bot,config):
                         #print(f'times:{times}, target_data:{target_data[1]},target_group:{target_group}')
                         queue_check.remove(target_data)
                     else:
-                        times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
-
+                        try:
+                            times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
+                        except:
+                            pass #大朔老师啥时候有空了加个缓存
                     times += 1
                     queue_check.append((from_id, target_group, 'group_owner_record', times))
                     #await manage_group_status(from_id, target_group, 'group_owner_record', times)
@@ -446,7 +475,7 @@ def main(bot,config):
             context = event.pure_text
             if context == '':
                 context = event.raw_message
-            if (f'{wifePrefix}' in context):  # 前置触发词
+            if f'{wifePrefix}' in context:  # 前置触发词
                 target_id_aim = None
                 flag_persona = 0
                 flag_aim = 0
@@ -455,16 +484,16 @@ def main(bot,config):
                 target_group = int(event.group_id)
 
 
-                if ('透群主' in context):
+                if '透群主' in context:
                     flag_persona = 1
                     check = 'owner'
-                elif ('透管理' in context):
+                elif '透管理' in context:
                     flag_persona = 2
                     check = 'admin'
-                elif ('透群友' in context):
+                elif '透群友' in context:
                     flag_persona = 3
                     pass
-                elif ('娶群友' in context):
+                elif '娶群友' in context:
                     flag_persona = 4
                     if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
                         target_id_aim = await manage_group_status(from_id,target_group,'wife_you_get')
@@ -472,14 +501,13 @@ def main(bot,config):
                     else:
                         flag_aim = 0
                     pass
-                elif ('离婚' in context):
+                elif '离婚' in context:
                     if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
                         await manage_group_status(from_id, target_group, 'wife_you_get',0)
                         await bot.send(event, '离婚啦，您现在是单身贵族咯~')
-                elif ('/今日群主' == context):
+                elif '/今日群主' == context:
                     flag_persona = 5
                     check = 'owner'
-                    #print('test')
                 else:
                     flag_persona = 0
 
@@ -581,7 +609,7 @@ def main(bot,config):
                         except Exception:
                             bot.logger.error('透热门群友列表加载出错，执行全局随机')
 
-                        if friendlist == []:
+                        if not friendlist:
                             for friend in data["data"]:
                                 #print(friend)
                                 data_test = None
@@ -592,7 +620,7 @@ def main(bot,config):
                                         data_test = friend['user_id']
                                 elif flag_persona == 3 or flag_persona == 4:
                                     data_test = friend['user_id']
-                                if data_test != None:
+                                if data_test is not None:
                                     friendlist.append(data_test)
                                 if flag_persona == 1 or flag_persona == 5:
                                     if data_check == 'owner':break
@@ -712,7 +740,7 @@ def main(bot,config):
                         type = 'day'
                     list_from, list_target = await manage_group_check(target_group, type)
                     #print(list_from, list_target)
-                    if list_from==None or list_target==None:
+                    if list_from is None or list_target is None:
                         await bot.send(event, f'本群好像还没有一个人开过趴捏~')
                         return
                     friendlist_get = await bot.get_group_member_list(event.group_id)

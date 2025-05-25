@@ -1,6 +1,6 @@
 @echo off
 set PYTHON_EXE=..\environments\Python311\python.exe
-set MAIN_SCRIPT=main.py
+set MAIN_SCRIPT=launch.py
 
 rem checking.....
 if exist "%PYTHON_EXE%" (

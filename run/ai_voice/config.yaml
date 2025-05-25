@@ -1,7 +1,10 @@
 tts:
-  tts_engine: online_vits2     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
+  tts_engine: blue_archive     #选择使用的语音合成引擎，可选napcat_tts/acgn_ai/vits(在群内下载整合包)，配了哪个填哪个。
   length_limit: 100 #语音合成最大长度，超过此长度将自动拒绝合成
-  lang_type: "zh"  #自动转换语言类型,ja或zh。vits系列建议全部ja
+  lang_type: "ja"  #自动转换语言类型,ja或zh。vits系列建议全部ja
+  ai_translator: false  #是否使用AI翻译，默认false，提高翻译质量
+  blue_archive:
+    speaker: "JP_Mari"   #前往https://huggingface.co/spaces/ORI-Muchim/BlueArchiveTTS查看支持的speakers
   online_vits2:
     speaker: "东海帝王 Tokai Teio (Umamusume Pretty Derby)"   #speaker见https://huggingface.co/spaces/Plachta/VITS-Umamusume-voice-synthesizer
   online_vits:   #配置方式见文档
@@ -14,3 +17,5 @@ tts:
     character_name: "酥心御姐"
   modelscope_tts:
     speaker: "东雪莲"
+  OttoTTS:
+    speaker: "otto"   #未经测试，不保证稳定性

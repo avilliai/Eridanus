@@ -110,7 +110,7 @@ async def fetch_video_info(sort,config):
             print(video_info)'''
         return video_info_list
 
-async def process_video(client, item):
+async def process_video(client, item,iwara_gray_layer=False):
     title = item.get("title")
     video_id = item.get("id")
     
@@ -120,7 +120,7 @@ async def process_video(client, item):
     
     #print(f"\n正在处理视频 ID: {video_id}, 标题: {title}")
     
-    thumbnail_path = await download_thumbnail(client, item)
+    thumbnail_path = await download_thumbnail(client, item,iwara_gray_layer=False)
     
     return {
         "title": title,
@@ -128,7 +128,7 @@ async def process_video(client, item):
         "path": thumbnail_path
     }
 
-async def download_thumbnail(client, item):
+async def download_thumbnail(client, item,iwara_gray_layer):
     title = item.get("title")
     thumbnail = item.get("thumbnail", 0)
     file_data = item.get("file", {})
@@ -172,17 +172,18 @@ async def download_thumbnail(client, item):
         
         try:
             response = await client.get(thumbnail_url)
-            response.raise_for_status()
-            #print(f"缩略图内容请求成功, 状态码: {response.status_code}")
-            
             sanitized_title = sanitize_filename(title)
             file_name = f"{sanitized_title}.jpg"
             absolute_file_path = os.path.abspath(os.path.join(DOWNLOAD_DIR, file_name)).replace("\\", "/")
             os.makedirs(os.path.dirname(absolute_file_path), exist_ok=True)
             img = Image.open(BytesIO(response.content))  # 从二进制数据创建图片对象
-            image_raw = img
-            image_black_white = image_raw.convert('1')
-            image_black_white.save(absolute_file_path)
+            if iwara_gray_layer:
+                #print(f"缩略图内容请求成功, 状态码: {response.status_code}")
+                image_raw = img
+                image_black_white = image_raw.convert('1')
+                image_black_white.save(absolute_file_path)
+            else:
+                img.save(absolute_file_path)
             
             #print(f"缩略图已下载并保存为: {absolute_file_path}")
             return absolute_file_path
@@ -232,7 +233,7 @@ async def download_specific_video(videoid,config):
             return None
             #print(f"未能下载视频 ID: {videoid}")
             
-async def search_videos(word,config):
+async def search_videos(word,config,iwara_gray_layer=False):
     query = urllib.parse.quote(word)
     url = f"https://api.iwara.tv/search?type=video&page=0&query={query}&limit={DOWNLOAD_LIMIT}"
     if proxy:
@@ -252,7 +253,7 @@ async def search_videos(word,config):
         video_info_list = []
         
         for item in results:
-            video_info = await process_video(client, item)
+            video_info = await process_video(client, item, iwara_gray_layer)
             if video_info:
                 video_info_list.append(video_info)
         
@@ -262,7 +263,6 @@ async def search_videos(word,config):
         return video_info_list
 
 def main(command):
-    global sort
     if command.startswith("下载"):
         videoid = command.replace("下载", "").strip()
         if videoid:
@@ -283,8 +283,6 @@ def main(command):
     elif command.startswith("榜单"):
         sort = command.replace("榜单", "").strip()
         asyncio.run(fetch_video_info(sort))
-    else:
-        pass
         #print("未知命令，请输入 '榜单{name}'、'榜单下载{name}' 、'下载{video_id}、'搜索{关键词}'")
 
 if __name__ == "__main__":

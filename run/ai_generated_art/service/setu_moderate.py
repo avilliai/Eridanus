@@ -1,6 +1,6 @@
-import httpx
-import ruamel.yaml
 import base64
+
+import httpx
 
 from framework_common.framework_util.yamlLoader import YAMLManager
 
@@ -56,7 +56,7 @@ async def pic_audit_standalone(
                 response.raise_for_status()  # 抛出异常，如果请求失败
                 return response.json()
             except httpx.HTTPStatusError as e:
-                print(f"API失败，错误信息: {e.response.status_code}, {await e.response.text()}")
+                print(f"API失败，错误信息: {e.response.status_code}, {e.response.text}")
                 return None
 
     payload = {"image": img_base64, "model": tag_model, "threshold": 0.35}
@@ -82,7 +82,7 @@ async def pic_audit_standalone(
     value = list(to_user_dict.values())
     value.sort(reverse=True)
     reverse_dict = {v: k for k, v in to_user_dict.items()}
-    message += (f"最终结果为:{reverse_dict[value[0]].rjust(5)}")
+    message += f"最终结果为:{reverse_dict[value[0]].rjust(5)}"
     
     keys = list(tags.keys())
     tags_str = ",".join(keys)
@@ -93,7 +93,7 @@ async def pic_audit_standalone(
         value.sort(reverse=True)
         reverse_dict = {v: k for k, v in possibilities.items()}
         #logger.info(message)
-        return True if reverse_dict[value[0]] == "questionable" or reverse_dict[value[0]] == "explicit" else False
+        return reverse_dict[value[0]] == "questionable" or reverse_dict[value[0]] == "explicit"
 
     if is_return_tags:
         return message, tags, tags_str

@@ -1,3 +1,4 @@
+import datetime
 import json
 import random
 import re
@@ -21,7 +22,7 @@ from run.ai_llm.service.aiReplyHandler.tecentYuanQi import construct_tecent_stan
 from framework_common.database_util.llmDB import get_user_history, update_user_history, delete_user_history, read_chara, \
     use_folder_chara
 
-from framework_common.database_util.User import get_user
+from framework_common.database_util.User import get_user, update_user
 import importlib
 
 from run.ai_voice.service.tts import TTS
@@ -85,8 +86,14 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 config.ai_llm.config["llm"]["chara_file_name"]))
         user_info = await get_user(user_id)
         system_instruction = system_instruction.replace("{用户}", user_info.nickname).replace("{bot_name}",
-                                                                                              config.common_config.basic_config[
-                                                                                                  "bot"])
+                                                                                              config.common_config.basic_config["bot"])
+    """
+    用户设定读取
+    """
+    if config.ai_llm.config["llm"]["长期记忆"]:
+        temp_user=await get_user(user_id)
+        system_instruction+=f"\n以下为当前用户的用户画像：{temp_user.user_portrait}"
+
     try:
         if recursion_times == 0 and processed_message:
             last_trigger_time[user_id] = time.time()
@@ -98,7 +105,10 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 config.common_config.basic_config["proxy"]["http_proxy"] if config.ai_llm.config["llm"][
                     "enable_proxy"] else None,
             )
-            reply_message = response_message['content']
+            if not response_message:
+                reply_message = "NetWork Error!"
+            else:
+                reply_message = response_message['content']
             await prompt_database_updata(user_id, response_message, config)
 
         elif config.ai_llm.config["llm"]["model"] == "openai":
@@ -196,7 +206,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                     else:
                         try:
                             r = await call_func(bot, event, config, func_name, json.loads(args))  # 真是到处都不想相互兼容。
-                            if r == False:
+                            if not r:
                                 await end_chat(user_id)
                             if r:
                                 func_call = True
@@ -340,7 +350,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                         try:
 
                             r = await call_func(bot, event, config, func_name, args)
-                            if r == False:
+                            if not r:
                                 await end_chat(user_id)
                             if r:
                                 func_r = {
@@ -356,7 +366,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                             traceback.print_exc()
                     await add_self_rep(bot, event, config, reply_message)
                     reply_message = None
-            if new_func_prompt != []:
+            if new_func_prompt:
                 await prompt_database_updata(user_id, {"role": "function", "parts": new_func_prompt}, config)
                 # await add_gemini_standard_prompt({"role": "function","parts": new_func_prompt},user_id)# 更新prompt
                 final_response = await aiReplyCore(None, user_id, config, tools=tools, bot=bot, event=event,
@@ -396,6 +406,10 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 "auto_clear_when_recursion_failed"]:
                 logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
+            if recursion_times+2 == config.ai_llm.config["llm"]["recursion_limit"]:
+                logger.warning(f"update user portrait for user: {event.user_id}")
+                await update_user(event.user_id, user_portrait="normal_user")
+                await update_user(event.user_id, portrait_update_time=datetime.datetime.now().isoformat())
             return await aiReplyCore(processed_message, user_id, config, tools=tools, bot=bot, event=event,
                                      system_instruction=system_instruction, func_result=func_result,
                                      recursion_times=recursion_times + 1, do_not_read_context=True)
@@ -423,6 +437,8 @@ async def tts_and_send(bot, event, config, reply_message):
             await bot.send(event, Record(file=path))
         except Exception as e:
             bot.logger.error(f"Error occurred when calling tts: {e}")
+            if not config.ai_llm.config["llm"]["语音回复附带文本"]:
+                await bot.send(event, reply_message.strip(), config.ai_llm.config["llm"]["Quote"])
 
     asyncio.create_task(_tts_and_send())
 
@@ -531,7 +547,7 @@ def remove_mface_filenames(reply_message, config, directory="data/pictures/Mface
             logger.info(f"mface 匹配到的文件名: {matched_files}")
 
         logger.info(f"mface 处理后的文本: {cleaned_text}")
-        if matched_files == []:
+        if not matched_files:
             return cleaned_text, []
         return cleaned_text, matched_files
     except Exception as e:

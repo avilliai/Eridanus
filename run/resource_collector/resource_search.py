@@ -5,7 +5,9 @@ from concurrent.futures.thread import ThreadPoolExecutor
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Node, Text, File, Card
+from developTools.utils.logger import get_logger
 from framework_common.database_util.User import get_user
+from framework_common.framework_util.yamlLoader import YAMLManager
 from run.resource_collector.service.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
     choose_from_hotest_asmr_100
 from run.resource_collector.service.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
@@ -15,12 +17,31 @@ from run.resource_collector.service.zLibrary.zLibrary import Zlibrary
 from framework_common.utils.random_str import random_str
 from framework_common.utils.utils import download_file, merge_audio_files, download_img
 
-global Z
+logger=get_logger()
+module_config=YAMLManager.get_instance()
+proxy = module_config.common_config.basic_config["proxy"]["http_proxy"]
+if proxy != "":
+    proxies = {
+        "http": proxy,
+        "https": proxy
+    }
+else:
+    proxies = None
+if module_config.resource_collector.config["z_library"]["email"] != "" and module_config.resource_collector.config["z_library"][
+    "password"] != "":
+    global Z
+    try:
+        Z = Zlibrary(email=module_config.resource_collector.config["z_library"]["email"],
+                     password=module_config.resource_collector.config["z_library"]["password"], proxies=proxies)
+        logger.info("✅ z_library 登陆成功")
+    except Exception as e:
+        logger.error(f"❌ z_library login error:{e}")
 
 global operating
 operating = {}  #jm文件共享的维护列表
 
 async def search_book_info(bot,event,config,info):
+    global Z
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["z_library"]["search_operate_level"]:
 
@@ -29,12 +50,14 @@ async def search_book_info(bot,event,config,info):
         forward_list = []
         for r in result:
             forward_list.append(Node(content=[Text(r[0]), Image(file=r[1])]))
+        print(forward_list)
         await bot.send(event, forward_list)
         # await bot.send(event,Image(file=p)])
         # print(r)
     else:
         await bot.send(event, "你没有权限使用该功能")
 async def call_download_book(bot,event,config,book_id: str,hash:str):
+    global Z
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["z_library"]["download_operate_level"]:
         await bot.send(event, "正在下载中，请稍候...")
@@ -104,10 +127,10 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
 
         except Exception as e:
             bot.logger.error(f"asmr error:{e}")
-            if try_again==False:
+            if not try_again:
                 bot.logger.warning("asmr try again!")
                 await call_asmr(bot,event,config,try_again=True)
-            if try_again==True:
+            if try_again:
                 await bot.send(event, "失败了！要不再试一次？")
     else:
         await bot.send(event, "你没有权限使用该功能")
@@ -116,9 +139,9 @@ async def check_latest_asmr(bot,event,config):
     bot.logger.info_func("开始监测 asmr.one 更新")
     try:
         r=await latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-        if r["id"]!=config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]:
+        if r["id"]!=config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]:
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 开始推送")
-            group_list = config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["groups"]
+            group_list = config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]
             for group_id in group_list:
                 try:
                     i = random.choice(r['media_urls'])
@@ -163,8 +186,8 @@ async def check_latest_asmr(bot,event,config):
                 except Exception as e:
                     bot.logger.error(f"latest_asmr_push error:{e}")
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
-            config.scheduled_tasks.scheduledTasks_push_groups["latest_asmr_push"]["latest_asmr_id"]=r["id"]
-            config.save_yaml("scheduledTasks_push_groups",plugin_name="scheduled_tasks")
+            config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]=r["id"]
+            config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
         else:
             bot.logger.info_func("asmr.one 无更新")
     except Exception as e:
@@ -283,22 +306,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
     asyncio.create_task(_call_jm())
     return {"status": "running", "message": "任务已在后台启动，请耐心等待结果"}
 def main(bot,config):
-    proxy = config.common_config.basic_config["proxy"]["http_proxy"]
-    if proxy!= "":
-        proxies = {
-            "http": proxy,
-            "https": proxy
-        }
-    else:
-        proxies=None
-    if config.resource_collector.config["z_library"]["email"]!="" and config.resource_collector.config["z_library"]["password"]!="":
-        global Z
-        try:
-            Z = Zlibrary(email=config.resource_collector.config["z_library"]["email"], password=config.resource_collector.config["z_library"]["password"],proxies=proxies)
-            bot.logger.info("✅ z_library 登陆成功")
-        except Exception as e:
-            bot.logger.error(f"❌ z_library login error:{e}")
-            return
+
     logger = bot.logger
 
 
@@ -376,10 +384,8 @@ def main(bot,config):
     async def randomcomic(event: GroupMessageEvent):
         if '本周jm' == event.pure_text or '本周JM' == event.pure_text or '今日jm' == event.pure_text or '今日JM' == event.pure_text:
             context = JM_search_week()
-            cmList = []
+            cmList = [Node(content=[Text('本周的JM排行如下，请君过目\n')]), Node(content=[Text(context)])]
 
-            cmList.append(Node(content=[Text('本周的JM排行如下，请君过目\n')]))
-            cmList.append(Node(content=[Text(context)]))
             await bot.send(event,cmList)
 
     @bot.on(GroupMessageEvent)

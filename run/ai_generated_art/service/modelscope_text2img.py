@@ -52,7 +52,7 @@ async def modelscope_drawer(prompt,proxy,args,negative=None,user_cookie=None):
     session_hash = random_session_hash(11)
     # 请求studio_token
     async with httpx.AsyncClient(proxies=proxies) as client:
-        response = await client.get("https://www.modelscope.cn/api/v1/studios/token", headers={"cookie": cookie if user_cookie==None else user_cookie})
+        response = await client.get("https://www.modelscope.cn/api/v1/studios/token", headers={"cookie": cookie if user_cookie is None else user_cookie})
         response_data = response.json()
         studio_token = response_data["Data"]["Token"]
     logger.info(f"studio_token: {studio_token}")

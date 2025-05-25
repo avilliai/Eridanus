@@ -1,24 +1,18 @@
-from bilibili_api import user, sync
-import yaml
-import os
-import urllib.parse
-
-import time
-
-from bilibili_api.user import get_self_info
-
-from bilibili_api import sync
-import inspect
 import asyncio
-import shutil
 import getpass
-from playwright.async_api import async_playwright
 import json
-from multiprocessing import Lock
+import os
+import shutil
 import sys
+import time
+from multiprocessing import Lock
+
+import yaml
+from playwright.async_api import async_playwright
+
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-class SaveData():
+class SaveData:
     base_dir = None
     lock = Lock()
 
@@ -99,7 +93,7 @@ async def bilibili_login():
         print("登陆失败。。。")
         exit()
 
-    if cookies != None:
+    if cookies is not None:
         data_file.data['login']['bili_login']['ac_time_value']=cookies['ac_time_value']
         data_file.data['login']['bili_login']['bili_jct'] = cookies['bili_jct']
         data_file.data['login']['bili_login']['buvid3'] = cookies['buvid3']

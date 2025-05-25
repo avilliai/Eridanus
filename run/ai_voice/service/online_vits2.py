@@ -1,41 +1,15 @@
-import json
-
 import asyncio
-import httpx
+import json
+import ssl
 
-import importlib.util
-import os
-import sys
+import httpx
+import websockets
 
 from developTools.utils.logger import get_logger
-
-import ssl
-import websockets
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ssl_context.check_hostname = False  # 关闭主机名检查
 ssl_context.verify_mode = ssl.CERT_NONE  # 关闭证书验证
-
-
-
-def install_and_import(package_name):
-    """检测模块是否已安装，若未安装则通过 pip 安装"""
-    # 检查模块是否已经安装
-    spec = importlib.util.find_spec(package_name)
-    if spec is None:
-        print(f"{package_name} 未安装，正在安装...")
-        # 使用 os.system 安装模块
-        os.system(f"{sys.executable} -m pip install {package_name}")
-        # 安装后再次导入模块
-        spec = importlib.util.find_spec(package_name)
-        if spec is None:
-            print(f"安装失败：无法找到 {package_name} 模块")
-            return None
-    return importlib.import_module(package_name)
-
-# 使用示例
-websockets = install_and_import('websockets')
-
 
 from run.ai_voice.service.online_vits import random_session_hash
 
