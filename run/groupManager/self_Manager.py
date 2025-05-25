@@ -275,7 +275,7 @@ def main(bot, config):
         if event.user_id==config.common_config.basic_config["master"]['id'] and event.pure_text=="notice":
             send_next_message = True
             await bot.send(event,"下一条消息将被转发至所有群")
-        if send_next_message and event.user_id==config.common_config.basic_config["master"]['id']:
+        elif send_next_message and event.user_id==config.common_config.basic_config["master"]['id']:
             send_next_message = False
             groups = await bot.get_group_list()
             for group in groups["data"]:
