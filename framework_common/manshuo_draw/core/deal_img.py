@@ -5,7 +5,7 @@ import textwrap
 import platform
 import re
 import inspect
-from framework_common.manshuo_draw.core.util.download_img import download_img
+from framework_common.manshuo_draw.core.util.download_img_old import download_img
 import traceback
 import requests
 from urllib.parse import urlparse
@@ -56,12 +56,8 @@ async def deal_img(json_img): #此函数将逐个解析json文件中的每个字
                 if canvas_dict == {}:return
                 layer_img_canvas=layer_img_info.paste_img(canvas_dict)
 
-    width, height = layer_img_canvas.size
-    if height > basic_img_info.img_height - basic_img_info.padding_up_common * 2 :
-        height = basic_img_info.img_height - basic_img_info.padding_up_common * 2
-        layer_img_canvas = layer_img_canvas.crop((0, 0, width, height))
-    basic_img.paste(layer_img_canvas, (basic_img_info.padding_left_common, basic_img_info.padding_up_common,basic_img_info.padding_left_common+width, basic_img_info.padding_up_common+height),mask=layer_img_canvas)
 
+    basic_img=basic_img_info.combine_layer_basic(basic_img,layer_img_canvas)
 
 
     #首先创建一个默认长度下的空白png，以便后续裁剪并与背景图粘贴
@@ -69,7 +65,7 @@ async def deal_img(json_img): #此函数将逐个解析json文件中的每个字
 
     #img_path = basic_img.img_path_save+"/" + random_str() + ".png"
     #basic_img.save(img_path, "PNG")
-    #basic_img.show()
+    basic_img.show()
 
     try:#做好对应资源关闭并释放，以免卡顿
 

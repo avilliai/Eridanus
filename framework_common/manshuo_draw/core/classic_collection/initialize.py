@@ -8,21 +8,20 @@ def initialize_yaml_must_require(params):
     if 'basic_set' == params['type'] :
         if 'config_path' not in params:
             params['config_path']='framework_common/manshuo_draw/defalut_config.yaml'
-
         if not os.path.exists(params['config_path']):
-            with open('framework_common/manshuo_draw/defalut_config.yaml', 'r') as file:
+            with open('framework_common/manshuo_draw/defalut_config.yaml', 'r', encoding='utf-8') as file:
                 origin_config_set_yaml = yaml.safe_load(file)
-            with open(params['config_path'], 'w') as file:
+            with open(params['config_path'], 'w', encoding='utf-8') as file:
                 yaml.dump(origin_config_set_yaml, file)
             initialize_yaml_set=origin_config_set_yaml
         else:
             try:
-                with open(params['config_path'], 'r') as file:
+                with open(params['config_path'], 'r', encoding='utf-8') as file:
                     initialize_yaml_set = yaml.safe_load(file)
             except Exception as e:
-                with open('framework_common/manshuo_draw/defalut_config.yaml', 'r') as file:
+                with open('framework_common/manshuo_draw/defalut_config.yaml', 'r', encoding='utf-8') as file:
                     origin_config_set_yaml = yaml.safe_load(file)
-                with open(params['config_path'], 'w') as file:
+                with open(params['config_path'], 'w', encoding='utf-8') as file:
                     yaml.dump(origin_config_set_yaml, file)
                 initialize_yaml_set = origin_config_set_yaml
 

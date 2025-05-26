@@ -1,11 +1,32 @@
 basic_set:
   img_width: 1000
-  img_height: 1000
+  img_height: 2000
   padding_left_common: 25
   padding_up_common: 25
+  is_crop_front: True               #是否对图片进行裁剪
+  is_rounded_corners_front: True    #是否对模块进行圆角处理
+  is_stroke_front: True             #是否对模块进行描边处理
+  is_shadow_front: True             #是否对模块进行阴影处理
   img_path_save: framework_common/manshuo_draw/data/cache
   debug: False
   config_path: framework_common/manshuo_draw/defalut_config.yaml
+
+  #以下为层级的部分处理
+  padding_up_layer: 20
+
+  is_rounded_corners_layer: True    #是否对层级进行圆角处理
+  rounded_corners_radius: 20
+
+  is_stroke_layer: True             #是否对层级进行描边处理
+  stroke_layer_radius: 23
+  stroke_layer_width: 10
+
+  is_shadow_layer: True             #是否对层级进行阴影处理
+  shadow_offset: 10                 #阴影的偏移量
+  shadow_opacity: 50                #阴影的透明度
+  blur_radius: 10                   #阴影模糊半径
+
+
 
 
 backdrop:
@@ -16,17 +37,21 @@ text:
   pure_text:
     font: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
     padding: 20
-    padding_up:
+    padding_up: 20
     spacing: 1
     font_size: 24
     color: '#000000'
 
 img:
   common:
-    number_per_row: 3
-    font: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+    number_per_row: default
+    padding: 20
     padding_with: 15
     is_crop: True
+
+    font: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
     font_size: 24
     font_color: '#ffffff'
     label_color: (251,114,153,80)
+    label: []
+

@@ -41,9 +41,9 @@ class TextModule:
             draw.text((x, y), text[i], font=font, fill=self.color)
             x += char_width + self.spacing
             i += 1
-            if x+20 > (self.img_width - self.padding*2) and i < len(text):
+            if x+10 > (self.img_width - self.padding*2) and i < len(text):
                 char_hight = bbox[3] - bbox[1]
-                y += char_hight + self.padding
+                y += char_hight + self.padding_up
                 x=self.padding
         canvas_bottom=y + self.font_size + 1
         pure_text_canvas = pure_backdrop.crop((0,0,self.img_width,canvas_bottom))

@@ -30,13 +30,13 @@ if __name__ == '__main__':
 
         {'type': 'backdrop', 'subtype': 'one_color'},
         {'type': 'text', 'subtype': 'pure_text',
-         'content': '你好，欢迎来到manshuo绘图！','font': 'data/fort/LXGWWenKai-Regular.ttf', 'color': '#000000', 'font_size': 24},
+         'content': '这里是manshuo！','font': 'data/fort/LXGWWenKai-Regular.ttf', 'color': '#000000', 'font_size': 24},
 
-        {'type':'text','subtype':'pure_text','content':'你好，欢迎来到manshuo绘图！欢迎来到manshuo绘图！欢迎来到manshuo绘图！欢迎来到manshuo绘图！这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢','font':'data/fort/LXGWWenKai-Regular.ttf','color':'#000000','font_size':24},
+        {'type':'text','subtype':'pure_text','content':'这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢','font':'data/fort/LXGWWenKai-Regular.ttf','color':'#000000','font_size':24},
 
-        {'type': 'img','subtype':'common','img': [],'label':[],'label_color':'','number_per_row':1,'font':'data/fort/LXGWWenKai-Regular.ttf','is_crop':True},
-        {'type': 'img','subtype':'common', 'img': [], 'label': [], 'label_color': '', 'number_per_row': 1, 'font': 'data/fort/LXGWWenKai-Regular.ttf', 'is_crop': True},
-        {'type': 'img','subtype':'common', 'img': [],'label':[],'label_color':'', 'number_per_row': 3,'font':'data/fort/LXGWWenKai-Regular.ttf','is_crop':True},
+        {'type': 'img','subtype':'common','img': ['data/cache/manshuo.jpg','data/cache/manshuo.jpg','data/cache/manshuo.jpg']},
+        {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg','data/cache/manshuo.jpg']},
+        {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg']},
         {'type': 'avatar','subtype':'text', 'img': '你好，欢迎来到manshuo绘图软件！','font':'default','padding_ahind':25,'padding_with':25},
 
         ]

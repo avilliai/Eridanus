@@ -75,10 +75,6 @@ def create_gradient_background(size, color1, color2):
             g = int(color1[1] * (1 - t) + color2[1] * t)
             b = int(color1[2] * (1 - t) + color2[2] * t)
             draw[x, y] = (r, g, b)
-
-
-
-
     return gradient
 
 def add_rounded_corners(image, radius):
@@ -95,6 +91,7 @@ def creat_white_corners(canvas, content_width, content_height,padding_x,current_
     shadow_color = (255, 255, 255, 80)
     if type is not None: shadow_color = (255, 255, 255, 80)
     if color is not None: shadow_color = color
+
     shadow_image = Image.new('RGBA', (content_width + shadow_width,content_height+ shadow_width), shadow_color)
     shadow_blurred = shadow_image.filter(ImageFilter.GaussianBlur(shadow_width / 2))
     shadow_x = int(padding_x - shadow_width / 2)
@@ -192,7 +189,7 @@ def add_shaow_image_new(canvas,padding,canvas_width,total_height,x,y):
     background = canvas.convert("RGBA")
     center_x=int(x)
     center_y=int(y)
-    img_width=int(canvas_width )
+    img_width=int(canvas_width)
     img_height=int(total_height)
     shadow_layer = Image.new("RGBA", canvas.size, (0, 0, 0, 0))  # 全透明图层
     shadow_draw = ImageDraw.Draw(shadow_layer)
