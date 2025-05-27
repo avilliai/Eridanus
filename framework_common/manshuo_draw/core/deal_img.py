@@ -52,9 +52,13 @@ async def deal_img(json_img): #此函数将逐个解析json文件中的每个字
             case 'img':
                 Image = ImageModule(layer_img_info, per_json_img)
                 canvas_dict[number_canvas] = getattr(Image, per_json_img['subtype'])()
+            case 'avatar':
+                Image = AvatarModule(layer_img_info, per_json_img)
+                canvas_dict[number_canvas] = getattr(Image, per_json_img['subtype'])()
             case _:
-                if canvas_dict == {}:return
-                layer_img_canvas=layer_img_info.paste_img(canvas_dict)
+                #if canvas_dict == {}:return
+                pass
+        layer_img_canvas=layer_img_info.paste_img(canvas_dict)
 
 
     basic_img=basic_img_info.combine_layer_basic(basic_img,layer_img_canvas)

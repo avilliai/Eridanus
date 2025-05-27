@@ -26,6 +26,7 @@ if __name__ == '__main__':
     :is_crop:表示是否裁剪图片，如True表示裁剪图片为一个正方形
     """
     contents=[
+        {'type': 'avatar', 'subtype': 'common', 'img': ['data/cache/manshuo.jpg']},
         {'type':'basic_set','img_path_save':'data/cache','debug':True,'config_path':'defalut_config.yaml'},
 
         {'type': 'backdrop', 'subtype': 'one_color'},
@@ -36,8 +37,8 @@ if __name__ == '__main__':
 
         {'type': 'img','subtype':'common','img': ['data/cache/manshuo.jpg','data/cache/manshuo.jpg','data/cache/manshuo.jpg']},
         {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg','data/cache/manshuo.jpg']},
-        {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg']},
-        {'type': 'avatar','subtype':'text', 'img': '你好，欢迎来到manshuo绘图软件！','font':'default','padding_ahind':25,'padding_with':25},
+        {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg'],'name':'manshuo','time':'2025年05月26日 22：32'},
+        {'type': 'img', 'subtype': 'common', 'img': ['data/cache/manshuo.jpg'], },
 
         ]
 

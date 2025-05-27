@@ -5,7 +5,7 @@ import os
 import base64
 from io import BytesIO
 
-class ImageModule:
+class AvatarModule:
     def __init__(self,layer_img_set,params):
         for key, value in vars(layer_img_set).items():#继承父类属性，主要是图片基本设置类
             setattr(self, key, value)
@@ -43,28 +43,13 @@ class ImageModule:
 
     def common(self):
         pure_backdrop = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
-
-        if self.number_per_row == 'default' :
-            if len(self.processed_img) == 1:
-                self.number_per_row=1
-                self.is_crop = False
-            elif len(self.processed_img) in [2,4] : self.number_per_row=2
-            else: self.number_per_row=3
-
-        new_width = (((self.img_width - self.padding*2 ) - (self.number_per_row - 1) * self.padding_with) // self.number_per_row)
+        current_y = self.padding_up
         x_offset = self.padding
         number_count = 0
-        current_y=0
-        #若有描边，则将初始粘贴位置增加一个描边宽度
-        if self.is_stroke_front and self.is_stroke_img:current_y = self.stroke_img_width
-        if self.is_shadow_front and self.is_shadow_img:current_y = self.shadow_offset
-        #对每个图片进行单独处理
+        new_width=(((self.img_width - self.padding*2 ) - (self.number_per_row - 1) * self.padding_with) // self.number_per_row)
         for img in self.processed_img:
+            img.thumbnail((self.avatar_size, self.avatar_size))
             number_count+=1
-            img = img.resize((new_width, int(new_width * img.height / img.width)))
-
-            #img = add_rounded_corners(img, radius=20)
-            #creat_white_corners(canvas, new_width, int(new_width * img.height / img.width), x_offset, current_y)
             # 圆角处理
             if self.is_rounded_corners_front and self.is_rounded_corners_img:
                 mask = Image.new("L", img.size, 0)
@@ -105,18 +90,20 @@ class ImageModule:
                 shadow_blurred.putalpha(mask)
                 pure_backdrop.paste(shadow_blurred, (int(x_offset - self.stroke_img_width / 2),int(current_y - self.stroke_img_width / 2)),shadow_blurred.split()[3])
 
-
-
-
-
             # 检查透明通道
-            if img.mode == "RGBA":pure_backdrop.paste(img, (int(x_offset), int(current_y)), img.split()[3])
-            else:pure_backdrop.paste(img, (int(x_offset), int(current_y)))
+            if img.mode == "RGBA":
+                pure_backdrop.paste(img, (int(x_offset), int(current_y)), img.split()[3])
+            else:
+                pure_backdrop.paste(img, (int(x_offset), int(current_y)))
             x_offset += new_width + self.padding_with
             if number_count == self.number_per_row:
                 number_count = 0
                 current_y += img.height + self.padding_with
-        if number_count != 0:
-            current_y  +=  new_width * img.height / img.width
+            if number_count != 0:
+                current_y += new_width * img.height / img.width
 
-        return {'canvas': pure_backdrop, 'canvas_bottom': current_y - self.padding_with}
+        return {'canvas': pure_backdrop, 'canvas_bottom': current_y - self.padding_with + self.padding_bottom}
+
+
+
+

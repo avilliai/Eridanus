@@ -15,11 +15,11 @@ basic_set:
   padding_up_layer: 20
 
   is_rounded_corners_layer: True    #是否对层级进行圆角处理
-  rounded_corners_radius: 20
+  rounded_corners_radius: 20        #层级的圆角弧度
 
   is_stroke_layer: True             #是否对层级进行描边处理
-  stroke_layer_radius: 23
-  stroke_layer_width: 10
+  stroke_layer_radius: 23           #描边的圆角弧度
+  stroke_layer_width: 10            #描边的圆角宽度
 
   is_shadow_layer: True             #是否对层级进行阴影处理
   shadow_offset: 10                 #阴影的偏移量
@@ -55,3 +55,38 @@ img:
     label_color: (251,114,153,80)
     label: []
 
+    #以下为层级的部分处理
+    is_rounded_corners_img: True    #是否对层级进行圆角处理
+    rounded_img_radius: 20
+
+    is_stroke_img: True             #是否对层级进行描边处理
+    stroke_img_radius: 23
+    stroke_img_width: 10
+
+    is_shadow_img: False             #是否对层级进行阴影处理
+    shadow_offset: 10                 #阴影的偏移量
+    shadow_opacity: 50                #阴影的透明度
+    blur_radius: 10                   #阴影模糊半径
+
+avatar:
+  common:
+    number_per_row: 1         #默认一个，可以指定每行多少个头像
+    is_name: Ture                   #是否在头像右侧旁添加名字
+    avatar_size: 100
+    padding: 30
+    padding_up: 5
+    padding_bottom: 5
+    padding_with: 15
+
+    #以下为层级的部分处理
+    is_rounded_corners_img: True    #是否对层级进行圆角处理
+    rounded_img_radius: 50
+
+    is_stroke_img: True             #是否对层级进行描边处理
+    stroke_img_width: 10
+    stroke_img_radius: 55
+
+    is_shadow_img: False             #是否对层级进行阴影处理
+    shadow_offset: 10                 #阴影的偏移量
+    shadow_opacity: 50                #阴影的透明度
+    blur_radius: 10                   #阴影模糊半径

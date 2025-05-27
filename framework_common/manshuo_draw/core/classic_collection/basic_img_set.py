@@ -61,9 +61,9 @@ class basicimgset:
             # 对阴影层应用模糊效果
             shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(self.blur_radius))
             # 将阴影层与底层图像 layer2 合并
-            combined_shadow = Image.alpha_composite(basic_img, shadow_image)
-            combined_shadow.paste(layer_img_canvas, (self.padding_left_common,self.padding_up_common), mask=layer_img_canvas)
-            basic_img = combined_shadow
+            basic_img = Image.alpha_composite(basic_img, shadow_image)
+            #combined_shadow.paste(layer_img_canvas, (self.padding_left_common,self.padding_up_common), mask=layer_img_canvas)
+
 
         # 描边处理
         if self.is_stroke_front and self.is_stroke_layer:
@@ -78,4 +78,5 @@ class basicimgset:
             basic_img.paste(shadow_blurred, (int(self.padding_left_common - self.stroke_layer_width / 2), int(self.padding_up_common - self.stroke_layer_width / 2)), shadow_blurred.split()[3])
 
         basic_img.paste(layer_img_canvas, (self.padding_left_common, self.padding_up_common,self.padding_left_common + width,self.padding_up_common + height), mask=layer_img_canvas)
+        basic_img.crop((0, 0, self.img_width, layer_img_canvas.height + self.padding_up_common))
         return basic_img
