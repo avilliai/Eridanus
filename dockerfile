@@ -1,4 +1,4 @@
-FROM python:3.11-slim AS builder
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.11-slim AS builder
 
 RUN set -eux; \
     codename="$(grep VERSION_CODENAME /etc/os-release | cut -d= -f2)"; \
@@ -26,7 +26,7 @@ RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \
         qrcode_terminal \
         flask_sock
 
-FROM python:3.11-slim
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/python:3.11-slim
 
 RUN set -eux; \
     codename="$(grep VERSION_CODENAME /etc/os-release | cut -d= -f2)"; \
