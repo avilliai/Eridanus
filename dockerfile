@@ -16,7 +16,7 @@ deb https://mirrors.tuna.tsinghua.edu.cn/debian-security $codename-security main
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /build/requirements.txt
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple \
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ \
     && pip install --upgrade pip \
     && pip install --no-cache-dir --prefix=/install \
         -r /build/requirements.txt \
