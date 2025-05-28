@@ -25,7 +25,7 @@ services:
       - qqbot-net
 
   eridanus:
-    image: sorahub555/eridanus-docker:latest
+    image: crpi-3gef5glpjhp2r3tx.cn-hangzhou.personal.cr.aliyuncs.com/sorahub/eridanus-docker:latest
     container_name: eridanus
     restart: always
     ports:
