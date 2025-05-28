@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   redis:
     image: redis:alpine
@@ -6,21 +8,34 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - eridanus-net
+      - qqbot-net
+
+  napcat:
+    image: docker.1ms.run/mlikiowa/napcat-docker:latest
+    container_name: napcat
+    environment:
+      - NAPCAT_UID=${NAPCAT_UID}
+      - NAPCAT_GID=${NAPCAT_GID}
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "6099:6099"
+    restart: always
+    networks:
+      - qqbot-net
 
   eridanus:
-    build:
-      context: . 
-      dockerfile: Dockerfile
+    image: sorahub555/eridanus-docker:latest
     container_name: eridanus
     restart: always
     ports:
       - "5007:5007"
     depends_on:
       - redis
+      - napcat
     networks:
-      - eridanus-net
+      - qqbot-net
 
 networks:
-  eridanus-net:
+  qqbot-net:
     driver: bridge
