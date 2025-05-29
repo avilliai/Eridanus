@@ -1,10 +1,8 @@
 from framework_common.manshuo_draw.core.deal_img import *
 import asyncio
 
-async def manshuo_draw(json_img, img_path=None):
-    #if img_path is not None:json_img['img_path_save']=img_path
-    #json_img['img_path_save']=json_img['img_path_save']+'/'+random_str(10)+'.png'
-
+async def manshuo_draw(json_img):
+    #json_img=json_check(json_img)   #检查并补正输入的参数
     await deal_img(json_img)
 
 
@@ -26,26 +24,32 @@ if __name__ == '__main__':
     :is_crop:表示是否裁剪图片，如True表示裁剪图片为一个正方形
     """
     contents=[
-        {'type': 'avatar', 'subtype': 'common', 'img': ['data/cache/manshuo.jpg']},
-        {'type':'basic_set','img_path_save':'data/cache','debug':True,'config_path':'defalut_config.yaml'},
+        {'type': 'basic_set', 'debug': False,'is_abs_path_convert':True},
 
-        {'type': 'backdrop', 'subtype': 'one_color'},
-        {'type': 'text', 'subtype': 'pure_text',
-         'content': '这里是manshuo！','font': 'data/fort/LXGWWenKai-Regular.ttf', 'color': '#000000', 'font_size': 24},
+        {'type': 'backdrop', 'subtype': 'gradient'},
 
-        {'type':'text','subtype':'pure_text','content':'这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢这部分是测试内容，请直接忽略，谢谢','font':'data/fort/LXGWWenKai-Regular.ttf','color':'#000000','font_size':24},
+        {'type': 'avatar', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],'upshift':25,
+         'content':[{'name': '漫朔_manshuo', 'time': '2025年 05月27日 20:32'}]
+         },
+        {'type': 'img', 'subtype': 'common','img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],'label':['BiliBili']},
+        {'type': 'img', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','https://gal.manshuo.ink/usr/uploads/2025/01/1015237503.png'],
+         'label': ['BiliBili','manshuo']},
 
-        {'type': 'img','subtype':'common','img': ['data/cache/manshuo.jpg','data/cache/manshuo.jpg','data/cache/manshuo.jpg']},
-        {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg','data/cache/manshuo.jpg']},
-        {'type': 'img','subtype':'common', 'img': ['data/cache/manshuo.jpg'],'name':'manshuo','time':'2025年05月26日 22：32'},
-        {'type': 'img', 'subtype': 'common', 'img': ['data/cache/manshuo.jpg'], },
+        {'type': 'text', 'subtype': 'common', 'content': ['这里是manshuo！']},
 
-        ]
+        {'type': 'img', 'subtype': 'common_with_description', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg'],
+         'content': ['这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]','这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]'] },
 
-    json_img={
-            'type':'draw','software':'manshuo','img_width':1000,'img_height':5000,'padding_common':25,'img_path_save':'data/cache','debug':True,
-            'contents':contents
-        }
+
+        {'type':'text','subtype':'common','content':['这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这部分是测试内容，请直接忽略，'],'layer':2,},
+        {'type': 'img', 'subtype': 'common_with_description', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg'],
+         'content': ['这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]','这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]'],'layer':2 },
+
+    ]
+
+    contents_not=[
+
+    ]
 
     img_path_set='data/cache'
 

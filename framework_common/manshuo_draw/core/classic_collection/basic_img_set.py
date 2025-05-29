@@ -1,13 +1,14 @@
-from PIL import Image, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageOps,ImageFont
 from .initialize import initialize_yaml_must_require
+from framework_common.manshuo_draw.core.util import *
 
 class basicimgset:
     def __init__(self, params):
         default_keys_values,must_required_keys=initialize_yaml_must_require(params)
+
         self.must_required_keys = must_required_keys or []  # 必须的键，如果没有提供就默认是空列表
         self.default_keys_values = default_keys_values or {}  # 默认值字典
         # 检测缺少的必需键
-        #print(must_required_keys)
         missing_keys = [key for key in self.must_required_keys if key not in params]
         if missing_keys:
             raise ValueError(f"初始化中缺少必需的键: {missing_keys}，请检查传入的数据是否有误")
@@ -19,64 +20,67 @@ class basicimgset:
             if not hasattr(self, key):  # 如果属性不存在，则设置默认值
                 setattr(self, key, value)
 
-
+        #是否获取其绝对路径
+        if self.is_abs_path_convert is True:
+            for key, value in vars(self).items():
+                setattr(self, key, get_abs_path(value))
 
 
     def creatbasicimgnobackdrop(self):
-        """
-        创建一个同名空白画布并返回。
-
-        """
+        """创建一个同名空白画布并返回。"""
         # 创建一个指定大小和颜色的画布
         canvas = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
         return canvas
 
 
     def combine_layer_basic(self,basic_img,layer_img_canvas):
+
         width, height = layer_img_canvas.size
         if height > self.img_height - self.padding_up_common * 2:
             height = self.img_height - self.padding_up_common * 2
             layer_img_canvas = layer_img_canvas.crop((0, 0, width, height))
-        # 圆角处理
-        if self.is_rounded_corners_front and self.is_rounded_corners_layer:
-            mask = Image.new("L", layer_img_canvas.size, 0)
-            draw = ImageDraw.Draw(mask)
-            draw.rounded_rectangle((0, 0, width, height), radius=self.rounded_corners_radius, fill=255, outline=255, width=2)
-            rounded_image = Image.new("RGBA", layer_img_canvas.size)
-            rounded_image.paste(layer_img_canvas, (0, 0), mask=mask)
-            layer_img_canvas=rounded_image
-        # 阴影处理
-        if self.is_shadow_front and self.is_shadow_layer:
-            shadow_image = Image.new("RGBA", basic_img.size, (0, 0, 0, 0))  # 初始化透明图层
-            shadow_draw = ImageDraw.Draw(shadow_image)
-            # 计算阴影矩形的位置
-            shadow_rect = [
-                self.padding_left_common - self.shadow_offset,  # 左
-                self.padding_up_common - self.shadow_offset,  # 上
-                self.padding_left_common + width + self.shadow_offset,  # 右
-                self.padding_up_common + height + self.shadow_offset  # 下
-            ]
-            # 绘制阴影（半透明黑色）
-            shadow_draw.rectangle(shadow_rect, fill=(0, 0, 0, self.shadow_opacity))
-            # 对阴影层应用模糊效果
-            shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(self.blur_radius))
-            # 将阴影层与底层图像 layer2 合并
-            basic_img = Image.alpha_composite(basic_img, shadow_image)
-            #combined_shadow.paste(layer_img_canvas, (self.padding_left_common,self.padding_up_common), mask=layer_img_canvas)
+
+        basic_img.paste(layer_img_canvas, (0, 0,width,height), mask=layer_img_canvas)
 
 
-        # 描边处理
-        if self.is_stroke_front and self.is_stroke_layer:
-            shadow_image = Image.new('RGBA', (width + self.stroke_layer_width, height + self.stroke_layer_width),(255, 255, 255, 80))
-            shadow_blurred = shadow_image.filter(ImageFilter.GaussianBlur(self.stroke_layer_width / 2))
-            mask = Image.new('L', shadow_blurred.size, 255)
-            draw = ImageDraw.Draw(mask)
-            draw.rounded_rectangle([0, 0, shadow_blurred.size[0], shadow_blurred.size[1]],radius=self.stroke_layer_radius, fill=0, outline=255, width=2)
-            shadow_blurred = ImageOps.fit(shadow_blurred, mask.size, method=0, bleed=0.0, centering=(0.5, 0.5))
-            mask = ImageOps.invert(mask)
-            shadow_blurred.putalpha(mask)
-            basic_img.paste(shadow_blurred, (int(self.padding_left_common - self.stroke_layer_width / 2), int(self.padding_up_common - self.stroke_layer_width / 2)), shadow_blurred.split()[3])
 
-        basic_img.paste(layer_img_canvas, (self.padding_left_common, self.padding_up_common,self.padding_left_common + width,self.padding_up_common + height), mask=layer_img_canvas)
-        basic_img.crop((0, 0, self.img_width, layer_img_canvas.height + self.padding_up_common))
+        basic_img=basic_img.crop((0, 0, self.img_width, height))
+
         return basic_img
+
+    def basic_img_draw_text(self,canvas,content,font,color,box=None,limit_box=None,padding_up=20):
+        """
+        #此方法不同于其余绘制方法
+        #其余绘制方法仅返回自身绘制画面
+        #此方法返回在原画布上绘制好的画面，同时返回的底部长度携带一个标准间距，此举意在简化模组中的叠加操作，请注意甄别
+        """
+
+        if box is None: x, y = (self.padding,0)  # 初始位置
+        else:x, y = box
+        if limit_box is None:x_limit, y_limit = (self.img_width - self.padding*2,self.img_height)  # 初始位置
+        else:x_limit, y_limit = limit_box
+        if content == '' or content is None:
+            return {'canvas': canvas, 'canvas_bottom': y}
+        if y > y_limit - (font.getbbox('的')[3] - font.getbbox('的')[1]):
+            return {'canvas': canvas, 'canvas_bottom': y}
+        draw = ImageDraw.Draw(canvas)
+        i = 0
+        # 对文字进行逐个绘制
+        text=content
+        while i < len(text):  # 遍历每一个字符
+            bbox = font.getbbox(text[i])
+            char_width = bbox[2] - bbox[0]
+            draw.text((x, y), text[i], font=font, fill=eval(color))
+            x += char_width + 1
+            i += 1
+            if x + char_width*2 > x_limit and i < len(text):
+                if y > y_limit - (font.getbbox('的')[3] - font.getbbox('的')[1] )*2 - padding_up :
+                    draw.text((x, y), '...', font=font, fill=eval(color))
+                    break
+
+            if x+char_width > x_limit and i < len(text):
+                y += font.getbbox('的')[3] - font.getbbox('的')[1] + padding_up
+                x=box[0]
+        bbox = font.getbbox('的')
+        canvas_bottom=y + bbox[3] - bbox[1] + padding_up
+        return {'canvas':canvas, 'canvas_bottom':canvas_bottom}

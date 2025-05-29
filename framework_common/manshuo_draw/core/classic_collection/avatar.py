@@ -17,22 +17,32 @@ class AvatarModule:
         missing_keys = [key for key in self.must_required_keys if key not in params]
         if missing_keys:
             raise ValueError(f"初始化中缺少必需的键: {missing_keys}，请检查传入的数据是否有误")
+        # 设置默认值
+        for key, value in self.default_keys_values.items():
+            setattr(self, key, value)
         # 将字典中的键值转化为类的属性
         for key, value in params.items():
             setattr(self, key, value)
-        # 设置默认值
-        for key, value in self.default_keys_values.items():
-            if not hasattr(self, key):  # 如果属性不存在，则设置默认值
-                setattr(self, key, value)
+        #是否获取其绝对路径
+        if self.is_abs_path_convert is True:
+            for key, value in vars(self).items():
+                setattr(self, key, get_abs_path(value))
+
+        # 设置字体和大小（需要确保字体文件路径正确）
+        try:
+            self.name_font = ImageFont.truetype(self.name_font_path, size=self.name_font_size)
+            self.time_font = ImageFont.truetype(self.time_font_path, size=self.time_font_size)
+        except OSError:
+            self.name_font=self.time_font = ImageFont.load_default()  # 如果字体不可用，使用默认字体
 
         #接下来是对图片进行处理，将其全部转化为pillow的img对象，方便后续处理
         self.processed_img = []
         for content in self.img:
-            if isinstance(content, str) and os.path.splitext(content)[1].lower() in [".jpg", ".png", ".jpeg", '.webp']: #若图片为本地文件，则转化为img对象
+            if isinstance(content, str) and os.path.splitext(content)[1].lower() in [".jpg", ".png", ".jpeg", '.webp'] and not content.startswith("http"): #若图片为本地文件，则转化为img对象
+                if self.is_abs_path_convert is True:content=get_abs_path(content)
                 self.processed_img.append(Image.open(content))
             elif isinstance(content, str) and content.startswith("http"):
-                img_path=download_img(content, self.img_path_save + "/" + random_str() + ".png")
-                self.processed_img.append(Image.open(img_path))
+                self.processed_img.append(Image.open(BytesIO(base64.b64decode(download_img_sync(content)))))
 
             else:#最后判断是否为base64，若不是，则不添加本次图像
                 try:
@@ -43,13 +53,13 @@ class AvatarModule:
 
     def common(self):
         pure_backdrop = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
-        current_y = self.padding_up
-        x_offset = self.padding
-        number_count = 0
+        number_count,upshift,downshift,current_y,x_offset = 0,0,0,self.padding_up_bottom,self.padding
+        #若有描边，则将初始粘贴位置增加一个描边宽度
+        if self.is_stroke_front and self.is_stroke_img:current_y += self.stroke_img_width / 2
+        if self.is_shadow_front and self.is_shadow_img:upshift +=self.shadow_offset*2
         new_width=(((self.img_width - self.padding*2 ) - (self.number_per_row - 1) * self.padding_with) // self.number_per_row)
         for img in self.processed_img:
             img.thumbnail((self.avatar_size, self.avatar_size))
-            number_count+=1
             # 圆角处理
             if self.is_rounded_corners_front and self.is_rounded_corners_img:
                 mask = Image.new("L", img.size, 0)
@@ -66,12 +76,12 @@ class AvatarModule:
                 # 计算阴影矩形的位置
                 shadow_rect = [
                     x_offset - self.shadow_offset,  # 左
-                    current_y - self.shadow_offset,  # 上
+                    current_y - self.shadow_offset + upshift,  # 上
                     x_offset + img.width + self.shadow_offset,  # 右
-                    current_y + img.height + self.shadow_offset  # 下
+                    current_y + img.height + self.shadow_offset + upshift  # 下
                 ]
                 # 绘制阴影（半透明黑色）
-                shadow_draw.rectangle(shadow_rect, fill=(0, 0, 0, self.shadow_opacity))
+                shadow_draw.rounded_rectangle(shadow_rect, radius=self.rounded_img_radius,fill=(0, 0, 0, self.shadow_opacity))
                 # 对阴影层应用模糊效果
                 shadow_image = shadow_image.filter(ImageFilter.GaussianBlur(self.blur_radius))
                 # 将阴影层与底层图像 layer2 合并
@@ -88,21 +98,34 @@ class AvatarModule:
                 shadow_blurred = ImageOps.fit(shadow_blurred, mask.size, method=0, bleed=0.0, centering=(0.5, 0.5))
                 mask = ImageOps.invert(mask)
                 shadow_blurred.putalpha(mask)
-                pure_backdrop.paste(shadow_blurred, (int(x_offset - self.stroke_img_width / 2),int(current_y - self.stroke_img_width / 2)),shadow_blurred.split()[3])
+                pure_backdrop.paste(shadow_blurred, (int(x_offset - self.stroke_img_width / 2),int(current_y - self.stroke_img_width / 2 + upshift)),shadow_blurred.split()[3])
 
             # 检查透明通道
             if img.mode == "RGBA":
-                pure_backdrop.paste(img, (int(x_offset), int(current_y)), img.split()[3])
+                pure_backdrop.paste(img, (int(x_offset), int(current_y + upshift)), img.split()[3])
             else:
-                pure_backdrop.paste(img, (int(x_offset), int(current_y)))
-            x_offset += new_width + self.padding_with
-            if number_count == self.number_per_row:
-                number_count = 0
-                current_y += img.height + self.padding_with
-            if number_count != 0:
-                current_y += new_width * img.height / img.width
+                pure_backdrop.paste(img, (int(x_offset), int(current_y + upshift)))
 
-        return {'canvas': pure_backdrop, 'canvas_bottom': current_y - self.padding_with + self.padding_bottom}
+
+            # 绘制名字和时间等其他信息
+            draw = ImageDraw.Draw(pure_backdrop)
+            text_x_offset=x_offset + self.avatar_size*1.1 + self.padding_with
+            text_y_offset=current_y + self.avatar_size//2
+            draw.text((text_x_offset , text_y_offset - self.name_font_size ), self.content[number_count]['name'], font=self.name_font, fill=eval(self.name_font_color))
+            draw.text((text_x_offset , text_y_offset + self.padding_with ), self.content[number_count]['time'], font=self.time_font, fill=eval(self.time_font_color))
+            x_offset += new_width + self.padding_with
+
+            number_count += 1
+            if number_count == self.number_per_row:
+                number_count,x_offset = 0,self.padding
+                current_y += img.height + self.padding_with
+        if number_count != 0:
+            current_y += new_width * img.height / img.width
+        else:
+            current_y -= self.padding_with
+
+        upshift+=self.upshift
+        return {'canvas': pure_backdrop, 'canvas_bottom': current_y + self.padding_up_bottom - self.upshift ,'upshift':upshift,'downshift':0}
 
 
 
