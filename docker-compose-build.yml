@@ -28,7 +28,9 @@ services:
       DATA_ROOT: "/app/Eridanus/data"
 
   eridanus:
-    image: crpi-3gef5glpjhp2r3tx.cn-hangzhou.personal.cr.aliyuncs.com/sorahub/eridanus-docker:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: eridanus
     ports:
       - "5007:5007"
