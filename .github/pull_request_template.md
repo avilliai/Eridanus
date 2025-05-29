@@ -11,5 +11,5 @@
 - [ ] 已在本地经过充分测试
 - [ ] 没有同步阻塞代码
 - [ ] 适配当前tool的更新机制
-- [ ] 【可选】在现有[文档](https://github.com/avilliai/Eridanus_doc) 中提交相关功能的说明
+- [ ] 【可选】在现有[文档](https://github.com/AOrbitron/vitepress_eridanus_doc) 中提交相关功能的说明
 
