@@ -3,19 +3,25 @@ import json
 import asyncio
 import redis
 import time
-
+import os
 from developTools.utils.logger import get_logger
 from run.ai_llm.service.aiReplyHandler.gemini import gemini_prompt_elements_construct
 from run.ai_llm.service.aiReplyHandler.openai import prompt_elements_construct, prompt_elements_construct_old_version
 
 DB_NAME = "data/dataBase/group_messages.db"
-REDIS_URL = "redis://localhost"
+def is_running_in_docker():
+    return os.path.exists("/.dockerenv") or os.environ.get("IN_DOCKER") == "1"
+
+if is_running_in_docker():
+    REDIS_URL = "redis://redis:6379/0"
+else:
+    REDIS_URL = "redis://localhost"
 REDIS_CACHE_TTL = 60  # 秒
 
 logger = get_logger()
 
 redis_client = None
-import os
+
 import subprocess
 import platform
 import zipfile
