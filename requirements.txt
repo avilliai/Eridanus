@@ -31,10 +31,3 @@ jieba
 scikit-learn
 psutil
 pyzipper
-PyJWT
-brotli
-qrcode
-qrcode_terminal
-flask_sock
-pypinyin
-rapidfuzz
