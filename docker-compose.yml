@@ -9,6 +9,8 @@ services:
       - "6379:6379"
     networks:
       - qqbot-net
+    environment:
+      TZ: Asia/Shanghai
 
   napcat:
     image: docker.1ms.run/mlikiowa/napcat-docker:latest
@@ -26,6 +28,7 @@ services:
       - ./run/group_fun/service:/app/Eridanus/run/group_fun/service:rw
     environment:
       DATA_ROOT: "/app/Eridanus/data"
+      TZ: Asia/Shanghai
 
   eridanus:
     image: crpi-3gef5glpjhp2r3tx.cn-hangzhou.personal.cr.aliyuncs.com/sorahub/eridanus-docker:latest
@@ -45,6 +48,7 @@ services:
       DATA_DIR: "/app/Eridanus/data"
       PICTURE_PATH: "/app/Eridanus/data/pictures"
       CACHE_PATH: "/app/Eridanus/data/video/cache"
+      TZ: Asia/Shanghai
 
 networks:
   qqbot-net:
