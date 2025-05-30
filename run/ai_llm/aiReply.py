@@ -213,7 +213,7 @@ def main(bot, config):
             "ai_change_character"]:
             chara_file = str(event.pure_text).replace("/切人设 ", "")
             if chara_file == "0":
-                reply = await clear_user_chara(event.user_id)
+                reply = await change_folder_chara(config.ai_llm.config["llm"]["chara_file_name"], event.user_id)
             else:
                 reply = await change_folder_chara(chara_file, event.user_id)
             await bot.send(event, reply, True)
@@ -221,7 +221,7 @@ def main(bot, config):
             "id"]:
             chara_file = str(event.pure_text).replace("/全切人设 ", "")
             if chara_file == "0":
-                reply = await clear_all_users_chara()
+                reply = await set_all_users_chara(config.ai_llm.config["llm"]["chara_file_name"])
             else:
                 reply = await set_all_users_chara(chara_file)
             await bot.send(event, reply, True)
