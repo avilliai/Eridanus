@@ -120,7 +120,7 @@ async def process_video(client, item,iwara_gray_layer=False):
     
     #print(f"\n正在处理视频 ID: {video_id}, 标题: {title}")
     
-    thumbnail_path = await download_thumbnail(client, item,iwara_gray_layer=False)
+    thumbnail_path = await download_thumbnail(client, item,iwara_gray_layer)
     
     return {
         "title": title,

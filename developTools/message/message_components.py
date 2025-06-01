@@ -39,6 +39,7 @@ class MessageComponent(BaseModel, ABC):
 class File(MessageComponent):
     comp_type: str = "file"
     file: str = Field(description="文件路径")
+    name: str= Field(default="",description="文件名")
     url: Annotated[Optional[str], OnlySend] = Field(default="",description="文件 URL")
     file_id: Annotated[Optional[str],OnlySend] = Field(default="",description="图片类型")
     path: Annotated[Optional[str], OnlySend] = Field(default="",description="文件路径")
@@ -52,7 +53,8 @@ class File(MessageComponent):
             # 将相对路径转换为绝对路径并添加 file:// 前缀
             abs_path = os.path.abspath(self.file).replace("\\", "/")
             self.file = f"file://{abs_path}"
-
+        file_name = os.path.basename(self.file)
+        self.name = file_name
 class Text(MessageComponent):
     comp_type: str = "text"
     text: str = Field(description="纯文本")
@@ -87,13 +89,15 @@ class Image(MessageComponent):
             # 将相对路径转换为绝对路径并添加 file:// 前缀
             abs_path = os.path.abspath(self.file).replace("\\", "/")
             self.file = f"file://{abs_path}"
+        if not self.url:
+            self.url = self.file
 
 class Mface(MessageComponent):
     comp_type: str = "mface"
     summary: Annotated[str, OnlySend] = Field(description="表情包描述")
     url: Annotated[str, OnlySend] = Field(description="表情包 URL")
     emoji_id : Annotated[str, OnlySend] = Field(description="表情包 ID")
-    emoji_package_id: Annotated[int, OnlySend] = Field(description="表情包包 ID")
+    emoji_package_id: Annotated[int|str, OnlySend] = Field(description="表情包包 ID")
     key: Annotated[str, OnlySend] = Field(description="表情包 Key")
 
 class Record(MessageComponent):
@@ -135,7 +139,7 @@ class Video(MessageComponent):
 
 class At(MessageComponent):
     comp_type: str = "at"
-    qq: int = Field(default=0,description="@的 QQ 号，all 表示全体成员")
+    qq: int|str = Field(default=0,description="@的 QQ 号，all 表示全体成员")
     name: Annotated[Optional[str], OnlySend] = Field(default="",description="昵称")
 
     @field_validator("qq", mode="before")
@@ -157,8 +161,8 @@ class Shake(MessageComponent):
 
 class Poke(MessageComponent):
     comp_type: str = "poke"
-    type: int = Field(description="类型")
-    id: int = Field(description="ID")
+    type: int|str = Field(description="类型")
+    id: int|str = Field(description="ID")
     name: Annotated[Optional[str], OnlyReceive] = Field(description="表情名")
 
 
@@ -194,7 +198,7 @@ class Location(MessageComponent):
 class Music(MessageComponent):
     comp_type: str = "music"
     type: str
-    id: int
+    id: int|str
 class Card(MessageComponent):
     comp_type: str = "music"
     type: str="custom"
@@ -205,7 +209,7 @@ class Card(MessageComponent):
 
 class Reply(MessageComponent):
     comp_type: str = "reply"
-    id: int = Field(description="回复时引用的消息 ID")
+    id: int | str = Field(description="回复时引用的消息 ID")
 
 class Markdown(MessageComponent):
     comp_type: str = "markdown"
@@ -221,9 +225,8 @@ class Forward(MessageComponent):
 
 class Node(MessageComponent):
     comp_type: str = "node"
-    id: str = Field(default="",description="转发的消息 ID")
-    user_id: str = Field(default="",description="发送者 QQ 号")
-    nickname: str = Field(default="",description="发送者昵称")
+    user_id: str = Field(default="3552663628",description="发送者 QQ 号")
+    nickname: str = Field(default="Eridanus",description="发送者昵称")
     content: str | list[MessageComponent] = Field(description="消息内容")
 
 

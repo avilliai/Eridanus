@@ -130,6 +130,8 @@ class MessageEvent(BaseModel):
         :return: 包含该类型消息的列表，或者 None（如果没有该类型的消息）。
         """
         result = [msg[message_type] for msg in self.processed_message if message_type in msg]
+        if result and message_type=="image" and "url" not in result[0]:
+            result[0]["url"]=result[0]["file"]
         return result if result else None
 
 class PrivateMessageEvent(MessageEvent):
