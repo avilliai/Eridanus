@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import re
+import traceback
 
 import httpx
 from PIL import Image
@@ -92,6 +93,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
                 #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
             except Exception as e:
+                traceback.print_exc()
                 prompt_elements.append({"text": f"系统提示：下载图片失败"})
 
         elif "record" in i:
