@@ -17,7 +17,7 @@ master:
   id: 1840094972
 group: 879886836   #测试群号1，随便建个小群。bot会往里面发乱七八糟的东西，不要填用户群。
 adapter:
-  name: "all"   #兼容性选项，如果用Lagrange，则必须填Lagrange，用其他onebot实现则不用动
+  name: "any"   #兼容性选项，如果用Lagrange，则必须填Lagrange，用其他onebot实现则不用动
   ws_client:   #机器人作为websocket客户端
     ws_link: "ws://127.0.0.1:3001"  #bot的websocket请求地址
 
