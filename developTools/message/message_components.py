@@ -87,6 +87,8 @@ class Image(MessageComponent):
             # 将相对路径转换为绝对路径并添加 file:// 前缀
             abs_path = os.path.abspath(self.file).replace("\\", "/")
             self.file = f"file://{abs_path}"
+        if not self.url:
+            self.url = self.file
 
 class Mface(MessageComponent):
     comp_type: str = "mface"
