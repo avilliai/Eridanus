@@ -117,7 +117,10 @@ class ExtendBot(WebSocketBot):
         Args:
             components (list[Union[MessageComponent, str]]): 消息组件或字符串。
         """
-        if Quote:
-            components.insert(0, Reply(id=str(event.message_id)))
-        return super().send(event, components)
+        if self.config.common_config.basic_config["adapter"]["name"] == "Lagrange":
+            if Quote:
+                components.insert(0, Reply(id=str(event.message_id)))
+            return super().send(event, components)
+        else:
+            return super().send(event, components, Quote)
 
