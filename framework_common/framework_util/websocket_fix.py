@@ -39,8 +39,11 @@ class ExtendBot(WebSocketBot):
                         if event_obj.post_type == "meta_event":
 
                             if event_obj.meta_event_type == "lifecycle":
-                                self.id = int(event_obj.self_id)
-                                self.logger.info(f"Bot ID: {self.id}")
+                                if self.config.common_config.basic_config["adapter"]["name"] == "Lagrange":
+                                    self.id=str(event_obj.self_id)
+                                else:
+                                    self.id = int(event_obj.self_id)
+                                self.logger.info(f"Bot ID: {self.id},{type(self.id)}")
                     except:
                         pass
                     if hasattr(event_obj, "group_id"):
