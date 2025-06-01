@@ -157,8 +157,8 @@ class Shake(MessageComponent):
 
 class Poke(MessageComponent):
     comp_type: str = "poke"
-    type: int = Field(description="类型")
-    id: int = Field(description="ID")
+    type: int|str = Field(description="类型")
+    id: int|str = Field(description="ID")
     name: Annotated[Optional[str], OnlyReceive] = Field(description="表情名")
 
 
