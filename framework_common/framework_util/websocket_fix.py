@@ -8,7 +8,7 @@ import websockets
 from developTools.adapters.websocket_adapter import WebSocketBot
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
-from developTools.message.message_components import MessageComponent, Reply
+from developTools.message.message_components import MessageComponent, Reply, Text
 
 
 class ExtendBot(WebSocketBot):
@@ -117,6 +117,10 @@ class ExtendBot(WebSocketBot):
         Args:
             components (list[Union[MessageComponent, str]]): 消息组件或字符串。
         """
+        if isinstance(components, str):
+            components = [Text(components)]
+        if not isinstance(components, list):
+            components = [components]
         if self.config.common_config.basic_config["adapter"]["name"] == "Lagrange":
             if Quote:
                 components.insert(0, Reply(id=str(event.message_id)))
