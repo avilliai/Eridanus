@@ -205,7 +205,7 @@ class Card(MessageComponent):
 
 class Reply(MessageComponent):
     comp_type: str = "reply"
-    id: int = Field(description="回复时引用的消息 ID")
+    id: int | str = Field(description="回复时引用的消息 ID")
 
 class Markdown(MessageComponent):
     comp_type: str = "markdown"

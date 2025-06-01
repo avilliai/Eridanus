@@ -1,11 +1,14 @@
 #实现黑白名单判断，后续aiReplyCore的阻断也将在这里实现
 import asyncio
 import json
+from typing import Union
 
 import websockets
 
 from developTools.adapters.websocket_adapter import WebSocketBot
+from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
+from developTools.message.message_components import MessageComponent, Reply
 
 
 class ExtendBot(WebSocketBot):
@@ -106,3 +109,15 @@ class ExtendBot(WebSocketBot):
                     future.cancel()
             self.response_callbacks.clear()
             self.receive_task = None
+
+    async def send(self, event: EventBase, components: list[Union[MessageComponent, str]], Quote: bool = False):
+        """
+        构建并发送消息链。
+
+        Args:
+            components (list[Union[MessageComponent, str]]): 消息组件或字符串。
+        """
+        if Quote:
+            components.insert(0, Reply(id=str(event.message_id)))
+        return super().send(event, components)
+
