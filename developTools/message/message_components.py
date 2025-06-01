@@ -93,7 +93,7 @@ class Mface(MessageComponent):
     summary: Annotated[str, OnlySend] = Field(description="表情包描述")
     url: Annotated[str, OnlySend] = Field(description="表情包 URL")
     emoji_id : Annotated[str, OnlySend] = Field(description="表情包 ID")
-    emoji_package_id: Annotated[int, OnlySend] = Field(description="表情包包 ID")
+    emoji_package_id: Annotated[int|str, OnlySend] = Field(description="表情包包 ID")
     key: Annotated[str, OnlySend] = Field(description="表情包 Key")
 
 class Record(MessageComponent):
