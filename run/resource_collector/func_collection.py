@@ -21,10 +21,10 @@ async def iwara_search(bot:ExtendBot,event:GroupMessageEvent,config,aim:str,oper
                 await bot.send(event, Text(f"未搜索到{aim}相关iwara视频"))
                 return
             node_list = [
-                Node(
-                    content=[Text(i.get('title')), Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
+                Node(content=[Text(i.get('title')), Text("\nvideo_id:"), Text(i.get('video_id')), Image(file=i.get('path'))])
                 for i in list
             ]
+            bot.logger.info(node_list)
             await bot.send(event, node_list)
         except Exception as e:
             await bot.send(event, Text(f"iwara搜索{aim}失败：{e}"))
