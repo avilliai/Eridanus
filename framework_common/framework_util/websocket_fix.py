@@ -8,7 +8,7 @@ import websockets
 from developTools.adapters.websocket_adapter import WebSocketBot
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
-from developTools.message.message_components import MessageComponent, Reply, Text, Music, At, Poke
+from developTools.message.message_components import MessageComponent, Reply, Text, Music, At, Poke, File
 
 
 class ExtendBot(WebSocketBot):
@@ -135,6 +135,8 @@ class ExtendBot(WebSocketBot):
                 elif isinstance(item, Poke):
                     item.type=str(item.type)
                     item.id=str(item.id)
+                elif isinstance(item,File):
+                    item.file=item.file.replace("file://","")
                 components[index] = item
             return await super().send(event, components)
         else:
