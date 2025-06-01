@@ -194,7 +194,7 @@ class Location(MessageComponent):
 class Music(MessageComponent):
     comp_type: str = "music"
     type: str
-    id: int
+    id: int|str
 class Card(MessageComponent):
     comp_type: str = "music"
     type: str="custom"

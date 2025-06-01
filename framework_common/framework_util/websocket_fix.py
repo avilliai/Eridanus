@@ -8,7 +8,7 @@ import websockets
 from developTools.adapters.websocket_adapter import WebSocketBot
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
-from developTools.message.message_components import MessageComponent, Reply, Text
+from developTools.message.message_components import MessageComponent, Reply, Text, Music
 
 
 class ExtendBot(WebSocketBot):
@@ -124,6 +124,11 @@ class ExtendBot(WebSocketBot):
         if self.config.common_config.basic_config["adapter"]["name"] == "Lagrange":
             if Quote:
                 components.insert(0, Reply(id=str(event.message_id)))
+            for index, item in enumerate(components):
+                if isinstance(item, Music):
+                    item.id=str(item.id)
+                    components[index] = item
+
             return await super().send(event, components)
         else:
             return await super().send(event, components, Quote)
