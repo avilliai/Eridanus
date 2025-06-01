@@ -8,7 +8,7 @@ import websockets
 from developTools.adapters.websocket_adapter import WebSocketBot
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
-from developTools.message.message_components import MessageComponent, Reply, Text, Music
+from developTools.message.message_components import MessageComponent, Reply, Text, Music, At
 
 
 class ExtendBot(WebSocketBot):
@@ -127,6 +127,9 @@ class ExtendBot(WebSocketBot):
             for index, item in enumerate(components):
                 if isinstance(item, Music):
                     item.id=str(item.id)
+                    components[index] = item
+                elif isinstance(item, At):
+                    item.qq=str(item.qq)
                     components[index] = item
 
             return await super().send(event, components)

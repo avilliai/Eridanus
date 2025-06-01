@@ -135,7 +135,7 @@ class Video(MessageComponent):
 
 class At(MessageComponent):
     comp_type: str = "at"
-    qq: int = Field(default=0,description="@的 QQ 号，all 表示全体成员")
+    qq: int|str = Field(default=0,description="@的 QQ 号，all 表示全体成员")
     name: Annotated[Optional[str], OnlySend] = Field(default="",description="昵称")
 
     @field_validator("qq", mode="before")
