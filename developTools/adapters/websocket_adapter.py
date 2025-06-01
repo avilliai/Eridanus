@@ -11,7 +11,7 @@ import websockets
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
 from developTools.message.message_chain import MessageChain
-from developTools.message.message_components import MessageComponent, Text, Reply, Node
+from developTools.message.message_components import MessageComponent, Text, Reply, Node, File
 from developTools.utils.logger import get_logger
 
 
@@ -182,6 +182,10 @@ class WebSocketBot:
                     if isinstance(message[0], Node):
                         r = await self.send_group_forward_msg(event.group_id, message)
                         return r
+                    if all(isinstance(item, File) for item in message):
+                        for f in message:
+                            r=await self.upload_group_file(event.group_id, f.file)
+                        return r
                 elif hasattr(event, "user_id"):
                     action = "send_private_msg"
                     params = {
@@ -191,6 +195,10 @@ class WebSocketBot:
 
                     if isinstance(message[0], Node):
                         r = await self.send_private_forward_msg(event.user_id, message)
+                        return r
+                    if all(isinstance(item, File) for item in message):
+                        for f in message:
+                            r=await self.upload_private_file(event.user_id, f.file)
                         return r
                 self.logger.info_func(f"发送的消息: {message.to_dict()}")
                 return await self._call_api(action, params)
