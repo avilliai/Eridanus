@@ -40,7 +40,7 @@ class ExtendBot(WebSocketBot):
 
                             if event_obj.meta_event_type == "lifecycle":
 
-                                self.id = str(event_obj.self_id)
+                                self.id = int(event_obj.self_id)
                                 self.logger.info(f"Bot ID: {self.id},{type(self.id)}")
                     except:
                         pass
