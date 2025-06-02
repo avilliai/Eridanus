@@ -135,6 +135,8 @@ class ExtendBot(WebSocketBot):
                     item.id=str(item.id)
                 elif isinstance(item,File):
                     item.file=item.file.replace("file://","")
+                elif isinstance(item,Reply):
+                    item.id=str(item.id)
                 components[index] = item
             return await super().send(event, components)
         else:

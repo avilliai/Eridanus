@@ -161,8 +161,8 @@ class Shake(MessageComponent):
 
 class Poke(MessageComponent):
     comp_type: str = "poke"
-    type: int|str = Field(description="类型")
-    id: int|str = Field(description="ID")
+    type: int = Field(description="类型")
+    id: int = Field(description="ID")
     name: Annotated[Optional[str], OnlyReceive] = Field(description="表情名")
 
 
@@ -198,7 +198,7 @@ class Location(MessageComponent):
 class Music(MessageComponent):
     comp_type: str = "music"
     type: str
-    id: int|str
+    id: int
 class Card(MessageComponent):
     comp_type: str = "music"
     type: str="custom"
@@ -209,7 +209,7 @@ class Card(MessageComponent):
 
 class Reply(MessageComponent):
     comp_type: str = "reply"
-    id: int | str = Field(description="回复时引用的消息 ID")
+    id: int = Field(description="回复时引用的消息 ID")
 
 class Markdown(MessageComponent):
     comp_type: str = "markdown"
