@@ -138,8 +138,8 @@ class ExtendBot(WebSocketBot):
                 elif isinstance(item,Reply):
                     item.id=str(item.id)
                 elif isinstance(item,Node):
-                    item.user_id=str(self.id) #3
-                    item.nickname=self.config.common_config.basic_config["bot"]
+                    item.user_id=str(self.id)
+                    item.nickname=str(self.config.common_config.basic_config["bot"]) #yaml
                 components[index] = item
             return await super().send(event, components)
         else:
