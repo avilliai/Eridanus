@@ -44,8 +44,9 @@ async def openaiRequest(ask_prompt,url: str,apikey: str,model: str,stream: bool=
         data["tool_choice"]="auto"
     async with httpx.AsyncClient(proxies=proxies, headers=headers, timeout=200) as client:
         r = await client.post(url, json=data)  # 使用 `json=data`
-        print(r.json())
-        return r.json()["choices"][0]["message"]
+        #print(r.json())
+        return r.json()
+        #return r.json()["choices"][0]["message"]
 async def openaiRequest_official(ask_prompt,url: str,apikey: str,model: str,stream: bool=False,proxy=None,tools=None,instructions=None,temperature=1.3,max_tokens=2560):
     """
     使用官方sdk
@@ -82,10 +83,10 @@ async def openaiRequest_official(ask_prompt,url: str,apikey: str,model: str,stre
         response =await client.chat.completions.create(**kwargs)
 
         #response = await client.chat.completions.create(**kwargs)
-        print(response)
+        #print(response)
         response_dict=response.model_dump()
-        return response_dict["choices"][0]["message"]
-        #print(response.choices[0].message.content)
+        return response_dict
+        #return response_dict["choices"][0]["message"]
     return await get_response()
 
 

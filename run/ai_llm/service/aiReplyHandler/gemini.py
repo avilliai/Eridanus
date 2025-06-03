@@ -47,8 +47,9 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
 
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
-        print(r.json())
-        return r.json()['candidates'][0]["content"]
+        return r.json()
+        #print(r.json())
+        #return r.json()['candidates'][0]["content"]
 
 """
 gemini标准prompt构建
