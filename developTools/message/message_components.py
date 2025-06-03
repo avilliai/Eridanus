@@ -225,8 +225,8 @@ class Forward(MessageComponent):
 
 class Node(MessageComponent):
     comp_type: str = "node"
-    user_id: str = Field(default="3552663628",description="发送者 QQ 号")
-    nickname: str = Field(default="Eridanus",description="发送者昵称")
+    user_id: str = Field(default="",description="发送者 QQ 号")
+    nickname: str = Field(default="",description="发送者昵称")
     content: str | list[MessageComponent] = Field(description="消息内容")
 
 
