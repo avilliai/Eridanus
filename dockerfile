@@ -41,8 +41,11 @@ deb https://mirrors.tuna.tsinghua.edu.cn/debian-security $codename-security main
         libjpeg-dev \
         zlib1g-dev \
         libpq-dev \
+        tzdata \
     && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
+    && ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && dpkg-reconfigure --frontend noninteractive tzdata \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && npm cache clean --force
@@ -54,6 +57,7 @@ RUN sed -i 's|ws://127.0.0.1:3001|ws://napcat:3001|g' /app/Eridanus/run/common_c
 
 WORKDIR /app
 ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
+ENV TZ=Asia/Shanghai
 
 EXPOSE 5007
 CMD ["python", "Eridanus/launch.py"]
