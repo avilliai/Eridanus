@@ -26,6 +26,7 @@ flask_sock = install_and_import("flask_sock")
 from flask_sock import Sock
 
 psutil = install_and_import("psutil")
+httpx = install_and_import("httpx")
 
 # 全局变量，用于存储 logger 实例和屏蔽的日志类别
 _logger = None
@@ -58,6 +59,9 @@ user_info = {
     "friends": 0,
     "groups": 0,
 }
+
+#ip白名单，便于不看文档的用户和远程开发调试使用
+ip_whitelist = ["127.0.0.1","192.168.195.128"]
 
 # 用户信息文件
 user_file = "../user_info.yaml"
@@ -264,6 +268,9 @@ def save_yaml(file_path, data):
 def auth(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        #白名单直接放行
+        if request.remote_addr in ip_whitelist:
+            return func(*args, **kwargs)
         global auth_info
         recv_token = request.cookies.get('auth_token')
         try:
@@ -575,6 +582,20 @@ def get_file():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+@app.route("/api/chat/music", methods=["POST"])
+@auth
+def get_music():
+    try:
+        response = httpx.post(
+            "https://ss.xingzhige.com/music_card/card",
+            json = request.json
+        )
+        # 解析返回的JSON数据
+        result = response.json()
+        music_data = result['meta']['music']
+        return jsonify(music_data)
+    except Exception as e:
+        return jsonify({"error": f"请求时出错: {str(e)}"})
 
 clients = set()
 
@@ -588,7 +609,7 @@ def handle_websocket(ws):
     try:
         # 对非本地的访问鉴权
         try:
-            if request.remote_addr != "127.0.0.1":
+            if request.remote_addr not in ip_whitelist:
                 recv_token = request.args.get('auth_token')
                 if auth_info[recv_token] > int(time.time()):
                     logger.server("WebSocket 客户端鉴权成功")
