@@ -92,7 +92,41 @@ def basic_img_draw_text(canvas,content,params,box=None,limit_box=None,is_shadow=
 
     content_list = deal_text_with_tag(content)
     #print(content_list)
-    should_break, last_tag = False, 'Nothing'
+
+    # 这一部分检测每行的最大高度
+    last_tag,line_height_list,per_max_height = 'Nothing',[],0
+    for content in content_list:
+        if last_tag != content['tag']:
+            last_tag = content['tag']
+            try:
+                font = ImageFont.truetype(params[f'font_{last_tag}'], params[f'font_{last_tag}_size'])
+            except OSError:
+                font = ImageFont.load_default()
+        i = 0
+        # 对文字进行逐个绘制
+        text = content['content']
+        while i < len(text):  # 遍历每一个字符
+            if text[i] == '': continue
+            char_width = font.getbbox(text[i])[2] - font.getbbox(text[i])[0]
+            if params[f'font_{last_tag}_size'] > per_max_height: per_max_height = params[f'font_{last_tag}_size']
+            x += char_width + 1
+            i += 1
+            if (x + char_width > x_limit and i < len(text)) or text[i - 1] == '\n':
+                if x != box[0] + char_width + 1 :
+                    x = box[0]
+                    line_height_list.append(per_max_height)
+                    per_max_height=0
+                if x == box[0] + char_width + 1 and text[i - 1] == '\n' :#检测是否在一行最开始换行，若是则修正
+                    x -= char_width + 1
+
+    line_height_list.append(params[f'font_common_size'])
+    #这一部分开始进行实际绘制
+    if box is None: box = (params['padding'], 0)  # 初始位置
+    x, y = box
+    should_break, last_tag, line_count = False, 'Nothing',0
+    #对初始位置进行修正
+    y += line_height_list[0] - params[f'font_common_size']
+
     for content in content_list:
         # 依据字符串处理的字典加载对应的字体
         if last_tag != content['tag']:
@@ -132,18 +166,18 @@ def basic_img_draw_text(canvas,content,params,box=None,limit_box=None,is_shadow=
             x += char_width + 1
             i += 1
             if (x + char_width * 2 > x_limit and i < len(text)) or text[i - 1] == '\n':
-                if y > y_limit - (font.getbbox('的')[3] - font.getbbox('的')[1]) * 2 - params['padding_up']:
+                if y > y_limit - (params[f'font_common_size'])  - params['padding_up'] - line_height_list[line_count + 1]:
                     draw.text((x, y), '...', font=font, fill=eval(params[f'font_{last_tag}_color']))
                     should_break = True
                     break
             if (x + char_width > x_limit and i < len(text)) or text[i - 1] == '\n':
                 if x != box[0] + char_width + 1 :
-                    y += font.getbbox('的')[3] - font.getbbox('的')[1] + params['padding_up']
+                    line_count += 1
+                    y += params[f'font_common_size'] + params['padding_up'] + line_height_list[line_count] - params[f'font_common_size']
                     x = box[0]
                 if x == box[0] + char_width + 1 and text[i - 1] == '\n' :#检测是否在一行最开始换行，若是则修正
                     x -= char_width + 1
-    bbox = font.getbbox('的')
-    canvas_bottom = y + bbox[3] - bbox[1] + 2
+    canvas_bottom = y + params[f'font_common_size'] + 2
     return {'canvas': canvas, 'canvas_bottom': canvas_bottom}
 
 

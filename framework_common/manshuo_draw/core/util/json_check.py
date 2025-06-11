@@ -8,7 +8,7 @@ def json_check(json_img):
     json_check_reload=[]
     for per_json_check in json_img:
         if isinstance(per_json_check, dict):#判断是否为正确格式（字典）若是，则检查其中参数是否完整
-            if 'type' in per_json_check and per_json_check['type'] in ['avatar','img','text']:#判断是否有一级分类
+            if 'type' in per_json_check and per_json_check['type'] in ['avatar','img','text','games']:#判断是否有一级分类
                 if 'subtype' not in per_json_check:#判断是否有二级分类，若没有，统一分给common类
                     per_json_check['subtype']='common'
                 json_check_reload.append(per_json_check)

@@ -47,7 +47,7 @@ class ImageModule:
     def common(self):
         pure_backdrop = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
         new_width = (((self.img_width - self.padding*2 ) - (self.number_per_row - 1) * self.padding_with) // self.number_per_row)
-        number_count,upshift,downshift,current_y,x_offset,max_height = 0,0,0,0,self.padding,0
+        per_number_count,number_count, upshift, downshift, current_y, x_offset, max_height = 0, 0, 0, 0, 0, self.padding, 0
         #若有描边，则将初始粘贴位置增加一个描边宽度
         if self.is_stroke_front and self.is_stroke_img:current_y += self.stroke_img_width / 2
         if self.is_shadow_front and self.is_shadow_img:upshift+=self.shadow_offset_img*2
@@ -64,11 +64,12 @@ class ImageModule:
 
             if img.height > max_height: max_height = img.height
             x_offset += new_width + self.padding_with
+            per_number_count += 1
             number_count += 1
-            if number_count == self.number_per_row:
+            if per_number_count == self.number_per_row:
                 current_y += max_height + self.padding_with
-                number_count, x_offset, max_height= 0, self.padding,0
-        if number_count != 0:
+                per_number_count, x_offset, max_height= 0, self.padding,0
+        if per_number_count != 0:
             current_y  +=  max_height
         else:
             current_y -= self.padding_with
@@ -79,7 +80,7 @@ class ImageModule:
     def common_with_des(self):
         pure_backdrop = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
         new_width = (((self.img_width - self.padding * 2) - (self.number_per_row - 1) * self.padding_with) // self.number_per_row)
-        number_count, upshift, downshift, current_y, x_offset,max_height = 0, 0, 0, 0, self.padding,0
+        per_number_count,number_count, upshift, downshift, current_y, x_offset, max_height = 0, 0, 0, 0, 0, self.padding, 0
         # 若有描边，则将初始粘贴位置增加一个描边宽度
         if self.is_stroke_front and self.is_stroke_img: current_y += self.stroke_img_width / 2
         if self.is_shadow_front and self.is_shadow_img: upshift += self.shadow_offset_img * 2
@@ -105,11 +106,12 @@ class ImageModule:
 
             if img.height > max_height: max_height = img.height
             x_offset += new_width + self.padding_with
+            per_number_count += 1
             number_count += 1
-            if number_count == self.number_per_row:
+            if per_number_count == self.number_per_row:
                 current_y += max_height + self.padding_with
-                number_count, x_offset, max_height= 0, self.padding,0
-        if number_count != 0:
+                per_number_count, x_offset, max_height= 0, self.padding,0
+        if per_number_count != 0:
             current_y += max_height
         else:
             current_y -= self.padding_with
@@ -120,7 +122,7 @@ class ImageModule:
     def common_with_des_right(self):
         pure_backdrop = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
         new_width = (((self.img_width - self.padding * 2) - (self.number_per_row - 1) * self.padding_with) // self.number_per_row)
-        number_count, upshift, downshift, current_y, x_offset, max_height = 0, 0, 0, 0, self.padding, 0
+        per_number_count,number_count, upshift, downshift, current_y, x_offset, max_height = 0, 0, 0, 0, 0, self.padding, 0
         # 若有描边，则将初始粘贴位置增加一个描边宽度
         if self.is_stroke_front and self.is_stroke_img: current_y += self.stroke_img_width / 2
         if self.is_shadow_front and self.is_shadow_img: upshift += self.shadow_offset_img * 2
@@ -141,11 +143,12 @@ class ImageModule:
 
             if img.height > max_height: max_height = img.height
             x_offset += new_width + self.padding_with
+            per_number_count += 1
             number_count += 1
-            if number_count == self.number_per_row:
+            if per_number_count == self.number_per_row:
                 current_y += max_height + self.padding_with
-                number_count, x_offset, max_height = 0, self.padding, 0
-        if number_count != 0:
+                per_number_count, x_offset, max_height = 0, self.padding, 0
+        if per_number_count != 0:
             current_y += max_height
         else:
             current_y -= self.padding_with

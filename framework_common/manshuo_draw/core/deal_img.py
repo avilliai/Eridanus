@@ -105,7 +105,8 @@ async def deal_img(json_img): #此函数将逐个解析json文件中的每个字
         basic_img_info.img_path_save = get_abs_path(basic_img_info.img_path_save,is_ignore_judge=True)
     img_path = basic_img_info.img_path_save+"/" + random_str() + ".png"
     basic_img.save(img_path, "PNG")
-    basic_img.show()
+    if basic_img_info.debug is True:
+        basic_img.show()
 
     try:#做好对应资源关闭并释放，以免卡顿
         basic_img.close()
