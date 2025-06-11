@@ -48,39 +48,3 @@ class basicimgset:
 
         return basic_img
 
-    def basic_img_draw_text(self,canvas,content,font,color,box=None,limit_box=None,padding_up=20):
-        """
-        #此方法不同于其余绘制方法
-        #其余绘制方法仅返回自身绘制画面
-        #此方法返回在原画布上绘制好的画面，同时返回的底部长度携带一个标准间距，此举意在简化模组中的叠加操作，请注意甄别
-        """
-
-        if box is None: x, y = (self.padding,0)  # 初始位置
-        else:x, y = box
-        if limit_box is None:x_limit, y_limit = (self.img_width - self.padding*2,self.img_height)  # 初始位置
-        else:x_limit, y_limit = limit_box
-        if content == '' or content is None:
-            return {'canvas': canvas, 'canvas_bottom': y}
-        if y > y_limit - (font.getbbox('的')[3] - font.getbbox('的')[1]):
-            return {'canvas': canvas, 'canvas_bottom': y}
-        draw = ImageDraw.Draw(canvas)
-        i = 0
-        # 对文字进行逐个绘制
-        text=content
-        while i < len(text):  # 遍历每一个字符
-            bbox = font.getbbox(text[i])
-            char_width = bbox[2] - bbox[0]
-            draw.text((x, y), text[i], font=font, fill=eval(color))
-            x += char_width + 1
-            i += 1
-            if x + char_width*2 > x_limit and i < len(text):
-                if y > y_limit - (font.getbbox('的')[3] - font.getbbox('的')[1] )*2 - padding_up :
-                    draw.text((x, y), '...', font=font, fill=eval(color))
-                    break
-
-            if x+char_width > x_limit and i < len(text):
-                y += font.getbbox('的')[3] - font.getbbox('的')[1] + padding_up
-                x=box[0]
-        bbox = font.getbbox('的')
-        canvas_bottom=y + bbox[3] - bbox[1] + padding_up
-        return {'canvas':canvas, 'canvas_bottom':canvas_bottom}

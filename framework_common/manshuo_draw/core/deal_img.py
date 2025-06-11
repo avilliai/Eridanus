@@ -62,6 +62,9 @@ async def layer_deal(basic_img_info,json_img,layer=1):
             case 'avatar':
                 Image = AvatarModule(layer_img_info, per_json_img)
                 canvas_dict[count_number] = getattr(Image, per_json_img['subtype'])()
+            case 'games':
+                Image = GamesModule(layer_img_info, per_json_img)
+                canvas_dict[count_number] = getattr(Image, per_json_img['subtype'])()
             case 'layer_processed':
                 canvas_dict[count_number] = per_json_img['content']
             case _:
@@ -98,21 +101,18 @@ async def deal_img(json_img): #此函数将逐个解析json文件中的每个字
 
 
 
-    #首先创建一个默认长度下的空白png，以便后续裁剪并与背景图粘贴
-    #deal_img_process = Image.new("RGBA", (json_img['img_width'], json_img['img_height']), (0, 0, 0, 0))
-
-    #img_path = basic_img.img_path_save+"/" + random_str() + ".png"
-    #basic_img.save(img_path, "PNG")
+    if basic_img_info.is_abs_path_convert is True:
+        basic_img_info.img_path_save = get_abs_path(basic_img_info.img_path_save,is_ignore_judge=True)
+    img_path = basic_img_info.img_path_save+"/" + random_str() + ".png"
+    basic_img.save(img_path, "PNG")
     basic_img.show()
 
     try:#做好对应资源关闭并释放，以免卡顿
-
         basic_img.close()
         del basic_img
-
-
-
         gc.collect()
         printf('图片缓存成功释放')
     except:
         printf('绘图资源释放失败，长期可能会导致缓存过大引起卡顿')
+
+    return img_path

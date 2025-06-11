@@ -5,6 +5,7 @@ from .layer import LayerSet
 from .text import TextModule
 from .img import ImageModule
 from .avatar import AvatarModule
+from .Games import GamesModule
 
 # 定义 __all__ 列表，明确导出的内容
-__all__ = ["basicimgset",'Backdrop','LayerSet','TextModule','ImageModule','AvatarModule']
+__all__ = ["basicimgset",'Backdrop','LayerSet','TextModule','ImageModule','AvatarModule','GamesModule']

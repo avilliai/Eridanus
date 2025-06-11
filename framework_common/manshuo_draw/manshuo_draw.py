@@ -1,10 +1,11 @@
 from framework_common.manshuo_draw.core.deal_img import *
 import asyncio
 
-async def manshuo_draw(json_img):
-    #json_img=json_check(json_img)   #检查并补正输入的参数
-    await deal_img(json_img)
 
+async def manshuo_draw(json_img):
+    json_img=json_check(json_img)   #检查并补正输入的参数
+    img_path=await deal_img(json_img)
+    return img_path
 
 if __name__ == '__main__':
 
@@ -24,34 +25,47 @@ if __name__ == '__main__':
     :is_crop:表示是否裁剪图片，如True表示裁剪图片为一个正方形
     """
     contents=[
-        {'type': 'basic_set', 'debug': False,'is_abs_path_convert':True},
+        {'type': 'basic_set', 'debug': True,'is_abs_path_convert':True},
 
         {'type': 'backdrop', 'subtype': 'gradient'},
 
         {'type': 'avatar', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],'upshift':25,
-         'content':[{'name': '漫朔_manshuo', 'time': '2025年 05月27日 20:32'}]
+         'content':[ {'name': '漫朔_manshuo❤️♡🥰😭🤔🤪😇', 'time': '2025年 05月27日 20:32'}] },
+
+        {'type': 'img', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg'],
+         'label': ['BiliBili', 'dy', 'manshuo']},
+
+        {'type': 'img', 'subtype': 'common_with_des_right', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],
+         'content': ['这里是manshuo[title]！这部分是测manshuo！[/title]这manshuo！[des]这里是介绍[/des]'] },
+    ]
+
+    contents_not=[12345,
+                  {'https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png'},'你好，这里是漫朔，请多多关照','https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png',
+                  ['framework_common/manshuo_draw/data/cache/manshuo.jpg','https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png'],]
+
+
+    contentsWithNoTag=[
+        {'type': 'basic_set', 'debug': True,'img_width':1000},
+        {'type': 'avatar', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],'upshift': 25,
+         'content': [{'name': '漫朔_manshuo', 'time': '2025年 05月27日 20:32'},],'type_software':'bilibili',},
+        {'type': 'img', 'subtype': 'common_with_des_right','img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],'label':['BiliBili'],
+         'content': ['这部分是测manshuo！\n这manshuo！这里是测试！这里是测试！这里是测试！这里是测试！这里是测试！这里是测试\n[des]这里是介绍[/des]']},
+        {'type': 'img', 'subtype': 'common_with_des_right', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg'],
+         'content': ['葬送的芙莉莲\n5星','败犬女主太多啦\n4.5星']
          },
-        {'type': 'img', 'subtype': 'common','img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],'label':['BiliBili']},
-        {'type': 'img', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','https://gal.manshuo.ink/usr/uploads/2025/01/1015237503.png'],
-         'label': ['BiliBili','manshuo']},
+        '这部分是测manshuo！\n这manshuo！这里是测试！这里是测试！这里是测试！这里是测试！这里是测试！这里是测试\n[des]这里是介绍[/des]',
+        {'type': 'img', 'subtype': 'common_with_des','img': ['https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png'], 'label': ['BiliBili'],
+         'content': ['这部分是测manshuo！\n这manshuo！这里是测试！这里是测试！这里是测试！这里是测试！这里是测试！这里是测试\n[des]这里是介绍[/des]']},
+    ]
 
-        {'type': 'text', 'subtype': 'common', 'content': ['这里是manshuo！']},
-
-        {'type': 'img', 'subtype': 'common_with_description', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg'],
-         'content': ['这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]','这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]'] },
-
-
-        {'type':'text','subtype':'common','content':['这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这里是manshuo这部分是测试内容，请直接忽略，'],'layer':2,},
-        {'type': 'img', 'subtype': 'common_with_description', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg','framework_common/manshuo_draw/data/cache/manshuo.jpg'],
-         'content': ['这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]','这里是manshuo！这部分是测manshuo！这manshuo！[des]这里是介绍[/des]'],'layer':2 },
+    games_content=[
+        {'type': 'basic_set', 'debug': True, 'img_width': 1000},
 
     ]
 
-    contents_not=[
-
-    ]
 
     img_path_set='data/cache'
 
 
-    asyncio.run(manshuo_draw(contents))
+    asyncio.run(manshuo_draw(contentsWithNoTag))
+    #asyncio.run(manshuo_draw(contents_not))

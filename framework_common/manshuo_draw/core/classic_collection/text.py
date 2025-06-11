@@ -29,27 +29,10 @@ class TextModule:
     def common(self):
         pure_backdrop = Image.new("RGBA", (self.img_width, self.img_height), (0, 0, 0, 0))
 
-        x, y = (self.padding,0)  # 初始位置
-        draw = ImageDraw.Draw(pure_backdrop)
-        i = 0
-        canvas_bottom=0
-        # 对文字进行逐个绘制
-        text=self.content[0]
-        #printf(text[0])
-        font = ImageFont.truetype(self.font, self.font_size)
-        while i < len(text):  # 遍历每一个字符
-            bbox = font.getbbox(text[i])
-            char_width = bbox[2] - bbox[0]
-            draw.text((x, y), text[i], font=font, fill=eval(self.font_color))
-            x += char_width + self.spacing
-            i += 1
-            if x+10 > (self.img_width - self.padding*2) and i < len(text):
-                bbox = font.getbbox('的')
-                char_hight = bbox[3] - bbox[1]
-                y += char_hight + self.padding_up
-                x=self.padding
-        canvas_bottom=y + self.font_size + 1
 
+        img_des_canvas_info = basic_img_draw_text(pure_backdrop, self.content[0], self.__dict__,
+                                                  box=(self.padding, 0))
+        canvas_bottom=int(img_des_canvas_info['canvas_bottom'] )
         pure_text_canvas = pure_backdrop.crop((0,0,self.img_width,canvas_bottom))
 
         return {'canvas':pure_text_canvas,'canvas_bottom':canvas_bottom,'upshift':0,'downshift':0}

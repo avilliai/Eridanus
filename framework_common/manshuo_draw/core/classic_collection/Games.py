@@ -5,7 +5,7 @@ import os
 import base64
 from io import BytesIO
 
-class ImageModule:
+class GamesModule:
     def __init__(self,layer_img_set,params):
         for key, value in vars(layer_img_set).items():#继承父类属性，主要是图片基本设置类
             setattr(self, key, value)
