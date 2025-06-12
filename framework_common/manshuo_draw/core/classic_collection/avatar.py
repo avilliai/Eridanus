@@ -54,7 +54,7 @@ class AvatarModule:
             draw_content= f"[name]{self.content[number_count]['name']}[/name]\n[time]{self.content[number_count]['time']}[/time]"
             if self.is_name:
                 pure_backdrop=basic_img_draw_text(pure_backdrop,draw_content,self.__dict__,
-                                                                     box=(x_offset + self.avatar_size*1.1 + self.padding_with, current_y + self.avatar_size//2  - self.font_name_size),
+                                                                     box=(x_offset + self.avatar_size*1.1 + self.padding_with, current_y + self.avatar_size//2  - self.font_name_size*1.2),
                                                                      limit_box=(x_offset + new_width  , current_y  + self.avatar_size ),is_shadow=self.is_shadow_font)['canvas']
 
             x_offset += new_width + self.padding_with

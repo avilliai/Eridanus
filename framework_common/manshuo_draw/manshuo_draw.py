@@ -39,9 +39,8 @@ if __name__ == '__main__':
          'content': ['这里是manshuo[title]！这部分是测manshuo！[/title]这manshuo！[des]这里是介绍[/des]'] },
     ]
 
-    contents_not=[12345,
-                  {'https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png'},'你好，这里是漫朔，请多多关照','https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png',
-                  ['framework_common/manshuo_draw/data/cache/manshuo.jpg','https://gal.manshuo.ink/usr/uploads/2025/02/1709218403.png'],]
+    contents_not=[        {'type': 'avatar', 'subtype': 'common', 'img': ['framework_common/manshuo_draw/data/cache/manshuo.jpg'],
+         'content':[ {'name': '漫朔_manshuo', 'time': '2025年 05月27日 20:32'}] },]
 
 
     contentsWithNoTag=[
@@ -67,5 +66,5 @@ if __name__ == '__main__':
     img_path_set='data/cache'
 
 
-    asyncio.run(manshuo_draw(contentsWithNoTag))
+    asyncio.run(manshuo_draw(contents_not))
     #asyncio.run(manshuo_draw(contents_not))

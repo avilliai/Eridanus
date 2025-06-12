@@ -74,7 +74,7 @@ backdrop:
 text:
   must_required_keys: {'content'}
   common:
-    spacing: 1
+    spacing: 1                       #每个字之间的间距
 
 img:
   font_label: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf

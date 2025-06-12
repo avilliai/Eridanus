@@ -120,6 +120,7 @@ def basic_img_draw_text(canvas,content,params,box=None,limit_box=None,is_shadow=
                     x -= char_width + 1
 
     line_height_list.append(params[f'font_common_size'])
+    line_height_list.append(params[f'font_common_size'])
     #这一部分开始进行实际绘制
     if box is None: box = (params['padding'], 0)  # 初始位置
     x, y = box

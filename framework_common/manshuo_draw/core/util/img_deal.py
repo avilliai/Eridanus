@@ -76,7 +76,7 @@ def backdrop_process(params,canves,limit=(0, 0)):
         # 创建空白遮罩图像
         mask = Image.new("L", (width, height), 0)  # 单通道（L模式）
         draw = ImageDraw.Draw(mask)
-        max_alpha,intensity = 100,2
+        max_alpha,intensity = 100,1.5
         # 创建径向渐变（非线性）
         max_distance = math.sqrt(center_x ** 2 + center_y ** 2)  # 从中心到角落的最大距离
         for y in range(height):

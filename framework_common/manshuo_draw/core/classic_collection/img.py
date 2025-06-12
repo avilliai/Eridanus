@@ -128,7 +128,8 @@ class ImageModule:
         if self.is_shadow_front and self.is_shadow_img: upshift += self.shadow_offset_img * 2
         # 对每个图片进行单独处理
         for img in self.processed_img:
-            img_width,img_height=int(new_width / 2.5),int((new_width / 2.5) * img.height / img.width)
+            if img.height/img.width < 9/16:img_width,img_height=int(new_width / 2),int((new_width / 2.5) * img.height / img.width)
+            else:img_width,img_height=int(new_width / 2.5),int((new_width / 2.5) * img.height / img.width)
             img = img.resize((img_width, img_height))
             img_des_canvas = Image.new("RGBA", (new_width, img_height),eval(self.description_color))
             img_des_canvas.paste(img, (0, 0))
