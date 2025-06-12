@@ -295,7 +295,7 @@ def main(bot,config):
                     recall_id = await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+times_add}次！',
                                            Image(file=img_url)])
                 if config.group_fun.config["today_wife"]["签🦌撤回"] is True:
-                    await sleep(20)
+                    await sleep(60)
                     await bot.recall(recall_id['data']['message_id'])
 
         elif '戒🦌' == context:

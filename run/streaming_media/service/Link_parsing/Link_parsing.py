@@ -217,7 +217,7 @@ async def bilibili(url,filepath=None,is_twice=None):
                         text_list_check = ''
                         number=0
                         pics_context=[]
-                        print(json.dumps(opus_paragraphs, indent=4))
+                        #print(json.dumps(opus_paragraphs, indent=4))
 
 
                         for text_check in opus_paragraphs['summary']['rich_text_nodes']:

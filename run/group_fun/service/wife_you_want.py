@@ -282,21 +282,21 @@ async def PIL_lu_maker(today , target_id,target_name,type='lu',contents=None):
     for lu in lu_list:
         if lu[1] == 1:
             times = await manage_group_status('lu', f'{year}_{month}_{lu[0]}', target_id)
-            lu_content[lu[0]]={'type':'lu','times':times}
+            lu_content[f'{int(lu[0])-1}']={'type':'lu','times':times}
         elif lu[1] == 2:
-            lu_content[lu[0]] = {'type': 'nolu', 'times':1}
+            lu_content[f'{int(lu[0])-1}'] = {'type': 'nolu', 'times':1}
 
     if type == 'lu':
         length_today = await manage_group_status('lu_length', f'{year}_{month}_{day}',target_id)
         length_total = await manage_group_status('lu_length_total', f'basic_info', target_id)
         times_total = await manage_group_status('lu_times_total', f'basic_info', target_id)
         today_times = lu_content[f'{day-1}']['times']
-        content=f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n今天🦌了{today_times}次，牛牛可开心了.今天一共变长了{length_today}cm\n您一共🦌了{times_total}次，现在一共{length_total}cm!!!"
+        content=f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n今天🦌了{today_times}次，牛牛可开心了.今天牛牛一共变长了{length_today}cm\n您一共🦌了{times_total}次，现在牛牛一共{length_total}cm!!!"
     elif type == 'supple_lu':
         length_today = await manage_group_status('lu_length', f'{year}_{month}_{day}',target_id)
         length_total = await manage_group_status('lu_length_total', f'basic_info', target_id)
         times_total = await manage_group_status('lu_times_total', f'basic_info', target_id)
-        content=f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n您补🦌了！！！！！，今天一共变长了{length_today}cm\n您一共🦌了{times_total}次，现在一共{length_total}cm!!!"
+        content=f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n您补🦌了！！！！！，今天牛牛一共变长了{length_today}cm\n您一共🦌了{times_total}次，现在牛牛一共{length_total}cm!!!"
     elif type == 'nolu':
         content = f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n您今天戒鹿了，非常棒！"
 
