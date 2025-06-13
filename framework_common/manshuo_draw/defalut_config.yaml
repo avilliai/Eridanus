@@ -1,0 +1,171 @@
+basic_set:
+  img_width: 1000                   #图像默认宽度
+  img_height: 3000                  #图像默认最大长度
+  padding_left_common: 20           #层级的左间距，注意，修改此处仅会影响部分间距，每个模块内可能有各自的间距设置
+  padding_up_common: 20             #层级的上间距，注意，修改此处仅会影响部分间距，每个模块内可能有各自的间距设置
+  is_crop_front: True               #是否对图片进行裁剪
+  is_rounded_corners_front: True    #是否对模块进行圆角处理
+  is_stroke_front: True             #是否对模块进行描边处理
+  is_shadow_front: True             #是否对模块进行阴影处理
+  img_path_save: data/pictures/cache  #若有图片保存需求，则会将文件保存在此处，基于‘Eridanus’文件夹
+  debug: False                      #是否开启debug，开启后控制台会输出相应处理过程
+  config_path: framework_common/manshuo_draw/defalut_config.yaml  #默认配置文件地址
+  is_abs_path_convert: True        #将文件路径转换为绝对路径（默认关闭，可能会有bug，但建议开发者打开以便于测试）
+                                    #注意：此处同时对传入的img路径进行转换，绝对路径初始值为‘Eridanus’，即bot所在文件夹
+
+  #以下为层级的部分处理
+  layer: 1
+  padding_up_layer: 20              #层级中各模块间的间隔
+
+  backdrop_mode: one_color          #可选模式为单色：one_color、无色：no_color、渐变色：gradient
+  backdrop_color:                   #单色时颜色为color1，渐变色则读取两种颜色进行渐变
+    'color1': (235, 239, 253)
+    'color2': (236, 255, 252)
+
+  is_rounded_corners_layer: True    #是否对层级进行圆角处理
+  rounded_layer_radius: 20        #层级的圆角弧度
+
+  is_stroke_layer: True             #是否对层级进行描边处理
+  stroke_layer_radius: 23           #描边的圆角弧度
+  stroke_layer_width: 10            #描边的圆角宽度
+
+  is_shadow_layer: True             #是否对层级进行阴影处理
+  shadow_offset_layer: 10           #阴影的偏移量
+  shadow_opacity_layer: 30          #阴影的透明度
+  blur_radius_layer: 7              #阴影模糊半径
+
+  #以下为模块的的前置设置
+  padding: 20                       #模块内间距
+  padding_with: 15                  #模块内元素之间的间距
+  padding_up: 20                    #模块内元素的上间距
+
+  font_common: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf  #字体路径
+  font_common_size: 24                     #字体大小
+  font_common_color: (0,0,0)               #字体颜色
+
+  font_des: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+  font_des_size: 19
+  font_des_color: (148,148,148)
+
+  font_title: framework_common/manshuo_draw/data/fort/LXGWWenKai-Bold.ttf
+  font_title_size: 34
+  font_title_color: (0,0,0)
+
+  is_rounded_corners_img: True      #是否对模块进行圆角处理
+  rounded_img_radius: 20            #圆角处理半径
+
+  is_stroke_img: True               #是否对模块进行描边处理
+  stroke_img_radius: 23             #描边的圆角弧度
+  stroke_img_width: 10              #描边的圆角宽度
+
+  is_shadow_img: True               #是否对模块进行阴影处理
+  shadow_offset_img: 10                 #阴影的偏移量
+  shadow_opacity_img: 50                #阴影的透明度
+  blur_radius_img: 10                   #阴影模糊半径
+
+
+backdrop:
+  one_color:
+    color: (194, 228, 255)
+  gradient:
+    left_color: (191, 202, 255)
+    right_color: (185, 246, 236)
+
+text:
+  must_required_keys: {'content'}
+  common:
+    spacing: 1                       #每个字之间的间距
+
+img:
+  font_label: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+  font_label_size: 34
+  font_label_color: (255,255,255)
+  label: []                           #默认的label内容
+  label_color: (251,114,153,255)      #默认label颜色
+
+  is_rounded_corners_label: True      #是否对标签进行圆角处理
+  rounded_label_radius: 10            #圆角处理半径
+
+  is_stroke_label: True               #是否对标签进行描边处理
+  stroke_label_radius: 12             #描边的圆角弧度
+  stroke_label_width: 10              #描边的圆角宽度
+
+  is_shadow_label: False               #是否对标签进行阴影处理
+  shadow_offset_label: 10                 #阴影的偏移量
+  shadow_opacity_label: 50                #阴影的透明度
+  blur_radius_label: 10                   #阴影模糊半径
+
+  must_required_keys: {'img'}
+
+  number_per_row: default           #每行图片个数，默认即为九宫格，可自定义
+  is_crop: default                    #是否裁剪
+
+  common:
+    must_required_keys: {'img'}
+
+  common_with_des:
+    must_required_keys: {'img','content'}
+    description_color: (255,255,255,255)  #放置介绍区域的颜色
+    max_des_length: 200
+
+  common_with_des_right:
+    must_required_keys: {'img','content'}
+    description_color: (255,255,255,255)  #放置介绍区域的颜色
+
+
+
+
+avatar:
+  #以下为字体的相关处理
+  font_name: framework_common/manshuo_draw/data/fort/LXGWWenKaiMono-Medium.ttf
+  font_name_size: 34
+  font_name_color: (251,114,153)
+  font_time: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+  font_time_size: 24
+  font_time_color: (148,148,148)
+
+  #以下为层级的部分处理，示例：可进行自定义
+  is_rounded_corners_img: True    #是否对层级进行圆角处理
+  rounded_img_radius: 50
+
+  is_stroke_img: True             #是否对层级进行描边处理
+  stroke_img_width: 10
+  stroke_img_radius: 55
+
+  is_shadow_img: False             #是否对层级进行阴影处理
+  shadow_offset_img: 10                 #阴影的偏移量
+  shadow_opacity_img: 50                #阴影的透明度
+  blur_radius_img: 8                   #阴影模糊半径
+
+  background: None
+  right_icon: None
+  type_software: None
+  is_shadow_font: False
+  software_list:
+    - {'type': 'bilibili','background':framework_common/manshuo_draw/data/img/type_software/bili.png,'right_icon':framework_common/manshuo_draw/data/img/type_software/bili_icon.png}
+    - {'type': 'dy','background':framework_common/manshuo_draw/data/img/type_software/dy.png,'right_icon':framework_common/manshuo_draw/data/img/type_software/dy_icon.png}
+    - {'type': 'lu','background':framework_common/manshuo_draw/data/img/type_software/lu.jpg,'right_icon':framework_common/manshuo_draw/data/img/type_software/lu_icon.png}
+
+
+  common:
+    must_required_keys: {'img','content'}
+    number_per_row: 1         #默认一个，可以指定每行多少个头像
+    is_name: Ture                   #是否在头像右侧旁添加名字
+    avatar_size: 100
+    padding: 30
+    padding_up_bottom: 15
+    upshift: 0                     #上偏移量
+
+
+
+games:
+  LuRecordMake:
+    font_lu: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+    font_lu_size: 24
+    font_lu_color: (255,0,0)
+    font_date: framework_common/manshuo_draw/data/fort/LXGWWenKai-Regular.ttf
+    font_date_size: 40
+    font_date_color: (0,0,0)
+    number_per_row: 7           #每行图片个数，默认即为九宫格，可自定义
+    background: framework_common/manshuo_draw/data/img/games/lu/background_LU.jpg
+    img: False

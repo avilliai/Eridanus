@@ -1,16 +1,21 @@
 import asyncio
 import calendar
 import time
+
+from framework_common.manshuo_draw.manshuo_draw import manshuo_draw
+
 from datetime import datetime
 
 import aiosqlite
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
+
 DATABASE = "data/dataBase/wifeyouwant.db"  # 修改路径为小写
 
 # 初始化数据库表结构
 async def initialize_db():
+    global DATABASE
     async with aiosqlite.connect(DATABASE) as db:
         # 创建类别表
         await db.execute('''
@@ -48,6 +53,7 @@ async def initialize_db():
 
 # 添加或更新用户数据
 async def add_or_update_user(category_name, group_name, username, times):
+    global DATABASE
     async with aiosqlite.connect(DATABASE, timeout=10) as db:
         category = await db.execute('SELECT * FROM categories WHERE name = ?', (category_name,))
         category_row = await category.fetchone()
@@ -81,6 +87,7 @@ async def add_or_update_user(category_name, group_name, username, times):
 
 
 async def add_or_update_user_collect(queue_check_make):
+    global DATABASE
     async with aiosqlite.connect(DATABASE, timeout=10) as db:
 
         for user_info in queue_check_make:
@@ -123,6 +130,7 @@ async def add_or_update_user_collect(queue_check_make):
 
 # 查询某个小组的用户数据，按照次数排序
 async def query_group_users(category_name, group_name):
+    global DATABASE
     async with aiosqlite.connect(DATABASE) as db:
         # 获取类别ID
         category = await db.execute('SELECT id FROM categories WHERE name = ?', (category_name,))
@@ -157,6 +165,7 @@ async def query_group_users(category_name, group_name):
 
 # 查询某个小组下特定用户的数据
 async def query_user_data(category_name, group_name, username):
+    global DATABASE
     async with aiosqlite.connect(DATABASE) as db:
         # 获取类别ID
         category = await db.execute('SELECT id FROM categories WHERE name = ?', (category_name,))
@@ -189,6 +198,7 @@ async def query_user_data(category_name, group_name, username):
 
 # 删除类别及其关联数据
 async def delete_category(category_name):
+    global DATABASE
     async with aiosqlite.connect(DATABASE) as db:
         # 查找类别是否存在
         category = await db.execute('SELECT id FROM categories WHERE name = ?', (category_name,))
@@ -202,6 +212,7 @@ async def delete_category(category_name):
 
 # 删除组别及其关联用户
 async def delete_group(category_name, group_name):
+    global DATABASE
     async with aiosqlite.connect(DATABASE) as db:
         # 获取类别ID
         category = await db.execute('SELECT id FROM categories WHERE name = ?', (category_name,))
@@ -260,140 +271,43 @@ async def manage_group_check(target_group,type):
     times_target=await query_group_users(f'wife_target_{type}', target_group)
     return times_from,times_target
 
-async def PIL_lu_maker(today , target_id):
+async def PIL_lu_maker(today , target_id,target_name,type='lu',contents=None):
     #print('进入图片制作')
     year, month,day= today.year, today.month ,today.day
     current_year_month = f'{year}_{month}'
     lu_list=await query_group_users(target_id, current_year_month)
-    #print('获取🦌列表')
-
-    lu_font_1000 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 15)
-    lu_font_100 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 20)
-    lu_font_10 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)
-    lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)
-
-    #print(lu_list)
-    month_days = calendar.monthrange(year, month)[1]
-    lu_list_lu=['1000']
-    lu_list_bulu = ['1000']
+    lu_content={}
     for lu in lu_list:
         if lu[1] == 1:
-            lu_list_lu.append(lu[0])
+            times = await manage_group_status('lu', f'{year}_{month}_{lu[0]}', target_id)
+            lu_content[f'{int(lu[0])-1}']={'type':'lu','times':times}
         elif lu[1] == 2:
-            lu_list_bulu.append(lu[0])
-    canvas_width, canvas_height = 800, 600
-    #print(lu_list_lu,lu_list_bulu)
-    # 创建画布
-    #print('创建画布')
-    canvas = Image.new("RGB", (canvas_width, canvas_height), "white")
-    draw = ImageDraw.Draw(canvas)
+            lu_content[f'{int(lu[0])-1}'] = {'type': 'nolu', 'times':1}
 
-    # 加载标题字体和日文字体
-    try:
-        title_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 40)  # 标题字体
-        day_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)  # 日字体
-    except IOError:
-        title_font = ImageFont.load_default()  # 如果字体加载失败，使用默认字体
-        day_font = ImageFont.load_default()
+    if type == 'lu':
+        length_today = await manage_group_status('lu_length', f'{year}_{month}_{day}',target_id)
+        length_total = await manage_group_status('lu_length_total', f'basic_info', target_id)
+        times_total = await manage_group_status('lu_times_total', f'basic_info', target_id)
+        today_times = lu_content[f'{day-1}']['times']
+        content=f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n今天🦌了{today_times}次，牛牛可开心了.今天牛牛一共变长了{length_today}cm\n您一共🦌了{times_total}次，现在牛牛一共{length_total}cm!!!"
+    elif type == 'supple_lu':
+        length_today = await manage_group_status('lu_length', f'{year}_{month}_{day}',target_id)
+        length_total = await manage_group_status('lu_length_total', f'basic_info', target_id)
+        times_total = await manage_group_status('lu_times_total', f'basic_info', target_id)
+        content=f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n您补🦌了！！！！！，今天牛牛一共变长了{length_today}cm\n您一共🦌了{times_total}次，现在牛牛一共{length_total}cm!!!"
+    elif type == 'nolu':
+        content = f"[title]{today.strftime('%Y年%m月')}的开🦌计划[/title]\n您今天戒鹿了，非常棒！"
 
-    # 写标题
-    title = f"{today.strftime('%Y年%m月')}的开LU计划"
-    title_bbox = draw.textbbox((0, 0), title, font=title_font)  # 获取文本边界框
-    title_x = (canvas_width - (title_bbox[2] - title_bbox[0])) // 2
-    draw.text((title_x, 20), title, fill="black", font=title_font)
+    formatted_time = datetime.now().strftime("%Y年%m月%d日 %H:%M")
+    draw_content=[
+        {'type': 'avatar', 'subtype': 'common', 'img': [f"https://q1.qlogo.cn/g?b=qq&nk={target_id}&s=640"],'upshift': 25,
+         'content': [{'name': target_name, 'time': formatted_time}, ], 'type_software': 'lu', },
+        str(content),
+        {'type': 'games', 'subtype': 'LuRecordMake','content': lu_content},
+    ]
+    img_path=await manshuo_draw(draw_content)
+    return img_path
 
-    # 加载背景图片
-    #print('加载背景图片')
-    image_path = "data/pictures/wife_you_want_img/background_LU.jpg"  # 图片文件路径（需确保存在）
-    try:
-        background = Image.open(image_path)
-        background = background.resize((100, 100))
-    except IOError:
-        #print("背景图片加载失败，使用填充色")
-        background = None
-
-    image_path_check = 'data/pictures/wife_you_want_img/correct-copy.png'
-    dui_check = Image.open(image_path_check)
-    dui_check = dui_check.resize((40, 40))
-
-    image_path_check_cuo = 'data/pictures/wife_you_want_img/cuo.png'
-    cuo_check = Image.open(image_path_check_cuo)
-    cuo_check = cuo_check.resize((40, 40))
-
-    # 日历起始位置和单元格大小
-    calendar_start_x = 50
-    calendar_start_y = 100
-    cell_width = 100
-    cell_height = 100
-
-    now = datetime.now()
-    # 绘制日历
-    #print('绘制日历')
-    for day in range(1, month_days + 1):
-        # 计算当前日期的单元格位置
-        #print(day)
-
-        first_day_of_month = datetime(now.year, now.month, 1)
-        day_of_week = first_day_of_month.weekday()
-        col = (day - 1 + day_of_week) % 7
-        row = (day - 1 + day_of_week) // 7
-        #print(col)
-        x = calendar_start_x + col * cell_width
-        y = calendar_start_y + row * cell_height
-
-        # 绘制背景图片
-        if background:
-            canvas.paste(background, (x, y), background.convert("RGBA"))
-        else:
-            draw.rectangle([x, y, x + cell_width, y + cell_height], fill="#f0f0f0", outline="black")
-
-        for day_check_lu in lu_list_lu:
-            for day_check_bulu in lu_list_bulu:
-                #print(day,day_check_lu,day_check_bulu)
-                x_re = x
-                y_re = y + 60
-                #print(day_check,day)
-                if f'{day}' == f'{day_check_bulu}':
-                    canvas.paste(cuo_check, (x_re, y_re), cuo_check.convert("RGBA"))
-                elif f'{day}' == f'{day_check_lu}':
-                    canvas.paste(dui_check, (x_re, y_re), dui_check.convert("RGBA"))
-
-        # 绘制日期文字
-
-        day_text = str(day)
-        text_bbox = draw.textbbox((0, 0), day_text, font=day_font)  # 获取文字边界框
-        text_width = text_bbox[2] - text_bbox[0]
-        text_height = text_bbox[3] - text_bbox[1]
-        text_x = x + (cell_width - text_width) // 1.5
-        text_y = y + (cell_height - text_height) // 5
-        draw.text((text_x, text_y), day_text, fill="black", font=day_font)
-
-        times = await manage_group_status('lu', f'{year}_{month}_{day}', target_id)
-        if times >= 1000:
-            lu_font = lu_font_1000
-        elif times >= 100:
-            lu_font = lu_font_100
-        elif times >= 10:
-            lu_font = lu_font_10
-        else:
-            lu_font = lu_font
-        if times not in {0,1}:
-            draw.text((int(x + (cell_width - text_width) // 1.5), int(y + (cell_height - text_height) // 1.2)), f'×{times}', fill="red", font=lu_font)
-
-    # 保存并展示日历
-    #print('保存并展示日历')
-    #canvas.show()  # 显示图片
-    path_img=f"data/pictures/cache/lulululu{int(time.time())}.png"
-    canvas.save(path_img)  # 保存图片为文件
-
-    try:
-        canvas.close()
-        del canvas
-        import gc
-        gc.collect()
-    except:
-        pass
-    return path_img
 
 
 async def daily_task():
@@ -427,6 +341,7 @@ def today_check_api(today_wife_api,header,num_check=None):
 
 
 if __name__ == '__main__':
+    DATABASE = "wifeyouwant.db"  # 修改路径为小写
     target_id=1270858640
     current_date=datetime.today()
-    asyncio.run(PIL_lu_maker(current_date, target_id))
+    asyncio.run(PIL_lu_maker(current_date, target_id,'manshuo'))

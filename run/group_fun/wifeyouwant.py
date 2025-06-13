@@ -65,7 +65,7 @@ def main(bot,config):
     global last_messages
     last_messages = {}
     global filepath
-    filepath = 'data/pictures/wife_you_want_img'
+    filepath = 'data/pictures/cache'
     if not os.path.exists(filepath):
         os.makedirs(filepath)
     asyncio.run(initialize_db())
@@ -235,6 +235,7 @@ def main(bot,config):
 
         lu_recall = ['不！给！你！🦌！！！','我靠你怎么这么坏！','再🦌都🦌出火星子了！！','让我来帮你吧~','好恶心啊~~','有变态！！','你这种人渣我才不会喜欢你呢！',
                         '令人害怕的坏叔叔','才不给你计数呢！（哼','杂鱼杂鱼','杂鱼哥哥还是处男呢','哥哥怎么还在这呀，好可怜']
+
         if context.startswith('🦌'):
             target_id = int(event.sender.user_id)
             times_add=0
@@ -252,7 +253,7 @@ def main(bot,config):
                 membercheck.pop(membercheck_id)
                 return
             bot.logger.info(f'yes! 🦌!!!!, 目标：{target_id}')
-
+            target_name = (await bot.get_group_member_info(event.group_id, target_id))['data']['nickname']
             if await manage_group_status('lu_limit', f'lu_others', target_id) == 1 and int(target_id) !=int(event.sender.user_id):#贞操锁
                 await bot.send(event, [At(qq=target_id), f' 是个好孩子，才不会给你呢~'])
                 membercheck.pop(membercheck_id)
@@ -271,9 +272,21 @@ def main(bot,config):
             #print('设置🦌状态')
             times=await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id,times+times_add)
+
+            times_total=await manage_group_status('lu_times_total', f'basic_info', target_id)
+            await manage_group_status('lu_times_total', f'basic_info', target_id,times_total+times_add)
+
+            length_add=0
+            for i in range(times_add):
+                length_add +=random.randint(1,10)
+            length_total=await manage_group_status('lu_length_total', f'basic_info', target_id)
+            await manage_group_status('lu_length_total', f'basic_info', target_id,length_total+length_add)
+            length_total_today = await manage_group_status('lu_length', f'{current_year}_{current_month}_{current_day}',target_id)
+            await manage_group_status('lu_length', f'{current_year}_{current_month}_{current_day}', target_id,length_total_today + length_add)
+
             #print('设置🦌次数')
             bot.logger.info(f'进入图片制作')
-            img_url=await PIL_lu_maker(current_date, target_id)
+            img_url=await PIL_lu_maker(current_date, target_id,target_name,)
 
             if img_url:
                 bot.logger.info('制作成功，开始发送~~')
@@ -285,12 +298,13 @@ def main(bot,config):
                     recall_id = await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+times_add}次！',
                                            Image(file=img_url)])
                 if config.group_fun.config["today_wife"]["签🦌撤回"] is True:
-                    await sleep(20)
+                    await sleep(60)
                     await bot.recall(recall_id['data']['message_id'])
 
         elif '戒🦌' == context:
             bot.logger.info('No! 戒🦌!!!!')
             target_id = int(event.sender.user_id)
+            target_name = (await bot.get_group_member_info(event.group_id, target_id))['data']['nickname']
             current_date = datetime.now()
             current_year = current_date.year
             current_month = current_date.month
@@ -299,7 +313,7 @@ def main(bot,config):
             await manage_group_status(current_day, current_year_month, target_id,2)
             times = await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id, times + 1)
-            img_url = await PIL_lu_maker(current_date, target_id)
+            img_url=await PIL_lu_maker(current_date, target_id,target_name,type = 'nolu')
             if img_url:
                 bot.logger.info('制作成功，开始发送~~')
                 await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file=img_url)])
@@ -307,6 +321,7 @@ def main(bot,config):
         elif '补🦌' == context:
             bot.logger.info('yes! 补🦌!!!!')
             target_id = int(event.sender.user_id)
+            target_name = (await bot.get_group_member_info(event.group_id, target_id))['data']['nickname']
             current_date = datetime.now()
             current_year = current_date.year
             current_month = current_date.month
@@ -318,14 +333,21 @@ def main(bot,config):
                 times_record = int(await manage_group_status('lu_record', f'lu_others', target_id))
                 times_record_check=times_record//3
                 if times_record_check == 0:
-                    await bot.send(event, [At(qq=target_id), f' 您的补🦌次数好像不够呢喵~~（已连续{times_record}天）'])
+                    await bot.send(event, [At(qq=target_id), f' 您的补🦌次数好像不够呢喵~~（已连续{times_record}天）(3天1次)'])
                 else:
                     for i in range(current_day):
                         day=current_day-i
                         if int(await manage_group_status(day, current_year_month, target_id)) not in {1,2}:
                             await manage_group_status(day, current_year_month, target_id, 1)
                             await manage_group_status('lu_record', f'lu_others', target_id,times_record-3)
-                            img_url = await PIL_lu_maker(current_date, target_id)
+
+                            times_total = await manage_group_status('lu_times_total', f'basic_info', target_id)
+                            await manage_group_status('lu_times_total', f'basic_info', target_id,times_total + 1)
+
+                            length_total = await manage_group_status('lu_length_total', f'basic_info', target_id)
+                            await manage_group_status('lu_length_total', f'basic_info', target_id,length_total + random.randint(1, 10))
+
+                            img_url=await PIL_lu_maker(current_date, target_id,target_name,type = 'supple_lu')
 
                             await bot.send(event, [At(qq=target_id), f' 您已成功补🦌！', Image(file=img_url)])
                             break
