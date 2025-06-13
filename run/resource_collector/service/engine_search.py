@@ -70,7 +70,7 @@ async def baidu_search(query):
         output += f"标题: {entry['title']}\n"
         output += f"链接: {entry['link']}\n"
         output += f"内容: {entry['content']}\n"
-        output += "-" * 20 + "\n"
+        output += "- " * 10 + "\n"
     
     return output
 
@@ -123,7 +123,7 @@ async def searx_search(query):
                 title = article.find('h3').get_text(strip=True)
                 link = article.find('a', class_='url_header')['href']
                 content = article.find('p', class_='content').get_text(strip=True)
-                results.append(f"标题: {title}\n链接: {link}\n内容: {content}\n{'-'* 20}")
+                results.append(f"标题: {title}\n链接: {link}\n内容: {content}\n{'- '* 10}")
 
             final = "searx搜索结果:\n" + "\n".join(results)
             return final

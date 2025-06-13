@@ -2,6 +2,7 @@ import base64
 import io
 import os
 import re
+import traceback
 
 import httpx
 from PIL import Image
@@ -46,8 +47,9 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
 
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
-        print(r.json())
-        return r.json()['candidates'][0]["content"]
+        return r.json()
+        #print(r.json())
+        #return r.json()['candidates'][0]["content"]
 
 """
 gemini标准prompt构建
@@ -65,7 +67,10 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 if "mface" in i:
                     url=i["mface"]["url"]
                 else:
-                    url=i["image"]["url"]
+                    try:
+                        url=i["image"]["url"]
+                    except:
+                        url=i["image"]["file"]
                 base64_match = BASE64_PATTERN.match(url)
                 if base64_match:
                     img_base64 = base64_match.group(2)
@@ -92,6 +97,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
                 #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
             except Exception as e:
+                traceback.print_exc()
                 prompt_elements.append({"text": f"系统提示：下载图片失败"})
 
         elif "record" in i:

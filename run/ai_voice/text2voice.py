@@ -16,7 +16,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
 
     # 获取所有 speakers
     all_speakers = (await call_all_speakers(bot, event, config))["speakers"]
-    ncspk, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers = all_speakers
+    ncspk, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers,otto = all_speakers
 
     # 检查是否有可用 speakers
     if not any(all_speakers):
@@ -29,6 +29,7 @@ async def call_tts(bot,event,config,text,speaker=None,mood="中立"):
         (vits_speakers, [(speaker, "vits")]),
         (online_vits2_speakers, [(speaker, "online_vits2")]),
         (blue_archive_speakers, [(speaker, "blue_archive")]),
+        (otto, [("otto", "OttoTTS")])
     ]
 
     # 匹配 speaker 和 mode
@@ -63,7 +64,7 @@ def main(bot: ExtendBot,config: YAMLManager):
     async def tts(event: GroupMessageEvent):
         if "说" in event.pure_text and event.pure_text.startswith("/"):
             speaker=event.pure_text.split("说")[0].replace("/","").strip()
-            text=event.pure_text.split("说")[1].strip()
+            text = event.pure_text.split("说", 1)[1].strip()
             r=await call_tts(bot,event,config,text,speaker)
             if r.get("audio"):
                 await bot.send(event, Record(file=r.get("audio")))

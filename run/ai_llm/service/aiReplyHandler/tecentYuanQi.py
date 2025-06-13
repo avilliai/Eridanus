@@ -39,7 +39,10 @@ async def tecent_prompt_elements_construct(precessed_message, bot=None, func_res
             if "mface" in i:
                 url = i["mface"]["url"]
             else:
-                url = i["image"]["url"]
+                try:
+                    url = i["image"]["url"]
+                except:
+                    url = i["image"]["file"]
             prompt_elements.append({"type": "text", "text": f"system提示: 当前图片的url为{url}"})
 
             prompt_elements.append({

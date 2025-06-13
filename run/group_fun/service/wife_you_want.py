@@ -1,16 +1,14 @@
-import aiosqlite
 import asyncio
-import threading
-import requests
+import calendar
+import time
+
+from framework_common.manshuo_draw.manshuo_draw import manshuo_draw
 
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
-import calendar
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
-import time
-from framework_common.manshuo_draw.manshuo_draw import manshuo_draw
+import aiosqlite
+import requests
+from PIL import Image, ImageDraw, ImageFont
 
 
 DATABASE = "data/dataBase/wifeyouwant.db"  # 修改路径为小写

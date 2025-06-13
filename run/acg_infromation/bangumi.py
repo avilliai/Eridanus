@@ -55,11 +55,8 @@ async def call_remen(bot,event,config):
     pass
 
 def main(bot,config):
-    global searchtask  # 变量提前，否则可能未定义
     searchtask = {}
-    global switch
     switch=0
-    global recall_id
     recall_id = None
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=1))
@@ -211,7 +208,7 @@ def main(bot,config):
             return
         bot.logger.info("正在查询：" + keywords)
 
-        global searchtask,recall_id,switch  # 变量提前，否则可能未定义
+        nonlocal searchtask,recall_id,switch  # 变量提前，否则可能未定义
         try:
             bangumi_json = await bangumi_PILimg(filepath='data/pictures/cache/',
                                                 type_soft=f'bangumi 查询', type='search',target=keywords,search_type=search_type)
@@ -237,7 +234,7 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bangumi_search_detail(event: GroupMessageEvent):
-        global searchtask, recall_id
+        nonlocal searchtask, recall_id
         botname = config.common_config.basic_config["bot"]
         if event.sender.user_id in searchtask:
             try:
@@ -283,8 +280,8 @@ def main(bot,config):
 
     @bot.on(GroupMessageEvent)
     async def bangumi_search_timeout(event: GroupMessageEvent):
-        global searchtask
-        global switch
+        nonlocal searchtask
+        nonlocal switch
         if event.sender.user_id in searchtask:
             if switch:
                 switch = 0  # 保证只发送一次超时提示

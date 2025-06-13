@@ -1,29 +1,48 @@
 # 语音合成接口
-import asyncio
-import random
 import re
-import threading
-
-import httpx
-import requests
 
 from developTools.utils.logger import get_logger
+from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.ai_translate import Translator
 from run.ai_voice.service.blue_archive_tts import get_huggingface_blue_archive_speakers, huggingface_blue_archive_tts
 from run.ai_voice.service.modelscopeTTS import modelscope_tts, get_modelscope_tts_speakers
 from run.ai_voice.service.napcat_tts import napcat_tts_speak, napcat_tts_speakers
 from run.ai_voice.service.online_vits import huggingface_online_vits
 from run.ai_voice.service.online_vits2 import huggingface_online_vits2, get_huggingface_online_vits2_speakers
+from run.ai_voice.service.ottoTTS import OttoTTS
 from run.ai_voice.service.vits import vits, get_vits_speakers
-from framework_common.utils.random_str import random_str
-from framework_common.utils.translate import translate
-
-from framework_common.framework_util.yamlLoader import YAMLManager
+import httpx
+import requests
 
 
+
+
+async def translate(text, mode="ZH_CN2JA"):
+    try:
+        URL = f"https://api.pearktrue.cn/api/translate/?text={text}&type={mode}"
+        async with httpx.AsyncClient(timeout=20) as client:
+            r = await client.get(URL)
+            #print(r.json()["data"]["translate"])
+            return r.json()["data"]["translate"]
+    except:
+        if mode != "ZH_CN2JA":
+            return text
+    try:
+        url = f"https://findmyip.net/api/translate.php?text={text}&target_lang=ja"
+        r = requests.get(url=url, timeout=10)
+        return r.json()["data"]["translate_result"]
+    except:
+        pass
+    try:
+        url = f"https://translate.appworlds.cn?text={text}&from=zh-CN&to=ja"
+        r = requests.get(url=url, timeout=10, verify=False)
+        return r.json()["data"]
+    except:
+        pass
+    return text
 
 logger=get_logger()
-class TTS():
+class TTS:
     def __init__(self):
         self.config = YAMLManager.get_instance()
         self.translator=Translator()
@@ -47,7 +66,7 @@ class TTS():
         """
         if mode is None:
             mode = config.ai_voice.config["tts"]["tts_engine"]
-        if config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive":
+        if (config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive") and mode!="OttoTTS":
             if config.ai_voice.config["tts"]["ai_translator"]:
                 text=await self.translator.translate(text)
             else:
@@ -90,6 +109,9 @@ class TTS():
             if speaker is None:
                 speaker=config.ai_voice.config["tts"]["blue_archive"]["speaker"]
             return await huggingface_blue_archive_tts(text, speaker)
+        elif mode=="OttoTTS":
+            otto=OttoTTS()
+            return await otto.speak(text)
         else:
             pass
     async def get_speakers(self,bot=None):
@@ -111,7 +133,7 @@ class TTS():
             error_msg="Error in get_huggingface_online_vits2_speakers"
         )
         blue_archive_speakers=await fetch_speakers(get_huggingface_blue_archive_speakers,error_msg="Error in get_huggingface_blue_archive_speakers")
-        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers]}
+        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers,["otto"]]}
 
 
 

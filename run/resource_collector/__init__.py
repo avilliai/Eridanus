@@ -4,6 +4,7 @@ dynamic_imports = {
         "search_book_info", "call_asmr", "call_download_book","call_jm"
     ],
     "run.resource_collector.engine_search": ["search_net", "read_html"],
+    "run.resource_collector.func_collection": ["iwara_search", "iwara_tendency"],
 }
 function_declarations=[
     {
@@ -112,6 +113,44 @@ function_declarations=[
             "required": [
                 "url"
             ]
+        }
+    },
+    {
+        "name": "iwara_search",
+        "description": "根据关键词/视频id在iwara搜索/下载视频",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "operation": {
+                    "type": "string", "enum": ["download", "search"],
+                    "description": "操作类型"
+                },
+
+                "aim": {
+                    "type": "string",
+                    "description": "搜索关键字/要下载的视频id"
+                }
+            },
+            "required": [
+                "operation",
+                "aim"
+            ]
+        }
+    },
+    {
+        "name": "iwara_tendency",
+        "description": "查询iwara的热门视频、当前趋势、最新视频的榜单",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "type": "string", "enum": ["hotest", "trending", "latest"], "description": "热门，当前趋势，最新"
+                }
+            },
+            "required": [
+                "mode"
+            ]
+
         }
     },
 ]

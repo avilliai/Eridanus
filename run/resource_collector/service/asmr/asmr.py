@@ -1,14 +1,12 @@
-import httpx
 import random
 
+import httpx
 import yaml
 from pytubefix import Channel, YouTube
-from ruamel.yaml import YAML
 
 from developTools.utils.logger import get_logger
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.utils import get_headers
-
 
 yaml_manager = YAMLManager.get_instance()
 

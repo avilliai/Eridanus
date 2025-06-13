@@ -127,10 +127,10 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
 
         except Exception as e:
             bot.logger.error(f"asmr error:{e}")
-            if try_again==False:
+            if not try_again:
                 bot.logger.warning("asmr try again!")
                 await call_asmr(bot,event,config,try_again=True)
-            if try_again==True:
+            if try_again:
                 await bot.send(event, "失败了！要不再试一次？")
     else:
         await bot.send(event, "你没有权限使用该功能")
@@ -384,10 +384,8 @@ def main(bot,config):
     async def randomcomic(event: GroupMessageEvent):
         if '本周jm' == event.pure_text or '本周JM' == event.pure_text or '今日jm' == event.pure_text or '今日JM' == event.pure_text:
             context = JM_search_week()
-            cmList = []
+            cmList = [Node(content=[Text('本周的JM排行如下，请君过目\n')]), Node(content=[Text(context)])]
 
-            cmList.append(Node(content=[Text('本周的JM排行如下，请君过目\n')]))
-            cmList.append(Node(content=[Text(context)]))
             await bot.send(event,cmList)
 
     @bot.on(GroupMessageEvent)

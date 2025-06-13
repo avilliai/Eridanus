@@ -177,7 +177,7 @@ def judgeRoom(room_level):
     elif room_level == "3": return "王座之间"
 
 def removeNull(data):
-    if data == None:
+    if data is None:
         return "0"
     else:
         return data

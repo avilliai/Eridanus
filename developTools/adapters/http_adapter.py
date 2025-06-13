@@ -1,15 +1,14 @@
 import asyncio
-import json
-from typing import Type, Union
+from typing import Type
 
-from fastapi import FastAPI, Request
 import uvicorn
+from fastapi import FastAPI, Request
 
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
 from developTools.interface.http_sendMes import http_mailman
-
 from developTools.utils.logger import get_logger
+
 
 class EventBus:
     def __init__(self) -> None:

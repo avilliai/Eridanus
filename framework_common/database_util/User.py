@@ -1,23 +1,25 @@
+import asyncio
+import datetime
 import json
 import os
 import pickle
 import platform
 import subprocess
-import zipfile
+import time
 
 import aiosqlite
-import datetime
-import asyncio
-import traceback
-
 import redis
 
 from developTools.utils.logger import get_logger
-from functools import wraps
-import time
 
 dbpath = "data/dataBase/user_management.db"
-REDIS_URL = "redis://localhost/1"  # 使用 db1，与默认 db0 隔离
+def is_running_in_docker():
+    return os.path.exists("/.dockerenv") or os.environ.get("IN_DOCKER") == "1"
+
+if is_running_in_docker():
+    REDIS_URL = "redis://redis:6379/1"
+else:
+    REDIS_URL = "redis://localhost/1"
 REDIS_CACHE_TTL = 60  # 秒
 REDIS_EXECUTABLE = "redis-server.exe"
 REDIS_ZIP_PATH = os.path.join("data", "Redis-x64-5.0.14.1.zip")

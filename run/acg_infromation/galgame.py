@@ -100,7 +100,7 @@ def main(bot,config):
             #print(json_check)
             state=json_check['success']
             #print(state)
-            if state == True:
+            if state:
                 total = json_check["data"]["total"]
                 #print(total)
                 #print(json_check)
@@ -140,7 +140,7 @@ def main(bot,config):
                 json_check = await Get_Access_Token_json(access_token, url, params)
                 #print(json_check)
                 state = json_check['success']
-                if state == True:
+                if state:
                     context=await context_assemble(json_check)
                     mainImg_state = json_check["data"]["game"]["mainImg"]
                     img_path = await get_game_image(mainImg_state, filepath)
@@ -156,7 +156,7 @@ def main(bot,config):
             json_check = await Get_Access_Token_json(access_token, url, params)
             # print(json_check)
             state = json_check['success']
-            if state == True:
+            if state:
                 context = await context_assemble(json_check)
                 mainImg_state = json_check["data"]["game"]["mainImg"]
                 img_path = await get_game_image(mainImg_state, filepath)
@@ -172,7 +172,7 @@ def main(bot,config):
             #print(json_check)
             state = json_check['success']
             # print(state)
-            if state == True:
+            if state:
                 context = await context_assemble(json_check)
                 #print(context)
                 mainImg_state = json_check["data"]["game"]["mainImg"]
@@ -186,7 +186,7 @@ def main(bot,config):
             #print(json_check)
             state = json_check['success']
             # print(state)
-            if state == True:
+            if state:
                 context = await context_assemble(json_check)
                 #print(context)
                 if 'mainImg' in json_check["data"]["org"]:
@@ -203,7 +203,7 @@ def main(bot,config):
             #print(json_check)
             state = json_check['success']
             # print(state)
-            if state == True:
+            if state:
                 context = await context_assemble(json_check)
                 #print(context)
                 mainImg_state = json_check["data"]["character"]["mainImg"]
@@ -217,7 +217,7 @@ def main(bot,config):
             #print(json_check)
             state = json_check['success']
             # print(state)
-            if state == True:
+            if state:
                 data_count = len(json_check["data"])
                 if int(data_count) ==0:
                     state = False
@@ -242,7 +242,7 @@ def main(bot,config):
             #print(json_check)
             state = json_check['success']
             # print(state)
-            if state == True:
+            if state:
                 data_count = len(json_check["data"])
                 if int(data_count) ==0:
                     state = False
@@ -269,7 +269,7 @@ def main(bot,config):
             state = json_check['success']
             # print(state)
             cmList.append(Node(content=[Text(f'今天的gal推荐，请君过目：')]))
-            if state == True:
+            if state:
                 data_count = len(json_check["data"])
                 for i in range(data_count):
                     data = json_check['data'][i]

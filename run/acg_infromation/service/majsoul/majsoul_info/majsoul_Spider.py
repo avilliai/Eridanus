@@ -24,24 +24,24 @@ def getURL(url):
 
 def getID(nickname):#获取牌谱屋角色ID
     nickname = urllib.parse.quote(nickname) #UrlEncode转换
-    url = baseurl + "/search_player/"+nickname+"?limit=9"
+    url = f"{baseurl}/search_player/{nickname}?limit=9"
     data = getURL(url)
     if isinstance(data,urllib.error.URLError):
         return -404
     datalist = json.loads(data)
     #print(datalist)
-    if datalist == [] :
+    if not datalist:
         return -1
     return datalist
 
 def gettriID(nickname):
     nickname = urllib.parse.quote(nickname) #UrlEncode转换
-    url = tribaseurl + "/search_player/"+nickname+"?limit=9"
+    url = f"{tribaseurl}/search_player/{nickname}?limit=9"
     data = getURL(url)
     if isinstance(data,urllib.error.URLError):
         return -404
     datalist = json.loads(data)
-    if datalist == [] :
+    if not datalist:
         return -1
     return datalist
 
@@ -81,8 +81,8 @@ def select_triLevel(room_level):
 def select_triInfo(id,room_level): #信息查询
     localtime = time.time()
     urltime = str(int(localtime*1000)) #时间戳
-    basicurl = tribaseurl+"/player_stats/"+str(id)+"/1262304000000/"+urltime+"?mode="
-    extendurl = tribaseurl+"/player_extended_stats/"+str(id)+"/1262304000000/"+urltime+"?mode="
+    basicurl = tribaseurl+f"/player_stats/{id}/1262304000000/{urltime}?mode="
+    extendurl = tribaseurl+f"/player_extended_stats/{id}/1262304000000/{urltime}?mode="
     data_list = []
     level_list = select_triLevel(room_level)
     for i in range(0,2):
@@ -106,17 +106,17 @@ def selectInfo(id,room_level): #信息查询
 def selectRecord(id):
     localtime = time.time()
     urltime = str(int(localtime * 1000))  # 时间戳
-    basicurl = baseurl + "/player_stats/" + str(id) + "/1262304000000/" + urltime + "?mode=16.12.9.15.11.8"
+    basicurl = f"{baseurl}/player_stats/{id}/1262304000000/{urltime}?mode=16.12.9.15.11.8"
     count = str(json.loads(getURL(basicurl))["count"])
-    recordurl = baseurl + "/player_records/"+str(id)+"/"+urltime+"/1262304000000?limit=5&mode=16.12.9.15.11.8&descending=true&tag="+count
+    recordurl = baseurl + "/player_records/"+str(id)+"/"+urltime+f"/1262304000000?limit=5&mode=16.12.9.15.11.8&descending=true&tag={count}"
     record = getURL(recordurl)
     return record
 
 def select_triRecord(id):
     localtime = time.time()
     urltime = str(int(localtime * 1000))  # 时间戳
-    basicurl = tribaseurl + "/player_stats/" + str(id) + "/1262304000000/" + urltime + "?mode=22.24.26.21.23.25"
+    basicurl = tribaseurl + f"/player_stats/{id}/1262304000000/{urltime}?mode=22.24.26.21.23.25"
     count = str(json.loads(getURL(basicurl))["count"])
-    recordurl = tribaseurl + "/player_records/"+str(id)+"/"+urltime+"/1262304000000?limit=5&mode=22.24.26.21.23.25&descending=true&tag="+count
+    recordurl = tribaseurl + f"/player_records/{id}/{urltime}/1262304000000?limit=5&mode=22.24.26.21.23.25&descending=true&tag={count}"
     record = getURL(recordurl)
     return record

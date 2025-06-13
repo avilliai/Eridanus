@@ -1,14 +1,12 @@
 import asyncio
-import os
-import json
-import aiosqlite
-import httpx
-import re
-from PIL import Image
 import base64
 import html
+import json
+import os
+import re
 
-from ruamel.yaml import YAML
+import aiosqlite
+from PIL import Image
 
 from framework_common.framework_util.yamlLoader import YAMLManager
 
@@ -88,7 +86,7 @@ def silly_tavern_card(image_path, clear_html=False):
                 final.append(res)
 
     except Exception as e:
-        return (f"错误，解码失败: {e}")
+        return f"错误，解码失败: {e}"
 
     if final:
         s = "\n".join(final)
