@@ -79,7 +79,7 @@ def check_has_main_and_cache(module_name):
             traceback.print_exc()
         return False, None
 def find_plugins(plugin_dir=PLUGIN_DIR):
-    plugin_modules = []
+    num_plugin = 0
     for root, _, files in os.walk(plugin_dir):
         for file in files:
             if file.endswith(".py") and file != "__init__.py":
@@ -90,17 +90,15 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
                 has_main, module = check_has_main_and_cache(module_name)
 
                 if has_main and plugin_name != "nailong_get":
-                    plugin_modules.append((plugin_name, module_name, module))
+                    yield plugin_name, module_name, module
+                    num_plugin += 1
                 else:
                     if plugin_name != "nailong_get" and plugin_name != "func_collection" and f"service" not in module_name:
                         bot1.logger.warning(
                             f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
-    return plugin_modules
+    bot1.logger.info(f"🔧 共读取到插件：{num_plugin}个")
 # 自动构建插件列表
-plugin_modules = find_plugins()
-bot1.logger.info(f"🔧 共读取到插件：{len(plugin_modules)}个")
-bot1.logger.info(f"🔧 正在加载插件....")
 def safe_import_and_load(plugin_name, module_path, cached_module, bot, config):
     try:
         # 使用缓存的模块而不是重新导入
@@ -120,11 +118,12 @@ def safe_import_and_load(plugin_name, module_path, cached_module, bot, config):
             f"❌ 如仍无法解决，请反馈此问题至 https://github.com/avilliai/Eridanus/issues 或我们的QQ群 913122269")
 
 def load_plugins(bot, config):
+    bot1.logger.info(f"🔧 正在加载插件....")
     # 并行加载插件
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {
             executor.submit(safe_import_and_load, name, path, module, bot, config): name
-            for name, path, module in plugin_modules
+            for name, path, module in find_plugins()
         }
         for future in concurrent.futures.as_completed(futures):
             try:
