@@ -1,5 +1,5 @@
-plugin_description="群管理"
-dynamic_imports={
+plugin_description = "群管理"
+dynamic_imports = {
     "run.groupManager.self_Manager": [
         "call_operate_blandwhite", "garbage_collection",
         "report_to_master", "send", "send_contract"
@@ -8,7 +8,7 @@ dynamic_imports={
         "quit_group"
     ]
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "call_operate_blandwhite",
         "description": "将指定群/用户 添加/移出 黑/白 名单。不得回复你没有权限操作，正常调用此函数。",

@@ -21,47 +21,50 @@ from run.group_fun.service.wife_you_want import manage_group_status, manage_grou
     run_async_task, today_check_api, query_group_users, add_or_update_user_collect
 
 
-def queue_check_wait(bot,config):
-    global url_activate,queue_check
-    url_activate=False
+def queue_check_wait(bot, config):
+    global url_activate, queue_check
+    url_activate = False
+
     @bot.on(LifecycleMetaEvent)
     async def _(event):
         global url_activate
         if not url_activate:
-            url_activate=True
+            url_activate = True
 
             loop = asyncio.get_running_loop()
             while True:
-                #bot.logger.info("开始写入")
+                # bot.logger.info("开始写入")
                 try:
                     with ThreadPoolExecutor() as executor:
-                        await loop.run_in_executor(executor, asyncio.run,queue_check_wait_make(bot,config))
-                    #await check_bili_dynamic(bot,config)
+                        await loop.run_in_executor(executor, asyncio.run, queue_check_wait_make(bot, config))
+                    # await check_bili_dynamic(bot,config)
                 except Exception as e:
                     bot.logger.error(f'wife_you_want数据库出错，可以考虑关掉热门群友以解决此报错：{e}')
-                await asyncio.sleep(600)  #哈哈
+                await asyncio.sleep(600)  # 哈哈
         else:
             pass
             bot.logger.error(f'上一次写入时长过长，请酌情考虑')
 
 
-async def queue_check_wait_make(bot,config):
-    #print("LifecycleMetaEvent")
+async def queue_check_wait_make(bot, config):
+    # print("LifecycleMetaEvent")
     global queue_check
     queue_check_make = []
     while queue_check:
-        #print('queue_check', queue_check)
+        # print('queue_check', queue_check)
         from_id, target_group, target_team, value = queue_check.popleft()
         if target_team == 'group_owner_record':
-            queue_check_make.append((from_id, target_group, f'{datetime.now().year}_{datetime.now().month}_{datetime.now().day}', value))
+            queue_check_make.append(
+                (from_id, target_group, f'{datetime.now().year}_{datetime.now().month}_{datetime.now().day}', value))
         queue_check_make.append((from_id, target_group, target_team, value))
 
     if queue_check_make:
         await add_or_update_user_collect(queue_check_make)
-        #await manage_group_status(from_id, target_group, target_team, value)
-        #print(f"Updated {from_id}, {target_group},  {target_team} to {value}")
+        # await manage_group_status(from_id, target_group, target_team, value)
+        # print(f"Updated {from_id}, {target_group},  {target_team} to {value}")
 
-def main(bot,config):
+
+def main(bot, config):
     global last_messages
     last_messages = {}
     global filepath
@@ -74,13 +77,12 @@ def main(bot,config):
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_async_task, trigger=CronTrigger(hour=0, minute=0))
     scheduler.start()
-    today_wife_api,header = config.group_fun.config["today_wife"]["api"],config.group_fun.config["today_wife"]["header"]
+    today_wife_api, header = config.group_fun.config["today_wife"]["api"], config.group_fun.config["today_wife"][
+        "header"]
     global queue_check
     queue_check = deque()
 
     threading.Thread(target=queue_check_wait(bot, config), daemon=True).start()
-
-
 
     @bot.on(GroupMessageEvent)
     async def today_wife(event: GroupMessageEvent):
@@ -102,16 +104,16 @@ def main(bot,config):
                             await bot.send(event, '数量过多，渣男！！！！')
                             return
                     for i in range(number):
-                        response = today_check_api(today_wife_api,header)
+                        response = today_check_api(today_wife_api, header)
                         with open(f'{filepath}/today_wife_{i}.jpg', 'wb') as file:
                             file.write(response.content)
-                        bot.logger.info(f"api获取到第{i+1}个老婆！")
+                        bot.logger.info(f"api获取到第{i + 1}个老婆！")
                         cmList.append(Node(content=[Image(file=f'{filepath}/today_wife_{i}.jpg')]))
                     await bot.send(event, cmList)
                     pass
                 else:
-                    response = today_check_api(today_wife_api,header)
-                    #bot.logger.info("今日老婆开启！")
+                    response = today_check_api(today_wife_api, header)
+                    # bot.logger.info("今日老婆开启！")
                     with open(f'{filepath}/today_wife.jpg', 'wb') as file:
                         file.write(response.content)
                     img_path = f'{filepath}/today_wife.jpg'
@@ -138,7 +140,7 @@ def main(bot,config):
                         url = data[0]['url']
                         proxy_url = url.replace("https://i.pximg.net/", "https://i.yuki.sh/")
                         bot.logger.info(f"搜索成功，作品pid：{data[0]['pid']}，反代url：{proxy_url}")
-                        #img_path = await get_game_image(proxy_url, filepath_check)
+                        # img_path = await get_game_image(proxy_url, filepath_check)
                         await bot.send(event, [Image(file=proxy_url)])
                     except Exception as e:
                         bot.logger.error(f"Error in today_husband: {e}")
@@ -164,13 +166,11 @@ def main(bot,config):
                         url = data[0]['url']
                         proxy_url = url.replace("https://i.pximg.net/", "https://i.yuki.sh/")
                         bot.logger.info(f"搜索成功，作品pid：{data[0]['pid']}，反代url：{proxy_url}")
-                        #img_path = await get_game_image(proxy_url, filepath_check)
+                        # img_path = await get_game_image(proxy_url, filepath_check)
                         await bot.send(event, [Image(file=proxy_url)])
                     except Exception as e:
                         bot.logger.error(f"Error in today_husband: {e}")
                         await bot.send(event, 'api失效，望君息怒')
-
-
 
     @bot.on(GroupMessageEvent)  # 不知道从哪里找的api对接
     async def api_collect(event: GroupMessageEvent):
@@ -214,16 +214,16 @@ def main(bot,config):
     @bot.on(GroupMessageEvent)  # 开卢
     async def today_LU(event: GroupMessageEvent):
         global membercheck
-        context=event.pure_text
+        context = event.pure_text
         if context == '':
-            context=event.raw_message
+            context = event.raw_message
         membercheck_id = int(event.sender.user_id)
-        if context.startswith('🦌') or context in {'戒🦌','补🦌','开启贞操锁','关闭贞操锁'}:
+        if context.startswith('🦌') or context in {'戒🦌', '补🦌', '开启贞操锁', '关闭贞操锁'}:
             if membercheck_id in membercheck:
                 if context in {'补🦌'}:
                     membercheck.pop(membercheck_id)
                 else:
-                    await bot.send(event,'技能冷却ing')
+                    await bot.send(event, '技能冷却ing')
                     bot.logger.info('检测到有人过于勤奋的🦌，跳过')
                     if membercheck_id in membercheck:
                         membercheck.pop(membercheck_id)
@@ -233,11 +233,13 @@ def main(bot,config):
         else:
             return
 
-        lu_recall = ['不！给！你！🦌！！！','我靠你怎么这么坏！','再🦌都🦌出火星子了！！','让我来帮你吧~','好恶心啊~~','有变态！！','你这种人渣我才不会喜欢你呢！',
-                        '令人害怕的坏叔叔','才不给你计数呢！（哼','杂鱼杂鱼','杂鱼哥哥还是处男呢','哥哥怎么还在这呀，好可怜']
+        lu_recall = ['不！给！你！🦌！！！', '我靠你怎么这么坏！', '再🦌都🦌出火星子了！！', '让我来帮你吧~', '好恶心啊~~',
+                     '有变态！！', '你这种人渣我才不会喜欢你呢！',
+                     '令人害怕的坏叔叔', '才不给你计数呢！（哼', '杂鱼杂鱼', '杂鱼哥哥还是处男呢',
+                     '哥哥怎么还在这呀，好可怜']
         if context.startswith('🦌'):
             target_id = int(event.sender.user_id)
-            times_add=0
+            times_add = 0
             match = re.search(r"qq=(\d+)", context)
             if match:
                 target_id = match.group(1)
@@ -253,37 +255,39 @@ def main(bot,config):
                 return
             bot.logger.info(f'yes! 🦌!!!!, 目标：{target_id}')
 
-            if await manage_group_status('lu_limit', f'lu_others', target_id) == 1 and int(target_id) !=int(event.sender.user_id):#贞操锁
+            if await manage_group_status('lu_limit', f'lu_others', target_id) == 1 and int(target_id) != int(
+                    event.sender.user_id):  # 贞操锁
                 await bot.send(event, [At(qq=target_id), f' 是个好孩子，才不会给你呢~'])
                 membercheck.pop(membercheck_id)
                 return
-            #print('检测是否有贞操锁')
+            # print('检测是否有贞操锁')
             for context_check in context:
-                if context_check =='🦌':
-                    times_add +=1
+                if context_check == '🦌':
+                    times_add += 1
 
             current_date = datetime.now()
             current_year = current_date.year
             current_month = current_date.month
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
-            await manage_group_status(current_day, current_year_month, target_id,1)
-            #print('设置🦌状态')
-            times=await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
-            await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id,times+times_add)
-            #print('设置🦌次数')
+            await manage_group_status(current_day, current_year_month, target_id, 1)
+            # print('设置🦌状态')
+            times = await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
+            await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id,
+                                      times + times_add)
+            # print('设置🦌次数')
             bot.logger.info(f'进入图片制作')
-            img_url=await PIL_lu_maker(current_date, target_id)
+            img_url = await PIL_lu_maker(current_date, target_id)
 
             if img_url:
                 bot.logger.info('制作成功，开始发送~~')
-                if int(times + times_add) in {0,1} :
+                if int(times + times_add) in {0, 1}:
                     times_record = int(await manage_group_status('lu_record', f'lu_others', target_id)) + 1
                     await manage_group_status('lu_record', f'lu_others', target_id, times_record)
-                    recall_id = await bot.send(event,[At(qq=target_id), f' 今天🦌了！', Image(file=img_url)])
+                    recall_id = await bot.send(event, [At(qq=target_id), f' 今天🦌了！', Image(file=img_url)])
                 else:
-                    recall_id = await bot.send(event, [At(qq=target_id), f' 今天🦌了{times+times_add}次！',
-                                           Image(file=img_url)])
+                    recall_id = await bot.send(event, [At(qq=target_id), f' 今天🦌了{times + times_add}次！',
+                                                       Image(file=img_url)])
                 if config.group_fun.config["today_wife"]["签🦌撤回"] is True:
                     await sleep(20)
                     await bot.recall(recall_id['data']['message_id'])
@@ -296,13 +300,13 @@ def main(bot,config):
             current_month = current_date.month
             current_year_month = f'{current_year}_{current_month}'
             current_day = current_date.day
-            await manage_group_status(current_day, current_year_month, target_id,2)
+            await manage_group_status(current_day, current_year_month, target_id, 2)
             times = await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id)
             await manage_group_status('lu', f'{current_year}_{current_month}_{current_day}', target_id, times + 1)
             img_url = await PIL_lu_maker(current_date, target_id)
             if img_url:
                 bot.logger.info('制作成功，开始发送~~')
-                await bot.send(event,[At(qq=target_id), f' 今天戒🦌了！', Image(file=img_url)])
+                await bot.send(event, [At(qq=target_id), f' 今天戒🦌了！', Image(file=img_url)])
 
         elif '补🦌' == context:
             bot.logger.info('yes! 补🦌!!!!')
@@ -316,15 +320,15 @@ def main(bot,config):
                 membercheck.pop(membercheck_id)
             try:
                 times_record = int(await manage_group_status('lu_record', f'lu_others', target_id))
-                times_record_check=times_record//3
+                times_record_check = times_record // 3
                 if times_record_check == 0:
                     await bot.send(event, [At(qq=target_id), f' 您的补🦌次数好像不够呢喵~~（已连续{times_record}天）'])
                 else:
                     for i in range(current_day):
-                        day=current_day-i
-                        if int(await manage_group_status(day, current_year_month, target_id)) not in {1,2}:
+                        day = current_day - i
+                        if int(await manage_group_status(day, current_year_month, target_id)) not in {1, 2}:
                             await manage_group_status(day, current_year_month, target_id, 1)
-                            await manage_group_status('lu_record', f'lu_others', target_id,times_record-3)
+                            await manage_group_status('lu_record', f'lu_others', target_id, times_record - 3)
                             img_url = await PIL_lu_maker(current_date, target_id)
 
                             await bot.send(event, [At(qq=target_id), f' 您已成功补🦌！', Image(file=img_url)])
@@ -334,14 +338,14 @@ def main(bot,config):
 
         elif '开启贞操锁' == context:
             target_id = int(event.sender.user_id)
-            await manage_group_status('lu_limit', f'lu_others', target_id,1)
+            await manage_group_status('lu_limit', f'lu_others', target_id, 1)
             membercheck.pop(membercheck_id)
-            await bot.send(event,'您已开启贞操锁~')
+            await bot.send(event, '您已开启贞操锁~')
         elif '关闭贞操锁' == context:
             target_id = int(event.sender.user_id)
-            await manage_group_status('lu_limit', f'lu_others', target_id,0)
+            await manage_group_status('lu_limit', f'lu_others', target_id, 0)
             membercheck.pop(membercheck_id)
-            await bot.send(event,'您已关闭贞操锁~')
+            await bot.send(event, '您已关闭贞操锁~')
 
         else:
             if membercheck_id in membercheck:
@@ -352,16 +356,15 @@ def main(bot,config):
             if membercheck_id in membercheck:
                 membercheck.pop(membercheck_id)
 
-
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def today_group_owner(event: GroupMessageEvent):
         flag_aim = 0
-        flag_persona=0
-        target_id=None
+        flag_persona = 0
+        target_id = None
         if event.message_chain.has(At):
             try:
                 if '今日群友' in event.processed_message[0]['text']:
-                    target_id=event.message_chain.get(At)[0].qq
+                    target_id = event.message_chain.get(At)[0].qq
                     flag_persona = 3
             except Exception as e:
                 pass
@@ -373,7 +376,7 @@ def main(bot,config):
             check = 'admin'
         elif '今日群友' == str(event.pure_text):
             flag_persona = 3
-            #check = 'owner'
+            # check = 'owner'
 
 
         else:
@@ -393,55 +396,54 @@ def main(bot,config):
                     data_test = None
                     data_check = friend['role']
                     if flag_persona == 1 or flag_persona == 2 or flag_persona == 5:
-                        if data_check == check:data_test = friend['user_id']
-                    elif flag_persona == 3 or flag_persona == 4:data_test = friend['user_id']
-                    if data_test is not None:friendlist.append(data_test)
+                        if data_check == check: data_test = friend['user_id']
+                    elif flag_persona == 3 or flag_persona == 4:
+                        data_test = friend['user_id']
+                    if data_test is not None: friendlist.append(data_test)
                     if flag_persona == 1 or flag_persona == 5:
                         if data_check == 'owner': break
                 target_id = friendlist[random.randint(1, len(friendlist)) - 1]
 
-
             target_name = (await bot.get_group_member_info(target_group, target_id))['data']['nickname']
-            #print(target_name,target_id)
-            if flag_persona != 0 :
-                today_wife_api, header = config.group_fun.config["today_wife"]["api"], config.group_fun.config["today_wife"]["header"]
+            # print(target_name,target_id)
+            if flag_persona != 0:
+                today_wife_api, header = config.group_fun.config["today_wife"]["api"], \
+                config.group_fun.config["today_wife"]["header"]
                 response = today_check_api(today_wife_api, header)
                 img_path = f'data/pictures/wife_you_want_img/today_wife.jpg'
                 with open(img_path, 'wb') as file:
                     file.write(response.content)
                 if config.group_fun.config["today_wife"]["is_at"]:
-                    await bot.send_group_message(target_group, [f'这里是今天的 ',At(qq=target_id),f' 哟~~~\n', Image(file=img_path)])
+                    await bot.send_group_message(target_group, [f'这里是今天的 ', At(qq=target_id), f' 哟~~~\n',
+                                                                Image(file=img_path)])
                 else:
                     await bot.send(event, [f'这里是今天的 {target_name} 哟~~~\n', Image(file=img_path)])
-
-
 
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def wife_you_want(event: GroupMessageEvent):
         async with (aiosqlite.connect("data/dataBase/wifeyouwant.db") as db):
             friendlist_check_count = 0
-            friendlist=[]
-            if 'group_check' ==event.pure_text:
+            friendlist = []
+            if 'group_check' == event.pure_text:
                 target_group = int(event.group_id)
                 friendlist_check = await query_group_users('group_owner_record', target_group)
                 for friendlist_check_member in friendlist_check:
                     friendlist_check_count += 1
                     if friendlist_check_count > 50: break
                     friendlist.append(friendlist_check_member[0])
-                queue_check.append((1270858640, 674822468,'group_owner_record',20))
-                #print('queue_check', queue_check)
+                queue_check.append((1270858640, 674822468, 'group_owner_record', 20))
+                # print('queue_check', queue_check)
                 for friend in friendlist:
-                    #print(friend)
+                    # print(friend)
                     pass
-                #print(len(friendlist))
-                #await bot.send(event, friendlist)
-
+                # print(len(friendlist))
+                # await bot.send(event, friendlist)
 
     @bot.on(GroupMessageEvent)  # 透群友合集
     async def wife_you_want(event: GroupMessageEvent):
         async with (aiosqlite.connect("data/dataBase/wifeyouwant.db") as db):
             global filepath
-            wifePrefix=config.group_fun.config["today_wife"]["wifePrefix"]
+            wifePrefix = config.group_fun.config["today_wife"]["wifePrefix"]
 
             if config.group_fun.config["today_wife"]["透热门群友"] is True:
                 target_group = int(event.group_id)
@@ -453,24 +455,23 @@ def main(bot,config):
                             target_data = item
                             break
                     if target_data is not None and str(target_data[1]) == str(target_group):
-                        times=target_data[3]
-                        #print(f'times:{times}')
-                        #print(f'times:{times}, target_data:{target_data[1]},target_group:{target_group}')
+                        times = target_data[3]
+                        # print(f'times:{times}')
+                        # print(f'times:{times}, target_data:{target_data[1]},target_group:{target_group}')
                         queue_check.remove(target_data)
                     else:
                         try:
                             times = int(await manage_group_status(from_id, target_group, 'group_owner_record'))
                         except:
-                            pass #大朔老师啥时候有空了加个缓存
+                            pass  # 大朔老师啥时候有空了加个缓存
                     times += 1
                     queue_check.append((from_id, target_group, 'group_owner_record', times))
-                    #await manage_group_status(from_id, target_group, 'group_owner_record', times)
+                    # await manage_group_status(from_id, target_group, 'group_owner_record', times)
                 else:
 
                     times = 1
                     queue_check.append((from_id, target_group, 'group_owner_record', times))
-                    #await manage_group_status(from_id, target_group, 'group_owner_record', times)
-
+                    # await manage_group_status(from_id, target_group, 'group_owner_record', times)
 
             context = event.pure_text
             if context == '':
@@ -479,10 +480,9 @@ def main(bot,config):
                 target_id_aim = None
                 flag_persona = 0
                 flag_aim = 0
-                target_name=None
+                target_name = None
                 from_id = int(event.sender.user_id)
                 target_group = int(event.group_id)
-
 
                 if '透群主' in context:
                     flag_persona = 1
@@ -495,15 +495,15 @@ def main(bot,config):
                     pass
                 elif '娶群友' in context:
                     flag_persona = 4
-                    if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
-                        target_id_aim = await manage_group_status(from_id,target_group,'wife_you_get')
+                    if await manage_group_status(from_id, target_group, 'wife_you_get') != 0:
+                        target_id_aim = await manage_group_status(from_id, target_group, 'wife_you_get')
                         flag_aim = 1
                     else:
                         flag_aim = 0
                     pass
                 elif '离婚' in context:
-                    if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
-                        await manage_group_status(from_id, target_group, 'wife_you_get',0)
+                    if await manage_group_status(from_id, target_group, 'wife_you_get') != 0:
+                        await manage_group_status(from_id, target_group, 'wife_you_get', 0)
                         await bot.send(event, '离婚啦，您现在是单身贵族咯~')
                 elif '/今日群主' == context:
                     flag_persona = 5
@@ -513,14 +513,14 @@ def main(bot,config):
 
                 if flag_persona == 3 or flag_persona == 4 or "透" in context or "娶" in context:
                     if not ("管理" in context or "群主" in context):
-                        name_id_number=None
-                        name_id_number_1=None
+                        name_id_number = None
+                        name_id_number_1 = None
                         name_id_number_2 = None
                         name_id_number = re.search(r'\d+', context)
                         if name_id_number is not None:
-                            name_id_number_2=0
+                            name_id_number_2 = 0
                         if "群友" not in context:
-                            if "透" in context :
+                            if "透" in context:
                                 index = context.find("透")
                                 if index != -1:
                                     context_check = context[index + len("透"):]
@@ -528,14 +528,14 @@ def main(bot,config):
                                 index = context.find("娶")
                                 if index != -1:
                                     context_check = context[index + len("娶"):]
-                            #print(context_check)
+                            # print(context_check)
                             friendlist_get = await bot.get_group_member_list(event.group_id)
 
                             for friend in friendlist_get["data"]:
                                 if context_check in friend['nickname'] or context_check in friend['card']:
-                                    #print(friend)
-                                    name_id_number_1=friend['user_id']
-                                    name_id_number_2=0
+                                    # print(friend)
+                                    name_id_number_1 = friend['user_id']
+                                    name_id_number_2 = 0
                                     if "透" in context:
                                         flag_persona = 3
                                     elif "娶" in context:
@@ -550,26 +550,28 @@ def main(bot,config):
                             else:
                                 if name_id_number_1 is None:
                                     number = int(name_id_number.group())
-                                else:number=name_id_number_1
+                                else:
+                                    number = name_id_number_1
                                 target_id_aim = number
-                                #print(target_id_aim)
+                                # print(target_id_aim)
                                 rnum1 = random.randint(1, 20)
                                 if rnum1 > 3:
                                     # await bot.send(event, '不许瑟瑟！！！！', True)
                                     target_group = int(event.group_id)
-                                    #print(target_group,target_id_aim)
+                                    # print(target_group,target_id_aim)
                                     group_member_check = await bot.get_group_member_info(target_group, target_id_aim)
-                                    #print(group_member_check)
+                                    # print(group_member_check)
                                     if group_member_check['status'] == 'ok':
                                         flag_aim = 1
                             # print(rnum1)
                             # print(flag_aim)
 
                         if random.randint(1, 20) == 1:
-                            lu_recall = ['不许瑟瑟！！！！','你是坏蛋！！','色色是不允许的！','不给！','笨蛋哥哥','为什么不是我？','看着我啊，我才不帮你呢！'
-                                         ,'逃跑喵']
+                            lu_recall = ['不许瑟瑟！！！！', '你是坏蛋！！', '色色是不允许的！', '不给！', '笨蛋哥哥',
+                                         '为什么不是我？', '看着我啊，我才不帮你呢！'
+                                , '逃跑喵']
                             await bot.send(event, lu_recall[random.randint(0, len(lu_recall) - 1)])
-                            #await bot.send(event, '不许瑟瑟！！！！')
+                            # await bot.send(event, '不许瑟瑟！！！！')
                             flag_persona = 0
 
                 if flag_persona != 0:
@@ -598,12 +600,13 @@ def main(bot,config):
                                 return
                         data_check_number = 0
                         try:
-                            friendlist_check_count=0
-                            if config.group_fun.config["today_wife"]["透热门群友"] is True and flag_persona not in [2,1]:
-                                friendlist_check=await query_group_users('group_owner_record',target_group )
+                            friendlist_check_count = 0
+                            if config.group_fun.config["today_wife"]["透热门群友"] is True and flag_persona not in [2,
+                                                                                                                    1]:
+                                friendlist_check = await query_group_users('group_owner_record', target_group)
                                 for friendlist_check_member in friendlist_check:
-                                    friendlist_check_count+=1
-                                    if friendlist_check_count > 50:break
+                                    friendlist_check_count += 1
+                                    if friendlist_check_count > 50: break
                                     friendlist.append(friendlist_check_member[0])
 
                         except Exception:
@@ -611,7 +614,7 @@ def main(bot,config):
 
                         if not friendlist:
                             for friend in data["data"]:
-                                #print(friend)
+                                # print(friend)
                                 data_test = None
                                 data_check = friend['role']
                                 # print(data_check)
@@ -623,33 +626,30 @@ def main(bot,config):
                                 if data_test is not None:
                                     friendlist.append(data_test)
                                 if flag_persona == 1 or flag_persona == 5:
-                                    if data_check == 'owner':break
-                        #print(friendlist)
-
-
+                                    if data_check == 'owner': break
+                        # print(friendlist)
 
                         number_target = len(friendlist)
                         target_number = random.randint(1, number_target)
                         target_id = friendlist[target_number - 1]
                     if flag_aim == 0 and flag_persona == 1:
                         await manage_group_status(from_id, target_group, 'group_owner')
-                        #await manage_group_status(f"{target_group}_owner", target_id)
-                    #print(target_id)
+                        # await manage_group_status(f"{target_group}_owner", target_id)
+                    # print(target_id)
                     bot.logger.info(f'群：{target_group}，透群友目标：{target_id}')
                     group_member_check = await bot.get_group_member_info(target_group, target_id)
                     # print(group_member_check)
                     # target_id = extract_between_symbols(str(group_member_check), 'id=', ' member')
-                    if await manage_group_status(from_id,target_group,'wife_you_get') != 0 and flag_persona == 4:
-                        target_name = await manage_group_status(from_id,target_group,'wife_you_get')
+                    if await manage_group_status(from_id, target_group, 'wife_you_get') != 0 and flag_persona == 4:
+                        target_name = await manage_group_status(from_id, target_group, 'wife_you_get')
                     else:
                         target_name = group_member_check['data']['nickname']
                         # target_name = extract_between_symbols(str(group_member_check), 'member_name=', ' permission')
                     if flag_persona == 4:
-                        if await manage_group_status(from_id,target_group,'wife_you_get') != 0:
+                        if await manage_group_status(from_id, target_group, 'wife_you_get') != 0:
                             flag_aim = 0
                         else:
-                            await manage_group_status(from_id, target_group, 'wife_you_get',target_id)
-
+                            await manage_group_status(from_id, target_group, 'wife_you_get', target_id)
 
                     # 下面是获取对应人员头像的代码
                     target_img_url = f"https://q1.qlogo.cn/g?b=qq&nk={target_id}&s=640"  # QQ头像 URL 格式
@@ -661,48 +661,47 @@ def main(bot,config):
                     from_name = str(from_name)
                     target_name = str(target_name)
 
-
-
                     if flag_persona == 1:
-                        if await manage_group_status(target_id,target_group,'group_owner') != 0:
-                            times = int(await manage_group_status(target_id,target_group,'group_owner'))
+                        if await manage_group_status(target_id, target_group, 'group_owner') != 0:
+                            times = int(await manage_group_status(target_id, target_group, 'group_owner'))
                             times += 1
-                            await manage_group_status(target_id,target_group,'group_owner',times)
+                            await manage_group_status(target_id, target_group, 'group_owner', times)
                         else:
-                            times=1
-                            await manage_group_status(target_id,target_group,'group_owner',times)
+                            times = 1
+                            await manage_group_status(target_id, target_group, 'group_owner', times)
                         recall_id = await bot.send(event,
-                                                     [f'@{from_name} 恭喜你涩到群主！！！！',
-                                                      Image(file=target_img_path),
-                                                      f'群主【{target_name}】今天这是第{times}次被透了呢'])
+                                                   [f'@{from_name} 恭喜你涩到群主！！！！',
+                                                    Image(file=target_img_path),
+                                                    f'群主【{target_name}】今天这是第{times}次被透了呢'])
                     elif flag_persona == 2:
                         recall_id = await bot.send(event,
-                                                     [f'@{from_name} 恭喜你涩到管理！！！！',
-                                                      Image(file=target_img_path),
-                                                      f'【{target_name}】 ({target_id})哒！'])
+                                                   [f'@{from_name} 恭喜你涩到管理！！！！',
+                                                    Image(file=target_img_path),
+                                                    f'【{target_name}】 ({target_id})哒！'])
                     elif flag_persona == 3:
                         if flag_aim == 1:
                             recall_id = await bot.send(event,
-                                                         [f'@{from_name} 恭喜你涩到了群友！！！！',
-                                                          Image(file=target_img_path),
-                                                          f'【{target_name}】 ({target_id})哒！'])
+                                                       [f'@{from_name} 恭喜你涩到了群友！！！！',
+                                                        Image(file=target_img_path),
+                                                        f'【{target_name}】 ({target_id})哒！'])
                         else:
                             recall_id = await bot.send(event,
-                                                         [f'@{from_name} 今天你的色色对象是',
-                                                          Image(file=target_img_path),
-                                                          f'【{target_name}】 ({target_id})哒！'])
+                                                       [f'@{from_name} 今天你的色色对象是',
+                                                        Image(file=target_img_path),
+                                                        f'【{target_name}】 ({target_id})哒！'])
                     elif flag_persona == 4:
                         if flag_aim == 1:
-                            recall_id = await bot.send(event,[f'@{from_name} 恭喜你娶到了群友！！！！',
-                                                Image(file=target_img_path),
-                                                 f'【{target_name}】 ({target_id})哒！'])
+                            recall_id = await bot.send(event, [f'@{from_name} 恭喜你娶到了群友！！！！',
+                                                               Image(file=target_img_path),
+                                                               f'【{target_name}】 ({target_id})哒！'])
                         else:
-                            recall_id = await bot.send(event,[f'@{from_name} 今天你的结婚对象是',
-                                                Image(file=target_img_path),
-                                                f'【{target_name}】 ({target_id})哒！'])
+                            recall_id = await bot.send(event, [f'@{from_name} 今天你的结婚对象是',
+                                                               Image(file=target_img_path),
+                                                               f'【{target_name}】 ({target_id})哒！'])
 
                     elif flag_persona == 5:
-                        today_wife_api, header = config.group_fun.config["today_wife"]["api"], config.group_fun.config["today_wife"]["header"]
+                        today_wife_api, header = config.group_fun.config["today_wife"]["api"], \
+                        config.group_fun.config["today_wife"]["header"]
                         response = today_check_api(today_wife_api, header)
                         img_path = f'data/pictures/wife_you_want_img/today_wife.jpg'
                         with open(img_path, 'wb') as file:
@@ -727,48 +726,48 @@ def main(bot,config):
                     if '本周' in str(event.pure_text) or '每周' in str(event.pure_text) or '星期' in str(
                             event.pure_text):
                         type_context = '以下是本周色色记录：'
-                        type='week'
+                        type = 'week'
                     elif '本月' in str(event.pure_text) or '月份' in str(event.pure_text) or '月' in str(
                             event.pure_text):
                         type = 'month'
                         type_context = '以下是本月色色记录：'
-                    elif '年' in str(event.pure_text) :
+                    elif '年' in str(event.pure_text):
                         type = 'Year'
                         type_context = '以下是年度色色记录：'
                     else:
                         type_context = '以下是本日色色记录：'
                         type = 'day'
                     list_from, list_target = await manage_group_check(target_group, type)
-                    #print(list_from, list_target)
+                    # print(list_from, list_target)
                     if list_from is None or list_target is None:
                         await bot.send(event, f'本群好像还没有一个人开过趴捏~')
                         return
                     friendlist_get = await bot.get_group_member_list(event.group_id)
-                    context_from='以下是透别人的次数~\n'
+                    context_from = '以下是透别人的次数~\n'
                     context_target = '以下是被别人透的次数~\n'
                     for i in range(len(list_from)):
                         for member in friendlist_get['data']:
                             if list_from[0][0] == str(member['user_id']):
-                                from_king_name=member['nickname']
+                                from_king_name = member['nickname']
                             if list_from[i][0] == str(member['user_id']):
-                                context_from+=f'{member["nickname"]} ({member["user_id"]}): {list_from[i][1]} 次\n'
+                                context_from += f'{member["nickname"]} ({member["user_id"]}): {list_from[i][1]} 次\n'
                     for i in range(len(list_target)):
                         for member in friendlist_get['data']:
                             if list_target[0][0] == str(member['user_id']):
-                                target_king_name=member['nickname']
+                                target_king_name = member['nickname']
                             if list_target[i][0] == str(member['user_id']):
-                                context_target+=f'{member["nickname"]} ({member["user_id"]}): {list_target[i][1]} 次\n'
+                                context_target += f'{member["nickname"]} ({member["user_id"]}): {list_target[i][1]} 次\n'
 
                     cmList.append(Node(content=[Text(f'{type_context}')]))
 
                     cmList.append(Node(content=[Text('透群友最多的人诞生了！！'),
-                                           Image(file=f"https://q1.qlogo.cn/g?b=qq&nk={list_from[0][0]}&s=640"),
-                                           Text(f'是【{from_king_name}】 ({list_from[0][0]})哦~')]))
+                                                Image(file=f"https://q1.qlogo.cn/g?b=qq&nk={list_from[0][0]}&s=640"),
+                                                Text(f'是【{from_king_name}】 ({list_from[0][0]})哦~')]))
                     cmList.append(Node(content=[Text(f'{context_from}')]))
 
                     cmList.append(Node(content=[Text('被群友透最多的人诞生了！！'),
-                                           Image(file=f"https://q1.qlogo.cn/g?b=qq&nk={list_target[0][0]}&s=640"),
-                                           Text(f'是【{target_king_name}】 ({list_target[0][0]})哦~')]))
+                                                Image(file=f"https://q1.qlogo.cn/g?b=qq&nk={list_target[0][0]}&s=640"),
+                                                Text(f'是【{target_king_name}】 ({list_target[0][0]})哦~')]))
                     cmList.append(Node(content=[Text(f'{context_target}')]))
 
                     await bot.send(event, cmList)
@@ -779,7 +778,8 @@ def main(bot,config):
         if config.group_fun.config["today_wife"]["复读开关"] is not True:
             return
         Read_check = ['[', '@', '来点', '随机', '#', '今日', 'gal', '查询', '搜索', '/', '瓶子', '什么', 'minfo', 'id',
-                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表','完成表','🦌']
+                      '管理', 'mai', '更新', '今', '日记', '看', '赞我', '随机', '本周', 'b50', '分数列表', '完成表',
+                      '🦌']
         group1 = f'{event.group_id}_1'
         group2 = f'{event.group_id}_2'
         group3 = f'{event.group_id}_3'

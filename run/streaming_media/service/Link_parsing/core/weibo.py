@@ -4,6 +4,7 @@ import math
 ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 WEIBO_SINGLE_INFO = "https://m.weibo.cn/statuses/show?id={}"
 
+
 def base62_encode(number):
     """将数字转换为 base62 编码"""
     if number == 0:

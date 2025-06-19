@@ -1,4 +1,3 @@
-
 """
 供函数调用的同类接口集合
 """
@@ -7,7 +6,7 @@ from run.acg_infromation.service.arona_api import stageStrategy
 from run.acg_infromation.service.steam import steam_query_game
 
 
-async def anime_game_service_func_collection(bot,event,config,m_type,query_target):
+async def anime_game_service_func_collection(bot, event, config, m_type, query_target):
     if m_type == "blue_archive":
         try:
             p = await stageStrategy(query_target)
@@ -15,7 +14,7 @@ async def anime_game_service_func_collection(bot,event,config,m_type,query_targe
         except Exception as e:
             bot.logger.error(f"无效的角色或网络连接错误{e}")
             await bot.send(event, "无效的角色 或网络连接出错")
-    elif m_type=="steam":
+    elif m_type == "steam":
         try:
             bot.logger.info(f"查询游戏{query_target}")
             result_dict = await steam_query_game(query_target)

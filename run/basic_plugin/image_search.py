@@ -10,7 +10,7 @@ from framework_common.utils.utils import download_img
 from run.basic_plugin.service.imgae_search.image_search import automate_browser
 from run.basic_plugin.service.imgae_search.image_search2 import fetch_results
 
-image_search={}
+image_search = {}
 
 
 async def call_image_search(bot, event, config, image_url=None):
@@ -50,19 +50,22 @@ async def call_image_search1(bot, event, config, img_url):
     bot.logger.info("调用聚合接口搜索图片")
     results = await fetch_results(config.common_config.basic_config["proxy"]["http_proxy"], img_url,
                                   config.basic_plugin.config["image_search"]["sauceno_api_key"])
-    async def extract_data(name,result):
+
+    async def extract_data(name, result):
         node_list = []
-        if name=="saucenao":
+        if name == "saucenao":
             for item in result:
                 try:
                     path = "data/pictures/cache/" + random_str() + ".png"
-                    imgpath = await download_img(item[0], path,proxy=config.common_config.basic_config["proxy"]["http_proxy"],gray_layer=True)
-                    node_list.append(Node(content=[Image(file=imgpath),Text(item[1])]))
+                    imgpath = await download_img(item[0], path,
+                                                 proxy=config.common_config.basic_config["proxy"]["http_proxy"],
+                                                 gray_layer=True)
+                    node_list.append(Node(content=[Image(file=imgpath), Text(item[1])]))
                 except Exception as e:
                     bot.logger.error(f"Error in extract_data: {e}")
                     node_list.append(Node(content=[Text(item[1])]))
                     continue
-        if name=="anime_trace":
+        if name == "anime_trace":
             node_list.append(Node(content=[Text(f"ai创作检测：{result[2]}")]))
             node_list.append(Node(content=[Text(result[0])]))
             node_list.append(Node(content=[Text(result[1])]))
@@ -108,7 +111,7 @@ async def call_image_search2(bot, event, config, img_url):
         f"最高相似度:{r[0]['similarity']}\n标题：{r[0]['title']}\n链接：{r[0]['detail_page_url']}\n\n")], True)
 
 
-def main(bot: ExtendBot,config:YAMLManager):
+def main(bot: ExtendBot, config: YAMLManager):
     @bot.on(GroupMessageEvent)
     async def search_image(event):
         try:

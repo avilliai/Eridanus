@@ -4,7 +4,7 @@ from developTools.message.message_components import Node, Text
 from framework_common.framework_util.websocket_fix import ExtendBot
 
 
-async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
+async def quit_group(bot: ExtendBot, event, config, th: int = 30, mode: str = "above"):
     """
     退出群聊
     :param bot: WebSocketBot
@@ -20,19 +20,21 @@ async def quit_group(bot: ExtendBot,event,config,th:int=30,mode: str="above"):
         return {"status": "failed", "reason": "你没有权限执行此操作！"}
     groups = await bot.get_group_list()
 
-    count=[]
-    if mode=="above":
+    count = []
+    if mode == "above":
         for group in groups["data"]:
-            if group["member_count"] > th and group["group_id"]!=0 and group["group_id"] not in config.common_config.censor_group["whitelist"]:
+            if group["member_count"] > th and group["group_id"] != 0 and group["group_id"] not in \
+                    config.common_config.censor_group["whitelist"]:
                 try:
                     bot.logger.info(f'退出群聊：{group}')
                     await bot.quit(group["group_id"])
                     count.append(group)
                 except:
                     traceback.print_exc()
-    elif mode=="below":
+    elif mode == "below":
         for group in groups["data"]:
-            if group["member_count"] < th and group["group_id"]!=0 and group["group_id"] not in config.common_config.censor_group["whitelist"]:
+            if group["member_count"] < th and group["group_id"] != 0 and group["group_id"] not in \
+                    config.common_config.censor_group["whitelist"]:
                 try:
                     bot.logger.info(f'退出群聊：{group}')
                     await bot.quit(group["group_id"])

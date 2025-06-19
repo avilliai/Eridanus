@@ -1,6 +1,9 @@
 # 语音合成接口
 import re
 
+import httpx
+import requests
+
 from developTools.utils.logger import get_logger
 from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.ai_translate import Translator
@@ -11,10 +14,6 @@ from run.ai_voice.service.online_vits import huggingface_online_vits
 from run.ai_voice.service.online_vits2 import huggingface_online_vits2, get_huggingface_online_vits2_speakers
 from run.ai_voice.service.ottoTTS import OttoTTS
 from run.ai_voice.service.vits import vits, get_vits_speakers
-import httpx
-import requests
-
-
 
 
 async def translate(text, mode="ZH_CN2JA"):
@@ -22,7 +21,7 @@ async def translate(text, mode="ZH_CN2JA"):
         URL = f"https://api.pearktrue.cn/api/translate/?text={text}&type={mode}"
         async with httpx.AsyncClient(timeout=20) as client:
             r = await client.get(URL)
-            #print(r.json()["data"]["translate"])
+            # print(r.json()["data"]["translate"])
             return r.json()["data"]["translate"]
     except:
         if mode != "ZH_CN2JA":
@@ -41,13 +40,16 @@ async def translate(text, mode="ZH_CN2JA"):
         pass
     return text
 
-logger=get_logger()
+
+logger = get_logger()
+
+
 class TTS:
     def __init__(self):
         self.config = YAMLManager.get_instance()
-        self.translator=Translator()
+        self.translator = Translator()
 
-    async def tts(self,text, speaker=None, config=None,mood=None,bot=None,mode=None):
+    async def tts(self, text, speaker=None, config=None, mood=None, bot=None, mode=None):
         pattern = re.compile(r'[\(\（][^\(\)（）（）]*?[\)\）]')
 
         # 去除括号及其中的内容
@@ -55,8 +57,7 @@ class TTS:
         text = cleaned_text.replace("·", "").replace("~", "").replace("-", "")
         text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
 
-
-        text=text.replace('```', '').strip()
+        text = text.replace('```', '').strip()
         if config is None:
             config = self.config
         if len(text) > config.ai_voice.config["tts"]["length_limit"]:
@@ -66,61 +67,62 @@ class TTS:
         """
         if mode is None:
             mode = config.ai_voice.config["tts"]["tts_engine"]
-        if (config.ai_voice.config["tts"]["lang_type"]=="ja" or mode=="blue_archive") and mode!="OttoTTS":
+        if (config.ai_voice.config["tts"]["lang_type"] == "ja" or mode == "blue_archive") and mode != "OttoTTS":
             if config.ai_voice.config["tts"]["ai_translator"]:
-                text=await self.translator.translate(text)
+                text = await self.translator.translate(text)
             else:
-                text=await translate(text)  #默认就是转日文
+                text = await translate(text)  # 默认就是转日文
             print(f"翻译后的文本：{text}")
 
-
         logger.info_func(f"语音合成任务：文本：{text}，发音人：{speaker}，模式：{mode}")
-        if mode=="napcat_tts":
+        if mode == "napcat_tts":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["napcat_tts"]["character_name"]
-            spkss=await napcat_tts_speakers(bot)
+                speaker = config.ai_voice.config["tts"]["napcat_tts"]["character_name"]
+            spkss = await napcat_tts_speakers(bot)
             if speaker in spkss:
-                speaker=spkss[speaker]
+                speaker = spkss[speaker]
             return await napcat_tts_speak(bot, config, text, speaker)
-        elif mode=="modelscope_tts":
+        elif mode == "modelscope_tts":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["modelscope_tts"]["speaker"]
-            return await modelscope_tts(text,speaker)
-        elif mode=="vits":
+                speaker = config.ai_voice.config["tts"]["modelscope_tts"]["speaker"]
+            return await modelscope_tts(text, speaker)
+        elif mode == "vits":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["vits"]["speaker"]
-            base_url=config.ai_voice.config["tts"]["vits"]["base_url"]
-            return await vits(text,speaker,base_url)
-        elif mode=="online_vits":
+                speaker = config.ai_voice.config["tts"]["vits"]["speaker"]
+            base_url = config.ai_voice.config["tts"]["vits"]["base_url"]
+            return await vits(text, speaker, base_url)
+        elif mode == "online_vits":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["online_vits"]["speaker"]
-            fn_index=config.ai_voice.config["tts"]["online_vits"]["fn_index"]
-            proxy=config.common_config.basic_config["proxy"]["http_proxy"]
-            return await huggingface_online_vits(text,speaker,fn_index,proxy)
-        elif mode=="online_vits2":
+                speaker = config.ai_voice.config["tts"]["online_vits"]["speaker"]
+            fn_index = config.ai_voice.config["tts"]["online_vits"]["fn_index"]
+            proxy = config.common_config.basic_config["proxy"]["http_proxy"]
+            return await huggingface_online_vits(text, speaker, fn_index, proxy)
+        elif mode == "online_vits2":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["online_vits2"]["speaker"]
+                speaker = config.ai_voice.config["tts"]["online_vits2"]["speaker"]
             if config.ai_voice.config["tts"]["lang_type"] == "ja":
-                lang="日本語"
+                lang = "日本語"
             else:
-                lang="简体中文"
-            return await huggingface_online_vits2(text,speaker,lang)
-        elif mode=="blue_archive":
+                lang = "简体中文"
+            return await huggingface_online_vits2(text, speaker, lang)
+        elif mode == "blue_archive":
             if speaker is None:
-                speaker=config.ai_voice.config["tts"]["blue_archive"]["speaker"]
+                speaker = config.ai_voice.config["tts"]["blue_archive"]["speaker"]
             return await huggingface_blue_archive_tts(text, speaker)
-        elif mode=="OttoTTS":
-            otto=OttoTTS()
+        elif mode == "OttoTTS":
+            otto = OttoTTS()
             return await otto.speak(text)
         else:
             pass
-    async def get_speakers(self,bot=None):
+
+    async def get_speakers(self, bot=None):
         async def fetch_speakers(func, *args, error_msg):
             try:
                 return await func(*args)
             except Exception as e:
                 bot.logger.error(f"{error_msg}: {e}")
                 return None
+
         nc_speakers = await fetch_speakers(napcat_tts_speakers, bot, error_msg="Error in napcat_tts_speakers")
         modelscope_speakers = get_modelscope_tts_speakers()
         vits_speakers = await fetch_speakers(
@@ -132,9 +134,8 @@ class TTS:
             get_huggingface_online_vits2_speakers,
             error_msg="Error in get_huggingface_online_vits2_speakers"
         )
-        blue_archive_speakers=await fetch_speakers(get_huggingface_blue_archive_speakers,error_msg="Error in get_huggingface_blue_archive_speakers")
-        return {"speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers,blue_archive_speakers,["otto"]]}
-
-
-
-
+        blue_archive_speakers = await fetch_speakers(get_huggingface_blue_archive_speakers,
+                                                     error_msg="Error in get_huggingface_blue_archive_speakers")
+        return {
+            "speakers": [nc_speakers, modelscope_speakers, vits_speakers, online_vits2_speakers, blue_archive_speakers,
+                         ["otto"]]}

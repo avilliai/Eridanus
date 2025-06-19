@@ -1,6 +1,7 @@
 import asyncio
-from httpx import AsyncClient
 import os
+
+from httpx import AsyncClient
 
 
 async def anime_trace(image_source) -> list[str, str, bool]:
@@ -40,7 +41,7 @@ async def anime_trace(image_source) -> list[str, str, bool]:
                     a = "galgame"
                 str_result = f"角色识别|{a}模型搜索结果：\n"
                 for result in content["data"][0]["character"]:
-                    #print(result)
+                    # print(result)
                     str_result += f"{result['work']} ({result['character']}%)\n"
                     if content["data"][0]["character"].index(result) > 2:
                         break

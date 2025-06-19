@@ -97,5 +97,3 @@ async def steam_query_game(keyword, proxy=None):
             "path": path
         }
         return result_dict
-
-

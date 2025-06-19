@@ -11,15 +11,18 @@ from developTools.utils.logger import get_logger
 from framework_common.database_util.llmDB import get_user_history, update_user_history
 from framework_common.utils.random_str import random_str
 
-logger=get_logger()
-async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=None,tools=None,system_instruction=None,temperature=0.7,maxOutputTokens=2048):
-    if proxy is not None and proxy !="":
-        proxies={"http://": proxy, "https://": proxy}
+logger = get_logger()
+
+
+async def geminiRequest(ask_prompt, base_url: str, apikey: str, model: str, proxy=None, tools=None,
+                        system_instruction=None, temperature=0.7, maxOutputTokens=2048):
+    if proxy is not None and proxy != "":
+        proxies = {"http://": proxy, "https://": proxy}
     else:
-        proxies=None
+        proxies = None
     url = f"{base_url}/v1beta/models/{model}:generateContent?key={apikey}"
     # print(requests.get(url,verify=False))
-    pay_load={
+    pay_load = {
         "contents": ask_prompt,
         "systemInstruction": {
             "parts": [
@@ -44,32 +47,34 @@ async def geminiRequest(ask_prompt,base_url: str,apikey: str,model: str,proxy=No
     if tools is not None:
         pay_load["tools"] = tools
 
-
     async with httpx.AsyncClient(proxies=proxies, timeout=100) as client:
         r = await client.post(url, json=pay_load)
         print(r.json())
         return r.json()['candidates'][0]["content"]
 
+
 """
 gemini标准prompt构建
 """
 BASE64_PATTERN = re.compile(r"^data:([a-zA-Z0-9]+/[a-zA-Z0-9-.+]+);base64,([A-Za-z0-9+/=]+)$")
-async def gemini_prompt_elements_construct(precessed_message,bot=None,func_result=False,event=None):
-    prompt_elements=[]
 
-    #{"role": "assistant","content":[{"type":"text","text":i["text"]}]}
+
+async def gemini_prompt_elements_construct(precessed_message, bot=None, func_result=False, event=None):
+    prompt_elements = []
+
+    # {"role": "assistant","content":[{"type":"text","text":i["text"]}]}
     for i in precessed_message:
         if "text" in i:
             prompt_elements.append({"text": i["text"]})
         elif "image" in i or "mface" in i:
             try:
                 if "mface" in i:
-                    url=i["mface"]["url"]
+                    url = i["mface"]["url"]
                 else:
                     try:
-                        url=i["image"]["url"]
+                        url = i["image"]["url"]
                     except:
-                        url=i["image"]["file"]
+                        url = i["image"]["file"]
                 base64_match = BASE64_PATTERN.match(url)
                 if base64_match:
                     img_base64 = base64_match.group(2)
@@ -94,30 +99,30 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                         quality -= 5
                     img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
                 prompt_elements.append({"inline_data": {"mime_type": "image/jpeg", "data": img_base64}})
-                #prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
+                # prompt_elements.append({"type":"image_url","image_url":i["image"]["url"]})
             except Exception as e:
                 traceback.print_exc()
                 prompt_elements.append({"text": f"系统提示：下载图片失败"})
 
         elif "record" in i:
-            origin_voice_url=i["record"]["file"]
+            origin_voice_url = i["record"]["file"]
             base64_match = BASE64_PATTERN.match(origin_voice_url)
             if base64_match:
                 mime_type = base64_match.group(1)
                 img_base64 = base64_match.group(2)
                 prompt_elements.append({"inline_data": {"mime_type": "audio/mp3", "data": img_base64}})
                 continue
-            r=await bot.get_record(origin_voice_url)
+            r = await bot.get_record(origin_voice_url)
 
-            mp3_filepath=r["data"]["file"]
+            mp3_filepath = r["data"]["file"]
             with open(mp3_filepath, "rb") as mp3_file:
                 mp3_data = mp3_file.read()
                 base64_encoded_data = base64.b64encode(mp3_data)
                 base64_message = base64_encoded_data.decode('utf-8')
                 prompt_elements.append({"inline_data": {"mime_type": "audio/mp3", "data": base64_message}})
-            #prompt_elements.append({"type":"voice","voice":i["voice"]})
+            # prompt_elements.append({"type":"voice","voice":i["voice"]})
         elif "video" in i:
-            video_url=i["video"]["url"]
+            video_url = i["video"]["url"]
             base64_match = BASE64_PATTERN.match(video_url)
             if base64_match:
                 mime_type = base64_match.group(1)
@@ -125,7 +130,7 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 prompt_elements.append({"inline_data": {"mime_type": "video/mp4", "data": img_base64}})
                 continue
             try:
-                video=await bot.get_video(video_url,f"data/pictures/cache/{random_str()}.mp4")
+                video = await bot.get_video(video_url, f"data/pictures/cache/{random_str()}.mp4")
 
                 # 下载视频文件大小限制(15MB)
                 file_size = os.path.getsize(video)
@@ -142,26 +147,30 @@ async def gemini_prompt_elements_construct(precessed_message,bot=None,func_resul
                 prompt_elements.append({"text": str(i)})
         elif "reply" in i:
             try:
-                event_obj=await bot.get_msg(int(event.get("reply")[0]["id"]))
-                message = await gemini_prompt_elements_construct(event_obj.processed_message) #
+                event_obj = await bot.get_msg(int(event.get("reply")[0]["id"]))
+                message = await gemini_prompt_elements_construct(event_obj.processed_message)  #
                 prompt_elements.extend(message["parts"])
             except Exception as e:
                 logger.warning(f"引用消息解析失败:{e}")
         else:
-            prompt_elements.append({"text": str(i)})   #不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
+            prompt_elements.append({"text": str(i)})  # 不知道还有什么类型，都需要做对应处理的，唉，任务还多着呢。
     if func_result:
-        return {"role": "model","parts":prompt_elements}
-    return {"role": "user","parts": prompt_elements}
-async def construct_gemini_standard_prompt(processed_message, user_id, bot=None,func_result=False,event=None):
-    message=await gemini_prompt_elements_construct(processed_message,bot,func_result,event=event)
+        return {"role": "model", "parts": prompt_elements}
+    return {"role": "user", "parts": prompt_elements}
+
+
+async def construct_gemini_standard_prompt(processed_message, user_id, bot=None, func_result=False, event=None):
+    message = await gemini_prompt_elements_construct(processed_message, bot, func_result, event=event)
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(message)
 
     await update_user_history(user_id, history)  # 更新数据库中的历史记录
     return history, original_history
-async def query_and_insert_gemini(user_id,aim_element,insert_message):
-    if insert_message=={
+
+
+async def query_and_insert_gemini(user_id, aim_element, insert_message):
+    if insert_message == {
         "parts": [
             {
                 "text": "\n"
@@ -172,17 +181,20 @@ async def query_and_insert_gemini(user_id,aim_element,insert_message):
         return
     history = await get_user_history(user_id)
     try:
-        index=history.index(aim_element)
-        history.insert(index+1,insert_message)
+        index = history.index(aim_element)
+        history.insert(index + 1, insert_message)
         await update_user_history(user_id, history)
     except Exception as e:
         logger.warning(f"插入gemini prompt失败:{e}\n原始消息:{aim_element} 要插入的消息:{insert_message}")
         return None
 
+
 async def get_current_gemini_prompt(user_id):
     history = await get_user_history(user_id)
     return history
-async def add_gemini_standard_prompt(prompt,user_id):
+
+
+async def add_gemini_standard_prompt(prompt, user_id):
     history = await get_user_history(user_id)
     original_history = history.copy()  # 备份，出错的时候可以rollback
     history.append(prompt)

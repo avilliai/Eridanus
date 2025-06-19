@@ -1,1 +1,1 @@
-plugin_description="定时任务"
+plugin_description = "定时任务"

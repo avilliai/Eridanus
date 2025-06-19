@@ -8,17 +8,17 @@ from developTools.message.message_components import Image, Node, Text, File, Car
 from developTools.utils.logger import get_logger
 from framework_common.database_util.User import get_user
 from framework_common.framework_util.yamlLoader import YAMLManager
+from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import download_file, merge_audio_files, download_img
 from run.resource_collector.service.asmr.asmr100 import random_asmr_100, latest_asmr_100, choose_from_latest_asmr_100, \
     choose_from_hotest_asmr_100
 from run.resource_collector.service.jmComic.jmComic import JM_search, JM_search_week, JM_search_comic_id, downloadComic, \
     downloadALLAndToPdf
 from run.resource_collector.service.zLibrary.zLib import search_book, download_book
 from run.resource_collector.service.zLibrary.zLibrary import Zlibrary
-from framework_common.utils.random_str import random_str
-from framework_common.utils.utils import download_file, merge_audio_files, download_img
 
-logger=get_logger()
-module_config=YAMLManager.get_instance()
+logger = get_logger()
+module_config = YAMLManager.get_instance()
 proxy = module_config.common_config.basic_config["proxy"]["http_proxy"]
 if proxy != "":
     proxies = {
@@ -27,8 +27,9 @@ if proxy != "":
     }
 else:
     proxies = None
-if module_config.resource_collector.config["z_library"]["email"] != "" and module_config.resource_collector.config["z_library"][
-    "password"] != "":
+if module_config.resource_collector.config["z_library"]["email"] != "" and \
+        module_config.resource_collector.config["z_library"][
+            "password"] != "":
     global Z
     try:
         Z = Zlibrary(email=module_config.resource_collector.config["z_library"]["email"],
@@ -38,9 +39,10 @@ if module_config.resource_collector.config["z_library"]["email"] != "" and modul
         logger.error(f"❌ z_library login error:{e}")
 
 global operating
-operating = {}  #jm文件共享的维护列表
+operating = {}  # jm文件共享的维护列表
 
-async def search_book_info(bot,event,config,info):
+
+async def search_book_info(bot, event, config, info):
     global Z
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["z_library"]["search_operate_level"]:
@@ -56,7 +58,9 @@ async def search_book_info(bot,event,config,info):
         # print(r)
     else:
         await bot.send(event, "你没有权限使用该功能")
-async def call_download_book(bot,event,config,book_id: str,hash:str):
+
+
+async def call_download_book(bot, event, config, book_id: str, hash: str):
     global Z
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["z_library"]["download_operate_level"]:
@@ -64,53 +68,60 @@ async def call_download_book(bot,event,config,book_id: str,hash:str):
         loop = asyncio.get_running_loop()
         try:
             with ThreadPoolExecutor() as executor:
-                path = await loop.run_in_executor(executor,download_book,Z,book_id.strip(),hash.strip())
+                path = await loop.run_in_executor(executor, download_book, Z, book_id.strip(), hash.strip())
             await bot.send(event, File(file=path))
-            await bot.send(event, "下载成功，请查看文件",True)
+            await bot.send(event, "下载成功，请查看文件", True)
         except Exception as e:
             bot.logger.error(f"download_book error:{e}")
-            await bot.send(event, "下载失败，请稍后再试",True)
+            await bot.send(event, "下载失败，请稍后再试", True)
     else:
         await bot.send(event, "你没有权限使用该功能")
 
-async def call_asmr(bot,event,config,try_again=False,mode="random"):
+
+async def call_asmr(bot, event, config, try_again=False, mode="random"):
     user_info = await get_user(event.user_id)
     if user_info.permission >= config.resource_collector.config["asmr"]["asmr_level"]:
         bot.logger.info("asmr start")
         try:
-            if mode=="random":
-                r=await random_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-            elif mode=="latest":
-                r=await choose_from_latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-            elif mode=="hotest":
+            if mode == "random":
+                r = await random_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+            elif mode == "latest":
+                r = await choose_from_latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+            elif mode == "hotest":
                 r = await choose_from_hotest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             i = random.choice(r['media_urls'])
 
             await bot.send(event, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
             try:
-                img=await download_img(r['mainCoverUrl'],f"data/pictures/cache/{random_str()}.png",config.resource_collector.config["asmr"]["gray_layer"],proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+                img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png",
+                                         config.resource_collector.config["asmr"]["gray_layer"],
+                                         proxy=config.common_config.basic_config["proxy"]["http_proxy"])
             except Exception as e:
                 bot.logger.error(f"download_img error:{e}")
-                img=r['mainCoverUrl']
+                img = r['mainCoverUrl']
             forward_list = []
             if config.resource_collector.config["asmr"]["with_url"]:
-                forward_list.append(Node(content=[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"), Image(file=img)]))
+                forward_list.append(Node(
+                    content=[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
+                             Image(file=img)]))
             else:
-                await bot.send(event,[Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"), Image(file=img)])
-            file_paths=[]
+                await bot.send(event, [Text(f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
+                                       Image(file=img)])
+            file_paths = []
             main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
 
             metype = r['media_urls'][0][1].split('.')[-1]
 
             for i in r['media_urls']:
-                if i[1].split('.')[-1] != metype or len(file_paths) >= config.resource_collector.config["asmr"]["max_merge_file_num"]:
+                if i[1].split('.')[-1] != metype or len(file_paths) >= config.resource_collector.config["asmr"][
+                    "max_merge_file_num"]:
                     bot.logger.error(f"audio type change:{i[1]}")
                     break
                 if config.resource_collector.config["asmr"]["with_file"]:
-                    path=f"data/voice/cache/{i[1]}"
-                    file=await download_file(i[0],path,config.common_config.basic_config["proxy"]["http_proxy"])
+                    path = f"data/voice/cache/{i[1]}"
+                    file = await download_file(i[0], path, config.common_config.basic_config["proxy"]["http_proxy"])
                     file_paths.append(file)
-                text=f"音频名称: {i[1]}\n音频url: {i[0]}"
+                text = f"音频名称: {i[1]}\n音频url: {i[0]}"
                 forward_list.append(Node(content=[Text(text)]))
             if config.resource_collector.config["asmr"]["with_url"]:
                 await bot.send(event, forward_list)
@@ -129,17 +140,18 @@ async def call_asmr(bot,event,config,try_again=False,mode="random"):
             bot.logger.error(f"asmr error:{e}")
             if not try_again:
                 bot.logger.warning("asmr try again!")
-                await call_asmr(bot,event,config,try_again=True)
+                await call_asmr(bot, event, config, try_again=True)
             if try_again:
                 await bot.send(event, "失败了！要不再试一次？")
     else:
         await bot.send(event, "你没有权限使用该功能")
 
-async def check_latest_asmr(bot,event,config):
+
+async def check_latest_asmr(bot, event, config):
     bot.logger.info_func("开始监测 asmr.one 更新")
     try:
-        r=await latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
-        if r["id"]!=config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]:
+        r = await latest_asmr_100(proxy=config.common_config.basic_config["proxy"]["http_proxy"])
+        if r["id"] != config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]:
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 开始推送")
             group_list = config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["groups"]
             for group_id in group_list:
@@ -147,7 +159,8 @@ async def check_latest_asmr(bot,event,config):
                     i = random.choice(r['media_urls'])
                     await bot.send_group_message(group_id, Card(audio=i[0], title=i[1], image=r['mainCoverUrl']))
                     try:
-                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png", config.resource_collector.config["asmr"]["gray_layer"],
+                        img = await download_img(r['mainCoverUrl'], f"data/pictures/cache/{random_str()}.png",
+                                                 config.resource_collector.config["asmr"]["gray_layer"],
                                                  proxy=config.common_config.basic_config["proxy"]["http_proxy"])
                     except Exception as e:
                         bot.logger.error(f"download_img error:{e}")
@@ -159,14 +172,16 @@ async def check_latest_asmr(bot,event,config):
                                      Image(file=img)]))
                     else:
                         await bot.send_group_message(group_id,
-                                       [Text(f"asmr更新啦\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
-                                        Image(file=img)])
+                                                     [Text(
+                                                         f"asmr更新啦\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
+                                                      Image(file=img)])
                     file_paths = []
                     main_path = f"data/voice/cache/{r['title']}.{r['media_urls'][0][1].split('.')[-1]}"
                     for i in r['media_urls']:
                         if config.resource_collector.config["asmr"]["with_file"]:
                             path = f"data/voice/cache/{i[1]}"
-                            file = await download_file(i[0], path, config.common_config.basic_config["proxy"]["http_proxy"])
+                            file = await download_file(i[0], path,
+                                                       config.common_config.basic_config["proxy"]["http_proxy"])
                             file_paths.append(file)
                         text = f"音频名称: {i[1]}\n音频url: {i[0]}"
                         forward_list.append(Node(content=[Text(text)]))
@@ -186,16 +201,18 @@ async def check_latest_asmr(bot,event,config):
                 except Exception as e:
                     bot.logger.error(f"latest_asmr_push error:{e}")
             bot.logger.info_func(f"最新asmr id:{r['id']} {r['title']} 推送完成")
-            config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"]=r["id"]
-            config.save_yaml("sheduled_tasks_push_groups_ordinary",plugin_name="scheduled_tasks")
+            config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["nightASMR"]["latest_asmr_id"] = r["id"]
+            config.save_yaml("sheduled_tasks_push_groups_ordinary", plugin_name="scheduled_tasks")
         else:
             bot.logger.info_func("asmr.one 无更新")
     except Exception as e:
         bot.logger.error(f"check_latest_asmr error:{e}")
-async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=None):
+
+
+async def call_jm(bot, event, config, mode="preview", comic_id=607279, serach_topic=None):
     async def _call_jm():
         global operating
-        if mode=="preview":
+        if mode == "preview":
 
             if hasattr(event, "group_id"):
                 temp_id = event.group_id
@@ -218,7 +235,9 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
                 with ThreadPoolExecutor() as executor:
                     # 使用 asyncio.to_thread 调用函数并获取返回结果
                     png_files = await loop.run_in_executor(executor, downloadComic, comic_id, 1,
-                                                           config.resource_collector.config["JMComic"]["previewPages"],config.resource_collector.config["JMComic"]["anti_nsfw"],config.resource_collector.config["JMComic"]["gif_compress"])
+                                                           config.resource_collector.config["JMComic"]["previewPages"],
+                                                           config.resource_collector.config["JMComic"]["anti_nsfw"],
+                                                           config.resource_collector.config["JMComic"]["gif_compress"])
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, "下载失败", True)
@@ -236,7 +255,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
                 event.group_id = group_id
                 await bot.send(event, cmList)
             operating.pop(comic_id)
-        elif mode=="download":
+        elif mode == "download":
             if hasattr(event, "group_id"):
                 temp_id = event.group_id
             else:
@@ -255,7 +274,8 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
                 with ThreadPoolExecutor() as executor:
                     r = await loop.run_in_executor(executor, downloadALLAndToPdf, comic_id,
                                                    config.resource_collector.config["JMComic"]["savePath"])
-                bot.logger.info(f"下载完成，车牌号：{comic_id} \n保存路径：{config.resource_collector.config['JMComic']['savePath']} {comic_id} ")
+                bot.logger.info(
+                    f"下载完成，车牌号：{comic_id} \n保存路径：{config.resource_collector.config['JMComic']['savePath']} {comic_id} ")
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, "下载失败", True)
@@ -264,19 +284,21 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
                     shutil.rmtree(f"{config.resource_collector.config['JMComic']['savePath']}/{comic_id}")
                     for group_id in operating[comic_id]:
                         event.group_id = group_id  # 修改数据实现切换群聊，懒狗实现
-                        await bot.send(event, File(file=f"{config.resource_collector.config['JMComic']['savePath']}/{comic_id}.pdf"))
+                        await bot.send(event, File(
+                            file=f"{config.resource_collector.config['JMComic']['savePath']}/{comic_id}.pdf"))
                         await bot.send(event, "下载完成了( >ρ< ”)。请等待上传完成。", True)
 
                     bot.logger.info("移除预览缓存")
                     operating.pop(comic_id)
                     if config.resource_collector.config['JMComic']["autoClearPDF"]:
-                        await wait_and_delete_file(bot,file_path=f"{config.resource_collector.config['JMComic']['savePath']}/{comic_id}.pdf")
+                        await wait_and_delete_file(bot,
+                                                   file_path=f"{config.resource_collector.config['JMComic']['savePath']}/{comic_id}.pdf")
                 except Exception as e:
                     bot.logger.error(e)
                 finally:
                     if comic_id in operating:
                         operating.pop(comic_id)
-        elif mode=="search":
+        elif mode == "search":
             bot.logger.info(f"JM搜索: {serach_topic}")
             try:
                 context = JM_search(serach_topic)
@@ -288,6 +310,7 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
             except Exception as e:
                 bot.logger.error(e)
                 await bot.send(event, "搜索失败", True)
+
     user_info = await get_user(event.user_id)
     if mode == "preview":
         if user_info.permission < config.resource_collector.config["jmcomic"]["jm_comic_search_level"]:
@@ -305,17 +328,17 @@ async def call_jm(bot,event,config,mode="preview",comic_id=607279,serach_topic=N
         await bot.send(event, "指令错误，请使用preview/download/search")
     asyncio.create_task(_call_jm())
     return {"status": "running", "message": "任务已在后台启动，请耐心等待结果"}
-def main(bot,config):
 
+
+def main(bot, config):
     logger = bot.logger
-
 
     @bot.on(GroupMessageEvent)
     async def book_resource_search(event):
 
         if str(event.pure_text).startswith("搜书"):
             book_name = str(event.pure_text).split("搜书")[1]
-            await search_book_info(bot,event,config,book_name)
+            await search_book_info(bot, event, config, book_name)
 
     @bot.on(GroupMessageEvent)
     async def book_resource_download(event):
@@ -323,17 +346,17 @@ def main(bot,config):
             try:
                 book_id = str(event.pure_text).split("下载书")[1].split(" ")[0]
                 hash = str(event.pure_text).split("下载书")[1].split(" ")[1]
-                await call_download_book(bot,event,config,book_id,hash)
+                await call_download_book(bot, event, config, book_id, hash)
             except Exception as e:
                 bot.logger.error(f"book_resource_download error:{e}")
                 await bot.send(event, "指令格式错误，请使用“下载书{book_id} {hash}”")
-        elif event.pure_text=="随机奥术" or event.pure_text=="随机asmr" or event.pure_text=="随机奥数":
+        elif event.pure_text == "随机奥术" or event.pure_text == "随机asmr" or event.pure_text == "随机奥数":
 
-            await call_asmr(bot,event,config)
-        elif event.pure_text=="最新asmr" or event.pure_text=="最新奥术" or event.pure_text=="最新奥数":
-            await call_asmr(bot,event,config,mode="latest")
-        elif event.pure_text=="最热asmr" or event.pure_text=="最热奥术" or event.pure_text=="热门asmr":
-            await call_asmr(bot,event,config,mode="hotest")
+            await call_asmr(bot, event, config)
+        elif event.pure_text == "最新asmr" or event.pure_text == "最新奥术" or event.pure_text == "最新奥数":
+            await call_asmr(bot, event, config, mode="latest")
+        elif event.pure_text == "最热asmr" or event.pure_text == "最热奥术" or event.pure_text == "热门asmr":
+            await call_asmr(bot, event, config, mode="hotest")
 
     @bot.on(LifecycleMetaEvent)
     async def _(event):
@@ -341,11 +364,12 @@ def main(bot,config):
         while True:
             try:
                 with ThreadPoolExecutor() as executor:
-                    await loop.run_in_executor(executor, asyncio.run, check_latest_asmr(bot,event ,config))
+                    await loop.run_in_executor(executor, asyncio.run, check_latest_asmr(bot, event, config))
                 # await check_bili_dynamic(bot,config)
             except Exception as e:
                 bot.logger.error(e)
             await asyncio.sleep(700)  # 每 11 分钟检查一次
+
     """
     以下为jm的功能实现
     """
@@ -386,7 +410,7 @@ def main(bot,config):
             context = JM_search_week()
             cmList = [Node(content=[Text('本周的JM排行如下，请君过目\n')]), Node(content=[Text(context)])]
 
-            await bot.send(event,cmList)
+            await bot.send(event, cmList)
 
     @bot.on(GroupMessageEvent)
     async def download(event: GroupMessageEvent):
@@ -404,7 +428,7 @@ def main(bot,config):
                 logger.error(e)
                 await bot.send(event, "无效输入 int，指令格式如下\n验车【车牌号】\n如：验车604142", True)
                 return
-            await call_jm(bot,event,config,mode="preview",comic_id=comic_id)
+            await call_jm(bot, event, config, mode="preview", comic_id=comic_id)
 
     @bot.on(GroupMessageEvent)
     async def downloadAndToPdf(event: GroupMessageEvent):
@@ -420,12 +444,11 @@ def main(bot,config):
             except:
                 await bot.send(event, "非法参数，指令示例 JM下载601279")
                 return
-            await call_jm(bot,event,config,mode="download",comic_id=comic_id)
+            await call_jm(bot, event, config, mode="download", comic_id=comic_id)
 
 
-
-async def wait_and_delete_file(bot,file_path, interval=60):
-    await asyncio.sleep(1800) #30min后自动删除
+async def wait_and_delete_file(bot, file_path, interval=60):
+    await asyncio.sleep(1800)  # 30min后自动删除
     for _ in range(10):
         try:
             shutil.os.remove(file_path)
@@ -440,4 +463,3 @@ async def wait_and_delete_file(bot,file_path, interval=60):
         except Exception as e:
             bot.logger.error(f"删除文件时出现错误: {e}")
             return
-

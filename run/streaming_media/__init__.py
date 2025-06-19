@@ -1,8 +1,8 @@
-plugin_description="媒体服务"
-dynamic_imports ={
+plugin_description = "媒体服务"
+dynamic_imports = {
     "run.streaming_media.youtube": ["download_video"],
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "download_video",
         "description": "下载youtube/bilibili的视频或音频。",

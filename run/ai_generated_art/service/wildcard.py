@@ -1,8 +1,10 @@
+import asyncio
 import os
 import random
 import re
+
 import aiofiles
-import asyncio
+
 
 async def get_random_lines(file_path, count):
     async with aiofiles.open(file_path, 'r', encoding='utf-8') as file:
@@ -10,6 +12,7 @@ async def get_random_lines(file_path, count):
         if not lines:
             raise ValueError(f"No content found in {file_path}")
         return [random.choice(lines) for _ in range(min(count, len(lines)))]
+
 
 def add_weight(item, weight_type, a=1.0, b=None):
     if weight_type == 'fixed':
@@ -23,6 +26,7 @@ def add_weight(item, weight_type, a=1.0, b=None):
         return item
     else:
         return f"({item}:{n})"
+
 
 def parse_weight_params(weight_str):
     try:
@@ -53,6 +57,7 @@ def parse_weight_params(weight_str):
         warning_msg = f"无效的权重参数 '{weight_str}'，使用默认权重 0 到 1. 错误信息: {e}"
         print(warning_msg)
         return 'range', 0.0, 1.0, warning_msg
+
 
 async def replace_wildcards(input_string, wildcards_relative_path='wildcards'):
     pattern = re.compile(r'<(wd[^:]*):([^=]+)(?:=([0-9]+))?>', re.UNICODE)
@@ -123,12 +128,13 @@ async def replace_wildcards(input_string, wildcards_relative_path='wildcards'):
     log = '\n'.join(replacement_log) if replacement_log else False
     return result, log
 
+
 async def get_available_wildcards(wildcards_relative_path='wildcards'):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     wildcards_dir = os.path.join(current_dir, wildcards_relative_path)
     if not os.path.isdir(wildcards_dir):
         return "无wildcard"
-    
+
     try:
         available_files = []
         for entry in os.scandir(wildcards_dir):

@@ -1,10 +1,10 @@
-plugin_description="语音合成"
+plugin_description = "语音合成"
 
 dynamic_imports = {
     "run.ai_voice.text2voice": [
         "call_tts", "call_all_speakers"]
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "call_tts",
         "description": "根据文本和语音合成角色，合成语音并播放。",

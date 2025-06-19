@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 DATABASE = "data/dataBase/wifeyouwant.db"  # 修改路径为小写
 
+
 # 初始化数据库表结构
 async def initialize_db():
     async with aiosqlite.connect(DATABASE) as db:
@@ -44,8 +45,6 @@ async def initialize_db():
         await db.commit()
 
 
-
-
 # 添加或更新用户数据
 async def add_or_update_user(category_name, group_name, username, times):
     async with aiosqlite.connect(DATABASE, timeout=10) as db:
@@ -75,7 +74,8 @@ async def add_or_update_user(category_name, group_name, username, times):
         if user_row:
             await db.execute('UPDATE users SET times =  ? WHERE id = ?', (times, user_row[0]))
         else:
-            await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',(username, group_id, times))
+            await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',
+                             (username, group_id, times))
 
         await db.commit()
 
@@ -84,7 +84,7 @@ async def add_or_update_user_collect(queue_check_make):
     async with aiosqlite.connect(DATABASE, timeout=10) as db:
 
         for user_info in queue_check_make:
-            category_name, group_name, username, times=user_info[2], user_info[1], user_info[0], user_info[3]
+            category_name, group_name, username, times = user_info[2], user_info[1], user_info[0], user_info[3]
 
             category = await db.execute('SELECT * FROM categories WHERE name = ?', (category_name,))
             category_row = await category.fetchone()
@@ -96,11 +96,13 @@ async def add_or_update_user_collect(queue_check_make):
             else:
                 category_id = category_row[0]
 
-            group = await db.execute('SELECT * FROM groups WHERE category_id = ? AND name = ?', (category_id, group_name))
+            group = await db.execute('SELECT * FROM groups WHERE category_id = ? AND name = ?',
+                                     (category_id, group_name))
             group_row = await group.fetchone()
 
             if not group_row:
-                cursor = await db.execute('INSERT INTO groups (category_id, name) VALUES (?, ?)', (category_id, group_name))
+                cursor = await db.execute('INSERT INTO groups (category_id, name) VALUES (?, ?)',
+                                          (category_id, group_name))
                 group_id = cursor.lastrowid
             else:
                 group_id = group_row[0]
@@ -112,13 +114,11 @@ async def add_or_update_user_collect(queue_check_make):
             if user_row:
                 await db.execute('UPDATE users SET times =  ? WHERE id = ?', (times, user_row[0]))
             else:
-                await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',(username, group_id, times))
-            #print(f"Updated {username}, {group_name},  {category_name} to {times}")
-
+                await db.execute('INSERT INTO users (username, group_id, times) VALUES (?, ?, ?)',
+                                 (username, group_id, times))
+            # print(f"Updated {username}, {group_name},  {category_name} to {times}")
 
         await db.commit()
-
-
 
 
 # 查询某个小组的用户数据，按照次数排序
@@ -222,59 +222,60 @@ async def delete_group(category_name, group_name):
             await db.commit()
 
 
-
-async def manage_group_status(user_id, group_id,type,status=None):#顺序为：个人，组别和状态
+async def manage_group_status(user_id, group_id, type, status=None):  # 顺序为：个人，组别和状态
     if status is None:
         context = await query_user_data(f'{type}', f'{group_id}', f"{user_id}")
-        if context is None :
+        if context is None:
             await add_or_update_user(f'{type}', f'{group_id}', f"{user_id}", 0)
         return await query_user_data(f'{type}', f'{group_id}', f"{user_id}")
     else:
         await add_or_update_user(f'{type}', f'{group_id}', f"{user_id}", status)
         return await query_user_data(f'{type}', f'{group_id}', f"{user_id}")
 
+
 async def manage_group_add(from_id, target_id, target_group):
-    times_from=await manage_group_status(from_id, target_group, 'wife_from_Year')
-    times_target=await manage_group_status(target_id, target_group, 'wife_target_Year')
-    await manage_group_status(from_id, target_group, 'wife_from_Year',times_from+1)
-    await manage_group_status(target_id, target_group, 'wife_target_Year',times_target+1)
+    times_from = await manage_group_status(from_id, target_group, 'wife_from_Year')
+    times_target = await manage_group_status(target_id, target_group, 'wife_target_Year')
+    await manage_group_status(from_id, target_group, 'wife_from_Year', times_from + 1)
+    await manage_group_status(target_id, target_group, 'wife_target_Year', times_target + 1)
 
-    times_from=await manage_group_status(from_id, target_group, 'wife_from_month')
-    times_target=await manage_group_status(target_id, target_group, 'wife_target_month')
-    await manage_group_status(from_id, target_group, 'wife_from_month',times_from+1)
-    await manage_group_status(target_id, target_group, 'wife_target_month',times_target+1)
+    times_from = await manage_group_status(from_id, target_group, 'wife_from_month')
+    times_target = await manage_group_status(target_id, target_group, 'wife_target_month')
+    await manage_group_status(from_id, target_group, 'wife_from_month', times_from + 1)
+    await manage_group_status(target_id, target_group, 'wife_target_month', times_target + 1)
 
-    times_from=await manage_group_status(from_id, target_group, 'wife_from_week')
-    times_target=await manage_group_status(target_id, target_group, 'wife_target_week')
-    await manage_group_status(from_id, target_group, 'wife_from_week',times_from+1)
-    await manage_group_status(target_id, target_group, 'wife_target_week',times_target+1)
+    times_from = await manage_group_status(from_id, target_group, 'wife_from_week')
+    times_target = await manage_group_status(target_id, target_group, 'wife_target_week')
+    await manage_group_status(from_id, target_group, 'wife_from_week', times_from + 1)
+    await manage_group_status(target_id, target_group, 'wife_target_week', times_target + 1)
 
-    times_from=await manage_group_status(from_id, target_group, 'wife_from_day')
-    times_target=await manage_group_status(target_id, target_group, 'wife_target_day')
-    await manage_group_status(from_id, target_group, 'wife_from_day',times_from+1)
-    await manage_group_status(target_id, target_group, 'wife_target_day',times_target+1)
+    times_from = await manage_group_status(from_id, target_group, 'wife_from_day')
+    times_target = await manage_group_status(target_id, target_group, 'wife_target_day')
+    await manage_group_status(from_id, target_group, 'wife_from_day', times_from + 1)
+    await manage_group_status(target_id, target_group, 'wife_target_day', times_target + 1)
 
-async def manage_group_check(target_group,type):
 
-    times_from= await query_group_users(f'wife_from_{type}', target_group)
-    times_target=await query_group_users(f'wife_target_{type}', target_group)
-    return times_from,times_target
+async def manage_group_check(target_group, type):
+    times_from = await query_group_users(f'wife_from_{type}', target_group)
+    times_target = await query_group_users(f'wife_target_{type}', target_group)
+    return times_from, times_target
 
-async def PIL_lu_maker(today , target_id):
-    #print('进入图片制作')
-    year, month,day= today.year, today.month ,today.day
+
+async def PIL_lu_maker(today, target_id):
+    # print('进入图片制作')
+    year, month, day = today.year, today.month, today.day
     current_year_month = f'{year}_{month}'
-    lu_list=await query_group_users(target_id, current_year_month)
-    #print('获取🦌列表')
+    lu_list = await query_group_users(target_id, current_year_month)
+    # print('获取🦌列表')
 
     lu_font_1000 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 15)
     lu_font_100 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 20)
     lu_font_10 = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 25)
     lu_font = ImageFont.truetype("data/pictures/wife_you_want_img/方正吕建德字体简体.ttf", 30)
 
-    #print(lu_list)
+    # print(lu_list)
     month_days = calendar.monthrange(year, month)[1]
-    lu_list_lu=['1000']
+    lu_list_lu = ['1000']
     lu_list_bulu = ['1000']
     for lu in lu_list:
         if lu[1] == 1:
@@ -282,9 +283,9 @@ async def PIL_lu_maker(today , target_id):
         elif lu[1] == 2:
             lu_list_bulu.append(lu[0])
     canvas_width, canvas_height = 800, 600
-    #print(lu_list_lu,lu_list_bulu)
+    # print(lu_list_lu,lu_list_bulu)
     # 创建画布
-    #print('创建画布')
+    # print('创建画布')
     canvas = Image.new("RGB", (canvas_width, canvas_height), "white")
     draw = ImageDraw.Draw(canvas)
 
@@ -303,13 +304,13 @@ async def PIL_lu_maker(today , target_id):
     draw.text((title_x, 20), title, fill="black", font=title_font)
 
     # 加载背景图片
-    #print('加载背景图片')
+    # print('加载背景图片')
     image_path = "data/pictures/wife_you_want_img/background_LU.jpg"  # 图片文件路径（需确保存在）
     try:
         background = Image.open(image_path)
         background = background.resize((100, 100))
     except IOError:
-        #print("背景图片加载失败，使用填充色")
+        # print("背景图片加载失败，使用填充色")
         background = None
 
     image_path_check = 'data/pictures/wife_you_want_img/correct-copy.png'
@@ -328,16 +329,16 @@ async def PIL_lu_maker(today , target_id):
 
     now = datetime.now()
     # 绘制日历
-    #print('绘制日历')
+    # print('绘制日历')
     for day in range(1, month_days + 1):
         # 计算当前日期的单元格位置
-        #print(day)
+        # print(day)
 
         first_day_of_month = datetime(now.year, now.month, 1)
         day_of_week = first_day_of_month.weekday()
         col = (day - 1 + day_of_week) % 7
         row = (day - 1 + day_of_week) // 7
-        #print(col)
+        # print(col)
         x = calendar_start_x + col * cell_width
         y = calendar_start_y + row * cell_height
 
@@ -349,10 +350,10 @@ async def PIL_lu_maker(today , target_id):
 
         for day_check_lu in lu_list_lu:
             for day_check_bulu in lu_list_bulu:
-                #print(day,day_check_lu,day_check_bulu)
+                # print(day,day_check_lu,day_check_bulu)
                 x_re = x
                 y_re = y + 60
-                #print(day_check,day)
+                # print(day_check,day)
                 if f'{day}' == f'{day_check_bulu}':
                     canvas.paste(cuo_check, (x_re, y_re), cuo_check.convert("RGBA"))
                 elif f'{day}' == f'{day_check_lu}':
@@ -377,13 +378,14 @@ async def PIL_lu_maker(today , target_id):
             lu_font = lu_font_10
         else:
             lu_font = lu_font
-        if times not in {0,1}:
-            draw.text((int(x + (cell_width - text_width) // 1.5), int(y + (cell_height - text_height) // 1.2)), f'×{times}', fill="red", font=lu_font)
+        if times not in {0, 1}:
+            draw.text((int(x + (cell_width - text_width) // 1.5), int(y + (cell_height - text_height) // 1.2)),
+                      f'×{times}', fill="red", font=lu_font)
 
     # 保存并展示日历
-    #print('保存并展示日历')
-    #canvas.show()  # 显示图片
-    path_img=f"data/pictures/cache/lulululu{int(time.time())}.png"
+    # print('保存并展示日历')
+    # canvas.show()  # 显示图片
+    path_img = f"data/pictures/cache/lulululu{int(time.time())}.png"
     canvas.save(path_img)  # 保存图片为文件
 
     try:
@@ -411,22 +413,24 @@ async def daily_task():
         await delete_category('wife_target_month')
     print(f"每日今日老婆已重置")
 
+
 # 包装一个同步任务来调用异步任务
 def run_async_task():
     asyncio.run(daily_task())
 
-def today_check_api(today_wife_api,header,num_check=None):
+
+def today_check_api(today_wife_api, header, num_check=None):
     if num_check is None:
-        num_check=0
+        num_check = 0
     headers = {'Referer': header}
     try:
-        response=requests.get(today_wife_api[num_check], headers=headers)
+        response = requests.get(today_wife_api[num_check], headers=headers)
         return response
     except:
-        return today_check_api(today_wife_api,header,num_check=num_check+1)
+        return today_check_api(today_wife_api, header, num_check=num_check + 1)
 
 
 if __name__ == '__main__':
-    target_id=1270858640
-    current_date=datetime.today()
+    target_id = 1270858640
+    current_date = datetime.today()
     asyncio.run(PIL_lu_maker(current_date, target_id))

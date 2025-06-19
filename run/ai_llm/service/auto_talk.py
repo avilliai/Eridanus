@@ -4,9 +4,9 @@ import numpy as np
 
 from framework_common.utils.install_and_import import install_and_import
 
-sklearn=install_and_import("scikit-learn","sklearn")
+sklearn = install_and_import("scikit-learn", "sklearn")
 
-jieba=install_and_import("jieba")
+jieba = install_and_import("jieba")
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
@@ -22,6 +22,7 @@ def clean_text(text: str) -> str:
     text = re.sub(r'\d+', '', text)
     return text
 
+
 def calculate_entropy(tokens: List[str]) -> float:
     """
     信息熵 H(t) = -∑_{w ∈ W} p(w) log_2 p(w)，p(w) = count(w) / ∑_{w' ∈ W} count(w')
@@ -32,6 +33,7 @@ def calculate_entropy(tokens: List[str]) -> float:
     total = len(tokens)
     entropy = -sum((count / total) * np.log2(count / total) for count in counter.values())
     return entropy
+
 
 def tokenize(text: str) -> List[str]:
     text = clean_text(text.lower().strip())
@@ -46,36 +48,39 @@ def tokenize(text: str) -> List[str]:
         tokens = re.findall(r'\b\w+\b', text)
     return tokens
 
+
 def calculate_time_weight(index: int, total: int) -> float:
     """
     窗口权重
     """
     return 1 + (total - index) * 0.1
 
+
 async def check_message_similarity(
-    input_str: str,
-    message_list: List[str],
-    similarity_threshold= 0.3,
-    frequency_threshold= 0.15,
-    min_list_size: int = 10,
-    entropy_threshold: float = 2.0
+        input_str: str,
+        message_list: List[str],
+        similarity_threshold=0.3,
+        frequency_threshold=0.15,
+        min_list_size: int = 10,
+        entropy_threshold: float = 2.0
 ) -> bool:
     def convert_number(num):
         if isinstance(num, int):
             return num / 100.0
         elif isinstance(num, float):
             return num
+
     similarity_threshold = convert_number(similarity_threshold)
     frequency_threshold = convert_number(frequency_threshold)
     try:
-        #print(message_list)
+        # print(message_list)
         # 检查消息列表长度
         if len(message_list) < min_list_size:
-            #print(f"Message list size {len(message_list)} < {min_list_size}")
+            # print(f"Message list size {len(message_list)} < {min_list_size}")
             return False
 
         if not message_list:
-            #print("No valid messages to compare")
+            # print("No valid messages to compare")
             return False
 
         # 分词输入字符串
@@ -135,9 +140,9 @@ async def check_message_similarity(
         high_similarity_count = np.sum(np.array(adjusted_similarities) >= similarity_threshold)
         similarity_frequency = high_similarity_count / len(message_list)
 
-        #print(
-            #f"Similarity frequency: {similarity_frequency:.3f}, Threshold: {frequency_threshold}"
-        #)
+        # print(
+        # f"Similarity frequency: {similarity_frequency:.3f}, Threshold: {frequency_threshold}"
+        # )
 
         del tfidf_matrix, similarities, adjusted_similarities
         gc.collect()
@@ -145,5 +150,5 @@ async def check_message_similarity(
         return similarity_frequency >= frequency_threshold
 
     except Exception as e:
-        #print(f"Error in check_message_similarity: {e}")
+        # print(f"Error in check_message_similarity: {e}")
         return False

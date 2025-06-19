@@ -1,15 +1,15 @@
 api_implements: #花里胡哨
-  nudge:                #戳一戳设置。
+  nudge: #戳一戳设置。
     counter_probability: 50  #反击概率
     is_Reply_with_meme: True  #戳一戳是否返回一张表情包
     Reply_with_meme_probability: 50  #戳一戳回复表情包概率
     Reply_with_meme_method: local   #戳一戳获取表情包方式，若为‘url’则从网络获取，若为‘local’则为本地获取
-    Reply_with_meme_url:     #戳一戳从网络获取表情包链接
+    Reply_with_meme_url: #戳一戳从网络获取表情包链接
       - 'http://localhost:5000/emoji'
       - 'http://bangumi.manshuo.ink:8092/emoji'
     Reply_with_meme_local: 'data/pictures/Mface'     #戳一戳本地获取表情包文件夹
-    replylist:        #如果开启aiReplyCore，将不使用此处配置回复
-    - 戳我干嘛呀！
+    replylist: #如果开启aiReplyCore，将不使用此处配置回复
+      - 戳我干嘛呀！
   send_like: 0     #“赞我”功能所需权限等级
   recall_level: 3  #撤回？
 user_data:

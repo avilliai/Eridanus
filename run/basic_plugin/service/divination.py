@@ -1,4 +1,4 @@
-#塔罗、运势等功能
+# 塔罗、运势等功能
 
 # -*- coding: gbk -*-
 import os.path
@@ -45,7 +45,7 @@ tarot = [['愚者 (The Fool)',
          ['命运之轮 (The Wheel of Fortune)',
           '机会到来; 随机应变能力佳; 好运; 转换期; 意想不到的幸运; 升迁有望; 变化丰富; 好时机; 宿命的相逢; 一见钟情; 幸运的婚姻; 富贵的身份',
           '低潮期; 时机未到; 评估易出错; 时机不好; 没有头绪; 处于劣势; 生活艰苦; 情况恶化; 计划停滞需要再等待; 失恋; 短暂的恋情; 易错失良机; 不敌诱惑; 爱情无法持久',
-          'The Wheel of Fortune.jpg'], #
+          'The Wheel of Fortune.jpg'],  #
          ['正义 (Justice)',
           '公正; 严正的意见; 良好的均衡关系; 严守中立立场; 凡事合理化; 身兼两种工作; 协调者; 与裁判、法律相关者; 表里一致的公正人物; 以诚实之心光明正大地交往; 彼此能获得协调',
           '不公正; 不平衡; 不利的条件; 偏颇; 先入为主的观念; 偏见与独断; 纷争、诉讼; 问心有愧; 无法两全; 天平两边无法平衡; 性格不一致; 无视于社会道德观的恋情; 偏爱',
@@ -93,7 +93,7 @@ tarot = [['愚者 (The Fool)',
 
 
 def tarotChoice(mode):
-    ints = random.choice([0,0,1])
+    ints = random.choice([0, 0, 1])
     if ints == 0:
         tarots = random.choice(tarot)
         txt = tarots[0] + '\n' + '正位' + '\n' + tarots[1]
@@ -132,6 +132,8 @@ def tarotChoice(mode):
             # 保存旋转后的图像
             rotated_img.save(f'data/pictures/tarot/side{img_folder}/' + tarots[3])
             return txt, img1
+
+
 lucky = [
     "——中吉——\n天上有云飘过的日子，天气令人十分舒畅。\n工作非常顺利，连午睡时也会想到好点子。\n突然发现，与老朋友还有其他的共同话题…\n——每一天，每一天都要积极开朗地度过——",
     "——中吉——\n十年磨一剑，今朝示霜刃。\n恶运已销，身临否极泰来之时。\n苦练多年未能一显身手的才能，\n现今有了大展身手的极好机会。\n若是遇到阻碍之事，亦不必迷惘，\n大胆地拔剑，痛快地战斗一番吧。",
@@ -256,7 +258,10 @@ qianc = {
     ]
 }
 
+
 def qianCao():
     return random.choice(qianc.get("浅草百签"))
+
+
 if __name__ == '__main__':
     tarotChoice(0)

@@ -2,19 +2,20 @@ import httpx
 
 from framework_common.utils.utils import download_img
 
-async def get_nasa_apod(apikey,proxy):
+
+async def get_nasa_apod(apikey, proxy):
     dataa = {"api_key": apikey}
     if proxy:
-        proxies={
+        proxies = {
             "http://": proxy,
             "https://": proxy
         }
     else:
-        proxies=None
+        proxies = None
     url = "https://api.nasa.gov/planetary/apod?" + "&".join([f"{k}={v}" for k, v in dataa.items()])
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url=url)
-        #print(response.json())
+        # print(response.json())
     # logger.info("下载缩略图")
     filename = await download_img(response.json().get("url"),
                                   "data/pictures/cache/" + response.json().get("date") + ".png")

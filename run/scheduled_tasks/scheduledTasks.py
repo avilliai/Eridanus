@@ -8,18 +8,18 @@ from apscheduler.triggers.cron import CronTrigger
 
 from developTools.event.events import GroupMessageEvent, LifecycleMetaEvent
 from developTools.message.message_components import Image, Text, Card
+from framework_common.database_util.User import get_users_with_permission_above, get_user
 from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.utils.random_str import random_str
 from framework_common.utils.utils import download_img
+from run.ai_llm.service.aiReplyCore import aiReplyCore
 from run.basic_plugin.service.life_service import bingEveryDay, danxianglii
 from run.basic_plugin.service.nasa_api import get_nasa_apod
 from run.basic_plugin.service.weather_query import free_weather_query
-from run.ai_llm.service.aiReplyCore import aiReplyCore
-from framework_common.database_util.User import get_users_with_permission_above, get_user
 from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja
 from run.resource_collector.service.asmr.asmr100 import random_asmr_100
-from run.system_plugin.func_collection import trigger_tasks
 from run.streaming_media.service.Link_parsing.Link_parsing import bangumi_PILimg
+from run.system_plugin.func_collection import trigger_tasks
 
 
 def main(bot: ExtendBot, config):
@@ -72,9 +72,9 @@ def main(bot: ExtendBot, config):
                     location = user_info.city
                     weather = await free_weather_query(location)
                     r = await aiReplyCore([{
-                                               "text": f"播报今天的天气，保持你的角色，根据天气给出建议，直接发送结果，不要发送'好的'之类的命令应答提示。今天的天气信息如下{weather}"}],
-                                          int(user["user_id"]),
-                                          config, bot=bot, tools=None)
+                        "text": f"播报今天的天气，保持你的角色，根据天气给出建议，直接发送结果，不要发送'好的'之类的命令应答提示。今天的天气信息如下{weather}"}],
+                        int(user["user_id"]),
+                        config, bot=bot, tools=None)
                     await bot.send_friend_message(int(user["user_id"]), r)
                     await sleep(6)
                 except Exception as e:
@@ -179,7 +179,7 @@ def main(bot: ExtendBot, config):
                         await bot.send_group_message(group_id,
                                                      [Text(
                                                          f"随机asmr\n标题: {r['title']}\nnsfw: {r['nsfw']}\n源: {r['source_url']}"),
-                                                      Image(file=img)])
+                                                         Image(file=img)])
                     else:
                         await bot.send_group_message(group_id,
                                                      [Text(
@@ -222,7 +222,7 @@ def main(bot: ExtendBot, config):
             for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary[task_name]["groups"]:
                 if group_id == 0: continue
                 try:
-                    #r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], random.randint(1000000, 99999999),config, bot=bot, tools=None)
+                    # r = await aiReplyCore([{"text": f"你现在是一个群机器人，向群内所有人道{task_name}，直接发送结果，不要发送多余内容"}], random.randint(1000000, 99999999),config, bot=bot, tools=None)
                     await bot.send_group_message(group_id, messages)
                     await sleep(6)
                 except Exception as e:
