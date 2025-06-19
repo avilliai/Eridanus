@@ -36,7 +36,7 @@ def queue_check_wait(bot, config):
                 # bot.logger.info("开始写入")
                 try:
                     with ThreadPoolExecutor() as executor:
-                        await loop.run_in_executor(executor, asyncio.run, queue_check_wait_make(bot, config))
+                        await loop.run_in_executor(executor, asyncio.run, await add_or_update_user_collect(queue_check_wait_make()))
                     # await check_bili_dynamic(bot,config)
                 except Exception as e:
                     bot.logger.error(f'wife_you_want数据库出错，可以考虑关掉热门群友以解决此报错：{e}')
@@ -46,23 +46,15 @@ def queue_check_wait(bot, config):
             bot.logger.error(f'上一次写入时长过长，请酌情考虑')
 
 
-async def queue_check_wait_make(bot, config):
+async def queue_check_wait_make():
     # print("LifecycleMetaEvent")
     global queue_check
-    queue_check_make = []
     while queue_check:
         # print('queue_check', queue_check)
         from_id, target_group, target_team, value = queue_check.popleft()
         if target_team == 'group_owner_record':
-            queue_check_make.append(
-                (from_id, target_group, f'{datetime.now().year}_{datetime.now().month}_{datetime.now().day}', value))
-        queue_check_make.append((from_id, target_group, target_team, value))
-
-    if queue_check_make:
-        await add_or_update_user_collect(queue_check_make)
-        # await manage_group_status(from_id, target_group, target_team, value)
-        # print(f"Updated {from_id}, {target_group},  {target_team} to {value}")
-
+                yield from_id, target_group, f'{datetime.now().year}_{datetime.now().month}_{datetime.now().day}', value
+        yield from_id, target_group, target_team, value
 
 def main(bot, config):
     global last_messages

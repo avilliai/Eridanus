@@ -1,10 +1,10 @@
 from developTools.message.message_components import Image, Text
 from framework_common.framework_util.websocket_fix import ExtendBot
 from framework_common.framework_util.yamlLoader import YAMLManager
-from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja
+from run.group_fun.service.lex_burner_Ninja import LexburnerNinja
 from run.streaming_media.youtube import download_video
 
-ninja = Lexburner_Ninja()
+ninja = LexburnerNinja()
 
 
 async def random_ninjutsu(bot: ExtendBot, event, config: YAMLManager):

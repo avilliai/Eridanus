@@ -151,9 +151,6 @@ async def query_group_users(category_name, group_name):
             return None
         return rows
 
-        for row in rows:
-            print(f"用户名: {row[0]}, 次数: {row[1]}")
-
 
 # 查询某个小组下特定用户的数据
 async def query_user_data(category_name, group_name, username):

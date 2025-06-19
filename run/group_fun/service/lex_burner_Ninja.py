@@ -3,7 +3,7 @@ import asyncio
 import httpx
 
 
-class Lexburner_Ninja:
+class LexburnerNinja:
     def __init__(self):
         self.name = "Lexburner_Ninja"
 
@@ -46,6 +46,6 @@ class Lexburner_Ninja:
 
 
 if __name__ == '__main__':
-    ninja = Lexburner_Ninja()
+    ninja = LexburnerNinja()
     print(asyncio.run(ninja.random_ninjutsu()))
     print(asyncio.run(ninja.query_ninjutsu("手")))
