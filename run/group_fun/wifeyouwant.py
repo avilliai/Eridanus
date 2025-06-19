@@ -778,7 +778,7 @@ def main(bot, config):
         message = str(event.pure_text)
         if message == '':
             return
-        flag = None
+
         if group1 not in last_messages:
             last_messages[group1] = None
         if group2 not in last_messages:
@@ -786,7 +786,7 @@ def main(bot, config):
         if group3 not in last_messages:
             last_messages[group3] = None
 
-        fudu1 = last_messages[group1]
+
         fudu2 = last_messages[group2]
         fudu3 = last_messages[group3]
         for i in range(len(Read_check)):
