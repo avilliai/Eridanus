@@ -50,7 +50,6 @@ if config.common_config.basic_config["webui"]["enable"]:
     webui_thread.start()
     bot1.logger.info("主线程：WebUI 已启动在子线程中")
 
-
 PLUGIN_DIR = "run"
 # 创建模块缓存字典
 module_cache = {}
@@ -78,6 +77,8 @@ def check_has_main_and_cache(module_name):
             bot1.logger.warning(f"⚠️ 加载模块 {module_name} 失败，请尝试补全依赖后重试")
             traceback.print_exc()
         return False, None
+
+
 def find_plugins(plugin_dir=PLUGIN_DIR):
     num_plugin = 0
     for root, _, files in os.walk(plugin_dir):
@@ -89,15 +90,17 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
 
                 has_main, module = check_has_main_and_cache(module_name)
 
-                if has_main and plugin_name != "nailong_get":
+                if has_main:
                     yield plugin_name, module_name, module
                     num_plugin += 1
                 else:
-                    if plugin_name != "nailong_get" and plugin_name != "func_collection" and f"service" not in module_name:
+                    if plugin_name != "func_collection" and f"service" not in module_name:
                         bot1.logger.warning(
                             f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 
     bot1.logger.info(f"🔧 共读取到插件：{num_plugin}个")
+
+
 # 自动构建插件列表
 def safe_import_and_load(plugin_name, module_path, cached_module, bot, config):
     try:
@@ -117,6 +120,7 @@ def safe_import_and_load(plugin_name, module_path, cached_module, bot, config):
         bot.logger.warning(
             f"❌ 如仍无法解决，请反馈此问题至 https://github.com/avilliai/Eridanus/issues 或我们的QQ群 913122269")
 
+
 def load_plugins(bot, config):
     bot1.logger.info(f"🔧 正在加载插件....")
     # 并行加载插件
@@ -131,24 +135,9 @@ def load_plugins(bot, config):
             except Exception as e:
                 bot.logger.warning(f"❌ 插件 {futures[future]} 加载过程中发生异常：{e}")
 
-    # 奶龙检测（可选功能）
-    try:
-        if config.character_detection.config["抽象检测"]["奶龙检测"] or config.character_detection.config["抽象检测"][
-            "doro检测"]:
-            # 这里也可以优化，检查缓存中是否已有此模块
-            if "run.character_detection.nailong_get" in module_cache:
-                module = module_cache["run.character_detection.nailong_get"]
-                safe_import_and_load("nailong_get", "run.character_detection.nailong_get", module, bot, config)
-            else:
-                module = importlib.import_module("run.character_detection.nailong_get")
-                module_cache["run.character_detection.nailong_get"] = module
-                safe_import_and_load("nailong_get", "run.character_detection.nailong_get", module, bot, config)
-
-    except Exception as e:
-        bot.logger.warning("⚠️ 【可选功能】奶龙检测相关依赖未安装，如有需要，请安装 AI 检测必要素材")
-
 def webui_bot():
     config_copy = YAMLManager("run")  # 这玩意用来动态加载和修改配置文件
+
     def config_fix(config_copy):
         config_copy.resource_collector.config["JMComic"]["anti_nsfw"] = "no_censor"
         config_copy.resource_collector.config["asmr"]["gray_layer"] = False
@@ -157,6 +146,7 @@ def webui_bot():
         config_copy.ai_llm.config["llm"]["读取群聊上下文"] = False
         config_copy.resource_collector.config["iwara"]["zip_file"] = False
         config_copy.common_config.basic_config["master"]["id"] = 111111111
+
     def run_bot2():
         """在独立线程运行 bot2"""
         config_fix(config_copy)
@@ -165,6 +155,7 @@ def webui_bot():
 
     bot2_thread = threading.Thread(target=run_bot2, daemon=True)
     bot2_thread.start()
+
 
 if config.common_config.basic_config["webui"]["enable"]:
     webui_bot()
