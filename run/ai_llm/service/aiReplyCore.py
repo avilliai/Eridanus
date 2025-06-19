@@ -524,8 +524,8 @@ def remove_mface_filenames(reply_message, config, directory="data/pictures/Mface
                 core_name = filename[1:-5]
                 mface_dict[core_name] = filename
 
-        brackets = "\(\[\{\<"  # 开括号
-        brackets_close = "\)\]\}\>"  # 闭括号
+        brackets = r"\(\[\{\<"  # 开括号
+        brackets_close = r"\)\]\}\>"  # 闭括号
         pattern = rf"[{brackets}]([^\[\](){{}}<>]+)[{brackets_close}]\.(gif|png|jpg)"
 
         matched_files = []
