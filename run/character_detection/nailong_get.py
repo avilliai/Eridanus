@@ -26,7 +26,7 @@ def main(bot, config):
     else:
         from run.character_detection.service.nailong11.nailong import main as nailong_main
         from run.character_detection.service.doro.doro import main as doro_main
-        from run.character_detection.service.nanniang.nn import main as nn_mains
+        from run.character_detection.service.nanniang.nn import main as nn_main
     if_doro = sets["doro检测"]
     nailong_groups = config.character_detection.nailong['whitelist']
     doro_groups = config.character_detection.doro['whitelist']
