@@ -148,6 +148,8 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 response_message = await openaiRequest_official(**kwargs)
             else:
                 response_message = await openaiRequest(**kwargs)
+            logger.info(response_message)
+            response_message=response_message["choices"][0]["message"]
             if "content" in response_message:
                 reply_message = response_message["content"]
                 if reply_message is not None:
@@ -226,7 +228,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                         except Exception as e:
                             # logger.error(f"Error occurred when calling function: {e}")
                             logger.error(f"Error occurred when calling function: {e}")
-                            traceback.print_exc()
+                            logger.error(traceback.format_exc())
                             temp_history.append({
                                 "role": "tool",
                                 "content": json.dumps({"status": "failed to call function"}),
@@ -276,7 +278,8 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 temperature=config.ai_llm.config["llm"]["gemini"]["temperature"],
                 maxOutputTokens=config.ai_llm.config["llm"]["gemini"]["maxOutputTokens"]
             )
-
+            logger.info(response_message)
+            response_message=response_message['candidates'][0]["content"]
             # print(response_message)
             try:
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
@@ -310,7 +313,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                         await add_to_group(event.group_id, self_message)
                     reply_message = None
             except Exception as e:
-                traceback.print_exc()
+                logger.error(traceback.format_exc())
                 logger.error(f"Error occurred when processing gemini response2: {e}")
             # 检查是否存在函数调用，如果还有提示词就发
             status = False
@@ -361,7 +364,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                         except Exception as e:
                             # logger.error(f"Error occurred when calling function: {e}")
                             logger.error(f"Error occurred when calling function: {func_name}")
-                            traceback.print_exc()
+                            logger.error(traceback.format_exc())
                     await add_self_rep(bot, event, config, reply_message)
                     reply_message = None
             if new_func_prompt:
@@ -394,7 +397,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
             return reply_message
     except Exception as e:
         logger.error(f"Error occurred: {e}")
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         logger.warning(f"roll back to original history, recursion times: {recursion_times}")
         await update_user_history(user_id, original_history)
         if recursion_times <= config.ai_llm.config["llm"]["recursion_limit"]:
@@ -544,13 +547,13 @@ def remove_mface_filenames(reply_message, config, directory="data/pictures/Mface
             matched_files = matched_files[:config.ai_llm.config["llm"]["单次发送表情包数量"]]
             logger.info(f"mface 匹配到的文件名: {matched_files}")
 
-        logger.info(f"mface 处理后的文本: {cleaned_text}")
+        #logger.info(f"mface 处理后的文本: {cleaned_text}")
         if not matched_files:
             return cleaned_text, []
         return cleaned_text, matched_files
     except Exception as e:
         logger.error(f"Error occurred when removing mface filenames: {e}")
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         return reply_message, []
 
 

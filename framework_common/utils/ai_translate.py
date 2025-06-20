@@ -65,7 +65,7 @@ class Translator:
                     response_message = await openaiRequest_official(**kwargs)
                 else:
                     response_message = await openaiRequest(**kwargs)
-
+                response_message = response_message["choices"][0]["message"]
                 reply_message = response_message["content"]
             elif config.ai_llm.config["llm"]["model"] == "gemini":
                 prompt = [
@@ -92,7 +92,7 @@ class Translator:
                     temperature=config.ai_llm.config["llm"]["gemini"]["temperature"],
                     maxOutputTokens=config.ai_llm.config["llm"]["gemini"]["maxOutputTokens"]
                 )
-
+                response_message = response_message['candidates'][0]["content"]
                 # print(response_message)
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
 

@@ -139,7 +139,7 @@ class Video(MessageComponent):
 
 class At(MessageComponent):
     comp_type: str = "at"
-    qq: int|str = Field(default=0,description="@的 QQ 号，all 表示全体成员")
+    qq: int = Field(default=0,description="@的 QQ 号，all 表示全体成员")
     name: Annotated[Optional[str], OnlySend] = Field(default="",description="昵称")
 
     @field_validator("qq", mode="before")
@@ -161,8 +161,8 @@ class Shake(MessageComponent):
 
 class Poke(MessageComponent):
     comp_type: str = "poke"
-    type: int|str = Field(description="类型")
-    id: int|str = Field(description="ID")
+    type: int = Field(description="类型")
+    id: int = Field(description="ID")
     name: Annotated[Optional[str], OnlyReceive] = Field(description="表情名")
 
 
@@ -198,7 +198,7 @@ class Location(MessageComponent):
 class Music(MessageComponent):
     comp_type: str = "music"
     type: str
-    id: int|str
+    id: int
 class Card(MessageComponent):
     comp_type: str = "music"
     type: str="custom"
@@ -209,7 +209,7 @@ class Card(MessageComponent):
 
 class Reply(MessageComponent):
     comp_type: str = "reply"
-    id: int | str = Field(description="回复时引用的消息 ID")
+    id: int = Field(description="回复时引用的消息 ID")
 
 class Markdown(MessageComponent):
     comp_type: str = "markdown"
@@ -225,8 +225,8 @@ class Forward(MessageComponent):
 
 class Node(MessageComponent):
     comp_type: str = "node"
-    user_id: str = Field(default="3552663628",description="发送者 QQ 号")
-    nickname: str = Field(default="Eridanus",description="发送者昵称")
+    user_id: str = Field(default="",description="发送者 QQ 号")
+    nickname: str = Field(default="",description="发送者昵称")
     content: str | list[MessageComponent] = Field(description="消息内容")
 
 

@@ -8,7 +8,7 @@ import websockets
 from developTools.adapters.websocket_adapter import WebSocketBot
 from developTools.event.base import EventBase
 from developTools.event.eventFactory import EventFactory
-from developTools.message.message_components import MessageComponent, Reply, Text, Music, At, Poke, File
+from developTools.message.message_components import MessageComponent, Reply, Text, Music, At, Poke, File, Node
 
 
 class ExtendBot(WebSocketBot):
@@ -39,10 +39,8 @@ class ExtendBot(WebSocketBot):
                         if event_obj.post_type == "meta_event":
 
                             if event_obj.meta_event_type == "lifecycle":
-                                if self.config.common_config.basic_config["adapter"]["name"] == "Lagrange":
-                                    self.id=str(event_obj.self_id)
-                                else:
-                                    self.id = int(event_obj.self_id)
+
+                                self.id = int(event_obj.self_id)
                                 self.logger.info(f"Bot ID: {self.id},{type(self.id)}")
                     except:
                         pass
@@ -137,6 +135,11 @@ class ExtendBot(WebSocketBot):
                     item.id=str(item.id)
                 elif isinstance(item,File):
                     item.file=item.file.replace("file://","")
+                elif isinstance(item,Reply):
+                    item.id=str(item.id)
+                elif isinstance(item,Node):
+                    item.user_id=str(self.id)
+                    item.nickname=str(self.config.common_config.basic_config["bot"]) #yaml
                 components[index] = item
             return await super().send(event, components)
         else:

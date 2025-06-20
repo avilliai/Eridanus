@@ -26,6 +26,7 @@ flask_sock = install_and_import("flask_sock")
 from flask_sock import Sock
 
 psutil = install_and_import("psutil")
+httpx = install_and_import("httpx")
 
 # 全局变量，用于存储 logger 实例和屏蔽的日志类别
 _logger = None
@@ -58,6 +59,9 @@ user_info = {
     "friends": 0,
     "groups": 0,
 }
+
+#ip白名单，便于不看文档的用户和远程开发调试使用
+ip_whitelist = ["127.0.0.1","192.168.195.128"]
 
 # 用户信息文件
 user_file = "../user_info.yaml"
@@ -264,6 +268,9 @@ def save_yaml(file_path, data):
 def auth(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        #白名单直接放行
+        if request.remote_addr in ip_whitelist:
+            return func(*args, **kwargs)
         global auth_info
         recv_token = request.cookies.get('auth_token')
         try:
@@ -575,6 +582,20 @@ def get_file():
     except Exception as e:
         return jsonify({"error": str(e)})
 
+@app.route("/api/chat/music", methods=["POST"])
+@auth
+def get_music():
+    try:
+        response = httpx.post(
+            "https://ss.xingzhige.com/music_card/card",
+            json = request.json
+        )
+        # 解析返回的JSON数据
+        result = response.json()
+        music_data = result['meta']['music']
+        return jsonify(music_data)
+    except Exception as e:
+        return jsonify({"error": f"请求时出错: {str(e)}"})
 
 clients = set()
 
@@ -588,7 +609,7 @@ def handle_websocket(ws):
     try:
         # 对非本地的访问鉴权
         try:
-            if request.remote_addr != "127.0.0.1":
+            if request.remote_addr not in ip_whitelist:
                 recv_token = request.args.get('auth_token')
                 if auth_info[recv_token] > int(time.time()):
                     logger.server("WebSocket 客户端鉴权成功")
@@ -660,52 +681,52 @@ def handle_websocket(ws):
                         clients.discard(client)
 
                 logger.server(f"已发送 OneBot v11 事件: {event_json}")
-            def is_valid_messages_structure(data):
-                # 检查字典是否包含 message 键
-                if not isinstance(data, dict) or 'message' not in data:
-                    return False
+            # def is_valid_messages_structure(data):
+            #     # 检查字典是否包含 message 键
+            #     if not isinstance(data, dict) or 'message' not in data:
+            #         return False
 
-                # 检查 message 是否包含 action 和 params
-                message = data.get('message')
-                if not isinstance(message, dict) or 'action' not in message or 'params' not in message:
-                    return False
+            #     # 检查 message 是否包含 action 和 params
+            #     message = data.get('message')
+            #     if not isinstance(message, dict) or 'action' not in message or 'params' not in message:
+            #         return False
 
-                # 检查 action 是否为 send_group_forward_msg
-                if message['action'] != 'send_group_forward_msg':
-                    return False
+            #     # 检查 action 是否为 send_group_forward_msg
+            #     if message['action'] != 'send_group_forward_msg':
+            #         return False
 
-                # 检查 params 是否包含 messages
-                params = message.get('params')
-                if not isinstance(params, dict) or 'messages' not in params:
-                    return False
+            #     # 检查 params 是否包含 messages
+            #     params = message.get('params')
+            #     if not isinstance(params, dict) or 'messages' not in params:
+            #         return False
 
-                # 检查 messages 是否为列表
-                messages = params.get('messages')
-                if not isinstance(messages, list):
-                    return False
-                # 检查 messages 中的每个元素是否为 node 类型
-                for msg in messages:
-                    if not isinstance(msg, dict) or 'type' not in msg or msg['type'] != 'node':
-                        return False
-                    # 进一步检查 node 是否包含 data 且 data 包含 content
-                    if 'data' not in msg or not isinstance(msg['data'], dict):
-                        return False
-                    if 'content' not in msg['data'] or not isinstance(msg['data']['content'], list):
-                        return False
+            #     # 检查 messages 是否为列表
+            #     messages = params.get('messages')
+            #     if not isinstance(messages, list):
+            #         return False
+            #     # 检查 messages 中的每个元素是否为 node 类型
+            #     for msg in messages:
+            #         if not isinstance(msg, dict) or 'type' not in msg or msg['type'] != 'node':
+            #             return False
+            #         # 进一步检查 node 是否包含 data 且 data 包含 content
+            #         if 'data' not in msg or not isinstance(msg['data'], dict):
+            #             return False
+            #         if 'content' not in msg['data'] or not isinstance(msg['data']['content'], list):
+            #             return False
 
-                return True
-            if is_valid_messages_structure(onebot_event):
-                """
-                对Node消息进行处理
-                """
-                back_event = onebot_event.copy()
-                for node in onebot_event['message']["params"]["messages"]:
-                    content=node['data']['content']
-                    back_event["message"]["action"] ="send_group_msg"
-                    back_event['message']["params"]["message"] = content
-                    send_mes(back_event)
-            else:
-                send_mes(onebot_event)
+            #     return True
+            # if is_valid_messages_structure(onebot_event):
+            #     """
+            #     对Node消息进行处理
+            #     """
+            #     back_event = onebot_event.copy()
+            #     for node in onebot_event['message']["params"]["messages"]:
+            #         content=node['data']['content']
+            #         back_event["message"]["action"] ="send_group_msg"
+            #         back_event['message']["params"]["message"] = content
+            #         send_mes(back_event)
+            # else:
+            send_mes(onebot_event)
     except Exception as e:
         logger.server(f"WebSocket事件: {e}")
     finally:
