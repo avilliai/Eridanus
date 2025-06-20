@@ -11,7 +11,6 @@ class PluginConfig:
         self._file_paths = file_paths
         self._name = name
         self._save_func = save_func
-        dir(self)
 
     def __getattr__(self, config_name):
         if config_name in ["_data", "_file_paths", "_save_func", "_name"]:
