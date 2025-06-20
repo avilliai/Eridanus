@@ -5,6 +5,30 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 
 
+class PluginConfig:
+    def __init__(self, name, data, file_paths, save_func):
+        self._data = data
+        self._file_paths = file_paths
+        self._name = name
+        self._save_func = save_func
+        dir(self)
+
+    def __getattr__(self, config_name):
+        if config_name in ["_data", "_file_paths", "_save_func", "_name"]:
+            return self.__getattribute__(config_name)
+        if config_name in self._data:
+            return self._data[config_name]
+        raise AttributeError(f"Plugin {self._name} has no config '{config_name}'.")
+
+    def __setattr__(self, config_name, value):
+        if config_name in ["_data", "_file_paths", "_save_func", "_name"]:
+            super().__setattr__(config_name, value)
+        elif config_name in self._data:
+            self._data[config_name] = value
+            self._save_func(config_name, self._name)
+        else:
+            raise AttributeError(f"Plugin {self._name} has no config '{config_name}'.")
+
 class YAMLManager:
     _instance = None
     _lock = threading.Lock()  # 线程安全的单例初始化
@@ -25,13 +49,6 @@ class YAMLManager:
         # 收集所有需要加载的 YAML 文件
         yaml_files = []
 
-        # run 目录下的 YAML 文件
-        for file_name in os.listdir(run_dir):
-            if file_name.endswith((".yaml", ".yml")):
-                file_path = os.path.join(run_dir, file_name)
-                config_name = os.path.splitext(file_name)[0]
-                yaml_files.append((None, config_name, file_path))
-
         # 插件文件夹中的 YAML 文件
         for plugin_folder in os.listdir(run_dir):
             plugin_path = os.path.join(run_dir, plugin_folder)
@@ -41,6 +58,11 @@ class YAMLManager:
                         file_path = os.path.join(plugin_path, file_name)
                         config_name = os.path.splitext(file_name)[0]
                         yaml_files.append((plugin_folder, config_name, file_path))
+            elif os.path.isfile(plugin_path):
+                if plugin_folder.endswith((".yaml", ".yml")):
+                    file_path = os.path.join(run_dir, plugin_folder)
+                    config_name = os.path.splitext(plugin_folder)[0]
+                    yaml_files.append((None, config_name, file_path))
 
         # 并行加载 YAML 文件
         def load_yaml_file(args):
@@ -52,19 +74,17 @@ class YAMLManager:
                 return plugin_name, config_name, file_path, yaml_instance.load(file)
 
         with ThreadPoolExecutor() as executor:
-            results = list(executor.map(load_yaml_file, yaml_files))
+            for plugin_name, config_name, file_path, data in executor.map(load_yaml_file, yaml_files):
+                if plugin_name is None:
+                    self.data[config_name] = data
+                    self.file_paths[config_name] = file_path
+                else:
+                    if plugin_name not in self.data:
+                        self.data[plugin_name] = {}
+                        self.file_paths[plugin_name] = {}
+                    self.data[plugin_name][config_name] = data
+                    self.file_paths[plugin_name][config_name] = file_path
 
-        # 整理加载结果
-        for plugin_name, config_name, file_path, data in results:
-            if plugin_name is None:
-                self.data[config_name] = data
-                self.file_paths[config_name] = file_path
-            else:
-                if plugin_name not in self.data:
-                    self.data[plugin_name] = {}
-                    self.file_paths[plugin_name] = {}
-                self.data[plugin_name][config_name] = data
-                self.file_paths[plugin_name][config_name] = file_path
 
         YAMLManager._instance = self
 
@@ -110,27 +130,7 @@ class YAMLManager:
         """
         if name in self.data:
             if isinstance(self.data[name], dict):  # 插件文件夹
-                class PluginConfig:
-                    def __init__(self, data, file_paths, save_func):
-                        self._data = data
-                        self._file_paths = file_paths
-                        self._save_func = save_func
-
-                    def __getattr__(self, config_name):
-                        if config_name in self._data:
-                            return self._data[config_name]
-                        raise AttributeError(f"Plugin {name} has no config '{config_name}'.")
-
-                    def __setattr__(self, config_name, value):
-                        if config_name in ["_data", "_file_paths", "_save_func"]:
-                            super().__setattr__(config_name, value)
-                        elif config_name in self._data:
-                            self._data[config_name] = value
-                            self._save_func(config_name, name)
-                        else:
-                            raise AttributeError(f"Plugin {name} has no config '{config_name}'.")
-
-                return PluginConfig(self.data[name], self.file_paths[name], self.save_yaml)
+                return PluginConfig(name, self.data[name], self.file_paths[name], self.save_yaml)
             else:  # 直接在 run 目录下的 YAML 文件
                 return self.data[name]
         raise AttributeError(f"YAMLManager has no plugin or config '{name}'.")
