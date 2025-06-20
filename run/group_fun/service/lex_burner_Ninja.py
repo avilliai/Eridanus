@@ -3,7 +3,7 @@ import asyncio
 import httpx
 
 
-class LexburnerNinja:
+class Lexburner_Ninja:
     """
     类名不要瞎几把改。
     改完用查找用法或者跑一遍测试。
