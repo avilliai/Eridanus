@@ -91,7 +91,7 @@ def main(bot: ExtendBot, config):
             text = await aiReplyCore(
                 [{"text": f"翻译下面的文本，直接发送结果，不要发送'好的'之类的命令应答提示。要翻译的文本为：{text}"}],
                 random.randint(1000000, 99999999),
-                config, bot=bot, tools=None)
+                config, bot=bot, tools=None,system_instruction="你是一个翻译机器人，请完成高效且准确的翻译。我给你文本，你需要直接给出翻译结果")
             for group_id in config.scheduled_tasks.sheduled_tasks_push_groups_ordinary["每日天文"]["groups"]:
                 if group_id == 0: continue
                 try:
