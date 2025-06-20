@@ -173,6 +173,7 @@ def main(bot, config):
                                     'text': 'system: 对以上聊天内容做出总结，描绘出当前对话的用户画像，总结出当前用户的人物性格特征以及偏好。不要回复，直接给出结果'}],
                                 current_event.user_id,
                                 config,
+                                system_instruction="请总结上下文",
                                 bot=bot,
                                 event=current_event,
                             )
