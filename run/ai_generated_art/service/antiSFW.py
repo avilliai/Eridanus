@@ -33,6 +33,7 @@ async def get_gif_name(image):
         os.path.splitext(os.path.basename(image))[0] + ".gif"
     )
 
+
 # 修改 generate_blank_img 使用 asyncio.to_thread
 async def generate_blank_img(img):
     """
@@ -66,22 +67,24 @@ async def generate_gif_1(image, duration=None):
         loop=0
     )
 
+
 async def get_stripe_imgs(img, stripe_width=1):
     """
     获取得到两张条纹化的图像对象(此函数用于调试条纹宽度)。
     """
     h, w, _ = img.shape
-    stripe_num = h // (stripe_width*2)
+    stripe_num = h // (stripe_width * 2)
     img1 = img.copy()
     img2 = img.copy()
-    
+
     for i in range(stripe_num):
         # 对第一张图片进行处理
-        img1[i*2*stripe_width: (i*2+1)*stripe_width, :, :] = 255
+        img1[i * 2 * stripe_width: (i * 2 + 1) * stripe_width, :, :] = 255
         # 对第二章图片进行处理
-        img2[(i*2+1)*stripe_width: (i*2+2)*stripe_width, :, :] = 255
-    
+        img2[(i * 2 + 1) * stripe_width: (i * 2 + 2) * stripe_width, :, :] = 255
+
     return [img1, img2]
+
 
 def analyze_image_brightness(img_np):
     """
@@ -91,8 +94,9 @@ def analyze_image_brightness(img_np):
     # 计算RGB通道的平均值（忽略alpha通道）
     mean_value = np.mean(img_np[..., :3])
     # 如果平均值大于127.5（255的一半），则认为偏白
-    #print(mean_value > 127.5)
+    # print(mean_value > 127.5)
     return mean_value <= 127.5
+
 
 async def generate_stripe_imgs(image, stripe_height=1, stripe_gap=1, invert_color=False):
     """
@@ -102,20 +106,20 @@ async def generate_stripe_imgs(image, stripe_height=1, stripe_gap=1, invert_colo
     img_obj = img_obj.convert("RGBA")
     img_np = np.array(img_obj)
     w, h = img_obj.size
-    
+
     # 判断图片整体明暗
     is_bright = analyze_image_brightness(img_np)
     # 根据明暗选择条纹颜色
     stripe_color = 0 if is_bright else 255
-    
+
     # 创建两个图像数组
     stripe_img1 = np.full_like(img_np, 255)  # 创建全白底图
     stripe_img2 = np.full_like(img_np, 255)  # 创建全白底图
-    
+
     # 计算条纹间隔和数量
     stripe_interval = stripe_height + stripe_gap
     stripe_num = h // stripe_interval
-    
+
     # 添加条纹效果（交替显示内容）
     for i in range(stripe_num):
         # 第一帧的内容和条纹
@@ -142,13 +146,14 @@ async def generate_stripe_imgs(image, stripe_height=1, stripe_gap=1, invert_colo
             if stripe_pos2 < h:
                 stripe_img2[stripe_pos2:stripe_end2, :, :3] = stripe_color
                 stripe_img2[stripe_pos2:stripe_end2, :, 3] = 255
-    
+
     # 如果需要反转颜色，在添加条纹后进行反转
     if invert_color:
         stripe_img1 = await invert_colors(stripe_img1)
         stripe_img2 = await invert_colors(stripe_img2)
-    
+
     return [stripe_img1, stripe_img2]
+
 
 async def generate_gif_2(image):
     """
@@ -164,17 +169,20 @@ async def generate_gif_2(image):
         loop=0
     )
 
+
 # 确保 invert_colors 也是异步的
 async def invert_colors(image):
     """
     反转图像颜色(与安卓系统的颜色反转逻辑一致)
     """
     return await asyncio.to_thread(_invert_colors_sync, image)
+
+
 def _invert_colors_sync(image):
     android_matrix = np.array([
         [-0.402, 1.174, 0.228],
-        [ 0.598, 0.174, 0.228],
-        [ 0.599, 1.175,-0.772]
+        [0.598, 0.174, 0.228],
+        [0.599, 1.175, -0.772]
     ], dtype=np.float32)
     normalized = image[..., :3].astype(np.float32) / 255.0
     transformed = np.dot(normalized, android_matrix.T)
@@ -182,6 +190,7 @@ def _invert_colors_sync(image):
     transformed = np.clip(transformed, 0.0, 1.0)
     image[..., :3] = (transformed * 255.0).astype(np.uint8)
     return image
+
 
 # 修改 process_single_image 确保所有步骤异步执行
 async def process_single_image(image_path, blank_duration_s=0.5, stripe_duration=0.1, loop=0,
@@ -197,9 +206,11 @@ async def process_single_image(image_path, blank_duration_s=0.5, stripe_duration
 
         # 生成首帧
         if channels == 4:
-            first_frame = await asyncio.to_thread(Image.new, "RGBA", (w, h), (0, 0, 0, 255) if not invert_color else (255, 255, 255, 255))
+            first_frame = await asyncio.to_thread(Image.new, "RGBA", (w, h),
+                                                  (0, 0, 0, 255) if not invert_color else (255, 255, 255, 255))
         else:
-            first_frame = await asyncio.to_thread(Image.new, "RGB", (w, h), (0, 0, 0) if not invert_color else (255, 255, 255))
+            first_frame = await asyncio.to_thread(Image.new, "RGB", (w, h),
+                                                  (0, 0, 0) if not invert_color else (255, 255, 255))
 
         # 生成条纹图像
         stripe_imgs = await generate_stripe_imgs(image_path, stripe_height, stripe_gap, invert_color)
@@ -238,9 +249,11 @@ async def process_single_image(image_path, blank_duration_s=0.5, stripe_duration
         )
     except Exception as e:
         print(f"Error processing {image_path}: {str(e)}")
+
+
 async def process_folder(input_folder, output_folder="processed_gifs", max_workers=4, blank_duration_s=0.016,
-                        stripe_duration=0.016, loop=2, stripe_height=1, stripe_gap=1,
-                        use_blank_frame=True, num_blank_frames=1, invert_color=False):
+                         stripe_duration=0.016, loop=2, stripe_height=1, stripe_gap=1,
+                         use_blank_frame=True, num_blank_frames=1, invert_color=False):
     """
     多线程处理文件夹中的所有图片 (异步方式)保存的图片名字相同，但是后缀为.gif
         # 直接设置处理参数
@@ -319,7 +332,7 @@ async def compress_gifs(gif_paths, max_workers=4):
     for path in gif_paths:
         queue.put_nowait(path)
 
-    def process_gif(gif_path,compress_colors=64,compress_pixels=589824):
+    def process_gif(gif_path, compress_colors=64, compress_pixels=589824):
         """
         处理并压缩单个GIF文件，直接覆盖源文件。
 
@@ -343,7 +356,7 @@ async def compress_gifs(gif_paths, max_workers=4):
                         frame = frame.resize(new_size, Image.LANCZOS)
                     frame = frame.convert('P', palette=Image.ADAPTIVE, colors=compress_colors)
                     frames.append(frame)
-                
+
                 # 覆盖保存压缩后的GIF
                 frames[0].save(
                     gif_path,
@@ -394,6 +407,8 @@ async def compress_gifs(gif_paths, max_workers=4):
         await asyncio.gather(*tasks, return_exceptions=True)
 
     return compressed_files
+
+
 """ if __name__ == "__main__":
     # 直接设置处理参数
     INPUT_FOLDER = "adversarial_frames666"  # 输入文件夹路径

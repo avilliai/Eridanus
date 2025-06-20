@@ -1,7 +1,7 @@
 today_wife:
   api:
-  - 'http://127.0.0.1:5000/today_wife'  #今日老婆的获取api，可以替换成自己的图床，可以添加多个链接
-  - 'https://api.iw233.cn/api.php?sort=top'
+    - 'http://127.0.0.1:5000/today_wife'  #今日老婆的获取api，可以替换成自己的图床，可以添加多个链接
+    - 'https://api.iw233.cn/api.php?sort=top'
   header: 'https://weibo.com/'          #知道的自己改，不知道的不要动
   wifePrefix: '/'                       #透群友的指令前缀
   复读开关: True

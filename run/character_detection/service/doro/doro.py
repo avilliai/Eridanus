@@ -1,11 +1,12 @@
+import base64
 import io
-from PIL import Image, ImageSequence
+import os
+
+import cv2
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-import cv2
-import base64
-import os
+from PIL import Image, ImageSequence
 
 # 定义数据预处理
 test_transform = transforms.Compose([

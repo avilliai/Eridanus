@@ -1,12 +1,12 @@
-plugin_description="ACG相关信息查询插件"
-dynamic_imports={
+plugin_description = "ACG相关信息查询插件"
+dynamic_imports = {
     "run.acg_infromation.bangumi": ["call_bangumi_search"],
     "run.acg_infromation.character_identify": ["call_character_identify"],
     "run.acg_infromation.func_collection": [
         "anime_game_service_func_collection"
     ],
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "call_bangumi_search",
         "description": "搜索acg相关番剧、动画、小说、游戏、音乐、三次元人物等",

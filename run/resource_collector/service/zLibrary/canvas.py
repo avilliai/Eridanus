@@ -6,8 +6,10 @@ from PIL import Image, ImageFont, ImageDraw
 from framework_common.utils.random_str import random_str
 
 texture_path = "run/resource_collector/service/zLibrary/img.png"
+
+
 def create_book_image(data):
-    #print(data)
+    # print(data)
     # 加载纹理图片并将其拉伸到画布大小
     texture_image = Image.open(texture_path)
 
@@ -101,15 +103,12 @@ def create_book_image(data):
     draw.text((x_offset, y_offset), "简介:", font=font_title, fill="black")
     y_offset += 40
     y_offset = draw_text_lines(draw, x_offset, y_offset, description_lines, font_text)
-    p=random_str() #你妈的，到底为什么
-    save_path=f"data/pictures/cache/{p}.jpg"
-    #sleep(2)
+    p = random_str()  # 你妈的，到底为什么
+    save_path = f"data/pictures/cache/{p}.jpg"
+    # sleep(2)
     canvas.save(save_path, "JPEG")
     return save_path
 
-
-
-
-  # 纹理图片路径
-#canvas = create_book_image(data, texture_path)
-#canvas.show()
+# 纹理图片路径
+# canvas = create_book_image(data, texture_path)
+# canvas.show()

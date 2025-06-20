@@ -8,9 +8,8 @@ from asyncio import sleep
 from developTools.event.events import GroupMessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
     LifecycleMetaEvent
 from developTools.message.message_components import Record, Text, Image, File, Node
-from framework_common.database_util.User import get_user
-
 from developTools.utils.logger import get_logger
+from framework_common.database_util.User import get_user
 
 logger = get_logger()
 
@@ -29,7 +28,7 @@ async def delete_old_files_async(folder_path):
         nonlocal deleted_file_sizes
         try:
             if file_path.endswith(".py") or file_path.endswith(".ttf"):
-                #print(f"跳过文件: {file_path}")
+                # print(f"跳过文件: {file_path}")
                 return None
 
             file_mtime = os.path.getmtime(file_path)
@@ -38,7 +37,7 @@ async def delete_old_files_async(folder_path):
                 file_size = os.path.getsize(file_path)
                 deleted_file_sizes += file_size
                 await asyncio.to_thread(os.remove, file_path)
-                #print(f"已删除文件: {file_path} (大小: {file_size:.2f} MB)")
+                # print(f"已删除文件: {file_path} (大小: {file_size:.2f} MB)")
         except Exception as e:
             logger.error(f"处理文件失败: {file_path} - {e}")
         deleted_file_sizes = deleted_file_sizes // (1024 ** 2)
@@ -58,6 +57,7 @@ async def delete_old_files_async(folder_path):
 
     # 统计删除的文件总大小
     return deleted_file_sizes
+
 
 async def call_operate_blandwhite(bot, event, config, target_id, type):
     if type == "添加群黑名单":
@@ -204,7 +204,7 @@ async def send(bot, event, config, message, delay=0):
     message_list = []
     print(message)
     for i in message:
-        #print(i)
+        # print(i)
         if len(i) > 1:
             for j in i:
                 if "text" in j:
@@ -269,22 +269,24 @@ def main(bot, config):
         while True:
             await garbage_collection(bot, event, config)
             await asyncio.sleep(5400)  # 每1.5h清理一次缓存
+
     @bot.on(GroupMessageEvent)
     async def groups_send(event: GroupMessageEvent):
         global send_next_message
-        if event.user_id==config.common_config.basic_config["master"]['id'] and event.pure_text=="notice":
+        if event.user_id == config.common_config.basic_config["master"]['id'] and event.pure_text == "notice":
             send_next_message = True
-            await bot.send(event,"下一条消息将被转发至所有群")
-        elif send_next_message and event.user_id==config.common_config.basic_config["master"]['id']:
+            await bot.send(event, "下一条消息将被转发至所有群")
+        elif send_next_message and event.user_id == config.common_config.basic_config["master"]['id']:
             send_next_message = False
             groups = await bot.get_group_list()
             for group in groups["data"]:
                 try:
                     bot.logger.info(f"转发消息至群{group['group_id']}")
-                    await bot.send_group_message(group["group_id"],event.message_chain)
+                    await bot.send_group_message(group["group_id"], event.message_chain)
                     await sleep(4)
                 except Exception as e:
                     bot.logger.error(f"发送群消息失败：{group['group_id']} 原因: {e}")
+
     @bot.on(GroupMessageEvent)
     async def _(event):
         if event.pure_text == "/gc":

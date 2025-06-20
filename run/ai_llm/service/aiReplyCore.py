@@ -1,17 +1,20 @@
+import asyncio
 import datetime
+import importlib
 import json
+import os
 import random
 import re
 import time
 import traceback
 from collections import defaultdict
-import os
-
-import asyncio
 
 from developTools.message.message_components import Record, Text, Node, Image
 from developTools.utils.logger import get_logger
 from framework_common.database_util.Group import get_last_20_and_convert_to_prompt, add_to_group
+from framework_common.database_util.User import get_user, update_user
+from framework_common.database_util.llmDB import get_user_history, update_user_history, delete_user_history, read_chara, \
+    use_folder_chara
 from run.ai_llm.service.aiReplyHandler.default import defaultModelRequest
 from run.ai_llm.service.aiReplyHandler.gemini import geminiRequest, construct_gemini_standard_prompt, \
     get_current_gemini_prompt
@@ -19,12 +22,6 @@ from run.ai_llm.service.aiReplyHandler.openai import openaiRequest, construct_op
     get_current_openai_prompt, construct_openai_standard_prompt_old_version, \
     openaiRequest_official
 from run.ai_llm.service.aiReplyHandler.tecentYuanQi import construct_tecent_standard_prompt, YuanQiTencent
-from framework_common.database_util.llmDB import get_user_history, update_user_history, delete_user_history, read_chara, \
-    use_folder_chara
-
-from framework_common.database_util.User import get_user, update_user
-import importlib
-
 from run.ai_voice.service.tts import TTS
 
 Tts = TTS()
@@ -86,13 +83,14 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 config.ai_llm.config["llm"]["chara_file_name"]))
         user_info = await get_user(user_id)
         system_instruction = system_instruction.replace("{用户}", user_info.nickname).replace("{bot_name}",
-                                                                                              config.common_config.basic_config["bot"])
+                                                                                              config.common_config.basic_config[
+                                                                                                  "bot"])
     """
     用户设定读取
     """
     if config.ai_llm.config["llm"]["长期记忆"]:
-        temp_user=await get_user(user_id)
-        system_instruction+=f"\n以下为当前用户的用户画像：{temp_user.user_portrait}"
+        temp_user = await get_user(user_id)
+        system_instruction += f"\n以下为当前用户的用户画像：{temp_user.user_portrait}"
 
     try:
         if recursion_times == 0 and processed_message:
@@ -409,7 +407,7 @@ async def aiReplyCore(processed_message, user_id, config, tools=None, bot=None, 
                 "auto_clear_when_recursion_failed"]:
                 logger.warning(f"clear ai reply history for user: {event.user_id}")
                 await delete_user_history(event.user_id)
-            if recursion_times+2 == config.ai_llm.config["llm"]["recursion_limit"]:
+            if recursion_times + 2 == config.ai_llm.config["llm"]["recursion_limit"]:
                 logger.warning(f"update user portrait for user: {event.user_id}")
                 await update_user(event.user_id, user_portrait="normal_user")
                 await update_user(event.user_id, portrait_update_time=datetime.datetime.now().isoformat())
@@ -529,8 +527,8 @@ def remove_mface_filenames(reply_message, config, directory="data/pictures/Mface
                 core_name = filename[1:-5]
                 mface_dict[core_name] = filename
 
-        brackets = "\(\[\{\<"  # 开括号
-        brackets_close = "\)\]\}\>"  # 闭括号
+        brackets = r"\(\[\{\<"  # 开括号
+        brackets_close = r"\)\]\}\>"  # 闭括号
         pattern = rf"[{brackets}]([^\[\](){{}}<>]+)[{brackets_close}]\.(gif|png|jpg)"
 
         matched_files = []

@@ -110,9 +110,9 @@ async def TrimajsoulInfo(context):
             # sv.logger.info("正在查询" + nickname + "的对局数据")
         message = ""
         room_level = ""
-        if args[0] in ["金场",  "金",  "金之间"]:
+        if args[0] in ["金场", "金", "金之间"]:
             room_level = "1"
-        elif args[0] in ["玉场", "玉",  "玉之间"]:
+        elif args[0] in ["玉场", "玉", "玉之间"]:
             room_level = "2"
         elif args[0] in ["王座", "王座之间"]:
             room_level = "3"

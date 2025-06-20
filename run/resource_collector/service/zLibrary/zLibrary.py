@@ -12,12 +12,12 @@ import requests
 
 class Zlibrary:
     def __init__(
-        self,
-        email: str = None,
-        password: str = None,
-        remix_userid: [int, str] = None,
-        remix_userkey: str = None,
-        proxies: dict = None,
+            self,
+            email: str = None,
+            password: str = None,
+            remix_userid: [int, str] = None,
+            remix_userkey: str = None,
+            proxies: dict = None,
     ):
         self.__email: str
         self.__name: str
@@ -84,12 +84,12 @@ class Zlibrary:
         return self.__login(email, password)
 
     def loginWithToken(
-        self, remix_userid: [int, str], remix_userkey: str
+            self, remix_userid: [int, str], remix_userkey: str
     ) -> dict[str, str]:
         return self.__checkIDandKey(remix_userid, remix_userkey)
 
     def __makePostRequest(
-        self, url: str, data: dict = {}, override=False
+            self, url: str, data: dict = {}, override=False
     ) -> dict[str, str]:
         if not self.isLoggedIn() and override is False:
             print("Not logged in")
@@ -104,7 +104,7 @@ class Zlibrary:
         ).json()
 
     def __makeGetRequest(
-        self, url: str, params: dict = {}, cookies=None
+            self, url: str, params: dict = {}, cookies=None
     ) -> dict[str, str]:
         if not self.isLoggedIn() and cookies is None:
             print("Not logged in")
@@ -147,7 +147,7 @@ class Zlibrary:
         return self.__makeGetRequest("/eapi/user/donations")
 
     def getUserDownloaded(
-        self, order: str = None, page: int = None, limit: int = None
+            self, order: str = None, page: int = None, limit: int = None
     ) -> dict[str, str]:
         """
         order takes one of the values\n
@@ -177,7 +177,7 @@ class Zlibrary:
         return self.__makeGetRequest("/eapi/info/plans")
 
     def getUserSaved(
-        self, order: str = None, page: int = None, limit: int = None
+            self, order: str = None, page: int = None, limit: int = None
     ) -> dict[str, str]:
         """
         order takes one of the values\n
@@ -222,7 +222,7 @@ class Zlibrary:
         return self.__makeGetRequest(f"/eapi/book/{bookid}/{hashid}/send-to-{totype}")
 
     def getBookInfo(
-        self, bookid: [int, str], hashid: str, switch_language: str = None
+            self, bookid: [int, str], hashid: str, switch_language: str = None
     ) -> dict[str, str]:
         if switch_language is not None:
             return self.__makeGetRequest(
@@ -241,57 +241,57 @@ class Zlibrary:
         )
 
     def updateInfo(
-        self,
-        email: str = None,
-        password: str = None,
-        name: str = None,
-        kindle_email: str = None,
+            self,
+            email: str = None,
+            password: str = None,
+            name: str = None,
+            kindle_email: str = None,
     ) -> dict[str, str]:
         return self.__makePostRequest(
             "/eapi/user/update",
             {
                 k: v
                 for k, v in {
-                    "email": email,
-                    "password": password,
-                    "name": name,
-                    "kindle_email": kindle_email,
-                }.items()
+                "email": email,
+                "password": password,
+                "name": name,
+                "kindle_email": kindle_email,
+            }.items()
                 if v is not None
             },
         )
 
     def search(
-        self,
-        message: str = None,
-        yearFrom: int = None,
-        yearTo: int = None,
-        languages: str = None,
-        extensions: [str] = None,
-        order: str = None,
-        page: int = None,
-        limit: int = None,
+            self,
+            message: str = None,
+            yearFrom: int = None,
+            yearTo: int = None,
+            languages: str = None,
+            extensions: [str] = None,
+            order: str = None,
+            page: int = None,
+            limit: int = None,
     ) -> dict[str, str]:
         return self.__makePostRequest(
             "/eapi/book/search",
             {
                 k: v
                 for k, v in {
-                    "message": message,
-                    "yearFrom": yearFrom,
-                    "yearTo": yearTo,
-                    "languages": languages,
-                    "extensions[]": extensions,
-                    "order": order,
-                    "page": page,
-                    "limit": limit,
-                }.items()
+                "message": message,
+                "yearFrom": yearFrom,
+                "yearTo": yearTo,
+                "languages": languages,
+                "extensions[]": extensions,
+                "order": order,
+                "page": page,
+                "limit": limit,
+            }.items()
                 if v is not None
             },
         )
 
     def __getImageData(self, url: str) -> requests.Response.content:
-        res = requests.get(url, headers=self.__headers,proxies=self.__proxies)
+        res = requests.get(url, headers=self.__headers, proxies=self.__proxies)
         if res.status_code == 200:
             return res.content
 
@@ -313,7 +313,7 @@ class Zlibrary:
         headers = self.__headers.copy()
         headers["authority"] = ddl.split("/")[2]
 
-        res = requests.get(ddl, headers=headers,proxies=self.__proxies)
+        res = requests.get(ddl, headers=headers, proxies=self.__proxies)
         if res.status_code == 200:
             return filename, res.content
 
@@ -343,7 +343,7 @@ class Zlibrary:
         return response
 
     def verifyCode(
-        self, email: str, password: str, name: str, code: str
+            self, email: str, password: str, name: str, code: str
     ) -> dict[str, str]:
         usr_data = {
             "email": email,

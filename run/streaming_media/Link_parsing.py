@@ -1,10 +1,11 @@
-import shutil
-import os
 import json as json_handle
+import os
+import shutil
+
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, File, Video
-from run.streaming_media.service.Link_parsing.core.login_core import ini_login_Link_Prising
 from run.streaming_media.service.Link_parsing.Link_parsing import link_prising, download_video_link_prising
+from run.streaming_media.service.Link_parsing.core.login_core import ini_login_Link_Prising
 from run.streaming_media.service.Link_parsing.music_link_parsing import netease_music_link_parse
 
 teamlist = {}
@@ -42,7 +43,7 @@ def main(bot, config):
         bot.logger.info('✅ 链接解析功能已上线！')
     else:
         if not bili_login_check:
-            #bot.logger.warning('⚠️ B站session未能成功获取')
+            # bot.logger.warning('⚠️ B站session未能成功获取')
             pass
         else:
             bot.logger.warning('✅ B站session成功获取')
@@ -69,7 +70,7 @@ def main(bot, config):
     async def Link_Prising_search(event: GroupMessageEvent):
         proxy = config.common_config.basic_config["proxy"]["http_proxy"]
         url = event.pure_text
-        #print(url)
+        # print(url)
         if url == '' and 'json' in event.processed_message[0]:
             try:
                 url = event.processed_message[0]['json']['data']
@@ -79,7 +80,7 @@ def main(bot, config):
             except:
                 pass
         if 'http' not in url: url = event.raw_message
-        #print(url)
+        # print(url)
         if event.group_id in teamlist:
             json = teamlist[event.group_id]
             if event.get("text") is not None and event.get("text")[0] == "下载视频":
@@ -87,12 +88,12 @@ def main(bot, config):
                     await bot.send(event, '该类型视频暂未提供下载支持，敬请期待')
                     teamlist.pop(event.group_id)
                 else:
-                    #teamlist.pop(event.group_id)
+                    # teamlist.pop(event.group_id)
                     await call_bili_download_video(bot, event, config)
 
         link_prising_json = await link_prising(url, filepath='data/pictures/cache/', proxy=proxy)
         send_context = f'{botname}识别结果：'
-        #print(link_prising_json)
+        # print(link_prising_json)
         if link_prising_json['status']:
             bot.logger.info('链接解析成功，开始推送~~')
             if link_prising_json['video_url']:
@@ -104,7 +105,7 @@ def main(bot, config):
             await bot.send(event, [f'{send_context}\n', Image(file=link_prising_json['pic_path'])])
         else:
             if link_prising_json['reason']:
-                #print(link_prising_json)
+                # print(link_prising_json)
                 bot.logger.error(str('bili_link_error ') + link_prising_json['reason'])
 
     @bot.on(GroupMessageEvent)

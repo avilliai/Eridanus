@@ -1,8 +1,9 @@
 import asyncio
-from httpx import AsyncClient
-import os
 
-async def saucenao(image_source, apiKey,proxies=None)->list[list[str,str]]:
+from httpx import AsyncClient
+
+
+async def saucenao(image_source, apiKey, proxies=None) -> list[list[str, str]]:
     """
     sauceno
     """
@@ -34,18 +35,17 @@ async def saucenao(image_source, apiKey,proxies=None)->list[list[str,str]]:
             results_data.append([header.get('thumbnail'), result_str])
 
         return results_data
+
     async with AsyncClient(proxies=proxies) as client:
         response = await client.post(url, data=data)
 
         return extract_results(response.json())
 
 
-
-
-
-
 # Example usage
 if __name__ == "__main__":
     # Replace 'test.jpg' with the path to an actual image file
-    anime_res=asyncio.run(sauceno("https://multimedia.nt.qq.com.cn/download?appid=1406&fileid=EhRq8Zf3Qv-XjJsas9Amk4cVErIziBiJihIg_gooppGTgNXwjAMyBHByb2RQgLsvWhDFcH7f9X7NnVwae5oKTZ9negK9ag&spec=0&rkey=CAESKBkcro_MGujoaVbNUyDExifqFmLH1P-PMnmpir0K1TjvFScqGJSs8A8","e3c085a454b08ca07641284b0eab3753b16e2654"))
+    anime_res = asyncio.run(sauceno(
+        "https://multimedia.nt.qq.com.cn/download?appid=1406&fileid=EhRq8Zf3Qv-XjJsas9Amk4cVErIziBiJihIg_gooppGTgNXwjAMyBHByb2RQgLsvWhDFcH7f9X7NnVwae5oKTZ9negK9ag&spec=0&rkey=CAESKBkcro_MGujoaVbNUyDExifqFmLH1P-PMnmpir0K1TjvFScqGJSs8A8",
+        "e3c085a454b08ca07641284b0eab3753b16e2654"))
     print(anime_res)

@@ -1,13 +1,13 @@
 plugin_description = "基础功能集合"
 dynamic_imports = {
     "run.basic_plugin.basic_plugin": [
-        "call_weather_query", "call_setu","call_tarot", "call_pick_music",
+        "call_weather_query", "call_setu", "call_tarot", "call_pick_music",
         "call_fortune", "call_quit_chat"
     ],
     "run.basic_plugin.image_search":
         ["call_image_search"],
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "call_weather_query",
         "description": "Get the current weather in a given location.",
@@ -92,6 +92,5 @@ function_declarations=[
         "name": "call_quit_chat",
         "description": "停止对话，不再接收信息"
     },
-
 
 ]

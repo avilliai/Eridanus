@@ -11,7 +11,7 @@ from framework_common.framework_util.yamlLoader import YAMLManager
 from framework_common.utils.random_str import random_str
 
 
-def main(bot: ExtendBot,config:YAMLManager):
+def main(bot: ExtendBot, config: YAMLManager):
     @bot.on(GroupMessageEvent)
     async def today_husband(event: GroupMessageEvent):
         text = str(event.pure_text)

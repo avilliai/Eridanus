@@ -1,17 +1,20 @@
-from bilibili_api import hot, sync,Credential,dynamic
-import requests
-import platform
-import subprocess
-import re
-import aiofiles
-import httpx
-from typing import Optional
 import asyncio
-from PIL import Image, ImageDraw, ImageFont
+import platform
+import random
+import re
+import subprocess
 import time
 from io import BytesIO
+from typing import Optional
+
+import aiofiles
+import httpx
+import requests
+from PIL import Image, ImageDraw, ImageFont
+from bilibili_api import hot, sync, Credential, dynamic
+
 from run.streaming_media.service.Link_parsing.core.login_core import ini_login_Link_Prising
-import random
+
 
 def bili_init():
     BILIBILI_HEADER = {
@@ -24,11 +27,12 @@ def bili_init():
     if ini_login_Link_Prising(type=1) is not None:
         data = ini_login_Link_Prising(type=1)
         BILI_SESSDATA: Optional[str] = f'{data["sessdata"]}'
-        credential = Credential(sessdata=BILI_SESSDATA, bili_jct=data['bili_jct'],ac_time_value=data['ac_time_value'])
+        credential = Credential(sessdata=BILI_SESSDATA, bili_jct=data['bili_jct'], ac_time_value=data['ac_time_value'])
     else:
         BILI_SESSDATA: Optional[str] = f' '
         credential = Credential(sessdata=BILI_SESSDATA)
-    return BILIBILI_HEADER,credential,BILI_SESSDATA
+    return BILIBILI_HEADER, credential, BILI_SESSDATA
+
 
 def add_rounded_rectangle(draw, xy, radius, fill):
     """绘制圆角矩形"""
@@ -40,31 +44,32 @@ def add_rounded_rectangle(draw, xy, radius, fill):
     draw.pieslice([x0, y1 - 2 * radius, x0 + 2 * radius, y1], 90, 180, fill=fill)
     draw.pieslice([x1 - 2 * radius, y1 - 2 * radius, x1, y1], 0, 90, fill=fill)
 
+
 def draw_video_thumbnail():
     # 打开模板图片
 
     file_path = 'manshuo_data/'
-    template_path=f'{file_path}check.png'
-    output_path=f'{file_path}correct-copy.png'
+    template_path = f'{file_path}check.png'
+    output_path = f'{file_path}correct-copy.png'
     template = Image.open(template_path).convert("RGBA")
     draw = ImageDraw.Draw(template)
 
-    resize_x=370
-    resize_y=260
-    resize_x_touxiang=90
-    resize_y_touxiang=90
+    resize_x = 370
+    resize_y = 260
+    resize_x_touxiang = 90
+    resize_y_touxiang = 90
 
     hot_get_bili = sync(hot.get_hot_videos())
-    number=0
+    number = 0
     for context_check in hot_get_bili['list']:
 
         print(number)
-        if number == 8:break
-        text=context_check[f'title']
+        if number == 8: break
+        text = context_check[f'title']
         thumbnail_path_url = context_check[f'pic']
         touxiang_path_url = context_check['owner']['face']
-        thumbnail_path=f'{file_path}fengmian.png'
-        touxiang_path=f'{file_path}touxiang.png'
+        thumbnail_path = f'{file_path}fengmian.png'
+        touxiang_path = f'{file_path}touxiang.png'
         response = requests.get(thumbnail_path_url)
         with open(thumbnail_path, 'wb') as file:
             file.write(response.content)
@@ -72,13 +77,13 @@ def draw_video_thumbnail():
         with open(touxiang_path, 'wb') as file:
             file.write(response.content)
 
-        x_check=number%2
-        y_check=number//2
-        #print(x_check,y_check)
-        paste_x=146+x_check*430
-        paste_y=343+y_check*394
-        paste_x_touxiang=paste_x
-        paste_y_touxiang=paste_y+283
+        x_check = number % 2
+        y_check = number // 2
+        # print(x_check,y_check)
+        paste_x = 146 + x_check * 430
+        paste_y = 343 + y_check * 394
+        paste_x_touxiang = paste_x
+        paste_y_touxiang = paste_y + 283
 
         thumbnail = Image.open(thumbnail_path).resize((resize_x, resize_y), Image.Resampling.LANCZOS)
         mask = Image.new("L", (resize_x, resize_y), 0)
@@ -97,12 +102,13 @@ def draw_video_thumbnail():
         text = '\n'.join(text)
         # 添加文案
         font = ImageFont.truetype(f"{file_path}微软雅黑.ttf", 30)  # 替换为实际字体路径
-        text_position = (paste_x_touxiang+100, paste_y_touxiang+5)  # 文案位置
+        text_position = (paste_x_touxiang + 100, paste_y_touxiang + 5)  # 文案位置
         draw.text(text_position, text, font=font, fill="black")
         number += 1
     # 保存输出图片
     template.save(output_path)
-    #template.show()
+    # template.show()
+
 
 async def download_b_file(url, full_file_name, progress_callback=None):
     """
@@ -122,19 +128,21 @@ async def download_b_file(url, full_file_name, progress_callback=None):
         async with client.stream("GET", url, headers=BILIBILI_HEADER) as resp:
             current_len = 0
             total_len = int(resp.headers.get('content-length', 0))
-            #print(total_len)
+            # print(total_len)
             async with aiofiles.open(full_file_name, "wb") as f:
                 async for chunk in resp.aiter_bytes():
                     current_len += len(chunk)
                     await f.write(chunk)
-                    #print(f'{current_len} bytes downloaded')
-                    #print(f'下载进度：{round(current_len / total_len, 3)}')
-                    #progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
+                    # print(f'{current_len} bytes downloaded')
+                    # print(f'下载进度：{round(current_len / total_len, 3)}')
+                    # progress_callback(f'下载进度：{round(current_len / total_len, 3)}')
+
 
 def download_and_process_image(image_url, save_path):
     """
     下载网络图片，获取中央正方形区域并保存
     """
+
     def crop_center_square(image):
         width, height = image.size
         min_edge = min(width, height)
@@ -143,6 +151,7 @@ def download_and_process_image(image_url, save_path):
         right = left + min_edge
         bottom = top + min_edge
         return image.crop((left, top, right, bottom))
+
     response = requests.get(image_url)
     if response.status_code == 200:
         image_data = BytesIO(response.content)
@@ -150,7 +159,9 @@ def download_and_process_image(image_url, save_path):
         square_image = crop_center_square(image)
         square_image.save(save_path)
 
-async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output_file_name: str, log_output: bool = False):
+
+async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output_file_name: str,
+                            log_output: bool = False):
     """
     合并视频文件和音频文件
     :param v_full_file_name: 视频文件路径
@@ -159,13 +170,13 @@ async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output
     :param log_output: 是否显示 ffmpeg 输出日志，默认忽略
     :return:
     """
-    #print(f'正在合并：{output_file_name}')
+    # print(f'正在合并：{output_file_name}')
 
     # 构建 ffmpeg 命令
     command = f'ffmpeg -y -i "{v_full_file_name}" -i "{a_full_file_name}" -c copy "{output_file_name}"'
     stdout = None if log_output else subprocess.DEVNULL
     stderr = None if log_output else subprocess.DEVNULL
-    #print(platform.system())
+    # print(platform.system())
     if platform.system() == "Windows":
         # Windows 下使用 run_in_executor
         loop = asyncio.get_event_loop()
@@ -182,6 +193,7 @@ async def merge_file_to_mp4(v_full_file_name: str, a_full_file_name: str, output
             stderr=stderr
         )
         await process.communicate()
+
 
 def extra_bili_info(video_info):
     """
@@ -212,7 +224,8 @@ def extra_bili_info(video_info):
 
     return video_info_result
 
-#B站将av号转化为bv号
+
+# B站将av号转化为bv号
 def av_to_bv(av_link):
     # AV号和BV号转换核心算法
     def av_to_bv_core(av_number):
@@ -226,7 +239,7 @@ def av_to_bv(av_link):
         bv = list("BV1  4 1 7  ")
 
         for i in range(6):
-            bv[tr[i]] = table[av_number // 58**i % 58]
+            bv[tr[i]] = table[av_number // 58 ** i % 58]
 
         return ''.join(bv)
 
@@ -238,6 +251,7 @@ def av_to_bv(av_link):
     else:
         raise ValueError("输入链接中不包含有效的 AV 号")
 
+
 async def fetch_latest_dynamic_id_api(uid):
     BILIBILI_HEADER, credential, BILI_SESSDATA = bili_init()
     time.sleep(1)
@@ -246,18 +260,18 @@ async def fetch_latest_dynamic_id_api(uid):
     if BILI_SESSDATA == ' ':
         raise ValueError(" credential失效，请先登录或重新配置")
     try:
-        dynamic_list = await dynamic.get_dynamic_page_info(credential,host_mid=int(uid))
+        dynamic_list = await dynamic.get_dynamic_page_info(credential, host_mid=int(uid))
     except Exception as e:
-        #print(e)
+        # print(e)
         raise ValueError(" bilibili_api动态抓取失效")
-    dy_id_1=(await dynamic_list[0].get_info())['item']['id_str']
-    dy_id_2=(await dynamic_list[1].get_info())['item']['id_str']
-    return dy_id_1,dy_id_2
+    dy_id_1 = (await dynamic_list[0].get_info())['item']['id_str']
+    dy_id_2 = (await dynamic_list[1].get_info())['item']['id_str']
+    return dy_id_1, dy_id_2
 
 
-async def download_b(video_url,audio_url,video_id,filepath=None):
-    path = filepath  + str(video_id)
-    #print('start video downloading')
+async def download_b(video_url, audio_url, video_id, filepath=None):
+    path = filepath + str(video_id)
+    # print('start video downloading')
     try:
         await asyncio.gather(
             download_b_file(video_url, f"{path}-video.m4s"),
@@ -267,7 +281,8 @@ async def download_b(video_url,audio_url,video_id,filepath=None):
     except Exception as e:
         pass
 
-async def download_img(url: str, path: str = '', proxy: str = None, session=None, headers=None,len=None) -> str:
+
+async def download_img(url: str, path: str = '', proxy: str = None, session=None, headers=None, len=None) -> str:
     """
     异步下载（aiohttp）网络图片，并支持通过代理下载。
     如果未指定path，则图片将保存在当前工作目录并以图片的文件名命名。
@@ -278,6 +293,7 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
     :param proxy: 可选，下载图片时使用的代理服务器的URL。
     :return: 保存图片的路径。
     """
+
     def crop_center_square(image):
         width, height = image.size
         min_edge = min(width, height)
@@ -286,23 +302,24 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
         right = left + min_edge
         bottom = top + min_edge
         return image.crop((left, top, right, bottom))
-    file_name=re.sub(r'[:]', '_', url.split('/').pop().split('?')[0])
-    path=f'{path}{file_name}'
+
+    file_name = re.sub(r'[:]', '_', url.split('/').pop().split('?')[0])
+    path = f'{path}{file_name}'
     if 'gif' in path:
-        path=path.replace("gif", "jpg")
-    #if not ('jpg' in path or 'png' in path or 'webp' in path or 'jpeg' in path):
+        path = path.replace("gif", "jpg")
+    # if not ('jpg' in path or 'png' in path or 'webp' in path or 'jpeg' in path):
     if not path.lower().endswith((".jpg", ".jpeg", ".png")):
         path = f'{path}.jpg'
     if 'jpeg' in path:
-        path=path.replace("jpeg", "jpg")
+        path = path.replace("jpeg", "jpg")
     # print(f'url:{url}\nfilename:{file_name}\npath:{path}')
     if len is None:
-        len=1
+        len = 1
     # 单个文件下载
-    if int(len) == 1 :
+    if int(len) == 1:
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
             response = await client.get(url)
-            if response.status_code  == 200:
+            if response.status_code == 200:
                 with open(path, 'wb') as f:
                     f.write(response.content)
                 return path
@@ -310,7 +327,7 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
     else:
         async with httpx.AsyncClient(proxies=proxy, headers=headers) as client:
             response = await client.get(url)
-            if response.status_code  == 200:
+            if response.status_code == 200:
                 square_image = crop_center_square(Image.open(BytesIO(response.content)))
                 if square_image.mode != "RGB":
                     square_image = square_image.convert("RGB")
@@ -318,22 +335,23 @@ async def download_img(url: str, path: str = '', proxy: str = None, session=None
                 return path
 
 
-async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None,card_url_list=None):
-    #print(f'is_opus:{is_opus}')
-    #print(json.dumps(dy_info, indent=4))
+async def info_search_bili(dy_info, is_opus=None, filepath=None, type=None, card_url_list=None):
+    # print(f'is_opus:{is_opus}')
+    # print(json.dumps(dy_info, indent=4))
     try:
-        json_dy = {'status': False,'pendant_path':False,'card_path':False,'card_number':False,'card_color':False,'card_is_fan':False}
+        json_dy = {'status': False, 'pendant_path': False, 'card_path': False, 'card_number': False,
+                   'card_color': False, 'card_is_fan': False}
         try:
-            dy_info_check=dy_info['item']['modules']['module_author']
+            dy_info_check = dy_info['item']['modules']['module_author']
         except:
             for check in dy_info['item']['modules']:
                 if 'module_author' in check:
                     dy_info_check = check['module_author']
         if 'pendant' in dy_info_check:
-            pendant_url=dy_info_check['pendant']['image']
+            pendant_url = dy_info_check['pendant']['image']
             if pendant_url != '':
-                pendant_path=await asyncio.gather(*[asyncio.create_task(download_img(pendant_url, f'{filepath}'))])
-                json_dy['pendant_path']=pendant_path[0]
+                pendant_path = await asyncio.gather(*[asyncio.create_task(download_img(pendant_url, f'{filepath}'))])
+                json_dy['pendant_path'] = pendant_path[0]
 
         if 'decorate' in dy_info_check:
             card_check = dy_info_check['decorate']
@@ -353,10 +371,10 @@ async def info_search_bili(dy_info,is_opus=None,filepath=None,type=None,card_url
             json_dy['card_path'] = card_path[0]
 
         if not json_dy['card_path']:
-            json_dy['card_path'] = (await asyncio.gather(*[asyncio.create_task(download_img(card_url_list[random.randint(0, len(card_url_list) - 1)], f'{filepath}'))]))[0]
-
+            json_dy['card_path'] = (await asyncio.gather(*[asyncio.create_task(
+                download_img(card_url_list[random.randint(0, len(card_url_list) - 1)], f'{filepath}'))]))[0]
 
         return json_dy
     except Exception as e:
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None

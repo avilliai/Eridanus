@@ -1,4 +1,5 @@
 import httpx
+
 from framework_common.utils.random_str import random_str
 
 datap = {"speaker": "宫子（泳装）", "text": "上午好"}
@@ -115,8 +116,8 @@ async def modelscope_tts(text: str, speaker: str):
         r = await client.post(url, json=data)
         newurl = newurp + \
                  r.json().get("data")[1].get("name")
-        async with httpx.AsyncClient(timeout=200, headers=headers) as client:
-            r = await client.get(newurl)
+        async with httpx.AsyncClient(timeout=200, headers=headers) as client2:
+            r = await client2.get(newurl)
             with open(p, "wb") as f:
                 f.write(r.content)
             return p

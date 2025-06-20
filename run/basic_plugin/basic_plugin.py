@@ -125,7 +125,7 @@ async def call_fortune(bot, event, config):
 async def call_pick_music(bot, event, config, aim):
     try:
         r = await cccdddm(aim)
-        #print(r)
+        # print(r)
         await bot.send(event, Music(type="163", id=r[0][1]))
     except Exception as e:
         bot.logger.error(f"Error in pick_music: {e}")
@@ -139,11 +139,11 @@ def main(bot, config):
     @bot.on(GroupMessageEvent)
     async def weather_query(event: GroupMessageEvent):
         if event.pure_text.startswith("查天气"):
-            #await bot.send(event, "已修改")
+            # await bot.send(event, "已修改")
             remark = event.pure_text.split("查天气")[1].strip()
             r = await call_weather_query(bot, event, config, remark)
             await bot.send(event, str(r.get("result")))
-            #await bot.set_friend_remark(event.user_id, remark)
+            # await bot.set_friend_remark(event.user_id, remark)
 
     @bot.on(GroupMessageEvent)
     async def weather(event: GroupMessageEvent):
@@ -168,16 +168,16 @@ def main(bot, config):
                 return
 
             txt, img = tarotChoice(config.basic_plugin.config["tarot"]["mode"])
-            await bot.send(event, [Text(txt), Image(file=img)])  #似乎没必要让这个也走ai回复调用
+            await bot.send(event, [Text(txt), Image(file=img)])  # 似乎没必要让这个也走ai回复调用
         elif event.pure_text == "抽象塔罗":
             txt, img = tarotChoice('AbstractImages')
-            await bot.send(event, [Text(txt), Image(file=img)])  #似乎没必要让这个也走ai回复调用
+            await bot.send(event, [Text(txt), Image(file=img)])  # 似乎没必要让这个也走ai回复调用
         elif event.pure_text == "ba塔罗":
             txt, img = tarotChoice('blueArchive')
-            await bot.send(event, [Text(txt), Image(file=img)])  #似乎没必要让这个也走ai回复调用
+            await bot.send(event, [Text(txt), Image(file=img)])  # 似乎没必要让这个也走ai回复调用
         elif event.pure_text == "bili塔罗" or event.pure_text == "2233塔罗":
             txt, img = tarotChoice('bilibili')
-            await bot.send(event, [Text(txt), Image(file=img)])  #似乎没必要让这个也走ai回复调用
+            await bot.send(event, [Text(txt), Image(file=img)])  # 似乎没必要让这个也走ai回复调用
         elif event.pure_text == "运势":
             await call_fortune(bot, event, config)
 

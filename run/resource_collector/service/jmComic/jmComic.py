@@ -1,11 +1,10 @@
 # -*- coding:utf-8 -*-
+import asyncio
 import os.path
 import shutil
 
 import jmcomic
 import yaml
-import asyncio
-
 from jmcomic import *
 
 from framework_common.utils.random_str import random_str

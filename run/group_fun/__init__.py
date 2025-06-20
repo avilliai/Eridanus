@@ -1,8 +1,8 @@
-plugin_description="群聊娱乐功能"
-dynamic_imports ={
-    "run.group_fun.func_collection": ["random_ninjutsu","query_ninjutsu"],
+plugin_description = "群聊娱乐功能"
+dynamic_imports = {
+    "run.group_fun.func_collection": ["random_ninjutsu", "query_ninjutsu"],
 }
-function_declarations=[
+function_declarations = [
     {
         "name": "query_ninjutsu",
         "description": "查询忍术",

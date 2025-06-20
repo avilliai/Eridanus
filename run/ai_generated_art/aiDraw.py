@@ -7,16 +7,16 @@ from bs4 import BeautifulSoup
 
 from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Image, Node, Text
-from run.ai_generated_art.service.modelscope_text2img import modelscope_drawer
-from run.ai_generated_art.service.hf_t2i import hf_drawer
-from run.ai_generated_art.service.setu_moderate import pic_audit_standalone
-from run.basic_plugin.service.ai_text2img import bing_dalle3, flux_ultra
 from framework_common.database_util.User import get_user, User
 from framework_common.utils.random_str import random_str
+from framework_common.utils.utils import download_img, url_to_base64, parse_arguments, get_img, delay_recall
 from run.ai_generated_art.service.aiDraw import n4, n3, SdDraw0, getloras, getcheckpoints, ckpt2, n4re0, n3re0, \
     SdmaskDraw, getsampler, getscheduler, interrupt, skipsd, SdOutpaint, get_img_info, aiArtModerate
+from run.ai_generated_art.service.hf_t2i import hf_drawer
+from run.ai_generated_art.service.modelscope_text2img import modelscope_drawer
+from run.ai_generated_art.service.setu_moderate import pic_audit_standalone
 from run.ai_generated_art.service.wildcard import get_available_wildcards, replace_wildcards
-from framework_common.utils.utils import download_img, url_to_base64, parse_arguments, get_img, delay_recall
+from run.basic_plugin.service.ai_text2img import bing_dalle3, flux_ultra
 from run.basic_plugin.service.imgae_search.anime_trace import anime_trace
 
 turn = 0
@@ -64,6 +64,7 @@ async def call_text2img(bot, event, config, prompt):
             except Exception as e:
                 bot.logger.error(f"Task failed: {e}")
         bot.logger.info(f"text2img 任务完成: {r}")
+
     # 在后台运行任务，不等待完成
     asyncio.create_task(run_tasks())
 

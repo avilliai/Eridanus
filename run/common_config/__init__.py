@@ -1,1 +1,1 @@
-plugin_description="基础配置"
+plugin_description = "基础配置"

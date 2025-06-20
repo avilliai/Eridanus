@@ -2,10 +2,11 @@ import httpx
 
 
 class Coomer:
-    def __init__(self,proxies=None):
+    def __init__(self, proxies=None):
         self.base_url = "https://coomer.su/api/v1/posts?q=hentai-tv"
         self.proxies = proxies
-    async def get_posts(self,keyword):
+
+    async def get_posts(self, keyword):
         async with httpx.AsyncClient(proxies=self.proxies) as client:
             response = await client.get(f"{self.base_url}&q={keyword}")
             return response.json()["posts"]
@@ -25,4 +26,5 @@ class Coomer:
               "attachments": []
             }]
         """
+
     pass

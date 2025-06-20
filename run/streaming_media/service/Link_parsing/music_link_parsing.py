@@ -1,7 +1,7 @@
-import re
 import copy
-import os
 import inspect
+import os
+import re
 
 from run.streaming_media.service.Link_parsing.core.cloud_music_draw import draw_netease_music_card
 from run.streaming_media.service.Link_parsing.core.netease_music import fetch_song_info, download_image
@@ -12,9 +12,9 @@ json_init = {
     "reason": {},
     "pic_path": {},
     "url": {},
-    "video_url": False,  #可以保留，或者根据需要改名
+    "video_url": False,  # 可以保留，或者根据需要改名
     "soft_type": "",
-    "url_file_path": None,  #下载链接文件路径
+    "url_file_path": None,  # 下载链接文件路径
 }
 filepath_init = (
     f"{os.path.dirname(os.path.dirname(os.path.abspath(inspect.getfile(fetch_song_info))))}/data/cache/"
@@ -41,7 +41,7 @@ async def netease_music_link_parse(url, filepath=None):
         return json_check
 
     if song_id:
-        #获取歌曲信息
+        # 获取歌曲信息
         try:
             song_info = await fetch_song_info(song_id, filepath)
             if not song_info:
@@ -51,7 +51,7 @@ async def netease_music_link_parse(url, filepath=None):
             json_check["reason"] = str(e)
             return json_check
 
-        #下载封面图
+        # 下载封面图
         try:
             cover_path = await download_image(song_info["cover_url"], filepath)
         except Exception as e:
@@ -59,7 +59,7 @@ async def netease_music_link_parse(url, filepath=None):
             json_check["reason"] = f"封面下载失败: {e}"
             return json_check
 
-        #绘图数据
+        # 绘图数据
         draw_data = {
             "cover_path": cover_path,
             "song_name": song_info["name"],
@@ -67,7 +67,7 @@ async def netease_music_link_parse(url, filepath=None):
             "song_type": song_info.get("song_type", ""),
         }
 
-        #绘制图片
+        # 绘制图片
         try:
             out_path = draw_netease_music_card(draw_data, filepath=filepath, song_id=song_id)
             json_check["pic_path"] = out_path
@@ -76,7 +76,7 @@ async def netease_music_link_parse(url, filepath=None):
             json_check["reason"] = f"绘图失败: {e}"
             return json_check
 
-        #存储下载链接文件路径
+        # 存储下载链接文件路径
         if song_info.get("url_file_path"):
             json_check["url_file_path"] = song_info["url_file_path"]
 

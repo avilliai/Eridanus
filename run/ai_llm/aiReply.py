@@ -8,7 +8,7 @@ from framework_common.database_util.Group import clear_group_messages
 from framework_common.database_util.Group import get_group_messages
 from framework_common.database_util.User import get_user, update_user
 from framework_common.database_util.llmDB import delete_user_history, clear_all_history, change_folder_chara, \
-    get_folder_chara, set_all_users_chara, clear_all_users_chara, clear_user_chara, delete_latest2_history
+    get_folder_chara, set_all_users_chara, delete_latest2_history
 from framework_common.framework_util.func_map_loader import gemini_func_map, openai_func_map
 from run.ai_llm.service.aiReplyCore import aiReplyCore, end_chat, judge_trigger, send_text, count_tokens_approximate
 from run.ai_llm.service.auto_talk import check_message_similarity
@@ -50,9 +50,9 @@ def main(bot, config):
     async def aiReply(event: GroupMessageEvent):
         await check_commands(event)
         if (event.message_chain.has(At) and event.message_chain.get(At)[0].qq == bot.id
-                or prefix_check(str(event.pure_text), config.ai_llm.config["llm"]["prefix"])  #前缀判断
+                or prefix_check(str(event.pure_text), config.ai_llm.config["llm"]["prefix"])  # 前缀判断
                 or await judge_trigger(event.processed_message, event.user_id, config, tools=tools, bot=bot,
-                                       event=event)):  #触发cd判断
+                                       event=event)):  # 触发cd判断
             bot.logger.info(f"接受消息{event.processed_message}")
 
             ## 权限判断
@@ -61,7 +61,7 @@ def main(bot, config):
                 await bot.send(event, "你没有足够的权限使用该功能~")
                 return
             if event.group_id == 913122269 and not user_info.permission >= 66:
-                #await bot.send(event,"你没有足够的权限使用该功能哦~")
+                # await bot.send(event,"你没有足够的权限使用该功能哦~")
                 return
             if not user_info.permission >= config.ai_llm.config["core"]["ai_token_limt"]:
                 if user_info.ai_token_record >= config.ai_llm.config["core"]["ai_token_limt_token"]:
@@ -158,19 +158,19 @@ def main(bot, config):
                     bot.logger.exception(f"用户 {uid} 处理出错: {e}")
                 finally:
                     user_state[uid]["queue"].task_done()
-                    #print(user_state[uid]["queue"])
+                    # print(user_state[uid]["queue"])
                     """
                     总结用户特征，伪长期记忆人格
                     """
                     if config.ai_llm.config["llm"]["长期记忆"]:
                         if user_info.portrait_update_time == "" or (
                                 datetime.datetime.now() - datetime.datetime.fromisoformat(
-                                user_info.portrait_update_time)).total_seconds() > config.ai_llm.config["llm"][
+                            user_info.portrait_update_time)).total_seconds() > config.ai_llm.config["llm"][
                             "记忆更新间隔"]:
                             bot.logger.info(f"更新用户 {event.user_id} 设定")
                             reply_message = await aiReplyCore(
                                 [{
-                                     'text': 'system: 对以上聊天内容做出总结，描绘出当前对话的用户画像，总结出当前用户的人物性格特征以及偏好。不要回复，直接给出结果'}],
+                                    'text': 'system: 对以上聊天内容做出总结，描绘出当前对话的用户画像，总结出当前用户的人物性格特征以及偏好。不要回复，直接给出结果'}],
                                 current_event.user_id,
                                 config,
                                 bot=bot,

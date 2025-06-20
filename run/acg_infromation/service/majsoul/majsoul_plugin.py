@@ -1,8 +1,8 @@
 import asyncio
+import copy
 
 from run.acg_infromation.service.majsoul.majsoul_info.init import majsoulInfo, TrimajsoulInfo, RecordInfo, TriRecordInfo
 from run.group_fun.service.wife_you_want import manage_group_status
-import copy
 
 json_init = {'status': False, 'content': {}, 'text': '初始化', 'pic_path': {}, 'type_soft': '雀魂牌谱屋',
              'uesr_name': '初始化'}
@@ -15,7 +15,7 @@ async def check_for_majsoul_personal_info(context, type=0, target_id=None, targe
     # type 3:雀魂三麻查询
     # type 4:雀魂三麻牌局查询
     # type 5:雀魂牌局查询
-    #目标数据库：majsoul
+    # 目标数据库：majsoul
     json_majsoul = copy.deepcopy(json_init)
     if target_id is not None:
         target_name_search = await manage_group_status(target_id, 'user_info_colloction', 'majsoul')

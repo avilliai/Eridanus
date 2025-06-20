@@ -18,7 +18,7 @@ from run.ai_generated_art.service.wildcard import replace_wildcards
 from .setu_moderate import pic_audit_standalone
 
 same_manager = YAMLManager.get_instance()
-#print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
+# print(same_manager.ai_generated_art.config,type(same_manager.ai_generated_art.config))
 aiDrawController = same_manager.ai_generated_art.config.get("ai绘画")
 ckpt = aiDrawController.get("sd默认启动模型") if aiDrawController else None
 if_save = aiDrawController.get("sd图片是否保存到生图端") if aiDrawController else False
@@ -35,20 +35,22 @@ try:
 except (ValueError, IndexError, TypeError):
     sd_max_size = 1600 * 1600
 allow_nsfw_groups = [int(item) for item in aiDrawController.get("allow_nsfw_groups", [])] if aiDrawController else []
-censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn", "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
+censored_words = ["nsfw", "nipple", "pussy", "areola", "dick", "cameltoe", "ass", "boob", "arse", "penis", "porn",
+                  "sex", "bitch", "fuck", "arse", "blowjob", "handjob", "anal", "nude", "vagina", "boner"]
 positives = '{},rating:general, best quality, very aesthetic, absurdres'
 negatives = 'blurry, lowres, error, film grain, scan artifacts, worst quality, bad quality, jpeg artifacts, very displeasing, chromatic aberration, logo, dated, signature, multiple views, gigantic breasts'
-#positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
-#negatives = 'nsfw,lowres,{bad},error,fewer,extra,missing,worst quality,jpeg artifacts,bad quality,watermark,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,[abstract],blurry,film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
-#negatives = '((nsfw)),((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly,poorly drawn,(censor),blurry,watermark,simple background,transparent background,{bad},error,fewer,extra,missing,jpeg artifacts,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract],film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
+# positives = '{},masterpiece,best quality,amazing quality,very aesthetic,absurdres,newest,'
+# negatives = 'nsfw,lowres,{bad},error,fewer,extra,missing,worst quality,jpeg artifacts,bad quality,watermark,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,[abstract],blurry,film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
+# negatives = '((nsfw)),((furry)),lowres,(bad quality,worst quality:1.2),bad anatomy,sketch,jpeg artifacts,ugly,poorly drawn,(censor),blurry,watermark,simple background,transparent background,{bad},error,fewer,extra,missing,jpeg artifacts,unfinished,displeasing,chromatic aberration,signature,extra digits,artistic error,username,scan,[abstract],film grain,scan artifacts,very displeasing,logo,dated,multiple views,gigantic breasts'
 round_sd = 0
 round_nai = 0
 
-configs = aiDrawController.get("其他默认绘图参数",[])
+configs = aiDrawController.get("其他默认绘图参数", [])
 default_args = {}
 
 for config in configs:
     default_args = parse_arguments(config, default_args)
+
 
 def check_censored(positive, censored_words):
     words = positive.lower().replace(',', ' ').split()
@@ -56,7 +58,9 @@ def check_censored(positive, censored_words):
         if word.lower() in words:
             return True
     return
-async def aiArtModerate(imgurl,api_user,api_secret):
+
+
+async def aiArtModerate(imgurl, api_user, api_secret):
     params = {
         'url': f'{imgurl}',
         'models': 'genai',
@@ -66,7 +70,9 @@ async def aiArtModerate(imgurl,api_user,api_secret):
     async with httpx.AsyncClient() as client:
         response = await client.get('https://api.sightengine.com/1.0/check.json', params=params)
         data = response.json()
-    return data["type"]['ai_generated']*100
+    return data["type"]['ai_generated'] * 100
+
+
 async def get_image_dimensions(base64_string):
     try:
         if ',' in base64_string:
@@ -78,13 +84,15 @@ async def get_image_dimensions(base64_string):
         width, height = image.size
         image.close()
         image_buffer.close()
-        
+
         return width, height
-        
+
     except Exception as e:
         raise Exception(f"处理图像时发生错误: {str(e)}")
-    
-def process_image_dimensions(width, height, max_area=None, min_area=None, resolution_options=None, divisible_by=None, upscale_to_max=False):
+
+
+def process_image_dimensions(width, height, max_area=None, min_area=None, resolution_options=None, divisible_by=None,
+                             upscale_to_max=False):
     """
     参数:
         width: 输入宽度
@@ -100,51 +108,52 @@ def process_image_dimensions(width, height, max_area=None, min_area=None, resolu
     try:
         orig_width, orig_height = width, height
         orig_ratio = orig_width / orig_height
-        
+
         new_width, new_height = orig_width, orig_height
-        
+
         curr_area = orig_width * orig_height
-        
+
         if max_area is not None and curr_area > max_area:
             scale = math.sqrt(max_area / curr_area)
             new_width = int(orig_width * scale)
             new_height = int(orig_height * scale)
-        
+
         if min_area is not None and curr_area < min_area:
             scale = math.sqrt(min_area / curr_area)
             new_width = int(orig_width * scale)
             new_height = int(orig_height * scale)
-        
+
         elif max_area is not None and curr_area < max_area and upscale_to_max:
             scale = math.sqrt(max_area / curr_area)
             new_width = int(orig_width * scale)
             new_height = int(orig_height * scale)
-                
+
         elif resolution_options is not None:
             best_match = None
             min_diff = float('inf')
-            
+
             for opt_width, opt_height in resolution_options:
                 opt_ratio = opt_width / opt_height
                 ratio_diff = abs(orig_ratio - opt_ratio)
-                
+
                 if ratio_diff < min_diff:
                     min_diff = ratio_diff
                     best_match = (opt_width, opt_height)
-                    
+
             new_width, new_height = best_match
-        
+
         if divisible_by is not None and divisible_by > 0:
             new_width = (new_width // divisible_by) * divisible_by
             new_height = (new_height // divisible_by) * divisible_by
             new_width = max(new_width, divisible_by)
             new_height = max(new_height, divisible_by)
-        
+
         return new_width, new_height
-    
+
     except Exception as e:
         raise Exception(f"处理尺寸时发生错误: {str(e)}")
-    
+
+
 def parse_custom_url_auth(input_string: str):
     parts = input_string.split(' ', 1)
     clean_url = parts[0]
@@ -158,6 +167,7 @@ def parse_custom_url_auth(input_string: str):
         auth_header = f"Basic {encoded_credentials_string}"
 
     return clean_url, auth_header
+
 
 async def n4(prompt, path, groupid, config, args):
     global round_nai
@@ -178,14 +188,31 @@ async def n4(prompt, path, groupid, config, args):
         width = 832
         height = 1216
 
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
-    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
-    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
-    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
-    
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args,
+                                                                                                                  dict) else default_args.get(
+        'nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args,
+                                                                                                             dict) else default_args.get(
+        'nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(
+        args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg',
+                                                                                                            5) if isinstance(
+            default_args, dict) else 5)
+
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
@@ -258,11 +285,13 @@ async def n4(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     if config.common_config.basic_config["proxy"]["http_proxy"]:
-        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"],
+                   "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
     round_nai += 1
@@ -282,9 +311,11 @@ async def n4(prompt, path, groupid, config, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+                    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
+                                                       url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -313,14 +344,31 @@ async def n3(prompt, path, groupid, config, args):
         prompt = prompt.replace("竖", "")
         width = 832
         height = 1216
-        
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
-    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
-    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
-    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args,
+                                                                                                                  dict) else default_args.get(
+        'nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args,
+                                                                                                             dict) else default_args.get(
+        'nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(
+        args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg',
+                                                                                                            5) if isinstance(
+            default_args, dict) else 5)
 
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
@@ -379,11 +427,13 @@ async def n3(prompt, path, groupid, config, args):
         "x-correlation-id": "89SHW4",
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     if config.common_config.basic_config["proxy"]["http_proxy"]:
-        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"],
+                   "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
     round_nai += 1
@@ -403,9 +453,11 @@ async def n3(prompt, path, groupid, config, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+                    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
+                                                       url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -421,15 +473,21 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
     url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     super_width, super_height = await get_image_dimensions(b64_in)
-    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
-    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
-    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
+    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size,
+                                                         min_area=768 * 768, divisible_by=8)
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args,
+                                                                                                             dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args,
+                                                                                                                 dict) else super_height
     denoising_strength = float(
-        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
-        if isinstance(args, dict) else 
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+        if isinstance(args, dict) else
         (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
     )
-    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
+    steps = min(
+        int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps',
+                                                                                                             15)) if isinstance(
+            default_args, dict) else 15, 35)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -443,21 +501,37 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         prompt = prompt.replace("竖", "")
         width = 1024
         height = 1536
-    
+
     width, height = process_image_dimensions(width, height, max_area=sd_max_size, divisible_by=8)
 
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
-    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
-    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
-    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
+    sampler = str(
+        args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get(
+            'sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args,
+                                                                                                           dict) else default_args.get(
+        'scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg',
+                                                                                                              6.5) if isinstance(
+        default_args, dict) else 6.5)
 
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
-    
+
     payload = {
         "init_images": [b64_in],
         "denoising_strength": denoising_strength,
@@ -486,7 +560,8 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
@@ -500,7 +575,7 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         "Accept": "application/json",
         "Authorization": auth_header
     }
-    
+
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
     r = response.json()
@@ -508,9 +583,11 @@ async def SdreDraw(prompt, path, config, groupid, b64_in, args):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+            config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True,
+                                               url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -530,11 +607,14 @@ async def SdDraw0(prompt, path, config, groupid, args):
     width = int(args.get('w', sd_w) if args.get('w', sd_w) > 0 else sd_w) if isinstance(args, dict) else sd_w
     height = int(args.get('h', sd_h) if args.get('h', sd_h) > 0 else sd_h) if isinstance(args, dict) else sd_h
     denoising_strength = float(
-        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
-        if isinstance(args, dict) else 
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+        if isinstance(args, dict) else
         (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
     )
-    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
+    steps = min(
+        int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps',
+                                                                                                             15)) if isinstance(
+            default_args, dict) else 15, 35)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -548,21 +628,37 @@ async def SdDraw0(prompt, path, config, groupid, args):
         prompt = prompt.replace("竖", "")
         width = 1024
         height = 1536
-    
+
     width, height = process_image_dimensions(width, height, max_area=sd_max_size, divisible_by=8)
 
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
-    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
-    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
-    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
+    sampler = str(
+        args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get(
+            'sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args,
+                                                                                                           dict) else default_args.get(
+        'scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg',
+                                                                                                              6.5) if isinstance(
+        default_args, dict) else 6.5)
 
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
             return False
-    
+
     payload = {
         "denoising_strength": denoising_strength,
         "enable_hr": 'false',
@@ -590,14 +686,15 @@ async def SdDraw0(prompt, path, config, groupid, args):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
     list_length = len(config.ai_generated_art.config['ai绘画']['sdUrl'])
     if round_sd >= list_length:
         round_sd = 0
-        
+
     url, auth_header = parse_custom_url_auth(url)
 
     headers = {
@@ -610,9 +707,11 @@ async def SdDraw0(prompt, path, config, groupid, args):
     r = response.json()
 
     b64 = r['images'][0]
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+            config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True,
+                                               url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -649,7 +748,7 @@ async def ckpt2(model, config):
     global ckpt
     ckpt = model
     config.ai_generated_art.config["ai绘画"]["sd默认启动模型"] = model
-    config.save_yaml("config",plugin_name="ai_generated_art")
+    config.save_yaml("config", plugin_name="ai_generated_art")
 
 
 async def getcheckpoints(config):
@@ -671,22 +770,33 @@ async def getcheckpoints(config):
         result = f'当前底模: {ckpt}\n以下是可用的底模：\n' + '\n'.join(model_lines)
         return result
 
+
 async def n4re0(prompt, path, groupid, config, b64_in, args):
     global round_nai
     super_width, super_height = await get_image_dimensions(b64_in)
-    super_width, super_height = process_image_dimensions(super_width, super_height, resolution_options=((1024,1024), (1216,832), (832,1216)))
-    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
-    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
+    super_width, super_height = process_image_dimensions(super_width, super_height,
+                                                         resolution_options=((1024, 1024), (1216, 832), (832, 1216)))
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args,
+                                                                                                             dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args,
+                                                                                                                 dict) else super_height
     args = args
     url = "https://image.novelai.net"
     denoising_strength = float(
-        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
-        if isinstance(args, dict) else 
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+        if isinstance(args, dict) else
         (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
     )
-    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
-    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
-    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args,
+                                                                                                                  dict) else default_args.get(
+        'nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args,
+                                                                                                             dict) else default_args.get(
+        'nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(
+        args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg',
+                                                                                                            5) if isinstance(
+            default_args, dict) else 5)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -701,11 +811,24 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
-    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
+    nai_cfg = float(
+        args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg',
+                                                                                                            5) if isinstance(
+            default_args, dict) else 5)
 
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
@@ -784,10 +907,12 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if config.common_config.basic_config["proxy"]["http_proxy"]:
-        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"],
+                   "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
@@ -807,9 +932,11 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+                    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
+                                                       url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -819,22 +946,33 @@ async def n4re0(prompt, path, groupid, config, b64_in, args):
                 img_file.write(image_data)
     return path
 
+
 async def n3re0(prompt, path, groupid, config, b64_in, args):
     global round_nai
     super_width, super_height = await get_image_dimensions(b64_in)
-    super_width, super_height = process_image_dimensions(super_width, super_height, resolution_options=((1024,1024), (1216,832), (832,1216)))
-    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
-    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
+    super_width, super_height = process_image_dimensions(super_width, super_height,
+                                                         resolution_options=((1024, 1024), (1216, 832), (832, 1216)))
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args,
+                                                                                                             dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args,
+                                                                                                                 dict) else super_height
     args = args
     url = "https://image.novelai.net"
     denoising_strength = float(
-        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
-        if isinstance(args, dict) else 
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+        if isinstance(args, dict) else
         (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
     )
-    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args, dict) else default_args.get('nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
-    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args, dict) else default_args.get('nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
-    nai_cfg = float(args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg', 5) if isinstance(default_args, dict) else 5)
+    nai_sampler = str(args.get('nai-sampler', default_args.get('nai-sampler', 'k_euler_ancestral')) if isinstance(args,
+                                                                                                                  dict) else default_args.get(
+        'nai-sampler', 'k_euler_ancestral') if isinstance(default_args, dict) else 'k_euler_ancestral')
+    nai_scheduler = str(args.get('nai-scheduler', default_args.get('nai-scheduler', 'karras')) if isinstance(args,
+                                                                                                             dict) else default_args.get(
+        'nai-scheduler', 'karras') if isinstance(default_args, dict) else 'karras')
+    nai_cfg = float(
+        args.get('nai-cfg', default_args.get('nai-cfg', 5)) if isinstance(args, dict) else default_args.get('nai-cfg',
+                                                                                                            5) if isinstance(
+            default_args, dict) else 5)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -849,9 +987,19 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         width = 832
         height = 1216
 
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
 
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
@@ -870,8 +1018,8 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             "sampler": nai_sampler,
             "steps": 23,
             "n_samples": 1,
-            "strength":denoising_strength,
-            "noise":0.2,
+            "strength": denoising_strength,
+            "noise": 0.2,
             "ucPreset": 0,
             "qualityToggle": True,
             "dynamic_thresholding": False,
@@ -917,10 +1065,12 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
         "x-initiated-at": "2025-01-27T16:40:54.521Z"
     }
     if config.common_config.basic_config["proxy"]["http_proxy"]:
-        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"], "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
+        proxies = {"http://": config.common_config.basic_config["proxy"]["http_proxy"],
+                   "https://": config.common_config.basic_config["proxy"]["http_proxy"]}
     else:
         proxies = None
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_nai += 1
@@ -940,9 +1090,11 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
             if not file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
                 raise ValueError("The zip archive does not contain an image file.")
             image_data = zf.read(file_name)
-            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+            if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+                    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
                 try:
-                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+                    check = await pic_audit_standalone(base64.b64encode(image_data).decode('utf-8'), return_none=True,
+                                                       url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
                     if check:
                         return False
                 except Exception as e:
@@ -952,20 +1104,27 @@ async def n3re0(prompt, path, groupid, config, b64_in, args):
                 img_file.write(image_data)
     return path
 
+
 async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     global round_sd
     url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
     args = args
     super_width, super_height = await get_image_dimensions(b64_in)
-    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
-    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
-    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
+    super_width, super_height = process_image_dimensions(super_width, super_height, max_area=sd_max_size,
+                                                         min_area=768 * 768, divisible_by=8)
+    width = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args,
+                                                                                                             dict) else super_width
+    height = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args,
+                                                                                                                 dict) else super_height
     denoising_strength = float(
-        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7) 
-        if isinstance(args, dict) else 
+        args.get('d', default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
+        if isinstance(args, dict) else
         (default_args.get('d', 0.7) if isinstance(default_args, dict) else 0.7)
     )
-    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
+    steps = min(
+        int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps',
+                                                                                                             15)) if isinstance(
+            default_args, dict) else 15, 35)
 
     if "方" in prompt:
         prompt = prompt.replace("方", "")
@@ -979,16 +1138,32 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         prompt = prompt.replace("竖", "")
         width = 1024
         height = 1536
-    
+
     width, height = process_image_dimensions(width, height, max_area=sd_max_size, divisible_by=8)
 
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive, str) else str(prompt)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", prompt) if isinstance(positive,
+                                                                                                              str) else str(
+        prompt)
     positive, _ = await replace_wildcards(positive)
-    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
-    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
-    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
+    sampler = str(
+        args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get(
+            'sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args,
+                                                                                                           dict) else default_args.get(
+        'scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg',
+                                                                                                              6.5) if isinstance(
+        default_args, dict) else 6.5)
 
     if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw"):
         if check_censored(positive, censored_words):
@@ -1027,7 +1202,8 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         },
         "override_settings_restore_afterwards": False,
     }  # manba out
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
     round_sd += 1
@@ -1048,9 +1224,11 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
         return None
     # 我的建议是，直接返回base64，让它去审查
     b64 = r['images'][0]
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+            config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True,
+                                               url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -1062,6 +1240,7 @@ async def SdmaskDraw(prompt, path, config, groupid, b64_in, args, mask_base64):
     # image.save(f'{path}')
     return path
 
+
 async def getsampler(config):
     global round_sd
     url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
@@ -1072,7 +1251,7 @@ async def getsampler(config):
         "Accept": "application/json",
         "Authorization": auth_header
     }
-    url = f'{url}/sdapi/v1/samplers'    
+    url = f'{url}/sdapi/v1/samplers'
 
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.get(url, headers=headers)
@@ -1086,7 +1265,8 @@ async def getsampler(config):
         if isinstance(r, dict) and "body" in r:
             names_list = [item["name"] for item in r["body"] if "name" in item]
             return f'\n'.join(names_list)
-    
+
+
 async def getscheduler(config):
     global round_sd
     url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
@@ -1104,6 +1284,7 @@ async def getscheduler(config):
         label_list = [item["label"] for item in r if "label" in item]
         result = f'\n'.join(label_list)
         return result
+
 
 async def interrupt(config):
     global round_sd
@@ -1134,7 +1315,8 @@ async def interrupt(config):
     except httpx.HTTPError as e:
         print(f"请求失败: {e}")
         return None
-    
+
+
 async def skipsd(config):
     global round_sd
     try:
@@ -1164,7 +1346,8 @@ async def skipsd(config):
     except httpx.HTTPError as e:
         print(f"请求失败: {e}")
         return None
-    
+
+
 async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     """
     使用纯 NumPy 分形噪声和内容感知插值优化扩图填充
@@ -1176,6 +1359,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     如果prompt中包含--full且处于扩图模式,直接将扩展后的图像调用SdreDraw进行全图重绘
     --overmask参数代表扩图对原图的覆盖长度,默认64
     """
+
     def extract_outpaint_params(prompt):
         patterns = {
             "left": r"--left\s*(\d*)",
@@ -1202,7 +1386,9 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     global round_sd
     url = config.ai_generated_art.config["ai绘画"]["sdUrl"][int(round_sd)]
-    OVERMASK = int(args.get('overmask', default_args.get('overmask', 64)) if isinstance(args, dict) else default_args.get('overmask', 64)) if isinstance(default_args, dict) else 64
+    OVERMASK = int(
+        args.get('overmask', default_args.get('overmask', 64)) if isinstance(args, dict) else default_args.get(
+            'overmask', 64)) if isinstance(default_args, dict) else 64
 
     orig_width, orig_height = await get_image_dimensions(b64_in)
     canvas_width = orig_width + outpaint_params["left"] + outpaint_params["right"]
@@ -1210,18 +1396,41 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     # 参数配置
     denoising_strength = float(args.get('d', 0.75) if isinstance(args, dict) else 0.75)
-    steps = min(int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps', 15)) if isinstance(default_args, dict) else 15, 35)
-    positive = str(args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args, dict) else positives)
-    negative = str(args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args, dict) else args.get('n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args, dict) else negatives)
-    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", cleaned_prompt) if isinstance(positive, str) else str(cleaned_prompt)
+    steps = min(
+        int(args.get('steps', default_args.get('steps', 15)) if isinstance(args, dict) else default_args.get('steps',
+                                                                                                             15)) if isinstance(
+            default_args, dict) else 15, 35)
+    positive = str(
+        args.get('p', default_args.get('p', positives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'p', positives) if isinstance(args, dict) else default_args.get('p', positives) if isinstance(default_args,
+                                                                                                          dict) else positives)
+    negative = str(
+        args.get('n', default_args.get('n', negatives)) if isinstance(args, dict) and isinstance(default_args,
+                                                                                                 dict) else args.get(
+            'n', negatives) if isinstance(args, dict) else default_args.get('n', negatives) if isinstance(default_args,
+                                                                                                          dict) else negatives)
+    positive = (("{}," + positive) if "{}" not in positive else positive).replace("{}", cleaned_prompt) if isinstance(
+        positive, str) else str(cleaned_prompt)
     positive, _ = await replace_wildcards(positive)
-    sampler = str(args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get('sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
-    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args, dict) else default_args.get('scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
-    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg', 6.5) if isinstance(default_args, dict) else 6.5)
-    noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns', 5)) if isinstance(default_args, dict) else 5
-    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf', 20)) if isinstance(default_args, dict) else 20
-    
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and check_censored(positive, censored_words):
+    sampler = str(
+        args.get('sampler', default_args.get('sampler', 'Restart')) if isinstance(args, dict) else default_args.get(
+            'sampler', 'Restart') if isinstance(default_args, dict) else 'Restart')
+    scheduler = str(args.get('scheduler', default_args.get('scheduler', 'Align Your Steps')) if isinstance(args,
+                                                                                                           dict) else default_args.get(
+        'scheduler', 'Align Your Steps') if isinstance(default_args, dict) else 'Align Your Steps')
+    cfg = float(args.get('cfg', default_args.get('cfg', 6.5)) if isinstance(args, dict) else default_args.get('cfg',
+                                                                                                              6.5) if isinstance(
+        default_args, dict) else 6.5)
+    noise_start = float(args.get('ns', default_args.get('ns', 5)) if isinstance(args, dict) else default_args.get('ns',
+                                                                                                                  5)) if isinstance(
+        default_args, dict) else 5
+    noise_fact = float(args.get('nf', default_args.get('nf', 20)) if isinstance(args, dict) else default_args.get('nf',
+                                                                                                                  20)) if isinstance(
+        default_args, dict) else 20
+
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and check_censored(positive,
+                                                                                                censored_words):
         return False
 
     # 初始化画布
@@ -1254,10 +1463,10 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
                     wy = yv[i, j] - y0
                     wx = xv[i, j] - x0
                     noise_interp[i, j] = (
-                        noise_base[y0, x0] * (1 - wy) * (1 - wx) +
-                        noise_base[y1, x0] * wy * (1 - wx) +
-                        noise_base[y0, x1] * (1 - wy) * wx +
-                        noise_base[y1, x1] * wy * wx
+                            noise_base[y0, x0] * (1 - wy) * (1 - wx) +
+                            noise_base[y1, x0] * wy * (1 - wx) +
+                            noise_base[y0, x1] * (1 - wy) * wx +
+                            noise_base[y1, x1] * wy * wx
                     )
             noise_array += noise_interp * scale
         noise_array = (noise_array - np.min(noise_array)) / (np.max(noise_array) - np.min(noise_array)) * 255
@@ -1368,14 +1577,17 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         draw.rectangle([0, 0, canvas_width, outpaint_params["up"] + OVERMASK], fill=255)
     if outpaint_params["down"] > 0:
         draw.rectangle([0, orig_height + outpaint_params["up"] - OVERMASK, canvas_width, canvas_height], fill=255)
-    
+
     buffered = io.BytesIO()
     mask.save(buffered, format="PNG")
     mask_data = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    super_width, super_height = process_image_dimensions(canvas_width, canvas_height, max_area=sd_max_size, min_area=768*768, divisible_by=8)
-    super_width1 = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(args, dict) else super_width
-    super_height1 = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(args, dict) else super_height
+    super_width, super_height = process_image_dimensions(canvas_width, canvas_height, max_area=sd_max_size,
+                                                         min_area=768 * 768, divisible_by=8)
+    super_width1 = int(args.get('w', super_width) if args.get('w', super_width) > 0 else super_width) if isinstance(
+        args, dict) else super_width
+    super_height1 = int(args.get('h', super_height) if args.get('h', super_height) > 0 else super_height) if isinstance(
+        args, dict) else super_height
 
     payload = {
         "init_images": [canvas_data],
@@ -1410,7 +1622,8 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
         "override_settings_restore_afterwards": False,
     }
 
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and not \
+    config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         print("审核api未配置,为保证安全已禁止画图请求")
         return "审核api未配置,为保证安全已禁止画图请求"
 
@@ -1418,7 +1631,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     list_length = len(config.ai_generated_art.config["ai绘画"]["sdUrl"])
     if round_sd >= list_length:
         round_sd = 0
-        
+
     url, auth_header = parse_custom_url_auth(url)
 
     headers = {
@@ -1429,16 +1642,18 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
 
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(url=f'{url}/sdapi/v1/img2img', json=payload, headers=headers)
-    
+
     r = response.json()
     if 'images' not in r or len(r['images']) == 0:
         return None
 
     b64 = r['images'][0]
 
-    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
+    if groupid not in allow_nsfw_groups and aiDrawController.get("禁止nsfw") and \
+            config.ai_generated_art.config['ai绘画']['sd审核和反推api']:
         try:
-            check = await pic_audit_standalone(b64, return_none=True, url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
+            check = await pic_audit_standalone(b64, return_none=True,
+                                               url=config.ai_generated_art.config['ai绘画']['sd审核和反推api'])
             if check:
                 return False
         except Exception as e:
@@ -1448,6 +1663,7 @@ async def SdOutpaint(prompt, path, config, groupid, b64_in, args):
     image = Image.open(io.BytesIO(base64.b64decode(b64)))
     image.save(f'{path}')
     return path
+
 
 async def get_img_info(base64, api):
     async with httpx.AsyncClient(timeout=None) as client:

@@ -1,10 +1,13 @@
-import sys
 import asyncio
+import sys
+
 import httpx
 from playwright.async_api import async_playwright
-from run.streaming_media.service.Link_parsing.Link_parsing import link_prising
+
 from framework_common.utils.random_str import random_str
+from run.streaming_media.service.Link_parsing.Link_parsing import link_prising
 from run.streaming_media.service.Link_parsing.core.bili import fetch_latest_dynamic_id_api
+
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 # 添加请求头
@@ -25,16 +28,16 @@ async def fetch_latest_dynamic_id(uid):
     try:
 
         async with httpx.AsyncClient(headers=headers) as client:
-            response = await client.get(url, params=params, headers=headers,timeout=5)
+            response = await client.get(url, params=params, headers=headers, timeout=5)
             data = response.json()
-            d1=data['data']['items'][0]['id_str']
-            d2=data['data']['items'][1]['id_str']  # 返回最新动态id
-            return d1,d2
+            d1 = data['data']['items'][0]['id_str']
+            d2 = data['data']['items'][1]['id_str']  # 返回最新动态id
+            return d1, d2
 
     except Exception as e:
 
-        dy_id_1,dy_id_2=await fetch_latest_dynamic_id_api(uid)
-        return dy_id_1,dy_id_2
+        dy_id_1, dy_id_2 = await fetch_latest_dynamic_id_api(uid)
+        return dy_id_1, dy_id_2
 
 
 async def fetch_dynamic(dynamic_id, mode="mobile"):
@@ -121,8 +124,7 @@ async def fetch_latest_dynamic(uid, config):
         if bilibili_type_draw == 1:
             dynamic = await fetch_dynamic(r1, config.streaming_media.config["bili_dynamic"]["screen_shot_mode"])
         elif bilibili_type_draw == 2:
-            dynamic= (await link_prising(f'https://t.bilibili.com/{r1}',filepath='data/pictures/cache/'))['pic_path']
+            dynamic = (await link_prising(f'https://t.bilibili.com/{r1}', filepath='data/pictures/cache/'))['pic_path']
         return dynamic
     else:
         return None
-
