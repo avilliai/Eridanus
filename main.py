@@ -156,8 +156,8 @@ def webui_bot():
     bot2_thread = threading.Thread(target=run_bot2, daemon=True)
     bot2_thread.start()
 
-
-if config.common_config.basic_config["webui"]["enable"]:
-    webui_bot()
-load_plugins(bot1, config)
-bot1.run()
+if __name__ == '__main__':
+    if config.common_config.basic_config["webui"]["enable"]:
+        webui_bot()
+    load_plugins(bot1, config)
+    bot1.run()
