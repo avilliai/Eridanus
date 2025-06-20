@@ -16,7 +16,7 @@ from run.ai_llm.service.aiReplyCore import aiReplyCore
 from run.basic_plugin.service.life_service import bingEveryDay, danxianglii
 from run.basic_plugin.service.nasa_api import get_nasa_apod
 from run.basic_plugin.service.weather_query import free_weather_query
-from run.group_fun.service.lex_burner_Ninja import LexburnerNinja
+from run.group_fun.service.lex_burner_Ninja import Lexburner_Ninja
 from run.resource_collector.service.asmr.asmr100 import random_asmr_100
 from run.streaming_media.service.Link_parsing.Link_parsing import bangumi_PILimg
 from run.system_plugin.func_collection import trigger_tasks
@@ -204,7 +204,7 @@ def main(bot: ExtendBot, config):
             logger.info_func("获取忍术大学习")
 
             async def get_random_renshu():
-                ninja = LexburnerNinja()
+                ninja = Lexburner_Ninja()
                 ninjutsu = await ninja.random_ninjutsu()
                 tags = ""
                 for tag in ninjutsu['tags']:

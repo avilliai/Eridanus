@@ -3,7 +3,11 @@ import asyncio
 import httpx
 
 
-class LexburnerNinja:
+class Lexburner_Ninja:
+    """
+    类名不要瞎几把改。
+    改完用查找用法或者跑一遍测试。
+    """
     def __init__(self):
         self.name = "Lexburner_Ninja"
 
@@ -21,7 +25,7 @@ class LexburnerNinja:
                 return {"error": "No jutsus found for the search term"}
 
             first_jutsu = jutsus[0]
-            # print(first_jutsu)
+            #print(first_jutsu)
             return {
                 "title": first_jutsu.get("name", "未找到标题"),
                 "description": first_jutsu.get("description", "未找到描述"),
@@ -39,13 +43,13 @@ class LexburnerNinja:
             url = "https://wsfrs.com/api/jutsus?limit=1&sortBy=random"
             response = await client.get(url)
 
+
             data = response.json()
             jutsus = data.get("jutsus", [])
 
             return jutsus[0]
 
-
 if __name__ == '__main__':
-    ninja = LexburnerNinja()
+    ninja = Lexburner_Ninja()
     print(asyncio.run(ninja.random_ninjutsu()))
     print(asyncio.run(ninja.query_ninjutsu("手")))

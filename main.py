@@ -94,7 +94,7 @@ def find_plugins(plugin_dir=PLUGIN_DIR):
                     yield plugin_name, module_name, module
                     num_plugin += 1
                 else:
-                    if plugin_name != "func_collection" and f"service" not in module_name:
+                    if plugin_name != "func_collection" and "service" not in module_name:
                         bot1.logger.warning(
                             f"⚠️ The plugin `{module_path} {plugin_name}` does not have a main() method. If this plugin is a function collection, please ignore this warning.")
 

@@ -13,7 +13,7 @@ from run.character_detection.func_collection import operate_group_censor
 
 
 def main(bot, config):
-    sets = config.character_detection["抽象检测"]
+    sets = config.character_detection.config["抽象检测"]
     chehui1 = sets["奶龙撤回"]
     mute1 = sets["奶龙禁言"]
     attack1 = sets["骂奶龙"]
@@ -21,17 +21,19 @@ def main(bot, config):
     mute2 = sets["doro禁言"]
     attack2 = sets["骂doro"]
     if_nailong = sets["奶龙检测"]
-    if not if_nailong:
-        del main
+    if_doro = sets["doro检测"]
+    if_nanniang = sets["男娘检测"]
+    if not if_nailong and not if_doro and not if_nanniang:
+        bot.logger.info("Character Detection: No character detection service is enabled.")
+        return
     else:
         from run.character_detection.service.nailong11.nailong import main as nailong_main
         from run.character_detection.service.doro.doro import main as doro_main
         from run.character_detection.service.nanniang.nn import main as nn_main
-    if_doro = sets["doro检测"]
+
     nailong_groups = config.character_detection.nailong['whitelist']
     doro_groups = config.character_detection.doro['whitelist']
     nanniang_groups = config.character_detection.nanniang['whitelist']
-    if_nanniang = sets["男娘检测"]
     chehui3 = sets["男娘撤回"]
     mute3 = sets["男娘禁言"]
     attack3 = sets["骂男娘"]
