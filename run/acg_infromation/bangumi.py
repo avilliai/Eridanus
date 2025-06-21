@@ -12,6 +12,9 @@ from developTools.event.events import GroupMessageEvent
 from developTools.message.message_components import Text, Image
 from run.acg_infromation.service.bangumisearch import banguimiList, bangumisearch, screenshot_to_pdf_and_png, \
     run_async_task, daily_task
+# Why import it from other plugin!!!!!
+# Why do it!
+# Please Split it as a public func!
 from run.streaming_media.service.Link_parsing.Link_parsing import bangumi_PILimg
 
 if sys.platform == 'win32':
@@ -40,6 +43,7 @@ async def call_bangumi_search(bot, event, config, keywords, cat):
             title = subjectlist[order - 1].find("a").string
         else:
             await bot.send(event, "查询失败！不规范的操作")
+            # Its Not Defined!
             searchtask.pop(event.sender.user_id)
             return
         try:
