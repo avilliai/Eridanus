@@ -12,10 +12,8 @@ DB_NAME = "data/dataBase/group_messages.db"
 def is_running_in_docker():
     return os.path.exists("/.dockerenv") or os.environ.get("IN_DOCKER") == "1"
 
-if is_running_in_docker():
-    REDIS_URL = "redis://redis:6379/0"
-else:
-    REDIS_URL = "redis://localhost"
+REDIS_URL = "redis://redis:6379/0" if is_running_in_docker() else "redis://localhost"
+
 REDIS_CACHE_TTL = 60  # 秒
 
 logger = get_logger()

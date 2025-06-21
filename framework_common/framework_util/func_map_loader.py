@@ -32,7 +32,8 @@ def convert_gemini_to_openai(gemini_tools):
 
     return openai_functions
 
-logger=get_logger()
+
+logger = get_logger()
 PLUGIN_DIR = "run"
 dynamic_imports = {}
 function_declarations = []
@@ -61,6 +62,7 @@ for root, dirs, files in os.walk(PLUGIN_DIR):
 
 def openai_func_map():
     return convert_gemini_to_openai(function_declarations)
+
 
 def gemini_func_map():
     return {"function_declarations": function_declarations}
