@@ -101,7 +101,7 @@ def main(bot, config):
 
     @bot.on(GroupMessageEvent)
     async def aronad(event):
-        if event.pure_text == "/arona" or event.pure_text == "/攻略":
+        if event.pure_text in ["/arona", "/攻略"]:
             url = "杂图"
             logger.info_func("查询攻略：" + url)
             try:

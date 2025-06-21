@@ -12,11 +12,13 @@ from run.ai_llm.service.aiReplyHandler.tecentYuanQi import YuanQiTencent
 class Translator:
     def __init__(self):
         self.config = YAMLManager.get_instance()
-        self.system_instruction="请翻译以下内容为日文，直接给出结果，不要有回应之类的内容。需要翻译的文本为："
-        self.logger=get_logger()
+        self.system_instruction = "请翻译以下内容为日文，直接给出结果，不要有回应之类的内容。需要翻译的文本为："
+        self.logger = get_logger()
+
     async def translate(self, text):
         return await self.aiReplyCore(text, self.config, self.system_instruction)
-    async def aiReplyCore(self,text,config,system_instruction=None,recursion_times=0):  # 后面几个函数都是供函数调用的场景使用的
+
+    async def aiReplyCore(self, text, config, system_instruction=None, recursion_times=0):  # 后面几个函数都是供函数调用的场景使用的
         logger = self.logger
         logger.info(f"translator called with message: {text}")
         """
@@ -28,8 +30,8 @@ class Translator:
 
         try:
             if config.ai_llm.config["llm"]["model"] == "default":
-                prompt=[
-                    {"role": "user", "content": system_instruction+text},
+                prompt = [
+                    {"role": "user", "content": system_instruction + text},
                 ]
                 response_message = await defaultModelRequest(
                     prompt,
@@ -46,11 +48,12 @@ class Translator:
                         {"role": "user", "content": system_instruction + text},
                     ]
                 else:
-                    prompt=[{"role": "system", "content": [{"type": "text", "text": system_instruction+text}]}]
+                    prompt = [{"role": "system", "content": [{"type": "text", "text": system_instruction + text}]}]
 
                 kwargs = {
                     "ask_prompt": prompt,
-                    "url": config.ai_llm.config["llm"]["openai"].get("quest_url") or config.ai_llm.config["llm"]["openai"].get("base_url"),
+                    "url": config.ai_llm.config["llm"]["openai"].get("quest_url") or config.ai_llm.config["llm"][
+                        "openai"].get("base_url"),
                     "apikey": random.choice(config.ai_llm.config["llm"]["openai"]["api_keys"]),
                     "model": config.ai_llm.config["llm"]["openai"]["model"],
                     "stream": False,
@@ -72,7 +75,7 @@ class Translator:
                     {
                         "parts": [
                             {
-                                "text": system_instruction+text,
+                                "text": system_instruction + text,
                             }
                         ],
                         "role": "user"
@@ -97,7 +100,7 @@ class Translator:
                 reply_message = response_message["parts"][0]["text"]  # 函数调用可能不给你返回提示文本，只给你整一个调用函数。
 
             elif config.ai_llm.config["llm"]["model"] == "腾讯元器":
-                prompt=[{"role": "user", "content": [{"type": "text", "text": system_instruction+text}]}]
+                prompt = [{"role": "user", "content": [{"type": "text", "text": system_instruction + text}]}]
                 response_message = await YuanQiTencent(
                     prompt,
                     config.ai_llm.config["llm"]["腾讯元器"]["智能体ID"],
